@@ -33,3 +33,7 @@ section {
 h2 {
     color: #0056b3;
 }
+body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f9f9; }
+header { display: flex; justify-content: space-between; align-items: center; background: #007bff; padding: 15px; color: white; }
+.whatsapp-btn { background: #25d366; color: white; padding: 10px; text-decoration: none; border-radius: 5px; }
+.info { display: flex; justify-content: space-between; margin-top: 20px; }
