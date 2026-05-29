@@ -1,39 +1,41 @@
-/* Body ka design */
 body {
-    background-color: #eef2f3;
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 0;
+    padding: 20px;
+    background-color: #f4f9f9;
 }
 
-/* Header ka design */
 header {
-    background-color: #0056b3;
+    background-color: #007bff;
     color: white;
     padding: 20px;
     text-align: center;
+    border-radius: 8px;
 }
 
-/* Section aur Cards ka design */
-section {
-    padding: 20px;
-    text-align: center;
+.whatsapp-btn {
+    display: inline-block;
+    background-color: #25d366;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-weight: bold;
 }
 
-.card {
+main {
+    margin-top: 20px;
     background: white;
-    padding: 15px;
-    margin: 10px auto;
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    width: 80%;
-    max-width: 300px;
 }
 
-h2 {
+h2, h3 {
     color: #0056b3;
 }
-body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f9f9; }
-header { display: flex; justify-content: space-between; align-items: center; background: #007bff; padding: 15px; color: white; }
-.whatsapp-btn { background: #25d366; color: white; padding: 10px; text-decoration: none; border-radius: 5px; }
-.info { display: flex; justify-content: space-between; margin-top: 20px; }
+
+ul {
+    list-style-type: square;
+}
