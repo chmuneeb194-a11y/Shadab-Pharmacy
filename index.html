@@ -29,6 +29,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         .header-container {
@@ -42,22 +43,23 @@
         .logo-section {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .logo-icon {
             background-color: #e6f4f4;
             color: #167a7c;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 1.2rem;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 1.3rem;
         }
 
         .logo-text {
-            font-size: 1.25rem;
+            font-size: 1.4rem;
             font-weight: 800;
             color: #1a202c;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .logo-text span {
@@ -68,25 +70,28 @@
             background-color: #0d5a5b;
             color: white;
             text-decoration: none;
-            padding: 10px 18px;
+            padding: 12px 22px;
             border-radius: 25px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: opacity 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(13, 90, 91, 0.15);
         }
 
         .whatsapp-top-btn:hover {
-            opacity: 0.9;
+            background-color: #167a7c;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(13, 90, 91, 0.2);
         }
 
         /* Hero Layout Styling for Premium Realistic Image */
         .hero-section {
             background: linear-gradient(to right, #d9f0f0, #ebf7f7, #ffffff);
             border-bottom: 1px solid #e2e8f0;
-            padding: 40px 20px;
+            padding: 60px 20px;
         }
 
         .hero-container {
@@ -94,7 +99,7 @@
             margin: 0 auto;
             display: grid;
             grid-template-columns: 1fr;
-            gap: 30px;
+            gap: 40px;
             align-items: center;
         }
 
@@ -105,30 +110,32 @@
         }
 
         .hero-text h2 {
-            font-size: 2.2rem;
+            font-size: 2.6rem;
             font-weight: 800;
             color: #1a202c;
             line-height: 1.2;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             letter-spacing: -0.5px;
         }
 
         .hero-text p {
-            font-size: 0.95rem;
+            font-size: 1.05rem;
             color: #4a5568;
             font-weight: 500;
-            line-height: 1.5;
+            line-height: 1.6;
             margin-bottom: 18px;
         }
 
         .hero-image-wrapper {
             width: 100%;
-            max-width: 450px;
+            max-width: 480px;
             margin: 0 auto;
-            border-radius: 16px;
+            border-radius: 20px;
             overflow: hidden;
             position: relative;
             background-color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .hero-image-wrapper img {
@@ -142,7 +149,7 @@
         main {
             max-width: 1100px;
             margin: 0 auto;
-            padding: 30px 20px;
+            padding: 40px 20px;
             display: grid;
             grid-template-columns: 1fr;
             gap: 30px;
@@ -150,93 +157,150 @@
 
         @media (min-width: 768px) {
             main {
-                grid-template-columns: 7fr 5fr;
+                grid-template-columns: 1fr 1fr;
             }
         }
 
         .panel-card {
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            margin-bottom: 25px;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+            transition: transform 0.3s ease;
+        }
+
+        .panel-card:hover {
+            transform: translateY(-2px);
         }
 
         .panel-title {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: #1a202c;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #edf2f7;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            color: #167a7c;
         }
 
         /* Logistics coverage location styling */
         .cities-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 14px;
         }
 
         .city-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px;
+            gap: 12px;
+            padding: 14px;
             background-color: #f7fafc;
             border: 1px solid #edf2f7;
-            border-radius: 12px;
-            font-size: 0.8rem;
+            border-radius: 14px;
+            font-size: 0.85rem;
             font-weight: 700;
             color: #4a5568;
             text-transform: uppercase;
+            transition: all 0.2s ease;
+        }
+
+        .city-item:hover {
+            background-color: #e6f4f4;
+            border-color: #bfe3e5;
+            color: #167a7c;
+        }
+
+        .city-item i {
+            color: #167a7c;
+        }
+
+        .info-note {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ebf8ff;
+            border-radius: 8px;
+            border-left: 4px solid #3182ce;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
         }
 
         /* Inventory Stock layout structures */
         .medicine-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .medicine-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            padding: 14px;
             background-color: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            border-radius: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .medicine-row:hover {
+            border-color: #cbd5e0;
+            background-color: #fafbfc;
         }
 
         .med-details {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
+
+        .med-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .med-a-box { background-color: #f0fff4; color: #38a169; }
+        .med-b-box { background-color: #fffaf0; color: #dd6b20; }
+        .med-c-box { background-color: #ebf8ff; color: #3182ce; }
+        .med-d-box { background-color: #faf5ff; color: #805ad5; }
 
         .med-name {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 700;
             color: #2d3748;
-        }
-
-        .med-category {
-            font-size: 0.65rem;
-            color: #a0aec0;
             display: block;
         }
 
+        .med-category {
+            font-size: 0.7rem;
+            color: #718096;
+            display: block;
+            margin-top: 2px;
+        }
+
         .status-badge {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 10px;
+            padding: 4px 10px;
+            border-radius: 12px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .status-ready { background-color: #c6f6d5; color: #22543d; }
@@ -244,10 +308,12 @@
 
         footer {
             background-color: #1a202c;
-            color: #718096;
-            font-size: 0.65rem;
-            padding: 15px 20px;
+            color: #a0aec0;
+            font-size: 0.75rem;
+            padding: 25px 20px;
             text-align: center;
+            border-top: 1px solid #2d3748;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -257,93 +323,4 @@
         <div class="header-container">
             <div class="logo-section">
                 <div class="logo-icon"><i class="fas fa-prescription-bottle-medical"></i></div>
-                <div class="logo-text">Shadab <span>Pharmacy</span></div>
-            </div>
-            <a href="https://wa.me/923006901869" class="whatsapp-top-btn">
-                <i class="fab fa-whatsapp"></i> 
-                Contact us on WhatsApp
-            </a>
-        </div>
-    </header>
-
-    <section class="hero-section">
-        <div class="hero-container">
-            <div class="hero-text">
-                <h2>B2B Medical Supply<br>to Your Store.</h2>
-                <p>Efficient and reliable medicine distribution to medical stores across Pakistan.</p>
-            </div>
-            <div class="hero-image-wrapper">
-                <img src="./1780096454351%281%29.png" alt="Shadab Pharmacy">
-            </div>
-        </div>
-    </section>
-
-    <main>
-        <div>
-            <!-- Cities Box -->
-            <div class="panel-card">
-                <div class="panel-title"><i class="fas fa-map-location-dot"></i> Cities We Supply To</div>
-                <div class="cities-grid">
-                    <div class="city-item"><span>CHICHAWATNI</span></div>
-                    <div class="city-item"><span>PAKPATTAN</span></div>
-                    <div class="city-item"><span>ARIFWALA</span></div>
-                    <div class="city-item"><span>SAHIWAL</span></div>
-                </div>
-            </div>
-
-            <!-- Medicines Box -->
-            <div class="panel-card">
-                <div class="panel-title"><i class="fas fa-boxes-stacked"></i> Available Medicines</div>
-                <div class="medicine-list">
-                    
-                    <div class="medicine-row">
-                        <div class="med-details">
-                            <div>
-                                <span class="med-name">Medicine A</span>
-                                <span class="med-category">Category: Antibiotic</span>
-                            </div>
-                        </div>
-                        <span class="status-badge status-ready">In Stock</span>
-                    </div>
-
-                    <div class="medicine-row">
-                        <div class="med-details">
-                            <div>
-                                <span class="med-name">Medicine B</span>
-                                <span class="med-category">Category: Painkiller</span>
-                            </div>
-                        </div>
-                        <span class="status-badge status-ready">In Stock</span>
-                    </div>
-
-                    <div class="medicine-row">
-                        <div class="med-details">
-                            <div>
-                                <span class="med-name">Medicine C</span>
-                                <span class="med-category">Category: Vaccine</span>
-                            </div>
-                        </div>
-                        <span class="status-badge status-limited">Low Stock</span>
-                    </div>
-
-                    <div class="medicine-row">
-                        <div class="med-details">
-                            <div>
-                                <span class="med-name">Medicine D</span>
-                                <span class="med-category">Category: Psychiatric</span>
-                            </div>
-                        </div>
-                        <span class="status-badge status-ready">In Stock</span>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer>
-        <p>&copy; 2026 Shadab Pharmacy. High-End B2B Medicine Distribution Management Logistics.</p>
-    </footer>
-
-</body>
-</html>
+                <div class="logo-text">Sh
