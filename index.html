@@ -121,28 +121,13 @@
             margin-bottom: 18px;
         }
 
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background-color: #ffffff;
-            border: 1px solid #bfe3e5;
-            color: #167a7c;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 6px 12px;
-            border-radius: 6px;
-        }
-
         .hero-image-wrapper {
             width: 100%;
             max-width: 450px;
             margin: 0 auto;
             border-radius: 16px;
             overflow: hidden;
-            border: 1px solid #edf2f7;
             position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
             background-color: #ffffff;
         }
 
@@ -190,10 +175,6 @@
             gap: 8px;
         }
 
-        .panel-title i {
-            color: #167a7c;
-        }
-
         /* Logistics coverage location styling */
         .cities-grid {
             display: grid;
@@ -213,21 +194,6 @@
             font-weight: 700;
             color: #4a5568;
             text-transform: uppercase;
-        }
-
-        .city-item i {
-            color: #167a7c;
-            font-size: 0.8rem;
-        }
-
-        .info-note {
-            font-size: 0.7rem;
-            color: #718096;
-            font-style: italic;
-            margin-top: 15px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
 
         /* Inventory Stock layout structures */
@@ -253,21 +219,6 @@
             gap: 12px;
         }
 
-        .med-icon-box {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-        }
-
-        .med-a-box { background-color: #f0fff4; color: #38a169; }
-        .med-b-box { background-color: #ebf8ff; color: #3182ce; }
-        .med-c-box { background-color: #e6fffa; color: #319795; }
-        .med-d-box { background-color: #faf5ff; color: #805ad5; }
-
         .med-name {
             font-size: 0.8rem;
             font-weight: 700;
@@ -278,7 +229,6 @@
             font-size: 0.65rem;
             color: #a0aec0;
             display: block;
-            font-weight: 500;
         }
 
         .status-badge {
@@ -292,100 +242,12 @@
         .status-ready { background-color: #c6f6d5; color: #22543d; }
         .status-limited { background-color: #feebc8; color: #744210; }
 
-        /* Working Hours Block Configuration */
-        .hours-box {
-            padding: 5px 0;
-        }
-
-        .hours-headline {
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: #1a202c;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-
-        .hours-subline {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #e53e3e;
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* Services Grid view matrix */
-        .services-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .service-mini-card {
-            padding: 12px;
-            background-color: #f7fafc;
-            border: 1px solid #edf2f7;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .service-mini-card i {
-            color: #167a7c;
-            font-size: 0.95rem;
-        }
-
-        .service-mini-card span {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #2d3748;
-            line-height: 1.2;
-        }
-
-        /* Footer & Extra bar structural setups */
-        .secondary-links {
-            background-color: #ffffff;
-            border-top: 1px solid #e2e8f0;
-            padding: 12px 20px;
-            text-align: center;
-        }
-
-        .links-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        @media (min-width: 768px) {
-            .links-container {
-                justify-content: flex-start;
-            }
-        }
-
-        .secondary-links a {
-            text-decoration: none;
-            color: #718096;
-            font-size: 0.75rem;
-            font-weight: 700;
-            transition: color 0.2s;
-        }
-
-        .secondary-links a:hover {
-            color: #167a7c;
-        }
-
         footer {
             background-color: #1a202c;
             color: #718096;
             font-size: 0.65rem;
             padding: 15px 20px;
             text-align: center;
-            border-top: 1px solid #2d3748;
         }
     </style>
 </head>
@@ -398,13 +260,10 @@
                 <div class="logo-text">Shadab <span>Pharmacy</span></div>
             </div>
             <a href="https://wa.me/923006901869" class="whatsapp-top-btn">
-                <i class="fab fa-whatsapp"></i>
-                <span>Contact us on WhatsApp</span>
+                <i class="fab fa-whatsapp"></i> 
+                Contact us on WhatsApp
             </a>
-        </div class="hero-image-wrapper">
-
         </div>
-        
     </header>
 
     <section class="hero-section">
@@ -412,43 +271,33 @@
             <div class="hero-text">
                 <h2>B2B Medical Supply<br>to Your Store.</h2>
                 <p>Efficient and reliable medicine distribution to medical stores across Pakistan.</p>
-                <div class="hero-badge">
-                    <i class="fas fa-clinic-medical"></i> Verified Store Delivery Network
-                </div>
             </div>
             <div class="hero-image-wrapper">
-                <img src="1780096454351(1).png alt="Shadab Pharmacy Delivery Logistics Fleet">
+                <img src="./1780096454351%281%29.png" alt="Shadab Pharmacy">
             </div>
         </div>
     </section>
 
     <main>
-        
         <div>
             <!-- Cities Box -->
             <div class="panel-card">
-                <div class="panel-title">
-                    <i class="fas fa-map-location-dot"></i> Cities We Supply To
-                </div>
+                <div class="panel-title"><i class="fas fa-map-location-dot"></i> Cities We Supply To</div>
                 <div class="cities-grid">
-                    <div class="city-item"><i class="fas fa-city"></i><span>CHICHAWATNI</span></div>
-                    <div class="city-item"><i class="fas fa-city"></i><span>PAKPATTAN</span></div>
-                    <div class="city-item"><i class="fas fa-city"></i><span>ARIFWALA</span></div>
-                    <div class="city-item"><i class="fas fa-city"></i><span>SAHIWAL</span></div>
-                </div>
-                <div class="info-note">
-                    <i class="fas fa-info-circle"></i> *We supply directly to verified medical stores.*
+                    <div class="city-item"><span>CHICHAWATNI</span></div>
+                    <div class="city-item"><span>PAKPATTAN</span></div>
+                    <div class="city-item"><span>ARIFWALA</span></div>
+                    <div class="city-item"><span>SAHIWAL</span></div>
                 </div>
             </div>
 
+            <!-- Medicines Box -->
             <div class="panel-card">
-                <div class="panel-title">
-                    <i class="fas fa-boxes-stacked"></i> Available Medicines (Updated)
-                </div>
+                <div class="panel-title"><i class="fas fa-boxes-stacked"></i> Available Medicines</div>
                 <div class="medicine-list">
+                    
                     <div class="medicine-row">
                         <div class="med-details">
-                            <div class="med-icon-box med-a-box"><i class="fas fa-capsules"></i></div>
                             <div>
                                 <span class="med-name">Medicine A</span>
                                 <span class="med-category">Category: Antibiotic</span>
@@ -456,9 +305,9 @@
                         </div>
                         <span class="status-badge status-ready">In Stock</span>
                     </div>
+
                     <div class="medicine-row">
                         <div class="med-details">
-                            <div class="med-icon-box med-b-box"><i class="fas fa-tablets"></i></div>
                             <div>
                                 <span class="med-name">Medicine B</span>
                                 <span class="med-category">Category: Painkiller</span>
@@ -466,9 +315,9 @@
                         </div>
                         <span class="status-badge status-ready">In Stock</span>
                     </div>
+
                     <div class="medicine-row">
                         <div class="med-details">
-                            <div class="med-icon-box med-c-box"><i class="fas fa-syringe"></i></div>
                             <div>
                                 <span class="med-name">Medicine C</span>
                                 <span class="med-category">Category: Vaccine</span>
@@ -476,10 +325,9 @@
                         </div>
                         <span class="status-badge status-limited">Low Stock</span>
                     </div>
-                    
+
                     <div class="medicine-row">
                         <div class="med-details">
-                            <div class="med-icon-box med-d-box"><i class="fas fa-brain"></i></div>
                             <div>
                                 <span class="med-name">Medicine D</span>
                                 <span class="med-category">Category: Psychiatric</span>
@@ -487,58 +335,11 @@
                         </div>
                         <span class="status-badge status-ready">In Stock</span>
                     </div>
+
                 </div>
             </div>
         </div>
-
-        <div>
-            <!-- Working Hours Box -->
-            <div class="panel-card">
-                <div class="panel-title">
-                    <i class="fas fa-clock"></i> Working Hours
-                </div>
-                <div class="hours-box">
-                    <div class="hours-headline">SATURDAY TO THURSDAY OPEN</div>
-                    <div class="hours-subline"><i class="fas fa-circle-xmark"></i> FRIDAY CLOSE</div>
-                    <div style="font-size: 0.8rem; font-weight: 700; color: #167a7c; margin-top: 8px;">9:00 AM to 5:00 PM</div>
-                </div>
-            </div>
-
-            <div class="panel-card">
-                <div class="panel-title">
-                    <i class="fas fa-hand-holding-medical"></i> Our Services
-                </div>
-                <div class="services-grid">
-                    <div class="service-mini-card">
-                        <i class="fas fa-cart-flatbed-suitcase"></i>
-                        <span>Wholesale Orders</span>
-                    </div>
-                    <div class="service-mini-card">
-                        <i class="fas fa-headset"></i>
-                        <span>Pharmacy Support</span>
-                    </div>
-                    <div class="service-mini-card">
-                        <i class="fas fa-snowflake"></i>
-                        <span>Cold Chain Management</span>
-                    </div>
-                    <div class="service-mini-card">
-                        <i class="fas fa-truck-ramp-box"></i>
-                        <span>Fleet Consistency</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </main>
-
-    <div class="secondary-links">
-        <div class="links-container">
-            <a href="#">About us</a>
-            <a href="#">Contact</a>
-            <a href="#">Store Locator</a>
-            <a href="#">FAQ</a>
-        </div>
-    </div>
 
     <footer>
         <p>&copy; 2026 Shadab Pharmacy. High-End B2B Medicine Distribution Management Logistics.</p>
