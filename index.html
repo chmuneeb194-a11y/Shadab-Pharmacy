@@ -6,45 +6,41 @@
     <title>Shadaab Pharmacy | Official</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         body { background-color: #eef2f3; padding: 20px; display: flex; justify-content: center; }
+        .main-wrapper { width: 100%; max-width: 900px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
         
-        .main-container { width: 100%; max-width: 900px; background: #fff; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
+        /* Hero Section */
+        .hero { background: #d1e7e4; padding: 40px; text-align: center; border-bottom: 3px solid #b2d8d5; }
+        .hero h1 { font-size: 32px; color: #1a202c; }
+        .hero p { color: #4a5568; margin: 10px 0; }
         
-        /* Banner Area */
-        .hero { background: #d1e7e4; padding: 40px; text-align: center; border-bottom: 5px solid #a8d5d1; }
-        .hero h1 { font-size: 28px; color: #167a7c; margin-bottom: 10px; }
-        .wa-btn { display: inline-block; background: #25d366; color: white; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: bold; margin-top: 15px; }
-
-        /* Dashboard Grid */
-        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 30px; }
+        /* Grid Layout */
+        .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 30px; }
         .card { background: #f9f9f9; padding: 20px; border-radius: 15px; border: 1px solid #e0e0e0; }
-        .card h2 { font-size: 18px; color: #333; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-
-        /* Content Items */
-        .item-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .box { background: white; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #eee; font-weight: bold; font-size: 13px; }
+        .card h3 { color: #167a7c; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         
-        .hours-text { font-size: 14px; line-height: 1.8; }
-        .open { color: #27ae60; font-weight: bold; }
-        .closed { color: #c0392b; font-weight: bold; }
-
-        @media (max-width: 600px) { .grid-layout { grid-template-columns: 1fr; } }
+        /* Elements */
+        .city-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .box { background: white; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; border: 1px solid #eee; }
+        .services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .service-item { background: white; padding: 10px; border-radius: 8px; font-size: 12px; text-align: center; border: 1px solid #eee; }
+        
+        @media (max-width: 600px) { .content-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="main-container">
+<div class="main-wrapper">
     <div class="hero">
         <h1>B2B Medical Supply to Your Store</h1>
         <p>Efficient and reliable medicine distribution across Pakistan.</p>
-        <a href="https://wa.me/923006901869" class="wa-btn"><i class="fab fa-whatsapp"></i> Contact on WhatsApp</a>
     </div>
 
-    <div class="grid-layout">
+    <div class="content-grid">
         <div class="card">
-            <h2><i class="fas fa-map-marker-alt"></i> Cities We Supply To</h2>
-            <div class="item-row">
+            <h3><i class="fas fa-map-marker-alt"></i> Cities We Supply To</h3>
+            <div class="city-box">
                 <div class="box">CHICHAWATNI</div>
                 <div class="box">PAKPATTAN</div>
                 <div class="box">ARIFWALA</div>
@@ -53,18 +49,17 @@
         </div>
 
         <div class="card">
-            <h2><i class="fas fa-clock"></i> Working Hours</h2>
-            <div class="hours-text">
-                <p><span class="open">SATURDAY TO THURSDAY:</span> 9AM - 5PM</p>
-                <p><span class="closed">FRIDAY:</span> CLOSED</p>
-            </div>
+            <h3><i class="fas fa-clock"></i> Working Hours</h3>
+            <p><strong>SATURDAY TO THURSDAY</strong><br>OPEN | FRIDAY CLOSE</p>
         </div>
 
         <div class="card" style="grid-column: span 2;">
-            <h2><i class="fas fa-medkit"></i> Available Medicines</h2>
-            <div class="item-row">
-                <div class="box">Medicine A (Antibiotic)</div>
-                <div class="box">Medicine B (Painkiller)</div>
+            <h3><i class="fas fa-briefcase"></i> Our Services</h3>
+            <div class="services-grid">
+                <div class="service-item">Wholesale Orders</div>
+                <div class="service-item">Pharmacy Support</div>
+                <div class="service-item">Cold Chain Management</div>
+                <div class="service-item">Fleet Consistency</div>
             </div>
         </div>
     </div>
