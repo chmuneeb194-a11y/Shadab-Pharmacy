@@ -145,14 +145,16 @@
             position: relative;
             box-shadow: 0 4px 10px rgba(0,0,0,0.04);
             background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
         }
 
-        .hero-image-wrapper img {
+        .hero-image-wrapper svg {
             width: 100%;
             height: auto;
-            min-height: 220px;
-            max-height: 280px;
-            object-fit: cover;
+            max-height: 260px;
             display: block;
         }
 
@@ -269,7 +271,7 @@
         .med-a-box { background-color: #f0fff4; color: #38a169; }
         .med-b-box { background-color: #ebf8ff; color: #3182ce; }
         .med-c-box { background-color: #e6fffa; color: #319795; }
-        .med-d-box { background-color: #faf5ff; color: #805ad5; } /* Purple theme for Psychiatry */
+        .med-d-box { background-color: #faf5ff; color: #805ad5; }
 
         .med-name {
             font-size: 0.8rem;
@@ -408,7 +410,7 @@
         </div>
     </header>
 
-    <!-- Hero Framework with Content Banner and Logistics Image -->
+    <!-- Hero Framework with Content Banner and Internal SVG Vector Graphic Drawing -->
     <section class="hero-section">
         <div class="hero-container">
             <div class="hero-text">
@@ -419,8 +421,28 @@
                 </div>
             </div>
             <div class="hero-image-wrapper">
-                <!-- Highly Stable Open Source Direct Public Image For Medicine Shipping Fleet -->
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/2021_Asahi_Kasei_Pharma_Logistics_Center.jpg/640px-2021_Asahi_Kasei_Pharma_Logistics_Center.jpg" alt="Medicine Distribution Logistics Van">
+                <!-- Premium Native SVG Medical Logistics Graphic Code (Loads Without External Links) -->
+                <svg viewBox="0 0 500 350" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100%" height="100%" fill="#ffffff"/>
+                    <circle cx="130" cy="230" r="110" fill="#e6f4f4" opacity="0.6"/>
+                    <path d="M 120 280 L 380 280" stroke="#cbd5e0" stroke-width="4" stroke-linecap="round"/>
+                    <!-- Delivery Fleet Outline Block -->
+                    <path d="M 140 130 L 290 130 L 290 240 L 140 240 Z" fill="#167a7c" rx="10"/>
+                    <path d="M 290 150 L 350 150 L 380 190 L 380 240 L 290 240 Z" fill="#0d5a5b"/>
+                    <path d="M 310 160 L 345 160 L 365 190 L 310 190 Z" fill="#e6f4f4"/>
+                    <!-- Wheels configuration -->
+                    <circle cx="180" cy="245" r="24" fill="#2d3748"/>
+                    <circle cx="180" cy="245" r="10" fill="#ffffff"/>
+                    <circle cx="330" cy="245" r="24" fill="#2d3748"/>
+                    <circle cx="330" cy="245" r="10" fill="#ffffff"/>
+                    <!-- Emblem Design Inside Graphic -->
+                    <circle cx="215" cy="185" r="22" fill="#ffffff"/>
+                    <path d="M 205 185 L 225 185 M 215 175 L 215 195" stroke="#167a7c" stroke-width="6" stroke-linecap="round"/>
+                    <!-- Modern Tech Background Shapes -->
+                    <rect x="30" y="60" width="70" height="12" rx="6" fill="#bfe3e5" opacity="0.5"/>
+                    <rect x="380" y="80" width="90" height="14" rx="7" fill="#bfe3e5" opacity="0.4"/>
+                    <circle cx="430" cy="140" r="8" fill="#167a7c" opacity="0.3"/>
+                </svg>
             </div>
         </div>
     </section>
@@ -483,13 +505,13 @@
                         <span class="status-badge status-limited">Low Stock</span>
                     </div>
                     
-                    <!-- NEW ADDITION: Psychiatry / Dimagh Ki Medicine -->
+                    <!-- Psychiatric Category Block -->
                     <div class="medicine-row">
                         <div class="med-details">
                             <div class="med-icon-box med-d-box"><i class="fas fa-brain"></i></div>
                             <div>
                                 <span class="med-name">Medicine D</span>
-                                <span class="med-category">Category: Psychiatry (Dimagh Medicine)</span>
+                                <span class="med-category">Category: Psychiatric</span>
                             </div>
                         </div>
                         <span class="status-badge status-ready">In Stock</span>
