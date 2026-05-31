@@ -1,3 +1,6 @@
+Muneeb bhai, bilkul perfect idea hai! Counter section ke background par microscope ki jagah medical supply van ki image set kar di hai, aur us van ke oopar **SP (Shadab Pharmacy)** ka monogram overlay design ke sath adjust kar diya hai taake look professional lagay.
+Aap is updated code ko copy kar ke test kar lein:
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -143,6 +146,88 @@
             height: auto;
             display: block;
             object-fit: cover;
+        }
+
+        /* Premium Counter Section with Supply Van & Monogram Background (Reference Image: 14282.jpg Modified) */
+        .counter-section {
+            position: relative;
+            background: linear-gradient(rgba(13, 90, 91, 0.88), rgba(22, 122, 124, 0.85)), url('https://images.unsplash.com/photo-1516514124239-00109d94183a?auto=format&fit=crop&q=80&w=1200') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
+            padding: 60px 20px;
+            color: #ffffff;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* Watermark style SP Monogram on the Background Van */
+        .counter-section::before {
+            content: "SP";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.04);
+            letter-spacing: 5px;
+            pointer-events: none;
+            font-family: Arial, sans-serif;
+            border: 8px solid rgba(255, 255, 255, 0.03);
+            padding: 0 30px;
+            border-radius: 20px;
+        }
+
+        .counter-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            position: relative;
+            z-index: 2;
+        }
+
+        @media (min-width: 768px) {
+            .counter-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .counter-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 35px 20px;
+            border-radius: 16px;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .counter-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .counter-card i {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            color: #d9f0f0;
+            display: block;
+        }
+
+        .counter-number {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 6px;
+            letter-spacing: -1px;
+        }
+
+        .counter-label {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #e6f4f4;
         }
 
         /* Main Workspace Split Grid Layout */
@@ -306,6 +391,163 @@
         .status-ready { background-color: #c6f6d5; color: #22543d; }
         .status-limited { background-color: #feebc8; color: #744210; }
 
+        /* Corporate Details and Navigation Info Panel (Reference Image: 14283.jpg) */
+        .corporate-section {
+            background-color: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 50px 20px;
+        }
+
+        .corporate-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        @media (min-width: 768px) {
+            .corporate-container {
+                grid-template-columns: 1.2fr 1fr;
+            }
+        }
+
+        .corp-brand-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 25px;
+        }
+
+        .corp-brand-icon {
+            background-color: #e6f4f4;
+            color: #167a7c;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .corp-brand-title h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1a202c;
+            text-transform: uppercase;
+        }
+
+        .corp-brand-title p {
+            font-size: 0.8rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .corp-contact-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border-left: 3px solid #167a7c;
+            padding-left: 20px;
+        }
+
+        .corp-contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .corp-contact-item i {
+            color: #4a5568;
+            font-size: 1rem;
+            margin-top: 3px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .corp-contact-content p {
+            font-size: 0.9rem;
+            color: #2d3748;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .corp-contact-content a {
+            color: #167a7c;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .corp-contact-content a:hover {
+            text-decoration: underline;
+        }
+
+        .corp-emails {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .corp-navigation {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .corp-links-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 30px;
+            border-left: 3px solid #319795;
+            padding-left: 20px;
+        }
+
+        .corp-link-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            color: #4a5568;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+
+        .corp-link-item:hover {
+            color: #167a7c;
+        }
+
+        .corp-link-item i {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .corp-social-wrapper {
+            padding-left: 20px;
+        }
+
+        .corp-social-icons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .corp-social-icons a {
+            color: #4a5568;
+            font-size: 1.3rem;
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .corp-social-icons a:hover {
+            color: #167a7c;
+            transform: scale(1.15);
+        }
+
         footer {
             background-color: #1a202c;
             color: #a0aec0;
@@ -344,8 +586,25 @@
         </div>
     </section>
 
+    <!-- Professional Counter Section with Supply Van & Monogram Background -->
+    <section class="counter-section">
+        <div class="counter-container">
+            <div class="counter-card">
+                <i class="fas fa-truck-ramp-box"></i>
+                <div class="counter-number">10+</div>
+                <div class="counter-label">Years Experience</div>
+            </div>
+            <div class="counter-card">
+                <i class="fas fa-handshake"></i>
+                <div class="counter-number">1 Million +</div>
+                <div class="counter-label">Satisfied Clients</div>
+            </div>
+        </div>
+    </section>
+
     <main>
         <div>
+            <!-- Cities Box -->
             <div class="panel-card">
                 <div class="panel-title"><i class="fas fa-map-location-dot"></i> Cities We Supply To</div>
                 <div class="cities-grid">
@@ -361,6 +620,7 @@
         </div>
 
         <div>
+            <!-- Medicines Box -->
             <div class="panel-card">
                 <div class="panel-title"><i class="fas fa-boxes-stacked"></i> Available Medicines</div>
                 <div class="medicine-list">
@@ -414,9 +674,76 @@
         </div>
     </main>
 
+    <!-- Corporate Information Panel -->
+    <section class="corporate-section">
+        <div class="corporate-container">
+            <div>
+                <div class="corp-brand-header">
+                    <div class="corp-brand-icon"><i class="fas fa-globe"></i></div>
+                    <div class="corp-brand-title">
+                        <h3>Cell International</h3>
+                        <p>Contribution for everyday living</p>
+                    </div>
+                </div>
+                <div class="corp-contact-list">
+                    <div class="corp-contact-item">
+                        <i class="fas fa-building"></i>
+                        <div class="corp-contact-content">
+                            <p>Cell Group of Companies.</p>
+                            <span style="font-size: 0.8rem; color: #718096; font-weight: 500;">Serving for Healthier Life</span>
+                        </div>
+                    </div>
+                    <div class="corp-contact-item">
+                        <i class="fas fa-location-dot"></i>
+                        <div class="corp-contact-content">
+                            <p>92- Shadman II , Lahore Pakistan</p>
+                        </div>
+                    </div>
+                    <div class="corp-contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div class="corp-contact-content">
+                            <p><a href="tel:+924235406992">+92 42 35406992</a></p>
+                        </div>
+                    </div>
+                    <div class="corp-contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div class="corp-contact-content corp-emails">
+                            <p><a href="mailto:info@cell-laboratories.com">info@cell-laboratories.com</a></p>
+                            <p><a href="mailto:info@cellpharmaceutical.com.pk">info@cellpharmaceutical.com.pk</a></p>
+                            <p><a href="mailto:info@cell-international.com">info@cell-international.com</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="corp-navigation">
+                <div class="corp-links-list">
+                    <a href="#" class="corp-link-item"><i class="fas fa-address-card"></i> About Us</a>
+                    <a href="#" class="corp-link-item"><i class="fas fa-prescription-bottle-medical"></i> Our Products</a>
+                    <a href="#" class="corp-link-item"><i class="fas fa-right-left"></i> Exchange & Refund Policy</a>
+                    <a href="#" class="corp-link-item"><i class="fas fa-images"></i> Gallery</a>
+                    <a href="#" class="corp-link-item" style="color: #c53030;"><i class="fas fa-triangle-exclamation" style="color: #c53030;"></i> ADVERSE DRUG REACTIONS REPORT</a>
+                    <a href="mailto:info@cell-international.com" class="corp-link-item"><i class="fas fa-paper-plane"></i> EMAIL US</a>
+                </div>
+                <div class="corp-social-wrapper">
+                    <div class="corp-social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-x-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="https://wa.me/923006901869"><i class="fab fa-whatsapp"></i></a>
+                        <a href="mailto:info@cell-international.com"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer>
         <p>&copy; 2026 Shadab Pharmacy. High-End B2B Medicine Distribution Management Logistics.</p>
     </footer>
 
 </body>
 </html>
+
+```
