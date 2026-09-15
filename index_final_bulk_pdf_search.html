@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Shadab Pharmacy v2 — Shadab Pharmacy — Visit Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+<style>
+/* ===== START: GLOBAL STYLES ===== */
+:root{--bg:#eef3f8;--card:rgba(255,255,255,.55);--card-solid:#ffffff;--text:#10151d;--muted:#647080;--line:rgba(255,255,255,.72);--blue:#007aff;--green:#20c96b;--red:#ff453a;--orange:#ff9f0a;--cyan:#36c8ff;--shadow:0 18px 45px rgba(40,70,100,.12);--radius:24px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 15% 5%,rgba(54,200,255,.20),transparent 27%),radial-gradient(circle at 90% 10%,rgba(0,122,255,.14),transparent 25%),linear-gradient(180deg,#edf5fa,#f4f7fa);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}.app{max-width:1180px;margin:auto;padding:env(safe-area-inset-top) 16px 40px}
+.topbar{position:sticky;top:0;z-index:20;margin:0 -16px;padding:12px 16px 10px;background:rgba(245,245,247,.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(0,0,0,.06)}
+.nav{display:flex;align-items:center;justify-content:space-between;max-width:1148px;margin:auto}.brand{display:flex;align-items:center;gap:11px}.logo{width:58px;height:58px;border-radius:50%;overflow:hidden;background:#0b2438;border:2px solid rgba(255,255,255,.25);display:grid;place-items:center;box-shadow:0 8px 24px #0005;flex:0 0 58px}.logo img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}.brand b{display:block;font-size:17px}.brand small{color:var(--muted);font-size:11px}.nav-actions{display:flex;gap:8px}.icon-btn{width:42px;height:42px;border-radius:14px;background:#fff;box-shadow:0 5px 18px #0000000c;border:1px solid #00000008}
+h1{font-size:clamp(29px,5vw,45px);letter-spacing:-1.5px;margin:25px 0 5px}.subtitle{color:var(--muted);margin:0 0 22px}
+.grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px}.card{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--radius);padding:20px;backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%)}.card h2{font-size:20px;margin:0 0 16px;letter-spacing:-.4px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:700;color:#55565b;margin-left:4px}.field input,.field select,.field textarea{width:100%;border:1px solid #dddde2;background:#fff;border-radius:14px;padding:13px 14px;outline:0;transition:.2s}.field input:focus,.field select:focus,.field textarea:focus{border-color:#9bc9ff;box-shadow:0 0 0 4px #007aff14}.field textarea{min-height:85px;resize:vertical}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.btn{padding:13px 17px;border-radius:14px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.18s}.btn:active{transform:scale(.97)}.primary{background:var(--blue);color:#fff}.secondary{background:#e9e9ee;color:#17171a}.success{background:var(--green);color:#fff}.danger{background:#ffe8e7;color:#c5221b}.dark{background:#171719;color:#fff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#fff;border-radius:17px;padding:15px}.stat b{font-size:25px;display:block}.stat span{font-size:11px;color:var(--muted)}
+.camera{background:#101014;border-radius:20px;overflow:hidden;position:relative;aspect-ratio:4/3;display:grid;place-items:center;color:#fff}.camera video,.camera canvas,.camera img{width:100%;height:100%;object-fit:cover}.camera video{display:none}.camera.has-video video{display:block}.camera-placeholder{text-align:center;color:#aaa}.camera-placeholder .camicon{font-size:38px}.camera-tools{display:flex;gap:8px;position:absolute;bottom:12px;left:12px;right:12px;justify-content:center}.camera-tools button{padding:10px 14px;border-radius:13px;background:#ffffffdd;font-weight:700}.photo-preview{display:none}.photo-preview.show{display:block}.photo-preview img{display:block;width:100%;border-radius:16px;margin-top:10px}
+.records-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:13px}.records-head h2{margin:0}.filters{display:flex;gap:8px;flex-wrap:wrap}.filters input,.filters select{border:1px solid #dddde2;background:#fff;border-radius:12px;padding:10px 12px}
+.record{background:#fff;border:1px solid #ececf0;border-radius:19px;padding:14px;margin:10px 0;display:grid;grid-template-columns:88px 1fr auto;gap:13px;align-items:center}.record img{width:88px;height:88px;border-radius:14px;object-fit:cover;background:#eee}.record-main b{font-size:16px}.record-main p{margin:4px 0;color:#606066;font-size:12px}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#edf5ff;color:#0068d9;font-size:10px;font-weight:800;margin:3px 3px 0 0}.record-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.mini{padding:9px 10px;border-radius:11px;background:#f0f0f4;font-size:12px;font-weight:750}.empty{text-align:center;color:var(--muted);padding:35px 10px}.whatsapp{position:fixed;right:18px;bottom:20px;z-index:50;width:58px;height:58px;border-radius:50%;background:#25d366;color:#fff;display:grid;place-items:center;font-size:27px;box-shadow:0 10px 30px #25d36655}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#171719;color:#fff;padding:12px 17px;border-radius:14px;opacity:0;pointer-events:none;transition:.25s;z-index:100;font-size:13px}.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:90;padding:20px;align-items:center;justify-content:center}.modal.show{display:flex}.modal-box{background:#f7f7f9;border-radius:25px;max-width:560px;width:100%;padding:20px;box-shadow:0 30px 80px #0005;max-height:90vh;overflow:auto}.modal-head{display:flex;justify-content:space-between;align-items:center}.modal-head h3{margin:0 0 15px}.close{background:#e5e5ea;border-radius:50%;width:34px;height:34px}
+.territory-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.territory-item{background:#fff;padding:8px 10px;border-radius:12px;border:1px solid #dddde2;display:flex;gap:7px;align-items:center}.territory-item button{background:#ffe8e7;color:#c5221b;border-radius:8px;padding:4px 7px}
+.notice{font-size:11px;color:#6d6d73;line-height:1.5;margin-top:10px}.footer{text-align:center;color:#8a8a90;font-size:11px;margin:28px 0 5px}
+
+/* ===== START: GLASS THEME & DARK MODE ===== */
+body.dark{--bg:#080b10;--card:rgba(24,29,37,.62);--card-solid:#171c24;--text:#f5f7fa;--muted:#a6afbd;--line:rgba(255,255,255,.09);--shadow:0 18px 55px rgba(0,0,0,.38);background:radial-gradient(circle at 10% 0%,rgba(54,200,255,.10),transparent 28%),radial-gradient(circle at 90% 10%,rgba(0,122,255,.10),transparent 25%),#080b10}
+body.dark .topbar{background:rgba(8,11,16,.72);border-bottom-color:rgba(255,255,255,.07)}
+body.dark .icon-btn,body.dark .stat,body.dark .record,body.dark .field input,body.dark .field select,body.dark .field textarea,body.dark .filters input,body.dark .filters select,body.dark .territory-item{background:rgba(255,255,255,.055);color:var(--text);border-color:rgba(255,255,255,.09)}
+body.dark .secondary,body.dark .mini{background:rgba(255,255,255,.09);color:var(--text)}
+body.dark .modal-box{background:#11161d;color:var(--text)}
+.theme-toggle{background:linear-gradient(135deg,#fff,#dff5ff)!important}
+body.dark .theme-toggle{background:linear-gradient(135deg,#202733,#11161d)!important;color:#fff}
+.autocomplete{position:relative}
+.suggestions{position:absolute;left:0;right:0;top:100%;z-index:60;background:var(--card-solid);border:1px solid var(--line);border-radius:15px;margin-top:5px;box-shadow:0 18px 40px #0002;overflow:hidden;display:none}
+.suggestions.show{display:block}
+.suggestion{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--line)}
+.suggestion:last-child{border-bottom:0}.no-match{cursor:default}.no-match small{margin-top:4px}.suggestion:hover{background:#007aff12}.suggestion small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.import-box{border:1px dashed #aeb8c5;border-radius:17px;padding:16px;background:#ffffff33;margin-top:14px}
+body.dark .import-box{background:#ffffff05}
+.import-box input[type=file]{display:none}.file-label{display:inline-flex;padding:11px 13px;border-radius:12px;background:#007aff;color:#fff;font-weight:750;cursor:pointer}
+.db-count{font-size:11px;color:var(--muted);margin-top:7px}
+/* ===== END: GLASS THEME & DARK MODE ===== */
+
+/* ===== START: SEARCH + DARK DROPDOWN FIX ===== */
+.suggestions{max-height:300px;overflow-y:auto}
+.suggestion{display:block;width:100%;text-align:left;background:var(--card-solid);color:var(--text);font-family:inherit}
+.suggestion:hover,.suggestion:focus{background:rgba(0,122,255,.12);color:var(--text)}
+body.dark .suggestions{background:#171c24;border-color:rgba(255,255,255,.12);box-shadow:0 20px 50px rgba(0,0,0,.55)}
+body.dark .suggestion{background:#171c24;color:#f5f7fa;border-bottom-color:rgba(255,255,255,.08)}
+body.dark .suggestion:hover,body.dark .suggestion:focus{background:rgba(0,122,255,.20)}
+body.dark .suggestion small{color:#a6afbd}
+.bulk-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;padding:10px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.20)}
+body.dark .bulk-toolbar{background:rgba(255,255,255,.045)}
+.bulk-select{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:750;margin-right:auto}
+.bulk-select input,.record-check{width:18px;height:18px;accent-color:#007aff}
+.bulk-btn{padding:9px 11px;border-radius:11px;background:#e9e9ee;color:#17171a;font-size:11px;font-weight:800}
+body.dark .bulk-btn{background:rgba(255,255,255,.09);color:var(--text)}
+.bulk-btn.primary{background:#007aff;color:#fff}
+.bulk-btn.success{background:#20c96b;color:#fff}
+.bulk-btn.dark{background:#171719;color:#fff}
+.record-check-wrap{display:flex;align-items:center;justify-content:center}
+.record.selected{outline:2px solid #007aff44}
+@media(max-width:820px){.bulk-toolbar{align-items:stretch}.bulk-select{width:100%;margin-right:0}.bulk-btn{flex:1}}
+/* ===== END: SEARCH + DARK DROPDOWN FIX ===== */
+
+
+@media(max-width:820px){.grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.record{grid-template-columns:72px 1fr}.record img{width:72px;height:72px}.record-actions{grid-column:1/-1;justify-content:flex-start}.record-main{min-width:0}}
+/* ===== END: GLOBAL STYLES ===== */
+
+/* ===== START: BRAND SIZE UPGRADE ===== */
+.brand-title, header h1, .app-title {
+  font-size: clamp(1.35rem, 4.8vw, 2rem) !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.035em;
+}
+.brand-subtitle, .app-subtitle { font-weight: 700; }
+/* ===== END: BRAND SIZE UPGRADE ===== */
+
+
+/* ===== START: CAMERA / PWA UPGRADE ===== */
+#cameraBox.has-video video { display:block !important; width:100%; height:auto; min-height:240px; object-fit:cover; }
+.camera-main-btn { width:100%; min-height:52px; font-size:1.05rem; font-weight:850; }
+.install-app-btn { display:none; }
+.install-app-btn.show { display:inline-flex; }
+.camera-help { font-size:.82rem; opacity:.78; margin-top:7px; }
+/* ===== END: CAMERA / PWA UPGRADE ===== */
+
+/* ===== START: CUSTOMER DATABASE UI ===== */
+.customer-city-note{font-size:.78rem;color:var(--muted);margin-top:5px}
+.nav-actions .icon-btn{font-size:18px}
+body.dark .suggestion:hover{background:rgba(0,122,255,.18)}
+/* ===== END: CUSTOMER DATABASE UI ===== */
+
+
+</style>
+<!-- ===== START: SUPPLIED PDF DATABASE =====
+Source PDFs loaded into the built-in database:
+ARIFWALA-1(1).pdf, CHICHAWATNI(1).pdf, SAHIWAL..(1).pdf, PAKPATTAN(1).pdf
+Unique customer/store records embedded: 716
+City is enforced as the primary filter in autocomplete.
+===== END: SUPPLIED PDF DATABASE ===== -->
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="nav">
+    <div class="brand"><div class="logo"><img src="data:image/jpeg;base64,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" alt="Shadab Pharmacy Logo"></div><div><b>Shadab Pharmacy</b><small>Professional Visit Manager</small></div></div>
+    <div class="nav-actions"><button class="icon-btn theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Dark / Light mode">🌙</button><button class="icon-btn" onclick="openTerritoryManager()" title="Territories">⚙️</button><button class="icon-btn" onclick="openStoreDatabase()" title="Store database">📋</button><button class="icon-btn" onclick="openCustomerModal()" title="Add customer">👤＋</button><button class="icon-btn" onclick="window.print()" title="Print">🖨️</button></div>
+  </div>
+</header>
+
+<main>
+<h1>Field Visit Manager</h1>
+<p class="subtitle">Record pharmacy visits, capture proof, manage territories and create date-wise reports.</p><div class="notice">Designed for <b>mobile + laptop + desktop</b>. On mobile, use the camera; on a computer, upload/capture from the available camera or use an existing image file where supported.</div>
+
+<div class="grid">
+<section class="card">
+<h2>New Visit</h2>
+<div class="form-grid">
+<div class="field"><label>Visit Type</label><select id="visitType" onchange="showStoreSuggestions()"><option>Doctor Pharmacy</option><option>Medical Stores</option><option>Pharmacy Store</option></select></div>
+<div class="field"><label>Area</label><select id="area" onchange="refreshTerritories();showStoreSuggestions()"><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select></div>
+<div class="field"><label>Territory</label><select id="territory"></select></div>
+<div class="field full autocomplete"><label>Store / Pharmacy Name</label><input id="storeName" autocomplete="off" placeholder="Start typing store name..." oninput="showStoreSuggestions()" onfocus="showStoreSuggestions()"><div class="suggestions" id="storeSuggestions"></div></div>
+<div class="field"><label>Person Name</label><input id="personName" placeholder="Person met at the store"></div>
+<div class="field"><label>Phone (optional)</label><input id="personPhone" inputmode="tel" placeholder="03XXXXXXXXX"></div>
+<div class="field full"><label>Visit Notes (optional)</label><textarea id="notes" placeholder="Add any useful visit details..."></textarea></div>
+</div>
+
+<div style="margin-top:17px">
+<label style="font-size:12px;font-weight:700;color:#55565b;margin-left:4px">On-site Photo</label>
+<div class="camera" id="cameraBox">
+  <div class="camera-placeholder" id="cameraPlaceholder"><div class="camicon">📷</div><div>Camera photo required / optional</div></div>
+  <video id="video" playsinline autoplay></video>
+  <canvas id="canvas" style="display:none"></canvas>
+  <input id="cameraFileInput" type="file" accept="image/*" capture="environment" style="display:none" onchange="handleCameraFile(event)">
+<div class="camera-tools"><button onclick="startCamera()">Open Camera</button><button onclick="openMobileCamera()">Capture</button><button onclick="stopCamera()">Stop</button><label style="padding:10px 14px;border-radius:13px;background:#ffffffdd;color:#111;font-weight:700;cursor:pointer">Upload Photo<input type="file" accept="image/*" capture="environment" onchange="uploadPhoto(event)" style="display:none"></label></div>
+</div>
+<div class="photo-preview" id="photoPreview"><img id="photoImg" alt="Captured photo"></div>
+</div>
+
+<div class="actions">
+<button class="btn primary" onclick="saveVisit()">＋ Save Visit</button>
+<button class="btn secondary" onclick="resetForm()">Reset</button>
+</div>
+<p class="notice">Camera and location permissions depend on your browser. GitHub Pages HTTPS is recommended for mobile camera/GPS access.</p>
+</section>
+
+<section class="card">
+<h2>Today</h2>
+<div class="stats">
+<div class="stat"><b id="todayCount">0</b><span>Total Visits</span></div>
+<div class="stat"><b id="todayPeople">0</b><span>People Met</span></div>
+<div class="stat"><b id="todayAreas">0</b><span>Areas</span></div>
+</div>
+<div style="height:18px"></div>
+<h2>Quick Report</h2>
+<div class="actions">
+<button class="btn dark" onclick="downloadPDFForDate(todayISO())">Today's PDF</button>
+<button class="btn secondary" onclick="printDateReport(todayISO())">Print Today</button>
+<button class="btn success" onclick="shareAllToday()">WhatsApp Today</button>
+</div>
+<p class="notice">PDF generation uses jsPDF loaded from a public CDN when online. Printing remains available through the browser.</p>
+</section>
+</div>
+
+<section class="card" style="margin-top:18px">
+<div class="records-head">
+<h2>Visit Records</h2>
+<div class="filters"><input type="date" id="filterDate" onchange="selectedRecordIds.clear();renderRecords()"><select id="filterArea" onchange="selectedRecordIds.clear();renderRecords()"><option value="">All Areas</option><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select><button class="mini" onclick="clearFilters()">Clear</button></div>
+</div>
+<div class="bulk-toolbar">
+  <label class="bulk-select"><input type="checkbox" id="selectAllRecords" onchange="toggleSelectAllRecords(this.checked)"> Select All Visible Records</label>
+  <button class="bulk-btn dark" onclick="viewSelectedPDF()">👁 View PDF</button>
+  <button class="bulk-btn primary" onclick="downloadSelectedPDF()">⬇ Download PDF</button>
+  <button class="bulk-btn success" onclick="shareSelectedPDF()">↗ Share PDF</button>
+</div>
+<div id="records"></div>
+</section>
+</main>
+<div class="footer">Shadab Pharmacy • Field Visit Manager</div>
+</div>
+
+<button class="whatsapp" onclick="shareAllToday()" title="WhatsApp">☘</button>
+<div class="toast" id="toast"></div>
+
+
+<div class="modal" id="storeDatabaseModal">
+<div class="modal-box">
+<div class="modal-head"><h3>Medical Store Database</h3><button class="close" onclick="closeStoreDatabase()">×</button></div>
+<div class="actions" style="margin-top:0;margin-bottom:10px"><button class="btn primary" onclick="openCustomerModal()">＋ Add Customer</button></div>
+<p class="notice" style="margin-top:0">Upload your existing <b>PDF list</b>. The app will read the PDF text and try to identify Store Name, Area and Territory automatically.</p>
+<div class="import-box">
+<label class="file-label" for="pdfFile">📄 Upload PDF List</label>
+<input id="pdfFile" type="file" accept=".pdf,application/pdf" onchange="importStorePDF(event)">
+<div class="db-count" id="dbCount"></div>
+<div id="pdfImportStatus" class="notice"></div>
+<p class="notice"><b>Best PDF format:</b> a selectable-text table/list with columns such as <b>Store Name, Area, Territory</b>. Scanned/image-only PDFs need OCR and may require a later OCR mode.</p>
+</div>
+<div class="actions"><button class="btn secondary" onclick="downloadPDFTemplate()">Download PDF Template</button><button class="btn danger" onclick="clearStoreDatabase()">Clear Store Database</button></div>
+</div>
+</div>
+
+<div class="modal" id="customerModal">
+<div class="modal-box">
+<div class="modal-head"><h3>＋ Add New Customer</h3><button class="close" onclick="closeCustomerModal()">×</button></div>
+<p class="notice" style="margin-top:0">Add a new Medical Store, Pharmacy or Doctor Pharmacy. The customer is saved on this device and will appear only under the selected city.</p>
+<div class="form-grid">
+<div class="field"><label>Customer Type</label><select id="customerType"><option>Medical Stores</option><option>Pharmacy Store</option><option>Doctor Pharmacy</option></select></div>
+<div class="field"><label>City / Area</label><select id="customerArea"><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select></div>
+<div class="field full"><label>Medical Store / Pharmacy / Doctor Name</label><input id="customerName" placeholder="Enter complete customer name"></div>
+<div class="field"><label>Territory (optional)</label><input id="customerTerritory" placeholder="Territory / route"></div>
+<div class="field"><label>Phone (optional)</label><input id="customerPhone" inputmode="tel" placeholder="03XXXXXXXXX"></div>
+<div class="field full"><label>Address (optional)</label><textarea id="customerAddress" placeholder="Shop / clinic address"></textarea></div>
+</div>
+<div class="actions">
+<button class="btn primary" onclick="addCustomer()">＋ Save Customer</button>
+<button class="btn secondary" onclick="closeCustomerModal()">Cancel</button>
+</div>
+</div>
+</div>
+<div class="modal" id="territoryModal">
+<div class="modal-box">
+<div class="modal-head"><h3>Territory Management</h3><button class="close" onclick="closeTerritoryManager()">×</button></div>
+<p class="notice" style="margin-top:0">Territories are stored separately for each Area. Add as many as you need.</p>
+<div class="field"><label>Area</label><select id="territoryArea" onchange="renderTerritoryList()"><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select></div>
+<div class="actions"><input id="newTerritory" style="flex:1;min-width:180px;border:1px solid #dddde2;border-radius:14px;padding:13px" placeholder="New territory name"><button class="btn primary" onclick="addTerritory()">Add Territory</button></div>
+<div class="territory-list" id="territoryList"></div>
+</div>
+</div>
+
+<script>
+/* ===== START: APP DATA & CONFIG ===== */
+const APP_KEY="shadab_pharmacy_visits_v1";
+const TERRITORY_KEY="shadab_pharmacy_territories_v1";
+const WHATSAPP_NUMBER="923006901869";
+const AREAS=["Sahiwal","Chichawatni","Pakpattan","Arifwala"];
+const STORE_KEY="shadab_pharmacy_store_database_v1";
+/* ===== START: BUILT-IN CITY DATABASE FROM SUPPLIED PDF LISTS ===== */
+const BUILTIN_STORE_DATABASE=[{"name":"WAQAS MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621075","address":"MAIN BAZAR QABOOLA. 4737278-7"},{"name":"ZAM ZAM MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621084","address":"MAIN BAZAR QABOOLA. 7126528-4"},{"name":"AZIZ MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621106","address":"MAIN BAZAR QABULA. 5516328-3"},{"name":"ISHTIAQ MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621134","address":"SHOP NO 2 SADAR BAZAR KAMEER. 3535605-7"},{"name":"BAHAWAL KHAN MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621305","address":"ADDA MUHAMMAD NAGAR. 4607664-2"},{"name":"DR GHULAM SHABEER","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621385","address":"Wahab Garden,Phase-III,Qabola Road Arifwala. 3948506-4"},{"name":"DR RAO SHAMSHER","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621400","address":"QABULA ROAD 3199707-4"},{"name":"DOCTORS PHARMACY PLUS","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621503","address":"MIAN BAZAR QABOOLA C372411-0"},{"name":"IBRAHIM MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621504","address":"MOHALLAH IQBAL NAGAR STREET#3. 3640161366093"},{"name":"ZAM ZAM PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"621530","address":"QABULA BAZAR ARIFWALA. 36401-9369076-7 AMIR IQBAL AKHTAR 4806415-6"},{"name":"BISMILLAH MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621536","address":"ADDA TRIKHNI MOR ARIFWALA C375522-6"},{"name":"CHOUDHARY MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621562","address":"ShopNo. 2A, Karkhana Bazar 5018129-8"},{"name":"SADAAT HOMEO PATHIC CLINIC","area":"Arifwala","territory":"","type":"Medical Stores","code":"621585","address":"ARIFWALA 3596453-7"},{"name":"DR MUHAMMAD NAZEER SIAL","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621593","address":"NOOR MUHAMMAD ORTHOPEDIC QABULA"},{"name":"GHOUSIA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621645","address":"ADDA TRIKHNI ARIFWALA A467491-4"},{"name":"DECENT MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621663","address":"QABULA BAZAR D004250-2"},{"name":"NAWAB DIN PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"621688","address":"SHOP#82 G BLOCK 6374290-4"},{"name":"AL SHIFA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621693","address":"MOHAMMADI CHOWK ARIFWALA 3824652-0"},{"name":"SAAD MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621715","address":"SHOP NO.82/F QABOOLA BAZAR C147251-2"},{"name":"SABIR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621733","address":"ShopNo. 7, Adda Muhammad Naga C364619-2"},{"name":"SHAN MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621751","address":"ARIFWALA 1108164-3"},{"name":"AMIR PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"621766","address":"Shop No 63 Qaboola Baza. C368980-7"},{"name":"DR UMAR SALEEM","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621809","address":"GULSHAN-E-IQBAL COLONY 3527292-9"},{"name":"STAR PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"621813","address":"SHOP 5 RUSTAM MARKET QABOOLA ROAD ARIFWALA 4938155-4"},{"name":"MANZOOR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621822","address":"SHOP#2 GULSHAN IQBAL COLONY NEAR GUJJAR CHOWK ARIFWALA 5578822-1"},{"name":"SHER-E-RABANI MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621887","address":"CHAK# 120/9-L C372022-7"},{"name":"SAKHI SURGICAL PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"621925","address":"SHOP#1/2 GULSHAN IQBAL COLONY ARIFWALA"},{"name":"CHAMAN PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"621937","address":"SHOP#82 QABOOLA BAZAR 2230010-4"},{"name":"DR SAEED DHILON HOSPITAL","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621970","address":"BUREWALA 4932401-1"},{"name":"LIFE CARE PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"622005","address":"SHOP#85F QABOOLA BAZAR D931439-2"},{"name":"HAMDARD MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622032","address":"ADDA QUARTER GAGGOO MANDI 4999536-5"},{"name":"MOON MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622066","address":"KHATA#158/159 KHATONI#684 120/9L 3699013-2"},{"name":"AHMAD MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622072","address":"SHOP#75-F QABOOLA BAZAR TEHSIL ARIFWALA 9186811-7"},{"name":"SHAH MUSA PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"622084","address":"SHOP NO 1 MAIN BAZAR QABOOLA 2889431-6"},{"name":"FARIDI MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622091","address":"Shop No2 Sadar Bazar Near Adda Kamir 120/9-L A586918-1"},{"name":"IBNE USMAN MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622092","address":"Khawat No 1277Khatoni No 1293 Qaboola Bazar A419671-1"},{"name":"AKASH MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622093","address":"36401-2582921-1 AKASH YOUSAF E579179-2"},{"name":"IQBAL MEDICOSE","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"622103","address":"ShopNo 14 Chak 42/EB Road Adda 34/EBArifwala 9195156-0"},{"name":"SAAD BASHIR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622110","address":"Shop.#164,Main Bazar Near Coca COLA AGENCY"},{"name":"DR GHULAM NABI PHARMACY","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622138","address":"BUREWALA. 2103475-3"},{"name":"DUAA PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"622141","address":"SHOP#78-F QABOOLA BAZAR TEHSIL ARIFWALA B615433-4"},{"name":"BUTT MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622154","address":"SHOP#50 C BLOCK PURANI SABAZ MANDI ARIFWALA. 6769747-1"},{"name":"HABIBIA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622171","address":"FAISAL CHOWK MAIN BAZAR QBOOLA 4838665-0"},{"name":"DR SYED FARAZ UL HASSAN GILLAN","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622189","address":"COLLEGE CHOWK. 4192814-8"},{"name":"DR MUHAMMAD ILLYAS","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622194","address":"QABOOLA BAZAR 5082769-1"},{"name":"SHOUKAT MEDICAL HALL","area":"Arifwala","territory":"","type":"Medical Stores","code":"622233","address":"OLD POST OFFICE ROAD 1108308-5"},{"name":"AL RAYAN MEDICOSE","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"622257","address":"SHOP#27 CHAUDHARY MARKET TARIKHNI36401-8696388-3"},{"name":"SHAH G MEDICAL&VETERINARY PH","area":"Arifwala","territory":"","type":"Medical Stores","code":"622274","address":"Shop No. 5/6, Bhatti Market Main Pakpattan Road"},{"name":"DR M AHMAD","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622290","address":"ALI IBRAHIM MEDICAL COMPLEX DOCTORS COLONY H.NO.1 NEAR THQ HOSPITAL 8921157-6"},{"name":"DOCTOR PLUS PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"622322","address":"SHOP NO.66' QABOOLA BAZAR ARIFWALA 4266403-9"},{"name":"DR FAISAL IQBAL","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622328","address":"163/E.B MUHAMMADNAGAR BUREWALA ROAD NEAR RHC E154394-8"},{"name":"AHMAD PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"62347","address":"SHOP NO 76-F BLOCK QABULA BAZAR TEHSIL"},{"name":"JALANDHAR MEDICAL HALL","area":"Arifwala","territory":"","type":"Medical Stores","code":"62369","address":"0455556-2"},{"name":"JINNAH MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62371","address":"QABULA BAZAR 0465927-9"},{"name":"KHALID MEDICAL HALL","area":"Arifwala","territory":"","type":"Medical Stores","code":"62372","address":"145 C THANA BAZAR ARIFWALA 0465621-7"},{"name":"MADINA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62373","address":"QABULA BAZAR 4012805-9"},{"name":"MACCA MEDICAL HALL","area":"Arifwala","territory":"","type":"Medical Stores","code":"62374","address":"SHOP#64-F QABULA BAZAR 36401-6243808-1 M.RAMZAN AZEEM 0465787-0"},{"name":"PUNJAB PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"62375","address":"THANA BAZAR 2168761-7"},{"name":"QADIR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62376","address":"SAHIWAL ROAD 0455471-4"},{"name":"QARI MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62377","address":"SHOP#35 OUTSIDE OLD SABZI MANDI 1108134-1"},{"name":"SHARJEEL MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62380","address":"THQ HOSPITAL 4035955-7"},{"name":"ZAM ZAM MEDICAL HALL","area":"Arifwala","territory":"","type":"Medical Stores","code":"62384","address":"MOHAMMADI CHOWK 1108086-8"},{"name":"PUBLIC MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62532","address":"MAIN BAZAR KAMIR 3686943-7"},{"name":"DR ABDUL SATTAR SH","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"62536","address":"ARIFWALA 2248881-2"},{"name":"RAMZAN MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62557","address":"SADAR BAZAR KAMIR 4668615-0"},{"name":"HAMMAD MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62600","address":"ShopNo. 76, F-Block, Qaboola Bazar 5170730-5"},{"name":"AL ABBAS MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62630","address":"INSIDE HAIDER FAMILY HOSPITAL QABULA ROAD ARIFWALA 5339418-6"},{"name":"AL QADIR DRUG HOUSE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62647","address":"MAIN BAZAR QABULA. 0466035-8"},{"name":"USMAN MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62679","address":"SHOP#65/F MAIN QABOOLA BAZAR. 0972777-9"},{"name":"PAK MEDICOSE PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"62731","address":"SHOP#72 F BLOCK QABOOLA BAZAR 9527137-7"},{"name":"KMS PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"62749","address":"SHOP#21&22 SADAR BAZAR KAMIR 8442821-3"},{"name":"DR MANZOOR KHURL","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"62768","address":"QABULA ROAD ARIFWALA 2340539-2"},{"name":"ROHTAK MEDICAL HALL","area":"Arifwala","territory":"","type":"Medical Stores","code":"62789","address":"Adda Rang Shah 4873445-8"},{"name":"AL - KHALIQ MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62799","address":"TRIKHNI ROAD ADDA CHAKIAN 4603467-8"},{"name":"AL KAREEM PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"62811","address":"SHOP#79/C BLOCK JINNAH CHOWK THANA BAZAR 6428661-6"},{"name":"DR M AKRAM","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"62835","address":"THANA BAZAR 04642104"},{"name":"DR SHAHID AZIZ PHARMACY","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"62872","address":"PAKPATTAN ROAD ARIFWALA. 3525602-8"},{"name":"DR FAYYAZ MAHMOOD","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"62873","address":"BUREWALA ROAD ARIFWALA 0117447-9"},{"name":"REHMANIA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62888","address":"SADAR BAZAR KAMIR 3317685-0"},{"name":"NEW ROHTIK MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62945","address":"Pakpattan Road N, Block Arifwala. 5512106-2"},{"name":"MURTAZA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62952","address":"ADDA RANGSHAH 4583335-0"},{"name":"DR AKHTAR HUSSAIN NAZIR","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"62988","address":"3923269-7"},{"name":"NEW AHSAN PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"103000000100711","address":"SHOP#78-F BLOCK QABOOLA BAZAR 36401-7786362-9 ABDUL QADIR 2432086-2"},{"name":"AL NOOR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"103000000100734","address":"PEER ASHRAF MARKET SHOP NO.1 NEAR36502-5377855-3"},{"name":"TOOBA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"103000000100736","address":"SHOP#324 M-BLOCKTEHSIL ARIFWALA DISTRICT"},{"name":"DR TARIQUE ZAHEER","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"103000000100745","address":"FOZIA TARIQ HOSPITAL 42501-0541359-1 TARIQ ZAHEER 1556415-7"},{"name":"AL RAHEEM MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"103000000100748","address":"Shop No. 02 Sadar Bazar Near RHC Kameer36502-6208295-7"},{"name":"DR ZOYA QAMAR","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"103000000100761","address":"FAYYAZ HOSPITAL 36601-1628863-3 AZHAR HAFEEZS 5384128-4"},{"name":"DR SHAMIM ASLAM","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"103000000100769","address":"QABOOLA ROAD NIAZ CLINIC&MATERNITY"},{"name":"DR MUHAMMAD ARSLAN RASHID","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"103000000100779","address":"DUA HOSPITAL MARLA CHOWK 31101-5406996-7 Muhammad Arslan Rashid G951855-6"},{"name":"NEW AJWA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"103000000100803","address":"SHOP #77 QABOOLA BAZAR 36401-1629642-9 BASIT KHAN I584146-1"},{"name":"JABBAR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621045","address":"KUMARIAN WALA CHOWK"},{"name":"ZAFAR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621101","address":"THANA BAZAR ARIFWALA"},{"name":"DR ASIF JALEES PHARMACY","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621230","address":"QABOLA ROAD ARIFWALA"},{"name":"ELLAHI BUKSH MEDICINE POINT","area":"Arifwala","territory":"","type":"Medical Stores","code":"621246","address":"QABULA BAZAR ARIFWALA"},{"name":"DR AMEER HAYDER","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621437","address":"QABULA ROAD ARIFWALA"},{"name":"UMAIR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621548","address":"MAIN BAZAR QABULA"},{"name":"DR EJAZ QUTAB","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621583","address":"RHC ROAD KAMIE"},{"name":"SHOUKAT MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621642","address":"KAMIR"},{"name":"WALEED MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621658","address":"KAMYARAN WALA CHOWK"},{"name":"AJWA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621667","address":"ARIFWALA"},{"name":"AL MADINA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621700","address":"QABOOLA"},{"name":"DUA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621745","address":"SHOP#1 GO PETROLEUM SERVICE QABOOLA"},{"name":"SIDRA SALEH","area":"Arifwala","territory":"","type":"Medical Stores","code":"621806","address":"MAIN BAZAR QABULA"},{"name":"AL HAMD MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621921","address":"THANA BAZAR ARIFWALA"},{"name":"DOCTORS MEDICARE CENTER","area":"Arifwala","territory":"","type":"Medical Stores","code":"621935","address":"GHULAM MUHAMMAD TOWN ARIFWALA"},{"name":"AL BASHIR MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"621947","address":"SHOP#132/EB ADDA 34/EB"},{"name":"DR SATTAR SHEIKH","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"621976","address":"SBM ACCOUNT ARIFWALA"},{"name":"ALI MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622056","address":"SHOP#2 MAIN QABOOLA ROAD M BLOCK ARIFWALA 9372294-0"},{"name":"SAFI MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622140","address":"ShopNo. 1, Qaboola Road Near THQ"},{"name":"AHAD MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"622150","address":"SHOP#75-F QABOOLA BAZAR"},{"name":"SHABBIR & SONS PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"622163","address":"Shop#4,Pakpattan Road Chowk Purana Thana"},{"name":"DR MOHSIN ALI JAMMU","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622169","address":"LAHORE MEDICAL COMPLEX QABOOLA SHARIF"},{"name":"DR NABEELA ARSHAD","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622177","address":"THANA BAZAR ARIFWALA"},{"name":"DR NAJMA","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622178","address":"QABOOLA ROAD ARIFWALA"},{"name":"DR MANSOOR AHMED","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622183","address":"70-J BLOCK NEAR GIRLS HIGH SCHOOL"},{"name":"HAYYAAL AL FALAH MEDICAL STOR","area":"Arifwala","territory":"","type":"Medical Stores","code":"622195","address":"Abadat Ali Market, Shop#01 Sadar Bazar Kameer, Near Municipal Committee"},{"name":"DR AYESHA AKRAM JAFFRY","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622261","address":"GULSHAN-E-IQBAL COLONY NEAR DR NAZEER SIAL CLINIC QABOOLA ROAD"},{"name":"DR SHAHID IQBAL BHUTTA","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622284","address":"SAKHI SURGICAL CLINIC & MATERNITY HOME QABOOLA ROAD"},{"name":"DR ANSAR YOUSAF JOYIA","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"622291","address":"QABOOLA ROAD GULSHAN IQBAL COLONY"},{"name":"ABBASS MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62346","address":"PAKPATTAN ROAD"},{"name":"JAMHORIYA MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62370","address":"KARKHANA BAZAR"},{"name":"AL REHMAN MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62378","address":"THQ HOSPITAL"},{"name":"KHALID MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62615","address":"MAIN BAZAR KAMIR"},{"name":"MAKKAH MEDICAL STORE","area":"Arifwala","territory":"","type":"Medical Stores","code":"62658","address":"MAIN BAZAR KAMIR"},{"name":"Shehroz medical store","area":"Arifwala","territory":"","type":"Medical Stores","code":"62706","address":"near railway phatak"},{"name":"CITY PHARMACY","area":"Arifwala","territory":"","type":"Pharmacy Store","code":"62785","address":"QABOOLA BAZAR"},{"name":"DR TANVEER AHMAD SHEIKH","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"62812","address":"BANK BAZAR KAMIR"},{"name":"DR TALLAL AHMED LOHDI","area":"Arifwala","territory":"","type":"Doctor Pharmacy","code":"103000000100713","address":"AL ABBAS ORTHO CARE BUREWALA"},{"name":"DR MUHAMMAD SADAT NAWAZ KHAN","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"621038","address":"CHOWK BLOCK NO 16. CHICHAWATNI. 7197912-0"},{"name":"ADNAN PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621049","address":"MAIN ROAD ADDA KHOI.CHAK#177/9-L 5388000-6"},{"name":"NEW GILLANI MEDIAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621077","address":"ADDA DAD FATIYANA. 4263458-0"},{"name":"AKBAR SUPER PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621082","address":"MALL MANDI RAOD 3650445-9"},{"name":"ZAIN MEDICAL STORE,","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621157","address":"BUREWALA ROAD IQBAL NAGAR 36501-7851040-1 M.IMRAN 4937576-1"},{"name":"TAHIR MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621167","address":"ADDA MIRDAD MUAFI. 3767833-7"},{"name":"DR YOUNAS PHARMACY","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"621215","address":"GRAIN MARKET KASSOWAL. 36501-7225099-1 DR.MUHAMMAD YOUNIS 0460533-7"},{"name":"BISMILLAH MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621302","address":"KAMBOH CHOWK 46811661"},{"name":"CHISHTIA PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621336","address":"ADDA BOOTI PAL SHOP#9 NEAR AL REHMAT"},{"name":"SARDAR MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621356","address":"SHOP#17 NEAR UNIQUE PUBLIC SCHOOL36501-3691638-3"},{"name":"CARE PLUS PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621386","address":"shop#1 block #7street#1near kasoori hotel 36501-5283798-1 USMAN AFZAL 7547958-0"},{"name":"URBAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621449","address":"KHAWAT#1534 KHATOONI#1536 OPP GOVT GIRLS SCHOOL 7482824-8"},{"name":"BIN ASHRAF PHARMACY NO.2","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621450","address":"Block no.16Near Cresent Girls College. 36501-6419945-9 M.ARSLAN CHISHTI 7972946-8"},{"name":"DR MASOOD UR REHMAN","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"621452","address":"MASOOD CHILDREN & SKIN CARE CLINIC 7353488-2"},{"name":"AL SHIFA PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621515","address":"SHOP#01CORNER BLOCK#7 KAMBOH CHOWK . 3106706-9"},{"name":"AL SHIFA DRUG HOUSE PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62154","address":"NEAR THQ HOSPITALOKANWALA ROAD. 5344586-8"},{"name":"AL ABBAS PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62155","address":"SHOP# 3 COLLEGE ROAD MADINA CHOWK 4914606-8"},{"name":"AL QADIR PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62157","address":"DR.FAROOQ SHAHEED CHOWK,BLOCK NO.16. 3536675-3"},{"name":"SOOD UR REHMAN","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621582","address":"MASOOD CHILDREN SKIN CARE CLINIC 7353488-2"},{"name":"BIN ASHRAF PHARMACY NO.1","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62159","address":"Block No.11'Naya Bazar,Tehsil Chichawatni 36501-6438090-9 AHMAD RAZA CHISHTI 5026127-5"},{"name":"BABAR MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62162","address":"POST OFFICE ROAD 36501-1885084-3 M. SARWAR JAVED 1107748-4"},{"name":"BILAL MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62163","address":"H.NO.66,ISLAM PURA GIRLS COLLEGE ROAD. 2639573-8"},{"name":"Healthzone Pharmacy","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621648","address":"Shop#1Nawaz Market NearBukhari Electronics GTRoadHarapp 8323226-8"},{"name":"CHOUDHARI PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62166","address":"SHOP#25 OKANWALA ROAD THQ HOSPITAL 3672688-5"},{"name":"HEALTH CARE PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621662","address":"PEER DARS CHOWK NEAR GHANTA GHAR 3995464-1"},{"name":"IMRAN ASHRAF PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621686","address":"STABLE ROAD KASSOWAL 5390042-5"},{"name":"ZAIN PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621696","address":"SHOP NO BLOCK NO 02 EXCHANGE ROAD CHICHAWATNI 2855000-5"},{"name":"EHSAS PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621734","address":"Khewat136Near UBLbankKasowal RoadOkanwala"},{"name":"BISMILLAH 2 MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621747","address":"Shop No. 11,12 College Road Near Unique Public"},{"name":"PUNJAB PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621764","address":"HOUSE#2086.BL16 NEAR GIRLS DEGREE COLLEGE A351757-1"},{"name":"RAFIQ PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621772","address":"SHOP#1778 FAROOQ SHAHEED CHOWK 36501-0501570-1 HAFIZ M KASHIF RAFIQ 8030837-2"},{"name":"FAHAD MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62179","address":"STREET#6 BLOCK#1 6474546-0"},{"name":"FATIMA MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62180","address":"HOUSING COLINY 3537980-4"},{"name":"FAZAL MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62181","address":"OKANWALA ROAD SHOP#9 INFRONT GREEN"},{"name":"DR ABDUL AZIZ MUSLIM","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"621818","address":"NAZD BATA SHOP MILLAT CLINIC 0465053-7"},{"name":"CITY MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621819","address":"OKANWALA ROAD KASOWAL. 36501-9084969-3 MUHAMMAD SAEED IQBAL 7464272-5"},{"name":"DR MURATIB ALI PHARMACY","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"621839","address":"1872792-1"},{"name":"FAMILY CARE PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621848","address":"SHOP#1189 BLOCK#7 STREET# 6 NEAR KAMBO CHOWK CHICHAWATNI 2369032-1"},{"name":"MADINA MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62185","address":"REHMANI ROAD CHICHAWATNI. 0464602-9"},{"name":"MUSLIM MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62189","address":"OKANWALA ROAD 219906-8"},{"name":"NEW PUNJAB MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621895","address":"KASOWAL 5165476-7"},{"name":"THE CARE PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621897","address":"Irshad Ahmed Market, Shop#02,Oppo Allied Bank,Council"},{"name":"ABDULLAH PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621898","address":"Shop No. A25 Major Market Near Al Habib Bank"},{"name":"NEW LIFE MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62191","address":"SHOP NO 18 POST OFFICE ROAD 3120182-2"},{"name":"INSAF PLUS PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621916","address":"SHOP#08 ABUBAKAR PLAZA TRIKHNI ROAD GHAZIABAD CHICHAWATNI E770173-7"},{"name":"MEDICARE PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621920","address":"NearBabaHamidAli KhaadStore Chichawatni A060753-3"},{"name":"USMAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621946","address":"MALL MANDI ROAD 4967661-8"},{"name":"DOCTOR PLUS PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621961","address":"SHOP/1954 BLOCK/13 HOUSING COLONY ROAD CHICHAWATNI 6084206-8"},{"name":"AL MADINA MEDICOSE","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621966","address":"SHOP#11 ADDA DAD FATYANA 35202-9629653-3 FARMAN ALI 4575779-1"},{"name":"RAZA PHARMACY&SURGICAL STORE","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621968","address":"HARAPPA STATION 9983774-2"},{"name":"SEHAT PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621973","address":"BLOCK NO 11 NEW KAMBOH CHOWK CHICHAWATNI 9587026-1"},{"name":"SHAREEF MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62199","address":"COLLEGE ROAD 2654855-7"},{"name":"KHAN PHARMACY&SURGICAL STORE","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621992","address":"SHOP#6'07 NAIWALA ROAD SHALIMAR TOWN E200056-4"},{"name":"HAQ BAHOO MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621998","address":"ST# 1 BLOCK 17 9376780-4"},{"name":"AZAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622006","address":"ADD DAD FATYANA CHICHAWATNI 36501-5692356-9 SHAHID IQBAL 4746719-7"},{"name":"DR AMJAD MEHMOOD","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622014","address":"LIFE CARE CLINIC 3563225-9"},{"name":"SHAN LIAQAT PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622050","address":"MADINA CHOWK COLLEGE ROAD SHOP NO 5 5457729-3"},{"name":"DR HINA MUBEEN","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622052","address":"7401142-1"},{"name":"BIN NAZEER PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622055","address":"KHEWAT#101/100 KHATONI #287 HUSSAIN CHOWK ADDA KHUI 176/9-L 2790964-6"},{"name":"HAFIZ PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622059","address":"SHOP#2 18 WALA MORE NEAR QADRIYA KARYANA STORE 6845694-0"},{"name":"AL NOOR PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622061","address":"SHOP#8,9,10 COLLEGE ROAD NEAR ILLYAS M/S 39 CHUNGI 3120182-2"},{"name":"M ALI MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622064","address":"SHOP NO 6 REHMAT HOSPITAL CHICHAWATNI"},{"name":"NAFEES PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622094","address":"Shop# 1Near Faisal Bank Farooq Shaheed RoadBlock #11Kamboh Chowk. A874067-5"},{"name":"ZAHID HANIF CARE HOSPITAL","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622118","address":"5442488-8"},{"name":"DR ZARINA KOUSAR","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622136","address":"CHICHAWATNI A966129-6"},{"name":"DR MUSARRAT BANO","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622139","address":"ALI HOSPITAL BLOCK NO.15 NEAR GOVT CRESCENT COLLAGE 7138556-8"},{"name":"NEW RAFIQ PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622145","address":"KHATONI NO 5 TO 10 ADDA GHAZIABAD. 36501-1780705-5 KASHIF RAFIQ 7166443-4"},{"name":"DR ASIM WAQAR SH","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622146","address":"CLINIC, STREET # 1 ,3 MARLA SCHEME, CHICHAWATNI, Sahiwal 3656072-3"},{"name":"DOCTORS PHARMACY","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622155","address":"SHOP#176'75'39'39GULSHAN REHMAN TRIKHNI ROAD. 4973309-8"},{"name":"DR SAAD PHARMACY","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622157","address":"CRESCENT COLLEGE RD B. NO14 LGS SCHOOL E417332-2"},{"name":"CARE PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622167","address":"SHOP NO A-17 GT ROAD KASSOWAL 4043448-6"},{"name":"DR WAJEEH UL HASNAIN","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622175","address":"BLOCK #01 STREET#06 36501-2095986-7 wajeeh ul hasnain 5442488-8"},{"name":"RASHID MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622179","address":"KHEWATNO.31KHATONI#90 TO 93 ADDA GHAZIA ABAD 5455192-4"},{"name":"ABDUL SATTAR MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622203","address":"SHOP#01 NEAR MASJID QUDOOS AHL E HADEES"},{"name":"MANJ MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622206","address":"GT ROAD NEAR AL JANNAT SWEETS 3008725-2"},{"name":"AHSAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622207","address":"ADDA GHAZIA ABAD TEHSIL CHICHAWATNI"},{"name":"RAFIQ SONS PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622223","address":"SHOP NO.29 NEAR THQ HOSPITAL GATE NO 1 E683242-7"},{"name":"DR HAFIZ MUHAMMAD ISHFAQ","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622247","address":"BISMILLAH GARDEN NEAR NADRA OFFICE F645841-1"},{"name":"AL SYED MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622253","address":"SHOP#02 COUNCIL MORE NEAR JAMIA MASJID 3650273459717"},{"name":"AL BILAL MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622264","address":"11 more old chichawatni . C364912-7"},{"name":"ZIKARULLAH MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622272","address":"KHATA NO 58/52 MAIN ROAD 39/12L 36501-1847699-1 ZIKRULLAH M/S C363995-8"},{"name":"AL GHAFOOR PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622275","address":"SHOP#20 NEAR HBL BANK CHAK#21/1-L 36501-7825643-9 ASIF NAEEM 7605746-8"},{"name":"MATLOOB MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622281","address":"CHAK#99/6-R ADDA BOTIPAL 3650213660385"},{"name":"DR BADAR MUNIR","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622297","address":"36501-2725194-3 BADAR MUNIR 8391858-6"},{"name":"MEHRIA NASEERIA MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622302","address":"IQBAL NAGAR 36104-3382027-1 TAHIR NOOR 3960659-7"},{"name":"DR FAKHAR SHAH PHARMACY","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622303","address":"IQBAL NAGAR"},{"name":"DR ALI ARSLAN DHILLON","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622315","address":"ZUBAIDA AMIN HOSPITAL GRILS COLLEGE ROAD 5137058-2"},{"name":"CITY HEALTH PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622317","address":"SHOP#01 RAVI CHOWK NEAR 3 STAR ELECTRONICS 3650267898979"},{"name":"NEW BILAL MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622318","address":"Shop#22 Near Al Ghani Chowk Opposite Al rahmat Hospital 3650124970697"},{"name":"ARSLAN PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622319","address":"Shop No. 01, Block No. 13 Girls College Road"},{"name":"DR GHULAM SARWAR","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622331","address":"KHAWAR BASHEER HOSPITAL JINNAH TOWN PHASE -1 8591742-1"},{"name":"FAROOQUI MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622337","address":"Shop#15, Near Govt Girls High School Main Road Chak#39/12-L, 6507916-7"},{"name":"DR HAFIZ ZAHEER UD DIN BABAR","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622338","address":"HAYATABAD STREET#13 BHALLI ROAD 7846121-2"},{"name":"SHAKEEL MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62503","address":"HARAPPA CITY 3381210-1"},{"name":"DR BASIL KAMRAN","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"62510","address":"BYE PASS BUREWALA ROAD CH MEDICAL STORE 4194230-2"},{"name":"MAKKAH MEDICAL SOTRE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62527","address":"MAIN BAZAR HARAPPA 2696246-2"},{"name":"RAJPOOT MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62545","address":"SHOP#1NEAR UBL'SADAR BAZAR HARRPA"},{"name":"SHAFA MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62560","address":"OUTSIDE THQ HOSPITAL 5344586-8"},{"name":"SHAHID RAFIQUE PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62586","address":"GT ROAD KASSOWAL 36501-2876280-5 ARSHAD MEHMOOD 2294350-1"},{"name":"NEW GANJ SHAKAR MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62644","address":"GALLA MANDI KASSOWAL. 36501-3502617-7 GHULAM FAROOQ BILAL CHISHTI A337340-2"},{"name":"ADNAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62653","address":"SHOP#1 NEAR ANWAR FARID BAKERY JANNAT BAZAR 2292407-8"},{"name":"NEW BABAR MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62654","address":"GHAZIABAD. 36501-8579093-5 MUHAMAMD IRFAN RIAZ 3206428-4"},{"name":"WAQAR PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62682","address":"MAIN BAZAR CHICHAWATNI. 3526038-6"},{"name":"CHISHTI DRUG HOUSE 11MORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62683","address":"111/7.R OLD CHICHAWATNI. 3678741-8"},{"name":"AL USMAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62809","address":"Chishti Chowk, Karmalia Road, 3666113-9"},{"name":"REHMANIYA PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62887","address":"BY PASS 3257202-6"},{"name":"SIDDIQUE MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62943","address":"BY PASS ADDA B141239-2"},{"name":"DR ABDUL WAHEED","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100718","address":"BLOCK 15 NEAR GIRLS COLLEGE 36501-2788130-7 ABDUL WAHEED 0462419-0"},{"name":"DOCTOR PLUS MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100720","address":"NOSHAHI MARKET SHOP#1 NEAR SHAH GEE"},{"name":"HAYAT PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"103000000100727","address":"SHOPP NO 2117 BLOCK NO 16 CRESCENT36501-1873572-9"},{"name":"BIN ISMAIL MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100728","address":"NAI WALA ROAD ADDA CHOWK MALAN SHAH"},{"name":"DR UMAR SUHAIB AKBAR","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100731","address":"MIAN MEDICAL COMPLEX BLOCK # 15 FAROOQ"},{"name":"DR BABAR SHAHZAD","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100732","address":"BYPASS ADDA IQBAL NAGAR 7/14-L KHATONI#430"},{"name":"SHAREEF PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"103000000100743","address":"Ada 17 Mor, Chak No. 17/14-L, Tehsil Chichawatni,"},{"name":"USAMA MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100755","address":"KHEWAT NO.125 SHOP NO.1 MAIN MAIN ROAD"},{"name":"DR SHAZIA ZUBAIR","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100756","address":"36501-7087012-8 DR SHAZIA ZUBAIR 1453982-9"},{"name":"DR HUMA BASHIR","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100762","address":"KHAWAR BASHIR HOSPITAL 6925517-8"},{"name":"BIN FAZAL MEDICINES & VETERINARY STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100778","address":"SHOP#4 Dad Fatiyana Near Jilandhar Bakers,"},{"name":"DR AHMED NAWAZ","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100785","address":"AL SHIFA MATERNITY HOME 18 MOR 36501-3474832-7 ASAD MAQBOOL E258263-8"},{"name":"DR UMAIR SADIQ CHAUDHARY","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100786","address":"SUBEDAR GHULAM HAIDER HOSPITAL. 36501-0334543-5 UMAIR SADIQ F027250-7"},{"name":"USMANIA MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100792","address":"MAIN BUS STOP BYPASS ROAD IQBAL NAGAR"},{"name":"AYYAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100793","address":"JINNAH TOWN NAI WAL ROAD 36502-2042070-5 NUMAN RAZA C366184-1"},{"name":"AL BADAR MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100794","address":"SHOP#1 INSIDE AL BADAR SURGICAL HOSPITAL"},{"name":"PAK MADINA MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100796","address":"SHOP#13NEAR NAYA SWERA SHOP 36501-1228234-7 RAFAQAT ALI F897376-4"},{"name":"BIN SHAMS PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"103000000100799","address":"SHOP#7 CHAK# 177-9L HUSSAIN CHOWK 36501-3833021-7 INAM UL HAQ C361461-3"},{"name":"ISHAQ MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100805","address":"House number 10 Main Chowk Near Markazi36501-3743468-5"},{"name":"DR UMAR SHAHZAD","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100808","address":"LIFE CARE CLINIC OKANWALA ROAD, NEAR"},{"name":"SUBHAN PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621028","address":"NAI WALA ROAD HARAPPA STATION"},{"name":"NEW RAJPOOT MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621297","address":"ADDA DADFATIYANA"},{"name":"MAKKAH MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621311","address":"KAMBOH CHOWK CHICHAWATNI"},{"name":"CHISHTI MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621321","address":"GHAZI ABAD"},{"name":"PAKISTAN MEDICAL STOTE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621335","address":"CHOWK UMAR E FAROOQ"},{"name":"ABDULLAH MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621361","address":"138-9/L HARRAPA"},{"name":"DR ABDUL AZIZ","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"621494","address":"BLOCK NO 2 STREET NO 1 NAZD FAHAD M/S"},{"name":"ALI MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62156","address":"GIRLS COLLEGE ROAD"},{"name":"CHOUDHARY MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621610","address":"CHAK NO 45/12L CHICHAWATNI"},{"name":"RABIA METERNITY HOME","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621630","address":"11 MORE OLD CHICHAWATNI"},{"name":"DR SHOUKAT HUSSAIN ANJUM","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"621653","address":"KASOWAL IQBAL NAGAR"},{"name":"AL MADINA MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621672","address":"OKANAWAL ROAD"},{"name":"SADDIQUE SURGICAL CENTER","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621695","address":"HARAPPA STATION"},{"name":"SHAKIR MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621863","address":"SHOP#9 KHATA#89KHATONI#262 NEAR WAPDA OFFICE HAQ BAHO CHOWK"},{"name":"MAKKAH MEDICOSE","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"621894","address":"39/12L CHICHAWATNI"},{"name":"PUNJAB MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62194","address":"OKANWALA ROAD"},{"name":"REHMAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621958","address":"HARAPPA STATION"},{"name":"SAKHAWAT SONS MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"621969","address":"HARAPPA STATION"},{"name":"SHAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62198","address":"BUREWALA ROAD"},{"name":"NEW SUBHAN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622009","address":"SHOP#3 NEAR MASJID AL REHMAT SHALIMAR TOWN HARAPPA STATION"},{"name":"UNITED PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62201","address":"KAMBOH CHOWK BRANCH-1"},{"name":"DR NAVEED REHMANI","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622030","address":"CHICHAWATNI"},{"name":"BHATTI MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622159","address":"NEW RAJPOOT M/S HARAPPA"},{"name":"DR SARMAD","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622164","address":"HARAPPA NEAR BHATTI M/S"},{"name":"DR TAHIR SIRAJ","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622191","address":"AL KHIDMAT LABORATORY HARAPPA"},{"name":"TANVEER MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622202","address":"MIRDAD MAFI"},{"name":"GILLANI MEDICAL TORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622208","address":"SHOP NO 2 NEAR MCB BANK THAN ROAD"},{"name":"ITEFAQ MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622211","address":"ABADI HARSPA"},{"name":"AL KHIDMAT PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"622289","address":"HARRPA STATION"},{"name":"DR YASIR SAEED","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622299","address":"GUJJAR CHOWK CHICHAWATNI"},{"name":"DR JAVAID GILL","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"622300","address":"OKANWALA ROAD"},{"name":"ARSHAD MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"622310","address":"IQBAL NAGAR"},{"name":"RAHAT SURGICAL HOSPITAL","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62508","address":"STADIUM ROAD"},{"name":"DR AKRAM JAVAID","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"62521","address":"HARAPPA STATION"},{"name":"ZAIN MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62570","address":"HARAPPA CITY"},{"name":"MADINA PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62583","address":"HARAPPA STATION"},{"name":"BISMIL MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62705","address":"HAYAT ABAD ROAD CHICHAWATNI"},{"name":"TAJ MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62773","address":"OLD CHICHAWATNI"},{"name":"AKAASH MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62784","address":"157-9.L NAIWALA BANGLA"},{"name":"SADAAT MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62818","address":"NAIWALA Bangla"},{"name":"FAISAL MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62846","address":"MAIN BAZAR CHICHAWATNI"},{"name":"ZAIN HAIDER MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"62939","address":"BEGUM SHEHNAZ ROAD CHICHAWATNI"},{"name":"DR NAEEM SADDIQUI SUR. HOSP","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"62958","address":"HOUSING COLONY CHICHAWATNI"},{"name":"ASAD MEDICAL STORE","area":"Chichawatni","territory":"","type":"Medical Stores","code":"103000000100725","address":"SHOP# 01 CHAK NO. 118/12L MOR NEAR MADRISA"},{"name":"DR TAHIR FAROOQ","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100787","address":"CAMBOH CHOWK"},{"name":"DR SHAHID RASOOL","area":"Chichawatni","territory":"","type":"Doctor Pharmacy","code":"103000000100809","address":"BRIGADIER SHABEER KAYANI HOSPITAL"},{"name":"SARWAR FOUNDATION PHARMACY","area":"Chichawatni","territory":"","type":"Pharmacy Store","code":"62610","address":"RAI ALI NAWAZ HOSPITAL GT ROAD 2285738-9"},{"name":"SALMAN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621","address":"GROUND FLOOR 105 HIGH STREET SADAR CHOWK 0459063-5"},{"name":"KOH I NOOR PHARMA PLUS PHARMAC","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6210","address":"HIGH STREET 2990500-1"},{"name":"DR ABDUL RAOUF CHOUDHARY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621013","address":"ARIFWALA ROAD SAHIWAL. 4857917-1"},{"name":"DR MUNIR AHMED PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621023","address":"SIR SYED ROAD 4032428-1"},{"name":"RAHEEM PHARMA PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"62107","address":"FARID TOWN 2293515-7"},{"name":"MAKKI MADNI MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6211","address":"HIGH STREET 36502-1393309-7 RENEWEL 2176236-8"},{"name":"AL MANSOOR PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621136","address":"SIR SYED ROAD. 1745585-5"},{"name":"DR ANWAAR UL HAQ SH. PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621172","address":"FATEHSHER ROAD SAHIWAL. 4793177-7"},{"name":"USMAN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621186","address":"Yawar Aleem MarkShop No.4 Opposite Rehman"},{"name":"RH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621193","address":"PARKING AREA MAIN MARKET COLLEGE CHOWK"},{"name":"NISHTER PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6212","address":"HIGH STREET 3700109-4"},{"name":"MAKKAH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"62126","address":"ShopNo.309 Karyana Bazar Ghalla Mandi 1139212-6"},{"name":"REHMAN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62127","address":"GHALLAH MANDI 2483322-3"},{"name":"PAK MEDICOSE SURGICAL PLUS","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6213","address":"SHOP#6 JIINAH SHOPPING CENTER HIGHT STREET 3638122-5"},{"name":"WAHEED PHARMA","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621308","address":"SHOP#03 DR.DAWOOD CHOWK KARBLA ROAD 3650295723627"},{"name":"HIGH STREET PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621354","address":"OPPOSITE MASJID ANWARIA HIGH STREET. 0150979-9"},{"name":"AL GHAZI MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62136","address":"FRIENDS CINEMA ROAD 4648200-2"},{"name":"KB PHARMACY, FAZAL DIN P.PLUS","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621363","address":"171- B-I HIGH STREET SAHIWAL. 3913891-7"},{"name":"CHISHTIA MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62137","address":"FRIENDS CINEMA ROAD 3914585-9"},{"name":"CARE SITE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6214","address":"HIGH STREET 2978740-8"},{"name":"HASSAN PHARMA PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"62141","address":"MUGHAL MARKET SHOP#11&12 OPPO MADINA PLAZA CANAL VIEW TOWN PAKPATTAN CHOWK3352457-2"},{"name":"DR SAMIULLAH PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621446","address":"DHQ ROAD NEAR QURESHI HOSPITAL. 3490264-3"},{"name":"CHRISTIAN HOSPITAL","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621471","address":"THE NANCY FULWOOD HOSPITAL SOCIETY"},{"name":"GREEN PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621475","address":"127/ B - 1, HIGH STREET SAHIWAL. 2277198-7"},{"name":"PHARMAZONE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6215","address":"CENTRAL PLAZA HIGH STREET 3676297-7"},{"name":"THE MEDICINE SHOP","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621500","address":"SHOP#16 QUAID E AZAM MARKET HIGH STREET 5078331-0"},{"name":"CITY PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621521","address":"OPPPSITE DHQ TEACHING HOSPITAL 5722913-6"},{"name":"AK PHARMA PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621539","address":"SHOPNO:275B-I,COMMERCIAL SHOP GROUND FLOOR 3780581-9"},{"name":"MR.CHEMIST PLUS MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621571","address":"DAWOOD CHOWK SHAMI ROAD SAHIWA 2020700-0"},{"name":"DR KAMRAN SHOUKAT","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621573","address":"NEAR MOHSIN WOMIC HOSPITAL 9958506-6"},{"name":"CARE ZONE MEDICINE SHOP","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621591","address":"TUFAIL SHAHEED ROAD C370542-3"},{"name":"AL HAFIZ PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621592","address":"SHOP#19 OPPO DHQ TEACHING HOSPITAL"},{"name":"MADINA MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621596","address":"SHOP#275-B VI'KARYANA BAZAR . 1139215-7"},{"name":"SAEED PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6216","address":"KHEWAT#2710 KHATONI#2724 CHOWK SABAZ MANDI 4160167-0"},{"name":"FAHAD MEDICAL SATORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621618","address":"MOHALLA NOOR PARK SAHIWAL 6922651-4"},{"name":"NISHTER + PHARMACY & SURGICAL","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621620","address":"GROUND FLOOR QADRIPLAZA NEAR BANK AL HABIB OPPO TEACHING HOSPITAL F286475-5"},{"name":"HEALTH CARE PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621625","address":"13Q MARKET FARID TOWN, DISTRICTSAHIWAL 3526286-9"},{"name":"M.M. MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621646","address":"86/ 6R. SAHIWAL. C368203-4"},{"name":"DR FAIQ ABDULLAH PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621652","address":"SIR SYED ROAD 5013797-5"},{"name":"DR SAJJAD HUSSAIN SABIR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621655","address":"FATEH SHER NEAR DUPILEX BEUTI PARLOUR 3668639-5"},{"name":"I CARE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621659","address":"SHOP NO 13.14 FAZAL AVENUE MAIN MADHALI"},{"name":"NOOR PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621660","address":"LIAQAT ROAD METERNITY HOPITAL SAHIWAL 6528753-0"},{"name":"NAHDI PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621669","address":"KARBALA ROAD SAHIWAL 36502-8179421-3 HAFIZ M.MUDASSAR 6097222-1"},{"name":"HEALTH PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621726","address":"TUFAIL SHAHEED ROAD SAHIWAL 4462612-3"},{"name":"OMEDICOSE SURGICAL PLUS","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621727","address":"SHOP NO.6,HIGH STREET. 3638122-5"},{"name":"NAJMI PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621737","address":"SHOP NO 52 TANKI CHOWK HIGH STREET SAHIWAL 8207228-2"},{"name":"USMAN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621739","address":"FAREED TOWN HOUSE#393 4841406-5"},{"name":"CHAND PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621742","address":"SHOP #3&4 W BLOCK TARIQ BIN ZIYAD COLONY STREET#2 8383495-4"},{"name":"AL SAFWA PHARMACY (SERVAID)","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621756","address":"SHOP NO 271/B11 HIGH STREET SAHIWAL 4899075-6"},{"name":"CARE HEALTH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621786","address":"FATEH SHER ROAD. 4494376-1"},{"name":"LIFE LINE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621789","address":"Khewat No. 550, Khatoni No. 569, Basti Meran"},{"name":"HASAN PHARMACY FAZAL DIN PHAR","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621793","address":"ADEEL PLAZA KOT FAREED KHAN NOOR SHAH ROAD DHQ SAHIWAL 2384304-7"},{"name":"WELLBEING PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621798","address":"159-B-1 HALI ROAD GOAL CHAKAR SAHIWAL A601650-0"},{"name":"SHIFA PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621805","address":"Plaza No.06,College Chowk Farid Town Sahiwal. 8541591-7"},{"name":"NEW PUBLIX PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621810","address":"SHOP#1A PL#8E SCHEME#2 COLLEGE CHOWK"},{"name":"DR MOHSIN WOMIC PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621814","address":"SAHIWAL 2241428-2"},{"name":"GHAZI MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621831","address":"BILAL COLONY GUNBAD-E-KHIZRA MOSQUE 4775830-3"},{"name":"ALLIED+ PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621843","address":"SHOP # 402 B-II HIGH STREET SAHIWAL 36502-5758640-3 M. ADEEL IFTIKHAR 8492176-2"},{"name":"ALI MEDICOSE","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621853","address":"SHOP NO 4 PULL BAZAR. 4386827-4"},{"name":"MED AND CURE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621861","address":"KHEWAT#692 KHATONI#407 HIGH STREET36502-2385691-3 muhammad soban 8158589-8"},{"name":"GALAXY PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621862","address":"SHOP NO 269 HIGH STREET SAHIWAL 4888257-6"},{"name":"DR HAFIZ JAVAID ARSHAD","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621864","address":"GHALLA MANDI 3682180-2"},{"name":"PHARMA CHOICE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621877","address":"SHOP NO 08 AL RAZZAQ EXECUTIVE BLOCK"},{"name":"REHAN MEDICINE SHOP","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621883","address":"ST#2 MOHALLA NOOR PARK SAHIWAL. C381414-3"},{"name":"SHAFIQUE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621892","address":"SHOP#1 TUFAIL SHAHEED ROAD 9492436-1"},{"name":"MUGHAL MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621905","address":"JAIL ROAD SAHIWAL RENWEAL 1107302-7"},{"name":"MERCURY PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621913","address":"Ground Floor,SituatedTabraiz Plaza, Main Noor Shah Road NearRasheed Memorial H E280812-3"},{"name":"K.K PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621915","address":"DHQ SAHIWAL 2752703-4"},{"name":"CARE HOSPITAL PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621917","address":"SIR SYED ROAD SAHIWAL 3650213332603"},{"name":"DR ASIF ASHRAF PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621918","address":"MAZDOOR PULI SAHIWAL 2296423-1"},{"name":"PUNJAB PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621924","address":"GROUND FLOOR NASEEM PLAZAZ. OPP DHQ SAHIWAL 4627146-8"},{"name":"SHAH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621927","address":"CHOWK PAKPATTAN SAHIWAL 8528385-4"},{"name":"AL ASAR PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621931","address":"HOUSE#607 PARNAMI MOHALLA SAHIWAL 4828435-3"},{"name":"KING PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621933","address":"SHOP 10/Z MAIN 60 FEET ROAD TARIQ BIN ZIYAD COLONY 4468203-5"},{"name":"BISMILLAH MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621941","address":"CHAK NO 134/9L. 4363602-7"},{"name":"FAZAL PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621942","address":"Shop Situated at Langriyal Surgimed Hospital36501-1771022-5"},{"name":"YASEEN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621955","address":"KHEWAT#85 KHATONI#5 NEAR MASHID GULZAR-E-MADINA"},{"name":"SHAKEEL PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621962","address":"SHOP#8 JINAH SHOPING CENTER HIGH STREET 4484348-4"},{"name":"DR AMMAD NAZIR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621964","address":"NEAR PILOT SCHOOL 4051562-1"},{"name":"SUPER PHARMACY&SURGICAL CENTER","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621965","address":"OPPOSITE DHQ HOSPITAL C728894-2"},{"name":"MG PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621982","address":"85-Y ALSAIF MARKET TARIQ BIN ZIAD COLONY 5305221-0"},{"name":"KAUSAR PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622","address":"JINNAH ROAD HIGH STREET 3090182-7"},{"name":"A PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622000","address":"OPP SAHIWAL INTERNATIONAL HOSPITAL MONTGPMERY 4886546-5"},{"name":"MAXCURE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622007","address":"t Scheme No. 3, Shop No. 326/W Block, Near36502-5997045-5"},{"name":"PAKISTAN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622008","address":"SHOP#4 NEAR MCB BANK OPP.GATE#3 DHQ A759007-1"},{"name":"AL MADINA MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622021","address":"SHOP#16/X'NEAR FBR OFFICE TARIQ BIN ZYAD COLONY 2881964-7"},{"name":"NEW HASSAN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622023","address":"KHATOONI#1859 GRAIN MARKET MAIN BAZAR . 4517539-3"},{"name":"DR SHAZIA NAZ","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622024","address":"MISSION CHOWK USMAN HOSPITAL DR AMIR AZIZ 7136366-5"},{"name":"KASHIF MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622029","address":"MADHALI ROAD SHADMAN TOWN SAHIWAL 7308347-5"},{"name":"MAZHAR SURGEON PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622034","address":"2444795-1"},{"name":"RAYYAN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622040","address":"NEAR AL MADINA MASJID PARK CHOWK JOHAR TOWN 3650243590203"},{"name":"MSONS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622041","address":"SHOP NO -1 SCHEME NO 2 COLLEGE CHOWK SAHIWAL 4999450-0"},{"name":"FARAZ PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622042","address":"DR MUJAHID HASSAN CLINIC. 4011536-4"},{"name":"IMTIAZ MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622048","address":"IMTIAZ HOSPITAL MALL MANDI CIVIL HOSPITAL ROAD 4231065-2"},{"name":"DOCTOR HOSPITAL","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622049","address":"MAIN GT ROAD JAMIA RASHEEDIA NO 2 MANZOOR COLONY SAHIWAL"},{"name":"AL KAREEM PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622057","address":"SHOP#1 STREET#6 MUSLIM BIN AQEEL COLONY JHALL ROAD 3526156-7"},{"name":"EVERYDAY PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622058","address":"SHOP NO.4 NEAR IDEAL BAKERY SAHIWAL 4854052-6"},{"name":"DR HAFIZ SAAD MASOOD CHISHTI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622071","address":"235-F SHOP#3 FARID TOWN 7851960-0"},{"name":"AL BARKAT PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622074","address":"CORNER COMMERCIAL BUILDING'HIGH STREET MISSION CHOWK 9306109-1"},{"name":"MUSA THE MEDICINE STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622088","address":"235/FSTOPNO3 MAINFARIDTOWNROADSAHIWAL"},{"name":"DR BILAL AHMAD","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622119","address":"OPP.BATALA SCHOOL CRICKET GROUND 35302-9936616-1"},{"name":"DR MUHAMMAD USAMA AKRAM","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622135","address":"NEAR MASJID-E-SHUHADA FARID TOWN 7679793-3"},{"name":"CITYCARE PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622137","address":"INTERNAL PHARNACY SAHIWAL INTERNATIONAL HOSPITAL MONTGOMERY HOME SAHIWAL .4655257-3"},{"name":"ABDULLAH MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622148","address":"Street no 15 Upper Canal Bank Hussain Abad Sahiwal 6978931-7"},{"name":"SAQIB MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622158","address":"9/NEW CIVIL LINES KACHEHRI ROAD TEHSIL"},{"name":"HEALTH CARE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622160","address":"SHOP NO.23 KHALID BALOCH MARKET NEAR"},{"name":"LIFE CARE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622166","address":"PAKPATAN CHOWK 7176346-7"},{"name":"A.H PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622173","address":"SHOP#03A OPP GATE#2 SAHIWAL TEACHING"},{"name":"HEALTH HAVEN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622176","address":"FAHIM SADIQ MARKET SHOP#1 MUHAMMAD"},{"name":"DR SHAHID BAJWA","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622180","address":"BAJWA HEALTH CARE GOL CHAKKAR 4402383-9"},{"name":"DR MOMINA SHEIKH","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622187","address":"GIRLS COLLEGE ROD 5340647-2"},{"name":"CARE PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622190","address":"Zain Market, Shop# 01&02NearFaisal Bank, Adda Mai Wali Masjid, D748755-0"},{"name":"DR IMDAD ALI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622201","address":"MALL MANDI 1672278-7"},{"name":"QADEER SONS MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622209","address":"Touqeer Shah Market, Shop#3 NearKhawka Surgical Hospital,Main Pak Avenue Road E424526-5"},{"name":"BIN LATIF MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622212","address":"SHOP#1 ANAYAT ELAHI COLONY 90 9-L ARIFWALA ROAD 4919927-1"},{"name":"JINNAH MEDICAL COMPLEX","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622214","address":"DR M.RIZWAN GILL NEAR UNIVERSTY OF 36502-8060004-3"},{"name":"DR BUSHRA WASEEM","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622217","address":"HOPE HOSPITAL 34101-2437299-6 BUSHRA PHOOL 3496441-0"},{"name":"DR KHAWAJA HAREEM FAROOQ","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622218","address":"PAK AVENUE COLONY 4136378-7"},{"name":"ANWAR MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622225","address":"SHOP#115 B1 MUHALAH MUSLIM ABAD 36502-9003977-5 FAISAL RAZA 9926994-3"},{"name":"ABID PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622227","address":"Munir Ahmad Market Shop#1opp HBL Bank Tufail Shaheed Road, F724817-2"},{"name":"DR ATIQ AHMAD","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622228","address":"NEAR DECENT BAKERY FAIQA CHILDREN36104-0405192-1"},{"name":"RAFIA BASHIR TRUST","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622236","address":"GIRLS COLLEGE ROAD 36502-5633321-0 AYSHA ASIF 3650256-1"},{"name":"AL HABIB PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622240","address":"Ground floor hall, property #19/A Main Market Infront Park ,Fateh Sher COLONY 3650290211197"},{"name":"PHARMX PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622241","address":"AL REHMAN PLAZA SHOP#12GROUND FLOOR OPPO ILM COLLEGE FATEH SHER ROAD 7531226-8"},{"name":"DR GHULAM HUSAIN","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622242","address":"DEPALPUR BAZAR MAZDOOR PULI SAHIWAL 0463353-9"},{"name":"DR SYED HASNAT AHMED","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622245","address":"OPP.GOVT GRADUATE COLLEGE SUPER MARKET AL GHANI PLAZA OLD IRIS CINEMS 3650290122479"},{"name":"DR BILAL AZIZ","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622250","address":"NATIONAL HOSPITAL POLICE LINE 3074526-8"},{"name":"SHAHID MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622262","address":"SHOP NO 1 P-37 NEAR ZILLA COUNCIL DISPENSARY GARH FATEH 1491505-7"},{"name":"THE HEALTH CARE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622263","address":"Shop#2 oppo Abdul Rehman Model High School, MazdoorPulli Jhall road 2766214-4"},{"name":"AKBAR PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622270","address":"MUHAMMAD SHARIF BLOCK SJ MATERNITY&CHILDREN HOSPITAL LIAQUAR ROAD 1690698-5"},{"name":"SAFDAR MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622271","address":"MAZDOOR PULLI DEPALPUR BAZAR 36502-5193853-1 MUHAMMAD SAFDAR 0456653-0"},{"name":"DANISH MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622277","address":"IQBAL MARKET SHOP#01'NEAR CHAMAN BAGH'PURANIBAKAR MANDI SHAHEEN ROAD 3650231650311"},{"name":"BIN HANIF PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622278","address":"HOUSE No. 128/B-VIII Shami Shaheed Road 3650230500209"},{"name":"SHAFI PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622280","address":"Shop # 02/03, Ground Floor Main Madhali Road, Al Razzaq Villas, F810498-3"},{"name":"AL KAUSAR PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622283","address":"Left Side Lasani Bakers Opp Punjab Boring& Sanitary Store Arif Wala Road 3718389-3"},{"name":"ALMASS MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622285","address":"ADDA PULL BAGRI BURJWALA SAHIWAL B313692-6"},{"name":"ARHAM ATTIQUE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622287","address":"SHAHEEN ROAD MUHAMMAD CHOWK NAI ABADI 3650288717533"},{"name":"ZAHID MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622288","address":"MAIN MARKET FARID TOWN 3650213934667"},{"name":"DR SHAHBAZ KHAN NIAZI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622293","address":"POLICE LINE ROAD 3650246451133"},{"name":"ASMAT PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6223","address":"No.368/B-III, Sharbat Bazar 3650277769747"},{"name":"DR M TAYYAB","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622305","address":"CARE HOSPITAL 3650215815359"},{"name":"HAMARI PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622308","address":"First Floor Plaza No. 22 Super Market Shop#1 Near Apna Bank Sahiwal 3650263553813"},{"name":"PHARMA GO PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622314","address":"SHOP#2 SHAMI SHAHEED ROAD GHAURI 36502-1377935-5"},{"name":"DR M FARHAN AKHTAR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622316","address":"BONGA HAYYAT ROAD ADDA 73/5-L E261974-2"},{"name":"AL SHEIKH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622320","address":"DEPALPUR BAZAR 3650249690285"},{"name":"ASIF MEDICOSE","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622323","address":"SHOP#5 TARIQ BLOCKJAMIA MASJID WALA ROAD 86/6R 3759808-2"},{"name":"NEW MODERN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622324","address":"RAJA CHOWK MAZDOOR PULI DEPALPUR BAZAR 9780130-1"},{"name":"MAQBOOL MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622325","address":"Street#07, Kot Khadim Ali Shah, Chak No.85/6R D744481-1"},{"name":"DOCTOR PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622326","address":"AL NOOR MARKET SHOP NO.1 MAIN SABIR COLONY 90 9/L A238385-2"},{"name":"GOOD HEALTH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622327","address":"Commercial Hall#13/B, Nai Abadi, Jhall Road,oppo BhuttaPetrol Pump, D483696-0"},{"name":"PEARL PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622329","address":"DILBAR COMMERCIAL HALL OPPO GOVT COMPREHENSIVE SCHOOL 0150979-9"},{"name":"HOLY PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622330","address":"Adil Market Shop#01,Main Road 86/6-R, opposite Street No. 04, G032591-2"},{"name":"DR ZEESHAN HAIDER","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622334","address":"NEAR HUSSAIN SHOPING MALL MAZDOOR PULI SAHIWAL 5123951-8"},{"name":"NEW KHALID MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622336","address":"PUL BAZAR 36502-1359559-1 M.BASHRAT MUNIR 6035627-2"},{"name":"JINNAH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622339","address":"KHATA NO 69 KHATONI NO 228 OPPOSITE36502-1290437-3"},{"name":"DR AJMAL NAZIR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"6228","address":"KARBALA ROAD 2233696-6"},{"name":"MADINA MEDICAL HALL","area":"Sahiwal","territory":"","type":"Medical Stores","code":"623","address":"SADAR CHOWK HIGH STREET 0456924-5"},{"name":"LIFE MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6232","address":"KARBALA ROAD"},{"name":"SAAD MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6236","address":"40-A KARBALA ROAD 6580078-7"},{"name":"WASEEM MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6239","address":"KARBALA ROAD 36502-4777199-5 MUHAMMAD SALEEM 1264261-4"},{"name":"NEW PUBLIC MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"624","address":"HIGH STREET 3914043-1"},{"name":"DR ATIF RAZZAQ PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"6241","address":"GOAL CHAKKAR 2324233-7"},{"name":"PHARMA LAND PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"62494","address":"OUTSIDE MATERNITY HOSPITAL 717745-4"},{"name":"ZAM ZAM PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"625","address":"SHOP#3B III PASHS STREET 0458384-1"},{"name":"AL REHMAT MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6253","address":"H.NO.23/CB VII,HALF GROND FLOOR FATEH SHER ROAD. 3817657-2"},{"name":"DR HASSAN MEHMOOD KHOKHAR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"62559","address":"SIR SYED ROAD"},{"name":"DR HAFIZ KHALID MAHMOOD","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"6257","address":"SIR SYED ROAD SAHIWAL. 0462736-9"},{"name":"DR SHAHZAD TAHIR PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"62594","address":"CAMAY JUICE STREET OPP. GOVT HIGH SCHOOL 4909534-3"},{"name":"AL MURAD PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"62595","address":"FURNITURE BAZAR 4322727-9"},{"name":"NEW MIAN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62638","address":"COLLEGE CHOWK SAHIWAL 2581837-6"},{"name":"HANNAN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6267","address":"SHOP#2 SIR SYED ROAD MISSION CHOWK 0457620-9"},{"name":"EHTISHAM MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62689","address":"MANZOOR COLONY PULL 90/9L 36502-7445566-3 M. IHTASHAM ARSHAD 7078458-5"},{"name":"DR ABDUL RASHEED PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"62712","address":"FARID TOWN 5518433-2"},{"name":"RANA PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"62718","address":"GRAIN MARKET SAHIWAL 0000"},{"name":"UMER MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62750","address":"Khatooni No. 1843, Khata No.1466/1447, Gate"},{"name":"AMER PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6277","address":"OPP.DHQ SAHIWAL TEACHING HOSPITAL SAHIWAL 0459209-3"},{"name":"ARSLAN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6278","address":"MALL MANDI ROAD QURESHI HOSPITAL 0870688-3"},{"name":"FAISAL MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6282","address":"RASHEED MEMORIAL HOSPITAL 138086-9"},{"name":"HAFIZ PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"6283","address":"OPP. DHQ HOSPITAL SAHIWAL 3758868-7"},{"name":"AHMAD MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62832","address":"OPPOSITE DHQ HOSPITAL. 36502-2528543-7 KAMRAN WALEED NAZISH 7493827-4"},{"name":"KHALIL MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6289","address":"OPP.DHQ HOSPITAL SAHIWAL 4260291-2"},{"name":"DR RANA WAQAR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"62893","address":"OPPO MISSION HOSPITAL 5658518-2"},{"name":"JAVED PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"629","address":"SHOP#2JINNAH SHOPPING CENTER SADAR CHOWK HIGH STREET 4483562-1"},{"name":"NEW BASHARAT MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6298","address":"SHOP#11/A NEAR MID CITY HOSPITAL COLLEGE"},{"name":"CITY HEALTH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"62998","address":"JAHAZ GROUND 3650212658671"},{"name":"AKHTAR MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"103000000100712","address":"RAZZAQ VILLAS MADHALI ROAD, 36104-3554997-7 M.AKHTAR 4491739-6"},{"name":"PHARMA LAND PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100714","address":"SHOP#372/H RIGHT SIDE SHOP#373/H NEAR"},{"name":"IBRAHIM PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100715","address":"ASGHAR JAVAID MARKET SHOP#01 NEAR36502-8207777-5"},{"name":"BILAL PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100716","address":"SHOP#1 NEAR SHEIKH DI HAATI ,ARIFWALA"},{"name":"FARHAN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100717","address":"SHOP#11&12 MASJID JAMIA FARIDIA,DARY"},{"name":"PUNJAB PLUS PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100719","address":"SHOP#380-H ABL 36501-9536208-0 HAFIZA HINA LIAQAT 6780888-3"},{"name":"MEERAM MEDICOS","area":"Sahiwal","territory":"","type":"Medical Stores","code":"103000000100721","address":"USMAN HOSPITAL MISSION CHOWK . 36502-9460582-9 AHSAN FIAZ JATOI 6946741-1"},{"name":"FAZAL SOHAIB PHARMACY(SERVAID)","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100726","address":"SHOP#2 GROUND FLOOR SHADMAN TOWN"},{"name":"ALIYAN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100729","address":"Shop No. 1, located at Al-Fateh Plaza, opposite"},{"name":"DR KIRAN WASEEM","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100730","address":"BLESS MATERNITY AND SKIN CARE CLINIC"},{"name":"ZAIN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"103000000100733","address":"SHOP NO.8 SAMI GARDEN CHAK NO.89/6.R"},{"name":"WELLCARE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100735","address":"Muhammad Usman Haider Market, Shop#01,36502-0224555-1"},{"name":"FAIZ PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100741","address":"Opposite small industrial estate old Harrapa road"},{"name":"PRIME HEALTH PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100742","address":"Commercial Shop No 16 Located Main Pakpattan"},{"name":"IMTIAZ PHARMACY (IMTIAZ GROUP PVT LTD)","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100754","address":"Imtiaz Mega Near Baba Farid Gas Ltd, Main Lahore-Multan"},{"name":"DR AFZAAL","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100757","address":"36502-3633512-3 M.AFZAAL 0222936-6"},{"name":"DR MUNTAZIR MEHDI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100759","address":"16-E SHADMAN TOWN 36603-6949704-1 MUNTAZAR MAHDI 1891395-4"},{"name":"DR USMAN AHMED SUKHERA","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100764","address":"FAIQ HOSPITAL 36502-8340321-7 USMAN AHMED SUKHERA 8000445-3"},{"name":"AHTASHAM MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"103000000100767","address":"MANZOOR COLONY PULL 90/9L 36502-7445566-3 AHTASHAM 7078458-5"},{"name":"WALI MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"103000000100768","address":"Haji ghulam Hussain market, shop no.4, Main36502-8388077-3"},{"name":"DR KHAWAR SAEED","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100770","address":"MAAL MANDI CHOWK 36502-3462817-7 KASHIF IQBAL 2752703-4"},{"name":"DR SHAFFAQ ISHTIAQ","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100771","address":"CITY HOSPITAL NEAR QURASHI HOSPITAL35202-2848798-8"},{"name":"DR M SHOAIB IQBAL","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100772","address":"FINE MEDICARE NEAR KABABISH PIZZA JHAL"},{"name":"DR SOHAIL SHAUKAT","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100773","address":"3 Camey St, Muslim Abad Sahiwal, 33303-3392650-7 SOHAIL SHAUKAT 7707730-4"},{"name":"DR SYED AZEEM HAMDANI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100775","address":"35202-8471343-5 SYED M.AZAM 5446867-4"},{"name":"DR YASIR MAKKI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100776","address":"ST#4 OPP DHQ KOT KHADIM MAKKI HOSPITAL 4968175-1"},{"name":"NEW ITTEFAQ PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100777","address":"Plot No. 225, near Feaster Pizza, pakpattan road"},{"name":"HANIF SONS HEALTHCARE PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100781","address":"Shop No.3 Royal City Ballay Wala Mor 36502-1384503-5 M HANIF 9818141-5"},{"name":"BILAL MEDICINE POINT","area":"Sahiwal","territory":"","type":"Medical Stores","code":"103000000100783","address":"MAIN NOORSHAH ROAD NEAR QURESHI TOWN"},{"name":"Al Rehmat Pharmacy","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"103000000100789","address":"PLOT#3 NEAR SAHIWALMEDICAL COMPLEX"},{"name":"DR ASMA SARWAR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100790","address":"36502-1372390-5 M.SARWAR 3364996-7"},{"name":"DR SAEED SABRI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100795","address":"UMAR HOSPITAL GOAL CHAKKAR MOSQUE"},{"name":"DR FATIMA SALEEM","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100797","address":"SADIQ MEDICARE CENTER 13-A FATH SHER"},{"name":"DR SEHRISH MUZAFAR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100801","address":"FATIMA MEDI CARE HOSPITAL DPO CHOWK"},{"name":"WAHEED SONS MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"103000000100802","address":"DEPALPUR BAZAR SAHIWAL 36502-8991000-3 AKHLAQ AHMAD 2348384-9"},{"name":"DR ABDUL MAJEED KHAN","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100806","address":"ZAIDI HOSPITAL 36502-8236329-7 SYED DANIYAL RAZA ZAIDI 730950R-5"},{"name":"DR SABOOHI SHAHWAR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100807","address":"WAMIQ HOSPITAL 36502-3076047-8 DR SABOOHI SHAHWAR 2482310-4"},{"name":"MA PLUS","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621019","address":"HIGH STREET"},{"name":"DR MUHAMMAD KHALIL","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621144","address":"SIR SYED ROAD SAHIWAL"},{"name":"FAAZAL MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62115","address":"JHALL ROAD"},{"name":"QASIM MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621366","address":"ADDA BAHADUR SHAH SAHIWAL"},{"name":"DR HAROON GILLANI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621436","address":"SIR SYED ROAD SAHIWAL"},{"name":"FRIENDS MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621459","address":"SHOP #11 NEAR JAMIA FARIDIA DARY WALA"},{"name":"ZULFIQAR MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621472","address":"231 B - 11, BERIWALA CHOWK"},{"name":"AZAN MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621474","address":"GHALLAH MANDI ROAD"},{"name":"DR SAJID MUKHTAR HOSPITAL","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621555","address":"FATEH SHER ROAD SAHIWAL"},{"name":"DR HAMMAD RAZA","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621557","address":"LIAQAT CHOWK SAHIWAL"},{"name":"DR ASIM IKRAAM","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621590","address":"FATEH SHER"},{"name":"AL HAFEEZ MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621605","address":"KARBALA ROAD"},{"name":"DR IRTAZA AHMAD","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621689","address":"DOWOOD CHOWK SAHIWAL"},{"name":"KB MEDICINE POINT","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621710","address":"HIGH STREET SAHIWAL"},{"name":"MASHA ALLAH MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621732","address":"115/BI MUHALLA MUSLIMABAD SAHIWAL"},{"name":"ZOHAN PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621780","address":"CHAUDHARY MARKET SHOP#02'OPP GATE#1 DHQ"},{"name":"UMAR MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6218","address":"RAILWAY ROAD"},{"name":"DR IMTIAZ","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621800","address":"PULL BAZAR SAHIWAL"},{"name":"DOCTOR PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"621804","address":"JEHAZ GROUND"},{"name":"ALI MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621824","address":"GULSHAN E ALI SAHIWAL"},{"name":"DR M ADREES","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"621891","address":"MISSION CHOWK SAHIWAL"},{"name":"ALI SHIRAZI CLINIC","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621904","address":"GHALLA MANDI"},{"name":"AL SHIFA HOSPITAL","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621912","address":"34 WALA PULL SAHIWAL"},{"name":"HAFIZ MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621934","address":"ADDA BAHADUR SHAH CHAK#58/G.D"},{"name":"AL KOUSAR MEDICINE POINT","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621951","address":"H.NO.220,MAIN MARKET TBZ COLONY"},{"name":"ASJAD MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621957","address":"90/ 9L MARKET"},{"name":"DR AMJAD MEHMOOD KHAN","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622004","address":"NEAR CHRISTIAN CHOWK"},{"name":"FARHAT HOSPITAL","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622046","address":"FATEHSHER ROAD"},{"name":"HOPE HOSPITAL","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622053","address":"DR BUSHRA WASEEM MADHALI ROAD OPPOSITE HUSSAIN MARQUE"},{"name":"SHERAZ MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622127","address":"GRAIN MARKET"},{"name":"NATIONAL HOSPITAL&DIAGNOSTICS","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622153","address":"POLIC LINE ROAD"},{"name":"HAJI SADIQ HOSPITAL&MATERNITY","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622156","address":"AL HASEEB TOWN"},{"name":"IQBAL MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622181","address":"Imran Town Street No. 02Near Gulshan e Madin Masjid 90/9-L"},{"name":"DR M TAHIR","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622192","address":"BILAL COLONY 7005630-5"},{"name":"DR SHAZIA IRSHAD","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622193","address":"NEAR JAMIA RASHIDIA SCHOOL"},{"name":"HAKEEM KHALID MUNIR","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622197","address":"MOHALLAH RAJPURA"},{"name":"HEALTH CARE ZONE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622198","address":"SHOP#02 MAIN MADHALI ROAD NEAR BEST SUPER MART"},{"name":"H.A PHARMACY","area":"Sahiwal","territory":"","type":"Pharmacy Store","code":"622213","address":"KHEWAT#45/46KHATOONI#126-130 CHAK#88/6FAISALABAD NALKEE ADA"},{"name":"DR ZAIN DENTIST","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622215","address":"SAHIWAL DENTAL COMPLEX"},{"name":"DR MUHAMMAD ASAD YOUSAF","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622219","address":"NEAR MISSION HOSPITAL"},{"name":"DR HAIDER IJAZ","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622230","address":"AFRASIAB CLINIC MAIN FATEHSHER ROAD"},{"name":"DR KAMRAN FARMAN","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622249","address":"OPPO DECENT BAKERY"},{"name":"HEALTH CARE MEDICOS","area":"Sahiwal","territory":"","type":"Medical Stores","code":"622260","address":"NEAR MINI HOSPITAL DISPENSERY ROAD"},{"name":"DR ASAD YOUSAF","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622312","address":"UMAR ABDULLAH MEMORIAL HOSPITAL"},{"name":"DR HAMZA MUJAHID","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"622321","address":"AL-MUJAHID POLY CLINIC STREET#1NEAR TCS OFFICE MISSION CHOWK"},{"name":"DR CAPT RIAZ AHMED","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"6227","address":"KARBALA ROAD"},{"name":"DR NAEEM AKHTAR PHARMACY","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"62474","address":"CANAL COLONY"},{"name":"NEW UMAR MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62483","address":"PAKPATTAN CHOWK"},{"name":"PUBLIC MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62528","address":"HIGH STREET"},{"name":"DR SAFDAR KARAM SHAH BODLA","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"6263","address":"AL-EMAN HOSPITAL Pakpattan Road"},{"name":"DR.HAFIZ MUHAMMAD AKHTAR PHARM","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62648","address":"KARBLA ROAD SAHIWAL"},{"name":"KHALID MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"6288","address":"OPP. DHQ HOSPITAL"},{"name":"PUNJAB MEDICAL STORE","area":"Sahiwal","territory":"","type":"Medical Stores","code":"62978","address":"MORE WALA CHOWK SAHIWAL"},{"name":"DR FIRDOUS KHAN NIAZI","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100765","address":"ZAIDI MATERNITY HOSPITAL GULISTAN ROAD"},{"name":"DR ABIDA","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100782","address":"PULL BAZAR SAHIWAL"},{"name":"DR BASHIR AHMAD CHARAN","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100784","address":"MUGHAL HOSPITAL NEAR MEHMOODIA HIGH"},{"name":"DR SHAZIA WAHEED","area":"Sahiwal","territory":"","type":"Doctor Pharmacy","code":"103000000100788","address":"AYESHA MATERNITY HOME 36502-7368032-7 SHAZIA WAHEED"},{"name":"ALKHIDMAT HOSPITAL SAHIWAL PH","area":"Sahiwal","territory":"","type":"Medical Stores","code":"621775","address":"JAMIA FAREEDIA ROAD SAHIWAL 36502-0562311-9 ZEESHAN WASEEM 2930665-5"},{"name":"ZAHID MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621014","address":"MAIN BAZAR NOORPUR 2523455-2"},{"name":"MADINA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621036","address":"MAIN BAZAR NOORPUR. 18307914"},{"name":"ALI MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621066","address":"SHOP#2 ADDA NOOR PUR 3640260091997"},{"name":"ZAFAR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621085","address":"MAIN BAZAR NOORPUR. 3784809-7"},{"name":"MUBARRUM MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621097","address":"MAINBAZAR BOONGAHAYAT. A274028-5"},{"name":"SHAFIQUE PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"621189","address":"OPP. DHQ HOSPITAL PAKPATTAN. 7324744-4"},{"name":"AL FAZAL MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621343","address":"Khawat#2520 Khatoni#2706 Hospita Road Masjid Mubarak Ahl Hadees 7843979-2"},{"name":"MEHMOOD MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621367","address":"OPPO DHQ HOSPITAL 8928325-1"},{"name":"ASIF AND SONS PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"621416","address":"SHOP#7M/0S HOSPITAL ROADMOHALLAH INAM ADAB 7581752-8"},{"name":"IKRAAM MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621492","address":"COLLEGE ROAD OPPO TANVIR HOSPITAL 3415780-8"},{"name":"SHAFI MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621561","address":"DEPALPUR ROAD ADDA PUL BAHMNI 36402-6361800-5 GHULAM MURTAZA E030907-1"},{"name":"ARIF RAZA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621666","address":"CHOWK SKINDER PAKPATTAN 4375685-9"},{"name":"MAKKAH MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621720","address":"SANDAY KHAN ROAD ADDA NOOR PUR 3640233981963"},{"name":"GHAFFARI MEDICOSE","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"621774","address":"HOSPITAL ROAD NEAR CITY HOSPITAL PAKPATTAN C368182-1"},{"name":"IRFAN MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621796","address":"ADDA SKINDAR CHOWK. 36402-2935138-3 MUKHTAR AHMAD 4895445-8"},{"name":"MUNIR PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"621832","address":"SHOP#653 NEAR DHQ HOSPITAL 36402-5482053-1 KASHIF MUNIR 7935649-7"},{"name":"DOCTOR'S PHARMACY","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"621852","address":"SHOP#1482 NEAR DHQ HOSPITAL PAKPATTAN 8081191-1"},{"name":"HASSAN MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621858","address":"OPPOSITE CITY HOSPITAL KHATOONI#160 PAKPATTAN C370535-5"},{"name":"NOOR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621909","address":"SHOP#5 ADDA BONGA HAYAT . 36402-0780053-1 NOOR.M 0466416-7"},{"name":"PAKPATTAN CITY PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"621919","address":"(FRANCHISE OF CLINIX) SHOP#B1-1 COLLEGE ROAD PAKPATTAN 5994107-8"},{"name":"FAHEEM MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621939","address":"OLD TOWN HALL' C360956-2"},{"name":"DR TARIQ SABRI PHARMACY","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"621940","address":"PAKPATTAN 1107511-2"},{"name":"GHOUSIA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621950","address":"tShop# 1HottaRoadBy Pass 1829978-4"},{"name":"AL SHAFI PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"621971","address":"SHOP#1484 OPPOSITE DHQ 5804319-3"},{"name":"FARIDIA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621972","address":"NEAR ZARAI BANK NOOR PUR F326409-6"},{"name":"J K MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621994","address":"SHOP#2 MAIN ROAD ADA NOOR PUR 3640267262483"},{"name":"YOUSAF & SONS PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622001","address":"SHOP NO 8 OPP CITY HOSPITAL PAKPATTAN A205829-8"},{"name":"DR M ASIF LATIF","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622002","address":"CH.SARFARAZ HOSPITAL . 6438374-8"},{"name":"DR ALI RAZA PHARMACY","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622044","address":"NOOR PUR 8371174-4"},{"name":"ZAM ZAM PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622063","address":"SHOP#1059-B1 MOHALLAH EID GAH ROAD CHOWK ARIAN 9648575-8"},{"name":"HAMZA TRADERS & MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622075","address":"KHAWAT#412/405KHATONI#1083 RAKH PULL 8210339-8"},{"name":"ABDUL KHALIQ MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62208","address":"OPPO GATE #2 DHQ HOSPITAL PAKPATTAN 4931836-3"},{"name":"NEW MUSLIM MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622080","address":"HOUSE#853 OPPO DHQ HOSPITAL C359720-8"},{"name":"AL SHIFA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622082","address":"SHOP#86 OPPO AL MADINA GAREND MARKI"},{"name":"DR JALIL AHMAD BHATTI","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622098","address":"AL SHIFA HOSPITAL MANDI MOARD 2979962-7"},{"name":"DR AMAN ULLAH KHAN","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622101","address":"118-APNA TOWN DEPALPUR ROAD 2179653-0"},{"name":"KHAN PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622105","address":"SHOP#1 KACHARI ROAD AL FAISAL CENIMA 5260287-3"},{"name":"DR ADEEL RIAZ","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622107","address":"8491530-4"},{"name":"YASEEN MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622112","address":"RAILWAY ROAD 4459321-6"},{"name":"FAIZAN E SABRI PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622116","address":"OPPOSHOP#9 DHQ HOSPITAL MOHALLAH INAMABAD. A862316-8"},{"name":"IBN-E-SULTAN PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622125","address":"PEER GHANI ROAD,OPP PEER GHANI BUS ADDAH NEAR MC SCHOOL. B172987-7"},{"name":"QARI MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622131","address":"SHOP#5 6 ADDA MALKA HANS 3640272240205"},{"name":"BISMILLAH MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62216","address":"RAILWAY ROAD 3092871-7"},{"name":"BODHLA PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62217","address":"SHOP#652/BL OPPO DHQ HOSPITAL 36402-8359593-1 M RIAZ BODLA 1108256-9"},{"name":"NEW DATA PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62219","address":"SHOP#BI 653/M OPP.DHQ HOSPITAL. 2660855-3"},{"name":"GHULAM MUHAMMAD MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622199","address":"SHOP#10 DHQ HOSPITALRAOD E239721-6"},{"name":"DR AYUB SABIR","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622224","address":"BABA G MEDICAL CENTER HAVELI LAKHA ROAD SABAZ MANDI 3640262059877"},{"name":"CITY CARE PLUS PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622239","address":"Near City Hospital, DHQ hospital Road near Nagina chowk 3104878-1"},{"name":"RAJPOOT PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622244","address":"SHOP 01 MAIN BAZAR MALKA HANS PAKPATTAN. 3640238805329"},{"name":"MUSTAFA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622256","address":"NEAR URBAN AREA SCHOOL MOHALLAH ISLAM 3640279107225"},{"name":"AHSAN PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622258","address":"SHOP NO 3737 MACHLI CGOWK THANA ROAD"},{"name":"DR AHMED RAZA","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622259","address":"SHOUKAT HOSPITAL DHQ ROAD 3640266163991"},{"name":"FAROOQ MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62226","address":"SHOP#1269 KHATOONI#1358 MANDI BAZAR 3354099-3"},{"name":"WAJID MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622265","address":"MALKA HANS 5605550-8"},{"name":"DR ADEEL SHARIF","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622266","address":"CHAHRI MOAR 8491530-4"},{"name":"SHAHBAZ MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622267","address":"MAIN BAZAR 5052067-7"},{"name":"AL NOOR PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622269","address":"KHAWAT#235/207 KHTONI#686 SANDHAY KHN"},{"name":"FOUJI MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62227","address":"SHOP#2 DISPENSARY ROAD 4985608-0"},{"name":"NEW KHAN PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622279","address":"Shop no 10 mohalla gulzarabad old tehsil road 3640282948547"},{"name":"FRIENDS MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62228","address":"MANDI BAZAR 1998746-3"},{"name":"MILLAT MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622282","address":"HOSPITAL ROAD OPO REHMAT HOSPITAL 0466246-6"},{"name":"SHAHENSHAH PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622292","address":"KHATONI#3183 MANDI MOR KACHARI ROAD NEAR AL SHIFA HOSPITAL 3640284417543"},{"name":"PAK MEDICOSE","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622294","address":"SHOP NO .12 DHQ ROAD NEAR CITY HOSPITAL 9682130-2"},{"name":"DR SAMRA JAVED","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622295","address":"YASIR MEDICARE NAGINA CHOWK 6051529-1"},{"name":"AL KARAMAT MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622301","address":"Thana Road, 3640260659081"},{"name":"AL FRID MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622304","address":"THANA ROAD 3640207827037"},{"name":"DR FAISAL IQBAL","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622311","address":"YASIR DIAGNOSTIC CENTER&CLINICS HOSPITAL ROAD 3640253683449"},{"name":"KARMANAWALA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62233","address":"RAILWAY ROAD. 36402-3366835-9 RAFIQUE 0467208-9"},{"name":"HAJI PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"622332","address":"NEAR NATIONAL BANK PAKPATTAN ROAD MALGADA CHOWK 5008488-6"},{"name":"LAHORE MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62235","address":"MANDI BAZAR NEAR GOVT MC GIRLS HIGH SCHOOL 1983202-8"},{"name":"MEDI PULS PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62238","address":"COLLEGE ROAD 3649023-7"},{"name":"PAK MEDICAL HALL","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62243","address":"OPPOSITE DHQ HOSPITAL 24446602"},{"name":"AL REHMAN MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62246","address":"SHOP#554/BI NEAR CITY HOSPITAL 7343472-3"},{"name":"SAIF MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62247","address":"DHQ HOSPITAL ROAD 1830864-3"},{"name":"SHAHEEN MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62250","address":"NEAR BUS STAND 22414258"},{"name":"SHAHID PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62251","address":"KHEWAT#3964/3939 KHATONI#4356 OPP DHQ 1380082-5"},{"name":"CITY PLUS PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62501","address":"INTERNAL PHARMACY CITY HOSPITAL NAGINA CHOWK 4655257-3"},{"name":"SAEEDI MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62517","address":"ADDA NOOR PUR 4265296-7"},{"name":"AL BARI PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62539","address":"SHOP#3 DHQ ROAD PAKPATTAN. 72778628"},{"name":"DOGAR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62540","address":"HOSPITAL ROAD PAKPATTAN 13801422"},{"name":"TARIQ MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62544","address":"SHOP#11 WARIS SHAH CHOWK 3640207893049"},{"name":"AL SHAFA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62564","address":"MANDI MORR 4933180-6"},{"name":"AMIM-UL-EHASAN PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62565","address":"Ghulam Muhammad Memorial Hospital 2652839-8"},{"name":"AL NOOR MEDICAL STORE(noorpur)","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62580","address":"KHAWAT#235/207 KHATONI#686 SANDY KHAN"},{"name":"ASHRAF PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62582","address":"SHOP#02 MAIN BAZAR NEAR PURANA THANA 4521990-8"},{"name":"AL MADINA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62637","address":"BUS STOP NOOR PUR.. 1830791-4"},{"name":"DR MAIRAJ KHAN","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"62666","address":"ANWAR TANVIR STREET PAKPATTAN. 1135590-5"},{"name":"ZULFIQAR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62794","address":"BOONGA HAYAT 1831397-3"},{"name":"AL NOOR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62795","address":"0466416-7"},{"name":"BASHIR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62808","address":"ADDA BOONGA HAYAT 36402-0754863-9 M.BASHIR AHMAD B153187-7"},{"name":"NEW AKHTAR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62866","address":"MALGADA CHOWK . 36502-6617993-7 M.ASIF MANZOOR C377530-7"},{"name":"MIRZA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62956","address":"DHQ ROAD PAKPATTAN. 5517721-1"},{"name":"AMJAD MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62972","address":"shop no 8 adda bonga hayyat 5521434-6"},{"name":"BABA G MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"103000000100724","address":"SHOP NO 12 SABZI MANDI BUNGA HAYAT 36402-0358330-9"},{"name":"KHAWAJA AZIZ MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"103000000100738","address":"SHOP#5 Khawaja Aziz Makki Chowk 36402-0513391-7 M. MURTAZA D498900-3"},{"name":"DR SUMRA JAVED","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"103000000100739","address":"KHAWAJA AZIZ MAKKI ROAD NEAR NAGINA"},{"name":"MOEEZ MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"103000000100744","address":"Shop No 5 Near Farooq e Azam Chowk Malka"},{"name":"SHAFQAT MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"103000000100746","address":"Shop No. 57, Mandi More, Mohallah Rehmat 36402-0817280-1 M.SHAFQAT BASHIR 3599785-7"},{"name":"REHMAN PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"103000000100749","address":"Shop No 3 Opposite DHQ Hospital Road Tehsil"},{"name":"JAMAL PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"103000000100750","address":"JAMAL CHOWK NEAR UNIVERSITY CNG 36401-0649866-9 AKBAR ALI 7844389-7"},{"name":"DR AZEEM TASSAWAR","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"103000000100753","address":"AL SHIFA HOSPITAL MANDI MOR 36402-1035946-1 AZEEM TASSAWAR 6681656-5"},{"name":"HEALTH WIRE PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"103000000100763","address":"Shop No 5, Anwar Bloch Markit Near Mashli Chowk"},{"name":"Green Plus Pharmacie","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"103000000100766","address":"COLLEGE ROAD NEAR TANVEER HOSPITAL"},{"name":"ANWAR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"103000000100774","address":"Adda Chak Bedi nazd Thana Chak Bedi main36402-8138593-1 ALI AKBAR ANWAR I848404-1"},{"name":"PUNJAB PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"103000000100800","address":"Shop No.10 Opposite DHQ Hospital, Inaamabad"},{"name":"TAHIR MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621104","address":"BOONGA HAYAT ROAD SAHIWAL"},{"name":"AL JAVAID SURGICAL HOSPITAL","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621119","address":"MAIN ROAD FAREED NAGAR"},{"name":"BABA FAREED MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621238","address":"HAVEELI ROAD BOONGA HAYAT"},{"name":"BILAL MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621365","address":"SIKANDAR CHOWK BONGA HAYAT"},{"name":"CITY PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"621368","address":"NAZD CITY HOSPITAL"},{"name":"ASIM CARDIOLOGY","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621371","address":"PAKPATTAN"},{"name":"NAZEER MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621429","address":"PAKPATTAN"},{"name":"DR RAO TARIQ","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"621722","address":"MALKA HANS"},{"name":"DR SYED M.AWAIS ALI SHAH","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"621744","address":"GREEN TOWN, PAKPATTAN"},{"name":"PUNJAB MEDICAL HALL","area":"Pakpattan","territory":"","type":"Medical Stores","code":"621781","address":"DHQ ROAD PAKPATTAN"},{"name":"MOHSIN PHARMACY","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"621790","address":"ADDA LOHARAN WALI KHOI"},{"name":"DR JUNAID ANWAR","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"621811","address":"PAKPATTAN"},{"name":"DR ALI ASGHAR","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"621948","address":"MAIN CHOWK"},{"name":"DR M MEHTAB TALHA KHAN","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622015","address":"DHQ HOSPITAL CH SARFRAZ AHMAD HOSPITAL 8209752-6"},{"name":"FAISAL MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622016","address":"SHOP#8 MAIN ROAD ADA MALKA HANS"},{"name":"MEO MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622185","address":"CHANPEER ROAD NEAR SHABEER CHOWK"},{"name":"ABDULLAH MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"622268","address":"SHOP NO 1 SHAHBAZ COMPUTERIZED KANTA BYPASS"},{"name":"DR M ADNAN","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"622306","address":"ADNAN MEDICAL AND DIAGNOSTIC CENTER KALMA CHOCK"},{"name":"PAKPATTAN MEDICOSE","area":"Pakpattan","territory":"","type":"Pharmacy Store","code":"62244","address":"DHQ ROAD OPPOSITE CITY HOSPITAL"},{"name":"ALI SURGICAL HOSPITAL","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62543","address":"MALKAHANS"},{"name":"SYED SHAH ALI MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62562","address":"MAIN BAZAR PAKPATTAN"},{"name":"KAMRAN MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62566","address":"MALKA HANS"},{"name":"JINNAH MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62567","address":"MALKA HANS"},{"name":"DR NAVEED","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"62797","address":"73/5L MALGADA CHOWK SAHIWAL"},{"name":"FAIZAN MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62827","address":"PAKPATTAN"},{"name":"DR ASIF ALI BHATTI","area":"Pakpattan","territory":"","type":"Doctor Pharmacy","code":"62897","address":"PULL RAAKH PAKPATTAN"},{"name":"KARMANWALA MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62982","address":"MAIN BAZAR MALKAHANS"},{"name":"AQIB MEDICAL STORE","area":"Pakpattan","territory":"","type":"Medical Stores","code":"62995","address":"MAIN BAZAR NOOR PUR"}];
+let storeDatabase=JSON.parse(localStorage.getItem(STORE_KEY)||"[]");
+(function seedBuiltInStores(){
+  const key=x=>(`${x.area}|${x.name}`).toLowerCase().replace(/\s+/g," ").trim();
+  const map=new Map(storeDatabase.map(x=>[key(x),x]));
+  BUILTIN_STORE_DATABASE.forEach(x=>{ if(!map.has(key(x))) map.set(key(x),x); });
+  storeDatabase=[...map.values()];
+  localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));
+})();
+/* ===== END: BUILT-IN CITY DATABASE FROM SUPPLIED PDF LISTS ===== */
+let visits=JSON.parse(localStorage.getItem(APP_KEY)||"[]");
+let territories=JSON.parse(localStorage.getItem(TERRITORY_KEY)||"{}");
+AREAS.forEach(a=>{if(!territories[a])territories[a]=[]});
+let stream=null, capturedData=null, editingId=null;
+/* ===== END: APP DATA & CONFIG ===== */
+
+/* ===== START: UTILITY FUNCTIONS ===== */
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function nowText(){return new Intl.DateTimeFormat("en-PK",{dateStyle:"medium",timeStyle:"short"}).format(new Date())}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2300)}
+function saveData(){localStorage.setItem(APP_KEY,JSON.stringify(visits));localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase))}
+function formatDate(iso){if(!iso)return "";return new Date(iso+"T00:00:00").toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}
+function normalizePhone(p){return (p||"").replace(/\D/g,"").replace(/^0/,"92")}
+function visitText(v){return `Shadab Pharmacy
+Visit Type: ${v.type}
+Area: ${v.area}
+Territory: ${v.territory||"—"}
+Store/Pharmacy: ${v.store}
+Person: ${v.person}
+Phone: ${v.phone||"—"}
+Date: ${formatDate(v.date)}
+Time: ${v.time}
+${v.notes?`Notes: ${v.notes}`:""}`}
+/* ===== END: UTILITY FUNCTIONS ===== */
+
+
+/* ===== START: CUSTOMER DATABASE FUNCTIONS ===== */
+function openCustomerModal(prefillArea){
+  document.getElementById("customerModal").classList.add("show");
+  document.getElementById("customerArea").value=prefillArea || document.getElementById("area").value || "Sahiwal";
+  document.getElementById("customerType").value=document.getElementById("visitType").value || "Medical Stores";
+  document.getElementById("customerName").focus();
+}
+function closeCustomerModal(){
+  document.getElementById("customerModal").classList.remove("show");
+}
+function addCustomer(){
+  const type=document.getElementById("customerType").value;
+  const area=document.getElementById("customerArea").value;
+  const name=document.getElementById("customerName").value.trim();
+  const territory=document.getElementById("customerTerritory").value.trim();
+  const phone=document.getElementById("customerPhone").value.trim();
+  const address=document.getElementById("customerAddress").value.trim();
+
+  if(!name) return toast("Customer / store name is required");
+
+  const exists=storeDatabase.some(x=>
+    String(x.area||"").toLowerCase()===area.toLowerCase() &&
+    String(x.name||"").trim().toLowerCase()===name.toLowerCase()
+  );
+  if(exists) return toast("This customer already exists in this city");
+
+  storeDatabase.push({
+    name, area, territory, type, phone, address,
+    code:"CUSTOM-"+uid()
+  });
+  saveData();
+  closeCustomerModal();
+
+  /* Put the new customer directly into the current visit form if same city. */
+  document.getElementById("area").value=area;
+  document.getElementById("visitType").value=type;
+  refreshTerritories(territory);
+  document.getElementById("storeName").value=name;
+  showStoreSuggestions();
+  updateDbCount();
+  toast(`${name} added under ${area}`);
+  ["customerName","customerTerritory","customerPhone","customerAddress"].forEach(id=>document.getElementById(id).value="");
+}
+/* ===== END: CUSTOMER DATABASE FUNCTIONS ===== */
+
+/* ===== START: TERRITORY FUNCTIONS ===== */
+function refreshTerritories(selected=""){
+  const area=document.getElementById("area").value;
+  const sel=document.getElementById("territory");
+  const list=Array.isArray(territories[area])?territories[area]:[];
+
+  let html='<option value="">'+(list.length?'Select Territory':'No territory saved yet')+'</option>';
+  html+=list.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+  html+='<option value="__add__">＋ Add New Territory</option>';
+  sel.innerHTML=html;
+  if(selected && list.includes(selected))sel.value=selected;
+  else sel.value="";
+
+  sel.onchange=()=>{
+    if(sel.value==="__add__"){
+      sel.value="";
+      openTerritoryManager(area);
+    }
+  };
+}
+
+function openTerritoryManager(area){
+ document.getElementById("territoryModal").classList.add("show");
+ if(area)document.getElementById("territoryArea").value=area;
+ renderTerritoryList();
+}
+function closeTerritoryManager(){document.getElementById("territoryModal").classList.remove("show")}
+function renderTerritoryList(){
+ const area=document.getElementById("territoryArea").value, box=document.getElementById("territoryList");
+ box.innerHTML=(territories[area]||[]).length?(territories[area]||[]).map((x,i)=>`<div class="territory-item">${esc(x)} <button onclick="deleteTerritory(${i})">×</button></div>`).join(""):'<span class="notice">No territories added yet.</span>';
+}
+function addTerritory(){
+ const area=document.getElementById("territoryArea").value, input=document.getElementById("newTerritory"), name=input.value.trim();
+ if(!name)return toast("Enter a territory name");
+ if(!territories[area].some(x=>x.toLowerCase()===name.toLowerCase()))territories[area].push(name);
+ saveData();input.value="";renderTerritoryList();refreshTerritories();toast("Territory added");
+}
+function deleteTerritory(i){
+ const area=document.getElementById("territoryArea").value;
+ if(confirm("Delete this territory?")){territories[area].splice(i,1);saveData();renderTerritoryList();refreshTerritories();}
+}
+/* ===== END: TERRITORY FUNCTIONS ===== */
+
+
+/* ===== START: STORE DATABASE & AUTOCOMPLETE ===== */
+function openStoreDatabase(){document.getElementById("storeDatabaseModal").classList.add("show");updateDbCount()}
+function closeStoreDatabase(){document.getElementById("storeDatabaseModal").classList.remove("show")}
+function updateDbCount(){document.getElementById("dbCount").textContent=`${storeDatabase.length} store records saved on this device.`}
+
+/* ===== START: PDF DATABASE IMPORT ===== */
+async function importStorePDF(event){
+  const file=event.target.files?.[0];
+  if(!file)return;
+  if(!/\.pdf$/i.test(file.name)){
+    toast("Please select a PDF file");
+    event.target.value="";
+    return;
+  }
+  try{
+    toast("Reading PDF store database…");
+    const arrayBuffer=await file.arrayBuffer();
+    const pdfjs=await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs");
+    pdfjs.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+
+    const pdf=await pdfjs.getDocument({data:arrayBuffer}).promise;
+    let allRows=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const content=await page.getTextContent();
+      const items=content.items.filter(x=>String(x.str||"").trim());
+      const rows=groupPDFItemsIntoRows(items);
+      allRows.push(...rows);
+    }
+
+    const imported=parseMedicalStoreRows(allRows);
+    if(!imported.length){
+      toast("No readable store rows found. If this PDF is scanned, OCR is required.");
+      return;
+    }
+
+    const key=x=>(`${x.name}|${x.area}|${x.territory}`).toLowerCase().replace(/\s+/g," ");
+    const map=new Map(storeDatabase.map(x=>[key(x),x]));
+    imported.forEach(x=>map.set(key(x),x));
+    storeDatabase=[...map.values()];
+    saveData();
+    updateDbCount();
+    event.target.value="";
+    toast(`${imported.length} store records imported successfully`);
+  }catch(err){
+    console.error(err);
+    toast("PDF could not be read. Use a text/selectable PDF.");
+  }
+}
+
+/* Groups PDF text fragments by their vertical position so multi-column tables
+   can be reconstructed before column detection. */
+function groupPDFItemsIntoRows(items){
+  const rows=[];
+  const tolerance=3.2;
+  for(const item of items){
+    const x=Number(item.transform?.[4]||0);
+    const y=Number(item.transform?.[5]||0);
+    const text=String(item.str||"").trim();
+    if(!text)continue;
+    let row=rows.find(r=>Math.abs(r.y-y)<=tolerance);
+    if(!row){row={y,items:[]};rows.push(row)}
+    row.items.push({x,text});
+  }
+  return rows
+    .sort((a,b)=>b.y-a.y)
+    .map(r=>r.items.sort((a,b)=>a.x-b.x).map(x=>x.text).join(" | ").replace(/\s+/g," ").trim())
+    .filter(Boolean);
+}
+
+function normalizeArea(value){
+  const s=String(value||"").trim().toLowerCase();
+  return AREAS.find(a=>a.toLowerCase()===s) || "";
+}
+
+function cleanCell(s){
+  return String(s||"").replace(/\s+/g," ").replace(/^[|,:;\-]+|[|,:;\-]+$/g,"").trim();
+}
+
+function isHeaderRow(row){
+  return /(?:store|medical|pharmacy|outlet|shop|chemist)/i.test(row) &&
+         /(?:area|town|city|territory|tehsil|district)/i.test(row);
+}
+
+/* ===== START: SMART COLUMN DETECTION ===== */
+function detectPDFColumns(headerCells){
+  const h=headerCells.map(x=>cleanCell(x).toLowerCase());
+  const findIndex=(patterns)=>{
+    const i=h.findIndex(v=>patterns.some(p=>p.test(v)));
+    return i;
+  };
+  return {
+    name:findIndex([/store/,/medical/,/pharmacy/,/outlet/,/shop/,/chemist/,/customer/]),
+    area:findIndex([/area/,/town/,/city/,/tehsil/,/district/]),
+    territory:findIndex([/territory/,/terr/,/route/,/beat/])
+  };
+}
+
+function inferStoreType(name){
+  const u=String(name||"").toUpperCase();
+  if(u.startsWith("DR ") || u.includes("DOCTOR'S PHARMACY") || u.includes("DOCTORS PHARMACY")) return "Doctor Pharmacy";
+  if(u.includes("PHARMACY") || u.includes("PHARMA") || u.includes("MEDICOSE")) return "Pharmacy Store";
+  return "Medical Stores";
+}
+
+function parseMedicalStoreRows(rows){
+  const out=[];
+  let header=null;
+  let headerIndex=-1;
+
+  for(let i=0;i<Math.min(rows.length,40);i++){
+    const cells=rows[i].split(/\s*\|\s*|\t| {2,}/).map(cleanCell).filter(Boolean);
+    if(isHeaderRow(rows[i])){
+      header=detectPDFColumns(cells);
+      headerIndex=i;
+      break;
+    }
+  }
+
+  const knownAreasRegex=new RegExp(AREAS.map(a=>a.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|"),"i");
+
+  for(let i=headerIndex+1;i<rows.length;i++){
+    const row=rows[i].trim();
+    if(!row)continue;
+    const cells=row.split(/\s*\|\s*|\t| {2,}/).map(cleanCell).filter(Boolean);
+    if(!cells.length)continue;
+
+    let name="",area="",territory="";
+
+    if(header){
+      if(header.name>=0) name=cells[header.name]||"";
+      if(header.area>=0) area=cells[header.area]||"";
+      if(header.territory>=0) territory=cells[header.territory]||"";
+    }
+
+    /* Fallback handles common layouts such as:
+       Store | Town | Territory
+       Town | Territory | Medical Store
+       Medical Store | Area | Territory */
+    if(!name){
+      const nameIndex=cells.findIndex(c=>/(?:medical|pharmacy|chemist|store|shop|outlet)/i.test(c) && c.length>2);
+      if(nameIndex>=0) name=cells[nameIndex];
+    }
+
+    if(!area){
+      const areaCell=cells.find(c=>normalizeArea(c));
+      if(areaCell) area=normalizeArea(areaCell);
+      else {
+        const townCell=cells.find(c=>knownAreasRegex.test(c));
+        if(townCell) area=normalizeArea(townCell);
+      }
+    } else {
+      area=normalizeArea(area) || area;
+    }
+
+    if(!territory && cells.length>=2){
+      const remaining=cells.filter(c=>c!==name && c!==area);
+      if(remaining.length) territory=remaining[remaining.length-1];
+    }
+
+    if(name && !/^(store name|medical store|pharmacy name|name|shop name)$/i.test(name)){
+      out.push({name,area,territory,type: inferStoreType(name)});
+    }
+  }
+
+  /* If no header was detected, retry every row with flexible positional logic. */
+  if(!out.length){
+    for(const row of rows){
+      const cells=row.split(/\s*\|\s*|\t| {2,}/).map(cleanCell).filter(Boolean);
+      if(cells.length<1)continue;
+      const areaCell=cells.find(c=>normalizeArea(c));
+      const area=areaCell?normalizeArea(areaCell):"";
+      const name=cells.find(c=>c!==area && !/^(town|area|territory|medical store|store name|pharmacy name)$/i.test(c) && c.length>2);
+      if(name){
+        const remaining=cells.filter(c=>c!==name && c!==area);
+        const territory=remaining.length?remaining[remaining.length-1]:"";
+        out.push({name,area,territory});
+      }
+    }
+  }
+
+  const seen=new Set();
+  return out.filter(x=>{
+    const k=`${x.name}|${x.area}|${x.territory}`.toLowerCase();
+    if(seen.has(k))return false;
+    seen.add(k);
+    return x.name.length>=2;
+  });
+}
+/* ===== END: SMART COLUMN DETECTION ===== */
+
+/* Backward-compatible alias if an older UI still calls importStoreExcel. */
+function importStoreExcel(event){ return importStorePDF(event); }
+/* ===== END: PDF DATABASE IMPORT ===== */
+
+function normalizeSearchText(value){
+  return String(value||"").toLowerCase().replace(/[^a-z0-9]+/g,"").trim();
+}
+
+function showStoreSuggestions(){
+  const input=document.getElementById("storeName"), box=document.getElementById("storeSuggestions");
+  if(!input||!box)return;
+  const raw=input.value.trim();
+
+  /* ===== START: EMPTY SEARCH MUST STAY EMPTY ===== */
+  if(!raw){
+    box.innerHTML="";
+    box.classList.remove("show");
+    window._visibleStoreSuggestions=[];
+    return;
+  }
+  /* ===== END: EMPTY SEARCH MUST STAY EMPTY ===== */
+
+  const q=raw.toLowerCase();
+  const nq=normalizeSearchText(raw);
+  const area=(document.getElementById("area")?.value||"").toLowerCase().trim();
+  let pool=storeDatabase.filter(x=>String(x.area||"").toLowerCase().trim()===area);
+
+  if(!pool.length){
+    box.classList.remove("show");
+    return;
+  }
+
+  const matches=pool.filter(x=>{
+    const name=String(x.name||"").toLowerCase();
+    const nn=normalizeSearchText(name);
+    return name.includes(q)||(nq&&nn.includes(nq));
+  }).sort((a,b)=>{
+    const an=String(a.name||"").toLowerCase(),bn=String(b.name||"").toLowerCase();
+    const ann=normalizeSearchText(an),bnn=normalizeSearchText(bn);
+    const ar=an.startsWith(q)||(nq&&ann.startsWith(nq))?0:1;
+    const br=bn.startsWith(q)||(nq&&bnn.startsWith(nq))?0:1;
+    if(ar!==br)return ar-br;
+    return an.localeCompare(bn);
+  }).slice(0,15);
+
+  if(!matches.length){
+    box.innerHTML='<div class="suggestion no-match"><b>No matching customer found</b><small>Only '+esc(document.getElementById("area").value)+' records are searched.</small></div>';
+    box.classList.add("show");
+    return;
+  }
+
+  window._visibleStoreSuggestions=matches;
+  box.innerHTML=matches.map((x,i)=>`<button type="button" class="suggestion" data-store-index="${i}" onclick="selectStoreSuggestionByIndex(${i})"><b>${esc(x.name)}</b><small>${esc(x.area)}${x.type?" • "+esc(x.type):""}${x.territory?" • "+esc(x.territory):""}</small></button>`).join("");
+  box.classList.add("show");
+}
+function selectStoreSuggestionByIndex(index){
+  const list=window._visibleStoreSuggestions||[];
+  const item=list[Number(index)];
+  if(!item)return;
+  selectStoreSuggestion(item.name,item.area,item.territory||"");
+}
+
+function selectStoreSuggestion(name,area,territory){
+  const storeInput=document.getElementById("storeName");
+  const territorySelect=document.getElementById("territory");
+  /* ===== START: PRESERVE MANUALLY SELECTED TERRITORY =====
+     The PDF database does not contain territory for many customers.
+     When such a customer is selected, NEVER clear the territory the user
+     already selected. Only replace it when the selected customer itself
+     has a real territory value.
+  ===== END: PRESERVE MANUALLY SELECTED TERRITORY ===== */
+  const currentArea=document.getElementById("area")?.value||"";
+  const currentTerritory=territorySelect?.value||"";
+  const sameArea=!area || area===currentArea;
+  const territoryToKeep=(territory && String(territory).trim()) ? String(territory).trim() : (sameArea ? currentTerritory : "");
+
+  storeInput.value=name||"";
+  if(area&&AREAS.includes(area)){
+    document.getElementById("area").value=area;
+    refreshTerritories(territoryToKeep);
+  }
+  document.getElementById("storeSuggestions").classList.remove("show");
+  window._visibleStoreSuggestions=[];
+  storeInput.focus();
+  /* Put the cursor at the end so the user can continue editing if needed. */
+  try{storeInput.setSelectionRange(storeInput.value.length,storeInput.value.length)}catch(e){}
+  toast(territoryToKeep ? "Store selected — territory kept" : "Store selected");
+}
+
+/* This template documents the PDF data format expected by the importer. */
+function downloadPDFTemplate(){
+  loadPDFLib().then(()=>{
+    const {jsPDF}=window.jspdf, doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    doc.setFontSize(18);doc.setFont(undefined,"bold");doc.text("Shadab Pharmacy - Store Database",14,18);
+    doc.setFont(undefined,"normal");doc.setFontSize(10);
+    doc.text("Recommended columns: Medical Store | Town/Area | Territory",14,28);
+    doc.text("Example Store | Sahiwal | Territory 1",14,36);
+    doc.save("Shadab-Pharmacy-Store-PDF-Template.pdf");
+  });
+}
+
+function clearStoreDatabase(){
+  if(confirm("Clear all imported store names?")){
+    storeDatabase=[];saveData();updateDbCount();toast("Store database cleared");
+  }
+}
+
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".autocomplete"))document.getElementById("storeSuggestions")?.classList.remove("show")
+});
+/* ===== END: STORE DATABASE & AUTOCOMPLETE ===== */
+
+/* ===== START: THEME FUNCTIONS ===== */
+function toggleTheme(){
+ const dark=document.body.classList.toggle("dark");localStorage.setItem("shadab_theme",dark?"dark":"light");document.getElementById("themeBtn").textContent=dark?"☀️":"🌙";
+}
+function loadTheme(){const dark=localStorage.getItem("shadab_theme")==="dark";document.body.classList.toggle("dark",dark);document.getElementById("themeBtn").textContent=dark?"☀️":"🌙"}
+/* ===== END: THEME FUNCTIONS ===== */
+
+/* ===== START: CAMERA FUNCTIONS ===== */
+async function startCamera(){
+  try{
+    if(!window.isSecureContext){
+      toast("Camera requires HTTPS. Open the GitHub Pages HTTPS link.");
+      return;
+    }
+    if(!navigator.mediaDevices?.getUserMedia){
+      toast("Live camera is not supported in this browser. Use the camera upload button.");
+      return;
+    }
+
+    stopCamera();
+    const constraints={
+      audio:false,
+      video:{
+        facingMode:{ideal:"environment"},
+        width:{ideal:1920},
+        height:{ideal:1080}
+      }
+    };
+    stream=await navigator.mediaDevices.getUserMedia(constraints);
+    const video=document.getElementById("video");
+    video.setAttribute("playsinline","");
+    video.setAttribute("autoplay","");
+    video.muted=true;
+    video.srcObject=stream;
+    document.getElementById("cameraBox").classList.add("has-video");
+    document.getElementById("cameraPlaceholder").style.display="none";
+    await video.play();
+    toast("Main camera is ready");
+  }catch(e){
+    console.error(e);
+    toast("Camera permission denied or camera unavailable");
+  }
+}
+
+function capturePhoto(){
+  const video=document.getElementById("video");
+  if(!stream||video.readyState<2)return toast("Tap Open Camera first");
+  const canvas=document.getElementById("canvas");
+  const ctx=canvas.getContext("2d");
+  canvas.width=video.videoWidth||1280;
+  canvas.height=video.videoHeight||960;
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+
+  const stamp=new Date();
+  const stampText=`Shadab Pharmacy  •  ${stamp.toLocaleDateString()} ${stamp.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
+  const barH=Math.max(72,canvas.height*.075);
+  ctx.fillStyle="rgba(0,0,0,.72)";
+  ctx.fillRect(0,canvas.height-barH,canvas.width,barH);
+  ctx.fillStyle="#fff";
+  ctx.font=`700 ${Math.max(20,canvas.width/48)}px Arial`;
+  ctx.fillText(stampText,Math.max(16,canvas.width*.02),canvas.height-barH/2+8);
+
+  capturedData=canvas.toDataURL("image/jpeg",.86);
+  const preview=document.getElementById("photoImg");
+  preview.src=capturedData;
+  document.getElementById("photoPreview").classList.add("show");
+  stopCamera();
+  toast("Photo captured and added");
+}
+
+function stopCamera(){
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
+    stream=null;
+  }
+}
+/* ===== END: CAMERA FUNCTIONS ===== */
+
+/* ===== START: MOBILE CAMERA FILE FALLBACK ===== */
+function openDeviceCamera(){
+  const input=document.getElementById("cameraFileInput");
+  if(input){
+    input.value="";
+    input.click();
+  }else{
+    startCamera();
+  }
+}
+
+function handleCameraFile(event){
+  const file=event.target.files?.[0];
+  if(!file)return;
+  if(!file.type.startsWith("image/")){
+    toast("Please choose a photo");
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.getElementById("canvas");
+      const ctx=canvas.getContext("2d");
+      const maxW=1800;
+      const scale=Math.min(1,maxW/img.width);
+      canvas.width=Math.round(img.width*scale);
+      canvas.height=Math.round(img.height*scale);
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+      const now=new Date();
+      const stamp=`Shadab Pharmacy  •  ${now.toLocaleDateString()} ${now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
+      const barH=Math.max(72,canvas.height*.075);
+      ctx.fillStyle="rgba(0,0,0,.72)";
+      ctx.fillRect(0,canvas.height-barH,canvas.width,barH);
+      ctx.fillStyle="#fff";
+      ctx.font=`700 ${Math.max(20,canvas.width/48)}px Arial`;
+      ctx.fillText(stamp,Math.max(16,canvas.width*.02),canvas.height-barH/2+8);
+
+      const data=canvas.toDataURL("image/jpeg",.86);
+      document.getElementById("photoData").value=data;
+      const preview=document.getElementById("photoPreview");
+      preview.src=data;
+      preview.style.display="block";
+      toast("Camera photo added");
+    };
+    img.src=reader.result;
+  };
+}
+/* ===== END: MOBILE CAMERA FILE FALLBACK ===== */
+
+/* ===== START: PWA INSTALL SUPPORT ===== */
+let deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  const btn=document.getElementById("installAppBtn");
+  if(btn)btn.classList.add("show");
+});
+async function installApp(){
+  if(!deferredInstallPrompt){
+    toast("On Android Chrome: menu ⋮ → Add to Home screen / Install app");
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt=null;
+  document.getElementById("installAppBtn")?.classList.remove("show");
+}
+window.addEventListener("appinstalled",()=>{
+  document.getElementById("installAppBtn")?.classList.remove("show");
+  toast("Shadab Pharmacy installed");
+});
+/* ===== END: PWA INSTALL SUPPORT ===== */
+
+/* ===== START: PHOTO UPLOAD FALLBACK ===== */
+function uploadPhoto(event){
+ const file=event.target.files[0]; if(!file)return;
+ const reader=new FileReader(); reader.onload=e=>{
+  const img=new Image(); img.onload=()=>{
+   const c=document.getElementById("canvas"),ctx=c.getContext("2d"),max=1600,scale=Math.min(1,max/img.width);
+   c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);ctx.drawImage(img,0,0,c.width,c.height);
+   ctx.fillStyle="rgba(0,0,0,.68)";ctx.fillRect(0,c.height-62,c.width,62);ctx.fillStyle="#fff";ctx.font=`bold ${Math.max(18,c.width/55)}px Arial`;
+   const d=new Date();ctx.fillText(`Shadab Pharmacy  •  ${d.toLocaleDateString("en-PK")}  ${d.toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"})}`,22,c.height-24);
+   capturedData=c.toDataURL("image/jpeg",.82);document.getElementById("photoImg").src=capturedData;document.getElementById("photoPreview").classList.add("show");toast("Photo loaded");
+  };img.src=e.target.result;
+ };reader.readAsDataURL(file);
+}
+/* ===== END: PHOTO UPLOAD FALLBACK ===== */
+
+/* ===== START: LOCATION FUNCTION ===== */
+function getLocation(){
+ return new Promise(resolve=>{
+  if(!navigator.geolocation)return resolve(null);
+  navigator.geolocation.getCurrentPosition(p=>resolve({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:Math.round(p.coords.accuracy)}),()=>resolve(null),{enableHighAccuracy:true,timeout:8000,maximumAge:0});
+ });
+}
+/* ===== END: LOCATION FUNCTION ===== */
+
+/* ===== START: VISIT CRUD FUNCTIONS ===== */
+async function saveVisit(){
+ const type=document.getElementById("visitType").value,area=document.getElementById("area").value,territory=document.getElementById("territory").value;
+ const store=document.getElementById("storeName").value.trim(),person=document.getElementById("personName").value.trim(),phone=document.getElementById("personPhone").value.trim(),notes=document.getElementById("notes").value.trim();
+ if(!store||!person)return toast("Store name and person name are required");
+ if(!territory)return toast("Please select a territory");
+ const loc=await getLocation(), d=new Date();
+ const obj={id:editingId||uid(),type,area,territory,store,person,phone,notes,date:d.toISOString().slice(0,10),time:d.toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"}),photo:capturedData||"",location:loc,createdAt:d.toISOString()};
+ if(editingId){const i=visits.findIndex(v=>v.id===editingId);if(i>-1)visits[i]=obj;toast("Visit updated successfully")}else{visits.unshift(obj);toast("Visit saved successfully")}
+ saveData();editingId=null;resetForm();renderRecords();updateStats();
+}
+function editVisit(id){
+ const v=visits.find(x=>x.id===id);if(!v)return;editingId=id;
+ document.getElementById("visitType").value=v.type;document.getElementById("area").value=v.area;refreshTerritories(v.territory);
+ document.getElementById("storeName").value=v.store;document.getElementById("personName").value=v.person;document.getElementById("personPhone").value=v.phone||"";document.getElementById("notes").value=v.notes||"";
+ capturedData=v.photo||null;if(capturedData){document.getElementById("photoImg").src=capturedData;document.getElementById("photoPreview").classList.add("show")}
+ window.scrollTo({top:0,behavior:"smooth"});toast("Edit mode enabled");
+}
+function deleteVisit(id){if(confirm("Delete this visit? This cannot be undone.")){visits=visits.filter(v=>v.id!==id);saveData();renderRecords();updateStats();toast("Visit deleted")}}
+function resetForm(){editingId=null;["storeName","personName","personPhone","notes"].forEach(id=>document.getElementById(id).value="");document.getElementById("visitType").value="Doctor Pharmacy";document.getElementById("area").value="Sahiwal";capturedData=null;document.getElementById("photoPreview").classList.remove("show");refreshTerritories();stopCamera()}
+/* ===== END: VISIT CRUD FUNCTIONS ===== */
+
+/* ===== START: RECORD RENDERING & FILTERS ===== */
+function renderRecords(){
+ const date=document.getElementById("filterDate").value,area=document.getElementById("filterArea").value,box=document.getElementById("records");
+ let data=visits.filter(v=>(!date||v.date===date)&&(!area||v.area===area));
+ const selectAll=document.getElementById("selectAllRecords");
+ if(selectAll) selectAll.checked=false;
+ if(!data.length){box.innerHTML='<div class="empty">No visit records found.</div>';return}
+ const selected=new Set(getSelectedRecordIds());
+ box.innerHTML=data.map(v=>`<article class="record ${selected.has(String(v.id))?"selected":""}">
+ <div class="record-check-wrap"><input class="record-check" type="checkbox" data-record-id="${esc(String(v.id))}" ${selected.has(String(v.id))?"checked":""} onchange="toggleRecordSelection('${esc(String(v.id))}',this.checked)"></div>
+ ${v.photo?`<img src="${v.photo}" alt="Visit photo">`:`<div style="width:88px;height:88px;border-radius:14px;background:#eee;display:grid;place-items:center;font-size:27px">📷</div>`}
+ <div class="record-main"><b>${esc(v.store)}</b><p>${esc(v.person)}${v.phone?" • "+esc(v.phone):""}</p><span class="pill">${esc(v.type)}</span><span class="pill">${esc(v.area)}</span><span class="pill">${esc(v.territory)}</span><p>🕒 ${esc(v.time)} • ${formatDate(v.date)}</p></div>
+ <div class="record-actions"><button class="mini" onclick="editVisit('${esc(String(v.id))}')">✏️ Edit</button><button class="mini" onclick="shareVisit('${esc(String(v.id))}')">☘ Share</button><button class="mini" onclick="downloadSinglePDF('${esc(String(v.id))}')">PDF</button><button class="mini" onclick="printSingle('${esc(String(v.id))}')">🖨️</button><button class="mini" onclick="deleteVisit('${esc(String(v.id))}')">🗑️</button></div>
+ </article>`).join("");
+ updateSelectAllState();
+}
+function clearFilters(){document.getElementById("filterDate").value="";document.getElementById("filterArea").value="";selectedRecordIds.clear();renderRecords()}
+function updateStats(){
+ const t=visits.filter(v=>v.date===todayISO());document.getElementById("todayCount").textContent=t.length;document.getElementById("todayPeople").textContent=new Set(t.map(v=>v.person.toLowerCase())).size;document.getElementById("todayAreas").textContent=new Set(t.map(v=>v.area)).size;
+}
+/* ===== END: RECORD RENDERING & FILTERS ===== */
+
+/* ===== START: WHATSAPP SHARING FUNCTIONS ===== */
+function shareVisit(id){
+ const v=visits.find(x=>x.id===id);if(!v)return;
+ const text=visitText(v);window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,"_blank");
+}
+function shareAllToday(){
+ const data=visits.filter(v=>v.date===todayISO());if(!data.length)return toast("No visits for today");
+ let text=`*Shadab Pharmacy — Today's Visits*\nDate: ${formatDate(todayISO())}\nTotal: ${data.length}\n\n`;
+ data.forEach((v,i)=>text+=`${i+1}. ${v.store} — ${v.person}\n${v.type} | ${v.area} | ${v.territory}\nTime: ${v.time}\n\n`);
+ window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,"_blank");
+}
+/* ===== END: WHATSAPP SHARING FUNCTIONS ===== */
+
+
+/* ===== START: BULK PDF SELECTION & SHARING FUNCTIONS ===== */
+let selectedRecordIds = new Set();
+
+function getSelectedRecordIds(){
+  return Array.from(selectedRecordIds);
+}
+function toggleRecordSelection(id,checked){
+  id=String(id);
+  if(checked) selectedRecordIds.add(id); else selectedRecordIds.delete(id);
+  updateSelectAllState();
+  renderRecordsSelectionOnly();
+}
+function renderRecordsSelectionOnly(){
+  document.querySelectorAll("#records .record").forEach(card=>{
+    const cb=card.querySelector(".record-check");
+    if(!cb)return;
+    const id=String(cb.dataset.recordId);
+    card.classList.toggle("selected",selectedRecordIds.has(id));
+  });
+}
+function getVisibleRecordData(){
+  const date=document.getElementById("filterDate")?.value||"";
+  const area=document.getElementById("filterArea")?.value||"";
+  return visits.filter(v=>(!date||v.date===date)&&(!area||v.area===area));
+}
+function toggleSelectAllRecords(checked){
+  const visible=getVisibleRecordData();
+  visible.forEach(v=>{
+    const id=String(v.id);
+    if(checked)selectedRecordIds.add(id);else selectedRecordIds.delete(id);
+  });
+  renderRecords();
+}
+function updateSelectAllState(){
+  const cb=document.getElementById("selectAllRecords");
+  if(!cb)return;
+  const visible=getVisibleRecordData();
+  const ids=visible.map(v=>String(v.id));
+  cb.checked=ids.length>0&&ids.every(id=>selectedRecordIds.has(id));
+  cb.indeterminate=ids.some(id=>selectedRecordIds.has(id))&&!cb.checked;
+}
+function getBulkPDFData(){
+  const selected=getSelectedRecordIds();
+  if(selected.length){
+    const set=new Set(selected);
+    return visits.filter(v=>set.has(String(v.id)));
+  }
+  return getVisibleRecordData();
+}
+async function makeCompactPDFBlob(data,title){
+  await loadPDFLib();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  let row=0,col=0;
+  const top=39,left=10,cardW=93,cardH=38,gapX=4,gapY=4;
+  if(!data.length)throw new Error("NO_DATA");
+  for(const v of data){
+    if(row>=6){doc.addPage();row=0;col=0;}
+    if(row===0&&col===0)pdfHeader(doc,title);
+    const x=left+(col*(cardW+gapX));
+    pdfRecordCompact(doc,v,x,top+(row*(cardH+gapY)),cardW,cardH);
+    col++;
+    if(col>=2){col=0;row++;}
+  }
+  doc.setFontSize(7.5);doc.setFont(undefined,"normal");
+  doc.text(`Total records: ${data.length}`,10,288);
+  return doc;
+}
+function bulkPdfTitle(data){
+  const date=document.getElementById("filterDate")?.value||"";
+  const area=document.getElementById("filterArea")?.value||"";
+  return `Visit Report — ${date?formatDate(date):"Selected Records"}${area?" — "+area:""}`;
+}
+async function viewSelectedPDF(){
+  const data=getBulkPDFData();
+  if(!data.length)return toast("No records to show");
+  try{
+    const doc=await makeCompactPDFBlob(data,bulkPdfTitle(data));
+    const blob=doc.output("blob");
+    const url=URL.createObjectURL(blob);
+    const w=window.open(url,"_blank");
+    if(!w)toast("Please allow popups to view PDF");
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(e){console.error(e);toast("Could not create PDF");}
+}
+async function downloadSelectedPDF(){
+  const data=getBulkPDFData();
+  if(!data.length)return toast("No records to download");
+  try{
+    const doc=await makeCompactPDFBlob(data,bulkPdfTitle(data));
+    doc.save(`Shadab-Pharmacy-Report-${todayISO()}.pdf`);
+    toast(`${data.length} records PDF downloaded`);
+  }catch(e){console.error(e);toast("Could not create PDF");}
+}
+async function shareSelectedPDF(){
+  const data=getBulkPDFData();
+  if(!data.length)return toast("No records to share");
+  try{
+    const doc=await makeCompactPDFBlob(data,bulkPdfTitle(data));
+    const blob=doc.output("blob");
+    const file=new File([blob],`Shadab-Pharmacy-Report-${todayISO()}.pdf`,{type:"application/pdf"});
+    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+      await navigator.share({title:"Shadab Pharmacy Visit Report",text:`${data.length} visit records`,files:[file]});
+      toast("PDF share opened");
+    }else{
+      doc.save(file.name);
+      toast("Your browser does not support PDF file sharing — PDF downloaded instead");
+    }
+  }catch(e){
+    if(e?.name==="AbortError")return;
+    console.error(e);toast("Could not share PDF");
+  }
+}
+/* ===== END: BULK PDF SELECTION & SHARING FUNCTIONS ===== */
+
+/* ===== START: PRINT FUNCTIONS ===== */
+function printHTML(title,data){
+  /* ===== START: COMPACT A4 PRINT LAYOUT ===== */
+  const cards=data.map(v=>`
+    <div class="visit-card">
+      <div class="visit-main">
+        <div class="store">${esc(v.store||"—")}</div>
+        <div class="meta">
+          <span><b>Person:</b> ${esc(v.person||"—")}</span>
+          <span><b>Type:</b> ${esc(v.type||"—")}</span>
+          <span><b>Area:</b> ${esc(v.area||"—")}</span>
+          <span><b>Territory:</b> ${esc(v.territory||"—")}</span>
+          <span><b>Phone:</b> ${esc(v.phone||"—")}</span>
+          <span><b>Date/Time:</b> ${formatDate(v.date)} ${esc(v.time||"")}</span>
+        </div>
+        ${v.notes?`<div class="notes"><b>Notes:</b> ${esc(v.notes)}</div>`:""}
+      </div>
+      <div class="photo-box">${v.photo?`<img src="${v.photo}" alt="Visit Photo">`:`<span>No Photo</span>`}</div>
+    </div>`).join("");
+
+  const w=window.open("","_blank","width=1000,height=800");
+  if(!w){toast("Please allow the print popup");return;}
+  const html=`<!doctype html><html><head><meta charset="utf-8">
+  <title>Shadab Pharmacy — ${esc(title)}</title>
+  <style>
+    @page{size:A4 portrait;margin:6mm}
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;color:#111;margin:0}
+    h1{font-size:16px;margin:0 0 1px}
+    .sub{color:#555;font-size:8px;margin:0 0 5px}
+    .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:3.5mm}
+    .visit-card{height:40mm;border:1px solid #bfc3c8;border-radius:2mm;padding:2.5mm;display:flex;gap:2.5mm;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
+    .visit-main{flex:1;min-width:0}
+    .store{font-size:9.5px;font-weight:700;line-height:1.15;margin-bottom:1.5mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .meta{font-size:7.2px;line-height:1.35;display:grid;grid-template-columns:1fr 1fr;column-gap:2mm}
+    .meta span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .notes{font-size:6.8px;line-height:1.25;margin-top:1.5mm;max-height:8mm;overflow:hidden}
+    .photo-box{width:24mm;height:24mm;border:1px solid #c8ccd0;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;font-size:6px;color:#777;text-align:center}
+    .photo-box img{width:100%;height:100%;object-fit:cover}
+    .total{font-size:8px;margin-top:4px;color:#555}
+    @media print{button{display:none!important}}
+  </style></head><body>
+  <h1>Shadab Pharmacy</h1>
+  <div class="sub">${esc(title)} • Generated ${nowText()}</div>
+  <div class="report-grid">${cards}</div>
+  <div class="total">Total Records: ${data.length}</div>
+  <script>window.onload=function(){window.print()}<\/script></body></html>`;
+  w.document.open();w.document.write(html);w.document.close();
+  /* ===== END: COMPACT A4 PRINT LAYOUT ===== */
+}
+function printDateReport(date){printHTML(`Visit Report — ${formatDate(date)}`,visits.filter(v=>v.date===date))}
+function printSingle(id){const v=visits.find(x=>x.id===id);if(v)printHTML(`Visit Report — ${formatDate(v.date)}`,[v])}
+/* ===== END: PRINT FUNCTIONS ===== */
+
+/* ===== START: PDF GENERATION FUNCTIONS ===== */
+async function loadPDFLib(){
+ if(window.jspdf)return true;
+ await new Promise((resolve,reject)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";s.onload=resolve;s.onerror=reject;document.head.appendChild(s)});
+ return !!window.jspdf;
+}
+async function downloadPDFForDate(date){
+ const data=visits.filter(v=>v.date===date);
+ if(!data.length)return toast("No records for this date");
+ try{
+   await loadPDFLib();
+   const {jsPDF}=window.jspdf;
+   const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+   pdfHeader(doc,`Visit Report — ${formatDate(date)}`);
+   let y=39, col=0, row=0;
+   const left=10, top=39, cardW=93, cardH=38, gapX=4, gapY=4;
+   for(const v of data){
+     if(row>=6){
+       doc.addPage();
+       pdfHeader(doc,`Visit Report — ${formatDate(date)} (continued)`);
+       row=0; col=0; y=top;
+     }
+     const x=left+(col*(cardW+gapX));
+     pdfRecordCompact(doc,v,x,top+(row*(cardH+gapY)),cardW,cardH);
+     col++;
+     if(col>=2){col=0;row++;}
+   }
+   doc.setFontSize(7.5);doc.setFont(undefined,"normal");
+   doc.text(`Total records: ${data.length}`,10,288);
+   doc.save(`Shadab-Pharmacy-${date}.pdf`);
+   toast("Compact PDF downloaded");
+ }catch(e){console.error(e);toast("PDF library unavailable. Use Print instead.");}
+}
+async function downloadSinglePDF(id){
+ const v=visits.find(x=>x.id===id);if(!v)return;
+ try{
+   await loadPDFLib();const {jsPDF}=window.jspdf;
+   const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+   pdfHeader(doc,`Single Visit — ${formatDate(v.date)}`);
+   pdfRecordCompact(doc,v,10,39,190,45);
+   doc.save(`Shadab-Pharmacy-${v.date}-${v.id}.pdf`);
+   toast("PDF downloaded");
+ }catch(e){toast("PDF unavailable. Use Print instead.")}
+}
+function pdfHeader(doc,title){
+ doc.setFontSize(16);doc.setFont(undefined,"bold");doc.text("Shadab Pharmacy",10,17);
+ doc.setFontSize(9);doc.setFont(undefined,"normal");doc.text(title,10,24);
+ doc.setFontSize(7.5);doc.text(`Generated: ${nowText()}`,10,30);
+ doc.line(10,33,200,33);
+}
+/* ===== START: COMPACT PDF VISIT CARD ===== */
+function pdfRecordCompact(doc,v,x,y,w,h){
+ doc.setDrawColor(190,195,200);doc.roundedRect(x,y,w,h,2,2);
+ const photoX=x+w-27, photoY=y+3;
+ if(v.photo && String(v.photo).startsWith("data:image/")){
+   try{
+     doc.addImage(v.photo,"JPEG",photoX,photoY,23,19,undefined,"FAST");
+   }catch(e){
+     doc.setFontSize(6);doc.text("No Photo",photoX+11.5,photoY+10,{align:"center"});
+   }
+ }else{
+   doc.setFontSize(6);doc.setTextColor(110,110,110);
+   doc.text("No Photo",photoX+11.5,photoY+10,{align:"center"});
+   doc.setTextColor(0,0,0);
+ }
+ const textW=w-32;
+ doc.setFontSize(8.5);doc.setFont(undefined,"bold");
+ doc.text(String(v.store||"—"),x+3,y+6,{maxWidth:textW});
+ doc.setFont(undefined,"normal");doc.setFontSize(6.5);
+ const lines=[
+   `Person: ${v.person||"—"}`,
+   `Type: ${v.type||"—"}`,
+   `Area: ${v.area||"—"}`,
+   `Territory: ${v.territory||"—"}`,
+   `Phone: ${v.phone||"—"}`,
+   `Date/Time: ${formatDate(v.date)} ${v.time||""}`
+ ];
+ lines.forEach((t,i)=>doc.text(String(t),x+3,y+11+(i*3.7),{maxWidth:textW}));
+ if(v.notes){
+   doc.setFontSize(6);doc.text(`Notes: ${String(v.notes)}`,x+3,y+h-3.5,{maxWidth:w-6});
+ }
+}
+/* ===== END: COMPACT PDF VISIT CARD ===== */
+
+/* ===== END: PDF GENERATION FUNCTIONS ===== */
+
+/* ===== START: APP INITIALIZATION ===== */
+loadTheme(); document.getElementById("filterDate").value=todayISO(); updateDbCount();
+refreshTerritories();renderRecords();updateStats();
+window.addEventListener("beforeunload",stopCamera);
+/* ===== END: APP INITIALIZATION ===== */
+
+/* ===== START: MOBILE DIRECT CAMERA / PHOTO PICKER ===== */
+function openMobileCamera(){
+  const input = document.getElementById('mobileCameraInput');
+  if(!input){ toast('Camera input unavailable'); return; }
+  input.value = '';
+  input.click();
+}
+function openPhotoPicker(){
+  const input = document.getElementById('photoPickerInput');
+  if(!input){ toast('Photo picker unavailable'); return; }
+  input.value = '';
+  input.click();
+}
+function handleMobileCamera(input){
+  const file = input && input.files && input.files[0];
+  if(!file) return;
+  if(!file.type || !file.type.startsWith('image/')){
+    toast('Please select an image');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const data = e.target.result;
+    try {
+      const cap = document.getElementById('capturedData');
+      if(cap) cap.value = data;
+      const img = document.getElementById('photoImg');
+      if(img){
+        img.src = data;
+        img.style.display = 'block';
+      }
+      const preview = document.getElementById('photoPreview');
+      if(preview) preview.classList.add('has-photo');
+      if(typeof toast === 'function') toast('Photo added successfully');
+    } catch(err) {
+      console.error(err);
+      if(typeof toast === 'function') toast('Could not add photo');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+/* ===== END: MOBILE DIRECT CAMERA / PHOTO PICKER ===== */
+
+</script>
+
+</body>
+</html>
