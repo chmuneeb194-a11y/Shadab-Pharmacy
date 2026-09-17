@@ -312,7 +312,7 @@ body:not(.dark) .follow-stat{background:linear-gradient(145deg,rgba(255,255,255,
       <div class="follow-stack" id="followStack"></div>
     </div>
     <div class="overview-card">
-      <h3>✓ Today's Tasks</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h3 style="margin:0">✓ Today's Tasks</h3><button class="mini" onclick="openSmartDailyRoute()">🚀 Smart Daily Route</button></div>
       <div class="follow-grid" id="taskDashboardGrid"></div>
       <div class="follow-stack" id="taskDashboardStack"></div>
     </div>
@@ -494,6 +494,15 @@ body:not(.dark) .follow-stat{background:linear-gradient(145deg,rgba(255,255,255,
  </div>
 </div>
 <!-- ===== END: ADMIN LOGIN & FIXED WEEKLY SCHEDULE ===== -->
+<div class="modal" id="smartRouteModal">
+ <div class="modal-box modal-wide">
+  <div class="modal-head"><h3>🚀 Smart Daily Route</h3><button class="close" onclick="closeSmartDailyRoute()">×</button></div>
+  <p class="notice" id="smartRouteSummary">Today's remaining stores are arranged by territory, then store name.</p>
+  <div class="route-picker-toolbar"><b id="smartRouteCount">0 stores</b><div><button class="mini" onclick="renderSmartDailyRoute('remaining')">Remaining</button><button class="mini" onclick="renderSmartDailyRoute('all')">All Today</button></div></div>
+  <div class="assignment-list" id="smartRouteList"></div>
+  <div class="actions"><button class="btn primary" onclick="printSmartDailyRoute()">🖨 Print Route</button><button class="btn secondary" onclick="closeSmartDailyRoute()">Close</button></div>
+ </div>
+</div>
 <div class="modal" id="taskNamesModal">
  <div class="modal-box modal-wide">
   <div class="modal-head"><h3 id="taskNamesTitle">Today's Tasks</h3><button class="close" onclick="closeTaskNames()">×</button></div>
@@ -1638,6 +1647,36 @@ function applyScheduledTasksForSalesman(salesman,force=false){
  renderTodayTasks();updatePremiumDashboard();
 }
 function onSalesmanChanged(){const salesman=document.getElementById("visitedBy")?.value;localStorage.setItem("shadab_current_salesman_v1",salesman||"");if(salesman&&adminSchedules[salesman]){applyScheduledTasksForSalesman(salesman,true);const d=adminSchedules[salesman];if(d.area){document.getElementById("area").value=d.area;refreshTerritories()}}else{renderTodayTasks();updatePremiumDashboard()}}
+let smartRouteMode="remaining";
+function smartRouteRows(mode="remaining"){
+ const day=currentTodayTasks(),stores=Array.isArray(day.stores)?day.stores.slice():[];
+ const wanted=mode==="all"?stores:stores.filter(x=>x.status==="Planned");
+ const territoryOrder=Array.isArray(day.territories)?day.territories:[];
+ const idx=new Map(territoryOrder.map((t,i)=>[t,i]));
+ wanted.sort((a,b)=>{
+   const ta=idx.has(a.territory)?idx.get(a.territory):9999, tb=idx.has(b.territory)?idx.get(b.territory):9999;
+   if(ta!==tb)return ta-tb;
+   const sa=a.status==="Planned"?0:1, sb=b.status==="Planned"?0:1;
+   if(sa!==sb)return sa-sb;
+   return String(a.name||"").localeCompare(String(b.name||""));
+ });
+ return wanted;
+}
+function openSmartDailyRoute(){smartRouteMode="remaining";document.getElementById("smartRouteModal").classList.add("show");renderSmartDailyRoute("remaining")}
+function closeSmartDailyRoute(){document.getElementById("smartRouteModal").classList.remove("show")}
+function renderSmartDailyRoute(mode="remaining"){
+ smartRouteMode=mode;
+ const day=currentTodayTasks(),rows=smartRouteRows(mode),box=document.getElementById("smartRouteList");
+ document.getElementById("smartRouteCount").textContent=rows.length+" "+(rows.length===1?"store":"stores");
+ const territories=[...new Set(rows.map(x=>x.territory))];
+ document.getElementById("smartRouteSummary").textContent=rows.length?("Recommended order: "+territories.join(" → ")):"No stores remaining for today's route.";
+ box.innerHTML=rows.length?rows.map((s,i)=>{
+   const follow=s.followup?(" • Follow-up "+formatDate(s.followup)):"";
+   const onclick="openTaskStore("+[JSON.stringify(s.name),JSON.stringify(s.area),JSON.stringify(s.territory)].join(",")+");closeSmartDailyRoute()";
+   return '<label class="assign-row task-pick-row" style="display:flex;align-items:center;gap:10px"><span style="min-width:30px;font-weight:800">'+(i+1)+'</span><span style="flex:1"><b>'+esc(s.name)+'</b><small>'+esc(s.territory)+' • '+esc(s.status||"Planned")+follow+'</small></span><button class="mini" onclick=\"'+onclick.replace(/\"/g,'&quot;')+'\">Open</button></label>';
+ }).join(""): "<div class='empty-state'>All today's stores have been visited.</div>";
+}
+function printSmartDailyRoute(){const rows=smartRouteRows(smartRouteMode);if(!rows.length)return toast("No stores in today's route");const w=window.open("","_blank","width=900,height=800");if(!w)return toast("Please allow the print popup");const tr=rows.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.name)}</td><td>${esc(s.area)}</td><td>${esc(s.territory)}</td><td>${esc(s.status||"Planned")}</td></tr>`).join("");w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — Smart Daily Route</title><style>@page{size:A4;margin:10mm}body{font-family:Arial;color:#111}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #aaa;padding:6px;text-align:left}h1{margin:0 0 4px}</style></head><body><h1>SHADAB PHARMACY</h1><p>Smart Daily Route — ${formatDate(todayISO())} • ${rows.length} stores</p><table><thead><tr><th>#</th><th>Medical Store</th><th>Area</th><th>Territory</th><th>Status</th></tr></thead><tbody>${tr}</tbody></table></body></html>`);w.document.close();w.onload=()=>setTimeout(()=>w.print(),250)}
 let activeTaskNameKind="planned";
 function getTaskNameData(kind){
  const stores=Array.isArray(currentTodayTasks().stores)?currentTodayTasks().stores:[];
