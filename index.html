@@ -1386,9 +1386,15 @@ async function saveVisit(){
  const visitedBy=document.getElementById("visitedBy").value,type=document.getElementById("visitType").value,area=document.getElementById("area").value,territory=selectedTerritories().join(", ");
  const store=document.getElementById("storeName").value.trim(),person=document.getElementById("personName").value.trim(),phone=document.getElementById("personPhone").value.trim(),notes=document.getElementById("notes").value.trim();
  const status=document.getElementById("visitStatus")?.value||"Completed",followup=document.getElementById("followupDate")?.value||"";
- if(!store||!person)return toast("Store name and person name are required");
- if(!territory)return toast("Please select a territory");
- if(voiceRecording)return toast("Please stop the voice recording first");
+ const missing=[];
+ if(!visitedBy)missing.push("Visited By");
+ if(!type)missing.push("Visit Type");
+ if(!area)missing.push("Area");
+ if(!territory)missing.push("Territory");
+ if(!store)missing.push("Store / Pharmacy Name");
+ if(!person)missing.push("Person Name");
+ if(missing.length){ alert("Please fill the following required field(s):\n\n• " + missing.join("\n• ")); return false; }
+ if(voiceRecording){ alert("Please stop the voice recording first."); return false; }
  const loc=await getLocation(), d=new Date(), id=editingId||uid();
  const old=editingId?visits.find(v=>v.id===editingId):null;
  const obj={id,visitedBy,type,area,territory,store,person,phone,notes,status,followup,date:d.toISOString().slice(0,10),time:d.toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"}),photo:capturedData||"",location:loc,createdAt:old?.createdAt||d.toISOString(),voiceNoteKey:old?.voiceNoteKey||""};
@@ -2074,5 +2080,30 @@ function openVisitRecordsSection(){
 }
 window.addEventListener("keydown",e=>{if(e.key==="Escape")closeSectionModal();});
 </script>
+
+<!-- FIREBASE STATUS ONLY: appended without changing existing page markup -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+#offlineBar .offline-dot.firebase-checking{background:#ff9f0a!important;animation:shadabFirebaseBlink 1s infinite}
+#offlineBar .offline-dot.firebase-connected{background:#20c96b!important;animation:shadabFirebaseBlink 1.2s infinite}
+#offlineBar .offline-dot.firebase-error{background:#ff3b30!important;animation:shadabFirebaseBlink .8s infinite}
+@keyframes shadabFirebaseBlink{0%,100%{opacity:1}50%{opacity:.25}}
+</style>
+<script id="shadab-firebase-status-only">
+(function(){
+ const dot=document.querySelector('#offlineBar .offline-dot'),text=document.getElementById('syncText');
+ if(!dot)return;
+ function setStatus(cls,msg){dot.classList.remove('firebase-checking','firebase-connected','firebase-error');dot.classList.add(cls);if(text)text.textContent=msg;}
+ setStatus('firebase-checking','Firebase connection checking...');
+ try{
+  firebase.initializeApp({apiKey:'AIzaSyAi5c8pdkxxfZyvZEG9hi4q5nugVGXfKUc',authDomain:'shadab-pharmacy.firebaseapp.com',projectId:'shadab-pharmacy',storageBucket:'shadab-pharmacy.firebasestorage.app',messagingSenderId:'1070012641373',appId:'1:1070012641373:web:18abfbf95b71c692a41db4',measurementId:'G-Q92J0E4R23'});
+  firebase.firestore().collection('_connection').doc('health').get({source:'server'})
+   .then(function(){setStatus('firebase-connected','Firebase connected — server check successful');})
+   .catch(function(err){console.warn('Firebase server check failed:',err);setStatus('firebase-error','Firebase server check failed — check Firestore rules/network');});
+ }catch(err){console.error('Firebase initialization failed:',err);setStatus('firebase-error','Firebase initialization failed');}
+})();
+</script>
+
 </body>
 </html>
