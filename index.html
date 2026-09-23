@@ -406,69 +406,6 @@ body.section-modal-records main>#visitRecordsCard{display:block!important;positi
 body.section-modal-records main>.card#visitRecordsCard .section-modal-close{display:block}
 body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisitManagerAnchor{display:block}
 @media(max-width:700px){body.section-modal-open .grid,body.section-modal-records main>.card#visitRecordsCard{inset:8px;padding:6px;border-radius:18px}}
-/* ===== SHADAB ALERT BAR ===== */
-.shadab-alert-bar{
-  width:100%;
-  display:flex;
-  align-items:center;
-  overflow:hidden;
-  min-height:48px;
-  margin:14px 0 18px;
-  border-radius:14px;
-  background:var(--card,rgba(255,255,255,.08));
-  border:1px solid rgba(67,190,255,.16);
-  box-shadow:0 8px 24px rgba(0,0,0,.08);
-}
-
-.shadab-alert-label{
-  flex:0 0 auto;
-  padding:0 14px;
-  height:48px;
-  display:flex;
-  align-items:center;
-  font-weight:800;
-  font-size:13px;
-  letter-spacing:.5px;
-  color:#fff;
-  background:linear-gradient(135deg,#123b58,#0b263b);
-  border-right:1px solid rgba(255,255,255,.10);
-  z-index:2;
-}
-
-.shadab-alert-window{
-  flex:1;
-  overflow:hidden;
-  white-space:nowrap;
-  position:relative;
-}
-
-.shadab-alert-track{
-  display:inline-block;
-  white-space:nowrap;
-  padding-left:100%;
-  animation:shadabAlertScroll 18s linear infinite;
-  color:#ff2020;
-  font-weight:800;
-  font-size:14px;
-}
-
-.shadab-alert-track:hover{
-  animation-play-state:paused;
-}
-
-@keyframes shadabAlertScroll{
-  from{transform:translateX(0)}
-  to{transform:translateX(-100%)}
-}
-
-body.dark .shadab-alert-bar{
-  background:linear-gradient(145deg,rgba(10,30,45,.96),rgba(7,19,30,.98));
-  border-color:rgba(67,190,255,.15);
-}
-
-body.dark .shadab-alert-label{
-  background:linear-gradient(135deg,#0b3049,#071d2e);
-  }
 </style>
 <div id="sectionModalBackdrop" onclick="closeSectionModal()"></div>
 <div class="top-action-icons" id="topActionIcons">
@@ -534,16 +471,6 @@ body.dark .shadab-alert-label{
 </select>
 </div>
 <!-- ===== END: VISITED BY FIELD ===== -->
-  <!-- SHADAB PHARMACY ALERT -->
-<div class="shadab-alert-bar" id="shadabAlertBar">
-  <div class="shadab-alert-label">🔔 ALERT</div>
-
-  <div class="shadab-alert-window">
-    <div class="shadab-alert-track" id="shadabAlertText">
-      Welcome to Shadab Pharmacy
-    </div>
-  </div>
-</div>
 <div class="field"><label>Visit ID</label><input id="visitIdPreview" readonly placeholder="Auto-generated on save"></div>
 <div class="field"><label>Visit Type</label><select id="visitType" onchange="showStoreSuggestions()"><option>Doctor Pharmacy</option><option>Medical Stores</option><option>Pharmacy Store</option></select></div>
 <div class="field"><label>Area</label><select id="area" onchange="refreshTerritories();showStoreSuggestions()"><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select></div>
@@ -677,23 +604,6 @@ body.dark .shadab-alert-label{
   <div class="field" style="margin-top:10px"><label>Password</label><input id="adminPassword" type="password" autocomplete="current-password" placeholder="Password"></div>
   <div class="actions"><button class="btn primary" onclick="adminLogin()">🔐 Login</button><button class="btn secondary" onclick="closeAdmin()">Cancel</button></div>
  </div>
-  <div class="card">
-  <h3>🔔 Alert Message</h3>
-
-  <textarea
-    id="adminAlertMessage"
-    rows="3"
-    placeholder="Type alert message here..."
-    style="width:100%;resize:vertical;"
-  ></textarea>
-
-  <button
-    class="btn"
-    type="button"
-    onclick="saveShadabAlert()">
-    Save Alert
-  </button>
-  </div>
  <div class="modal-box modal-wide" id="adminDashboardBox" style="display:none">
   <div class="admin-hero">
    <div><div class="admin-kicker">FIELD CONTROL CENTER</div><h3>Admin • Smart Route Planner</h3><p>Build a weekly route once. A salesman can have multiple cities, each with its own territories and days.</p></div>
@@ -2194,47 +2104,6 @@ window.addEventListener("keydown",e=>{if(e.key==="Escape")closeSectionModal();})
  }catch(err){console.error('Firebase initialization failed:',err);setStatus('firebase-error','Firebase initialization failed');}
 })();
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    function loadShadabAlert() {
-        if (typeof firebase === "undefined" || !firebase.database) return;
-
-        firebase.database().ref("shadabAlert").on("value", function(snapshot) {
-            const message = snapshot.val();
-            const alertText = document.getElementById("shadabAlertText");
-
-            if (alertText && message) {
-                alertText.textContent = message;
-            }
-        });
-    }
-
-    window.saveShadabAlert = function () {
-        const input = document.getElementById("adminAlertMessage");
-
-        if (!input) return;
-
-        const message = input.value.trim();
-
-        if (!message) {
-            alert("Please enter an alert message.");
-            return;
-        }
-
-        firebase.database().ref("shadabAlert").set(message)
-            .then(function () {
-                alert("Alert saved successfully.");
-            })
-            .catch(function (error) {
-                console.error("Alert save error:", error);
-                alert("Alert save failed.");
-            });
-    };
-
-    loadShadabAlert();
-
-});
-</script>
 </body>
 </html>
