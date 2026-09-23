@@ -1386,15 +1386,9 @@ async function saveVisit(){
  const visitedBy=document.getElementById("visitedBy").value,type=document.getElementById("visitType").value,area=document.getElementById("area").value,territory=selectedTerritories().join(", ");
  const store=document.getElementById("storeName").value.trim(),person=document.getElementById("personName").value.trim(),phone=document.getElementById("personPhone").value.trim(),notes=document.getElementById("notes").value.trim();
  const status=document.getElementById("visitStatus")?.value||"Completed",followup=document.getElementById("followupDate")?.value||"";
- const missing=[];
- if(!visitedBy)missing.push("Visited By");
- if(!type)missing.push("Visit Type");
- if(!area)missing.push("Area");
- if(!territory)missing.push("Territory");
- if(!store)missing.push("Store / Pharmacy Name");
- if(!person)missing.push("Person Name");
- if(missing.length){ alert("Please fill the following required field(s):\n\n• " + missing.join("\n• ")); return false; }
- if(voiceRecording){ alert("Please stop the voice recording first."); return false; }
+ if(!store||!person)return toast("Store name and person name are required");
+ if(!territory)return toast("Please select a territory");
+ if(voiceRecording)return toast("Please stop the voice recording first");
  const loc=await getLocation(), d=new Date(), id=editingId||uid();
  const old=editingId?visits.find(v=>v.id===editingId):null;
  const obj={id,visitedBy,type,area,territory,store,person,phone,notes,status,followup,date:d.toISOString().slice(0,10),time:d.toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"}),photo:capturedData||"",location:loc,createdAt:old?.createdAt||d.toISOString(),voiceNoteKey:old?.voiceNoteKey||""};
