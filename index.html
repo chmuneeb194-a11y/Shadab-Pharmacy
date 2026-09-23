@@ -262,7 +262,8 @@ body:not(.dark) .overview-card{background:linear-gradient(145deg,rgba(255,255,25
 body:not(.dark) .follow-stat{background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(239,247,252,.92))!important;border-color:rgba(72,146,190,.12)!important}
 /* ===== END: V10 PREMIUM COLOR CORRECTION ===== */
 </style>
-<style id="shadab-task-pdf-style">.task-pdf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:650px){.task-pdf-actions .btn{width:100%}}</style>
+<style id="shadab-task-pdf-style">.task-pdf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:650px){.task-pdf-actions .btn{width:100%}}<style id="field-manager-upgrade-style">.voice-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:7px}.voice-tools select{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:var(--card);color:inherit;font-size:11px}.voice-hint{font-size:10px;color:var(--muted)}.field-manager-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:rgba(32,201,107,.10);color:#159b50;font-size:10px;font-weight:800}.admin-assignment-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.admin-assignment-meta span{padding:5px 8px;border:1px solid var(--line);border-radius:9px;font-size:10px;color:var(--muted)}body.dark .voice-tools select{background:#10283a;color:#eef8ff;border-color:rgba(101,206,255,.12)}</style>
+</style>
 <style id="shadab-admin-style">#routePlannerCard{display:none}.admin-schedule-grid{display:grid;gap:8px;margin-top:12px}.admin-day-row{display:block;padding:0;border:1px solid #0000000d;border-radius:14px;background:#ffffffaa;overflow:hidden}.admin-day-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:0;background:transparent;font:inherit;font-weight:700;text-align:left;cursor:pointer}.admin-day-toggle .day-meta{font-size:11px;color:var(--muted);font-weight:500;margin-left:auto}.admin-day-toggle .day-chevron{font-size:14px;transition:transform .15s ease}.admin-day-row.open .day-chevron{transform:rotate(180deg)}.admin-day-content{display:none;padding:0 12px 12px}.admin-day-row.open .admin-day-content{display:block}.admin-territory-list{display:flex;flex-wrap:wrap;gap:7px}.admin-territory-list label{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #dddde2;border-radius:12px;background:#fff;font-size:12px}.admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.admin-login-note{font-size:12px;color:var(--muted);margin:0 0 12px}.admin-panel .modal-box{max-width:980px}.admin-saved-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border:1px solid #0000000d;border-radius:14px;margin-top:7px;background:#fff}.admin-saved-row small{display:block;color:var(--muted);margin-top:3px}.task-name-list{display:grid;gap:7px;max-height:55vh;overflow:auto}.task-name-row{padding:10px 12px;border:1px solid #0000000d;border-radius:13px;background:#fff}.task-name-row small{display:block;color:var(--muted);margin-top:3px}@media(max-width:650px){.admin-saved-row{align-items:flex-start;flex-direction:column}}body.dark .admin-day-row,body.dark .admin-territory-list label,body.dark .admin-saved-row,body.dark .task-name-row{background:rgba(19,47,64,.7);border-color:rgba(101,206,255,.10)}</style>
 <style id="shadab-new-assignment-style">
 .territory-multiselect{min-height:44px;width:100%;border-radius:12px;padding:8px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.12)}
@@ -316,6 +317,12 @@ body.section-modal-field .grid > section:first-child,
 body.section-modal-today .grid > section:nth-child(2) { display:block !important; }
 body.section-modal-open .section-modal-close { display:block !important; }
 </style>
+
+<style id="smart-admin-premium-style">
+.admin-hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:18px;border:1px solid rgba(91,170,255,.18);border-radius:22px;background:linear-gradient(135deg,rgba(15,80,130,.20),rgba(10,22,38,.72));box-shadow:0 18px 50px rgba(0,0,0,.18)}
+.admin-kicker,.admin-section-label{font-size:10px;letter-spacing:.14em;font-weight:900;color:#56b8ff}.admin-hero h3{margin:4px 0 5px;font-size:22px}.admin-hero p{margin:0;color:var(--muted);font-size:12px;max-width:650px}.admin-hero-actions{display:flex;gap:8px}.admin-icon-btn{width:40px;height:40px;border-radius:13px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.07);color:inherit;font-size:20px;cursor:pointer}.admin-icon-btn.danger{color:#ff8b8b}.admin-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.admin-kpi{padding:13px 14px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 8px 22px rgba(0,0,0,.06)}.admin-kpi b{display:block;font-size:20px}.admin-kpi span{font-size:10px;color:var(--muted)}.admin-planner-grid{display:grid;grid-template-columns:.75fr 1.65fr;gap:12px}.admin-card{border:1px solid var(--line);border-radius:20px;padding:14px;background:var(--card);box-shadow:0 10px 28px rgba(0,0,0,.05)}.admin-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.admin-card-head h4{margin:2px 0 0;font-size:16px}.admin-add-btn,.admin-auto-btn,.admin-remove-btn{border:1px solid var(--line);border-radius:11px;padding:8px 10px;background:var(--soft);color:inherit;font-weight:800;font-size:11px;cursor:pointer}.admin-auto-btn{color:#0a83d8;background:rgba(10,131,216,.09)}.admin-remove-btn{color:#d44;background:rgba(220,50,50,.07)}.admin-premium-select,.admin-route-editor input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:var(--soft);color:inherit;font:inherit}.admin-salesman-snapshot{margin-top:12px}.admin-snapshot-main{font-weight:900;font-size:17px}.admin-snapshot-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.admin-snapshot-meta span{font-size:10px;padding:5px 7px;border-radius:9px;background:var(--soft);border:1px solid var(--line)}.admin-assignment-tabs{display:flex;gap:8px;overflow:auto;padding:2px 1px 9px}.admin-assignment-tab{min-width:120px;padding:10px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:inherit;text-align:left;cursor:pointer}.admin-assignment-tab.active{border-color:#3fa9ff;box-shadow:0 0 0 2px rgba(63,169,255,.12);background:rgba(63,169,255,.10)}.admin-assignment-tab b{display:block;font-size:12px}.admin-assignment-tab small{display:block;margin-top:3px;color:var(--muted);font-size:9px}.admin-route-topline{display:flex;justify-content:space-between;align-items:center;margin:2px 0 12px}.admin-current-area{font-size:18px;font-weight:900;margin-top:3px}.admin-week-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:14px 0 8px}.admin-week-title small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.admin-summary-card{margin-top:12px}.admin-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.admin-summary-chip{padding:10px;border-radius:13px;background:var(--soft);border:1px solid var(--line)}.admin-summary-chip b{display:block}.admin-summary-chip small{color:var(--muted)}.admin-status-badge{padding:6px 9px;border-radius:999px;font-size:10px;font-weight:900;background:rgba(32,201,107,.1);color:#159b50}.admin-status-badge.unsaved{background:rgba(255,174,0,.12);color:#b56d00}.admin-saved-block{margin-top:12px}.admin-saved-modern{display:grid;gap:8px}.admin-saved-modern .admin-saved-row{margin:0;padding:12px;border-radius:15px;background:var(--soft);border:1px solid var(--line)}.admin-day-row{background:var(--soft)!important;border-color:var(--line)!important}.admin-territory-list label{background:transparent!important;border-color:var(--line)!important}.admin-territory-list input{accent-color:#159fe8}.admin-day-toggle{padding:11px 12px}.admin-day-content{padding:0 12px 12px}.admin-day-meta-pill{font-size:10px;padding:4px 7px;border-radius:8px;background:rgba(63,169,255,.10);color:#1788ca}.admin-actions{margin-top:12px}.salesman-picker-row .salesman-picker-avatar{background:linear-gradient(135deg,#138fe8,#6b5cff)!important;color:#fff!important;border:0!important;box-shadow:0 7px 18px rgba(19,143,232,.22)}
+@media(max-width:800px){.admin-planner-grid{grid-template-columns:1fr}.admin-kpi-grid{grid-template-columns:repeat(2,1fr)}.admin-summary-grid{grid-template-columns:1fr 1fr}.admin-hero h3{font-size:19px}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -363,6 +370,20 @@ body.dark .top-action-icon .tai-icon{background:linear-gradient(145deg,rgba(0,12
 body.dark .top-action-icon.placeholder .tai-icon{background:rgba(255,255,255,.08);color:#b7bdc7}
 @media(max-width:700px){.top-action-icons{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.top-action-icon{min-height:88px;border-radius:18px}.top-action-icon .tai-icon{width:40px;height:40px;border-radius:13px}.top-action-icon .tai-icon svg{width:20px;height:20px}}
 </style>
+<style id="shadab-coming-next-style">
+.coming-next-card{cursor:pointer!important}
+.coming-next-card .tai-icon{background:linear-gradient(145deg,#e9f6ff,#d7edff)!important;color:#0876df!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 5px 12px rgba(0,122,255,.10)!important}.coming-next-card .tai-icon svg{stroke:currentColor!important}.coming-next-card:hover .tai-icon{transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 8px 18px rgba(0,122,255,.16)!important}body.dark .coming-next-card .tai-icon{background:linear-gradient(145deg,rgba(0,122,255,.24),rgba(0,122,255,.12))!important;color:#70baff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,122,255,.12)!important}
+.salesman-picker-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.salesman-picker-row{border:1px solid rgba(0,122,255,.14);background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(245,249,255,.9));border-radius:17px;padding:13px;display:flex;align-items:center;gap:11px;cursor:pointer;text-align:left;box-shadow:0 6px 18px rgba(25,35,50,.06);transition:.18s}
+.salesman-picker-row:hover{transform:translateY(-1px);border-color:rgba(0,122,255,.35)}
+.salesman-picker-avatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#eaf5ff,#d7ebff);color:#0876df;font-weight:900;flex:none}
+.salesman-picker-row b{display:block;font-size:13px}.salesman-picker-row small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.salesman-add-row{display:flex;gap:8px;margin-top:12px}.salesman-add-row input{flex:1;min-width:0}
+.salesman-current{margin-top:12px;padding:11px 13px;border-radius:14px;background:rgba(0,122,255,.07);border:1px solid rgba(0,122,255,.12);font-size:12px}
+body.dark .salesman-picker-row{background:linear-gradient(145deg,rgba(30,38,48,.96),rgba(23,31,40,.94));border-color:rgba(255,255,255,.10);color:#fff}
+body.dark .salesman-picker-avatar{background:rgba(0,122,255,.20);color:#70baff}
+@media(max-width:700px){.salesman-picker-list{grid-template-columns:1fr}.salesman-add-row{flex-direction:column}.salesman-add-row button{width:100%}}
+</style>
 <style id="shadab-main-cleanup-style">
 /* Main screen stays clean: detailed sections open only from their action cards/menu. */
 main>#routePlannerCard{display:none!important}
@@ -391,8 +412,8 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
   <button class="top-action-icon" type="button" onclick="openFieldVisitManager()">
     <span class="tai-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6"/><path d="M9 4a2 2 0 0 0-2 2v13h10V6a2 2 0 0 0-2-2"/><path d="M9 9h6M9 13h4"/><path d="M15.5 16.5 18 19l4-4"/></svg></span><strong>Field Visit</strong><small>New Visit &amp; Store Booking</small>
   </button>
-  <button class="top-action-icon placeholder" type="button" onclick="showToast('This section will be configured next.')">
-    <span class="tai-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><strong>Coming Next</strong><small>Details will be added later</small>
+  <button class="top-action-icon coming-next-card" type="button" onclick="openComingNextSalesman()">
+    <span class="tai-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20"/><circle cx="10" cy="7" r="3"/><path d="M16 8h4M18 6v4"/></svg></span><strong>Salesman</strong><small>Field Manager • Quick Select</small>
   </button>
   <button class="top-action-icon" type="button" onclick="openTodayReportPanel()">
     <span class="tai-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l3 3v15H7z"/><path d="M15 3v4h4M10 12h5M10 16h5"/></svg></span><strong>Today Report</strong><small>PDF • Print • Save</small>
@@ -459,7 +480,7 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
 <div class="field"><label>Phone (optional)</label><input id="personPhone" inputmode="tel" placeholder="03XXXXXXXXX"></div>
 <div class="field"><label>Visit Status</label><select id="visitStatus"><option>Completed</option><option>Order Received</option><option>Order Done</option><option>No Order</option><option>Follow-up Required</option><option>Pending</option><option>Follow-up Done</option></select></div>
 <div class="field"><label>Follow-up Date (optional)</label><input id="followupDate" type="date"></div>
-<div class="field full"><label>Order / Business Notes</label><div class="voice-row"><textarea id="notes" placeholder="e.g. X Medical Store ne order diya / nahi diya..."></textarea><button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceNote()" title="Record voice note">🎙️<span>Mic</span></button></div><div class="voice-state" id="voiceState">Voice note optional • works offline on supported browsers</div><audio id="voicePlayer" controls hidden></audio></div>
+<div class="field full"><label>Order / Business Notes</label><div class="voice-row"><textarea id="notes" placeholder="e.g. X Medical Store ne order diya / nahi diya..."></textarea><button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceNote()" title="Record voice note">🎙️<span>Mic</span></button></div><div class="voice-tools"><select id="voiceLanguage" title="Speech language"><option value="ur-PK">Urdu + English</option><option value="en-PK">English</option><option value="ur-IN">Urdu</option><option value="en-US">English (US)</option></select><span class="voice-hint">🎙️ Speech will also be written into Notes when your browser supports speech recognition.</span></div><div class="voice-state" id="voiceState">Voice note optional • audio is saved on this device</div><audio id="voicePlayer" controls hidden></audio></div>
 </div>
 
 <div style="margin-top:17px">
@@ -584,18 +605,57 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
   <div class="actions"><button class="btn primary" onclick="adminLogin()">🔐 Login</button><button class="btn secondary" onclick="closeAdmin()">Cancel</button></div>
  </div>
  <div class="modal-box modal-wide" id="adminDashboardBox" style="display:none">
-  <div class="modal-head"><h3>Admin • Salesman Assignment</h3><button class="close" onclick="closeAdmin()">×</button></div>
-  <p class="admin-login-note">Assign one salesman to a city and one or more territories for each day. Saved assignments automatically link with New Visit.</p>
-  <div class="form-grid admin-form-grid">
-   <div class="field"><label>Salesman</label><select id="adminSalesman"></select></div>
-   <div class="field"><label>City</label><select id="adminScheduleArea"><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select></div>
+  <div class="admin-hero">
+   <div><div class="admin-kicker">FIELD CONTROL CENTER</div><h3>Admin • Smart Route Planner</h3><p>Build a weekly route once. A salesman can have multiple cities, each with its own territories and days.</p></div>
+   <div class="admin-hero-actions"><button class="admin-icon-btn" type="button" onclick="refreshAdminDashboard()" title="Refresh">↻</button><button class="admin-icon-btn danger" type="button" onclick="logoutAdmin()" title="Logout">↪</button></div>
   </div>
-  <div class="admin-week" id="adminScheduleGrid"></div>
-  <div class="admin-schedule-summary" id="adminScheduleSummary"></div>
-  <div class="actions"><button class="btn primary" onclick="saveAdminSchedule()">✓ Save Assignment</button><button class="btn secondary" onclick="resetAdminAssignment()">＋ New Assignment</button><button class="btn secondary" onclick="logoutAdmin()">Logout</button></div>
-  <div class="admin-saved-block"><h4>Saved Salesman Assignments</h4><div id="adminSavedSchedules"></div></div>
+  <div class="admin-kpi-grid" id="adminKpiGrid"></div>
+  <div class="admin-planner-grid">
+   <section class="admin-card admin-salesman-card">
+    <div class="admin-card-head"><div><span class="admin-section-label">STEP 1</span><h4>Salesman</h4></div><button class="admin-add-btn" type="button" onclick="promptAddSalesmanAdmin()">＋ Add</button></div>
+    <select id="adminSalesman" class="admin-premium-select"></select>
+    <div id="adminSalesmanSnapshot" class="admin-salesman-snapshot"></div>
+   </section>
+   <section class="admin-card admin-route-card">
+    <div class="admin-card-head"><div><span class="admin-section-label">STEP 2</span><h4>Route Builder</h4></div><button class="admin-add-btn" type="button" onclick="addAdminAreaAssignment()">＋ Add Area</button></div>
+    <div id="adminAssignmentTabs" class="admin-assignment-tabs"></div>
+    <div class="admin-route-editor">
+     <div class="admin-route-topline"><div><span class="admin-section-label">CURRENT AREA</span><div id="adminCurrentAreaBadge" class="admin-current-area">Sahiwal</div></div><button class="admin-remove-btn" type="button" onclick="removeCurrentAdminArea()">Remove Area</button></div>
+     <div class="form-grid admin-form-grid">
+      <div class="field"><label>City / Area</label><select id="adminScheduleArea" class="admin-premium-select"><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select></div>
+      <div class="field"><label>Town / Route <small>(optional)</small></label><input id="adminScheduleTown" placeholder="e.g. Main Town / Green Market Route"></div>
+     </div>
+     <div class="admin-week-title"><div><b>STEP 3 • Weekly Route</b><small>Select territories per day. The list always belongs to the selected city.</small></div><button class="admin-auto-btn" type="button" onclick="autoPlanCurrentAdminArea()">✨ Smart Plan</button></div>
+     <div class="admin-week" id="adminScheduleGrid"></div>
+    </div>
+   </section>
+  </div>
+  <section class="admin-card admin-summary-card">
+   <div class="admin-card-head"><div><span class="admin-section-label">LIVE PREVIEW</span><h4>Assignment Summary</h4></div><span id="adminUnsavedBadge" class="admin-status-badge">Ready</span></div>
+   <div id="adminScheduleSummary"></div>
+   <div class="actions admin-actions"><button class="btn primary" onclick="saveAdminSchedule()">✓ Save Weekly Plan</button><button class="btn secondary" onclick="resetAdminAssignment()">＋ New Setup</button></div>
+  </section>
+  <section class="admin-card admin-saved-block">
+   <div class="admin-card-head"><div><span class="admin-section-label">FIELD TEAM</span><h4>Saved Salesman Plans</h4></div></div>
+   <div id="adminSavedSchedules"></div>
+  </section>
  </div></div>
 <!-- ===== END: ADMIN LOGIN & UNIFIED CITY/TERRITORY/SCHEDULE ===== -->
+<!-- ===== START: SALESMAN QUICK SELECT / FIELD MANAGER BRIDGE ===== -->
+<div class="modal" id="comingNextSalesmanModal">
+ <div class="modal-box modal-wide">
+  <div class="modal-head"><h3>👤 Salesman • Field Manager</h3><button class="close" onclick="closeComingNextSalesman()">×</button></div>
+  <p class="notice">Select a salesman. Their saved Admin assignment — Area, Town / Route, today’s territories and assigned stores — will automatically load into Field Visit / New Visit.</p>
+  <div class="salesman-current" id="comingNextCurrent">No salesman selected.</div>
+  <div class="salesman-picker-list" id="comingNextSalesmanList"></div>
+  <div class="salesman-add-row">
+   <input id="comingNextNewSalesman" placeholder="Enter new salesman name">
+   <button class="btn primary" type="button" onclick="addSalesmanFromComingNext()">＋ Add Salesman</button>
+  </div>
+  <div class="actions"><button class="btn secondary" onclick="closeComingNextSalesman()">Close</button></div>
+ </div>
+</div>
+<!-- ===== END: SALESMAN QUICK SELECT / FIELD MANAGER BRIDGE ===== -->
 <div class="modal" id="smartRouteModal">
  <div class="modal-box modal-wide">
   <div class="modal-head"><h3>🚀 Smart Daily Route</h3><button class="close" onclick="closeSmartDailyRoute()">×</button></div>
@@ -787,7 +847,7 @@ function addCustomer(){
 /* ===== START: TERRITORY FUNCTIONS ===== */
 function selectedTerritories(){const sel=document.getElementById("territory");return sel?[...sel.selectedOptions].map(o=>o.value).filter(Boolean):[]}
 function setSelectedTerritories(list){const sel=document.getElementById("territory");if(!sel)return;const vals=new Set((list||[]).map(String));[...sel.options].forEach(o=>o.selected=vals.has(o.value));sel.dispatchEvent(new Event("change"));}
-function refreshTerritories(selected=""){const area=document.getElementById("area")?.value,sel=document.getElementById("territory");if(!sel)return;const list=Array.isArray(territories[area])?territories[area]:[];sel.multiple=true;sel.innerHTML=list.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");const wanted=Array.isArray(selected)?selected:(selected?[selected]:[]);setSelectedTerritories(wanted.filter(x=>list.includes(x)));sel.onchange=()=>{showStoreSuggestions();saveDraft()}}
+function refreshTerritories(selected=""){const area=document.getElementById("area")?.value,sel=document.getElementById("territory");if(!sel)return;const list=Array.isArray(territories[area])?territories[area]:[];sel.multiple=true;sel.innerHTML=list.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");let wanted;if(Array.isArray(selected))wanted=selected;else if(selected)wanted=[selected];else{try{const saved=JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null");wanted=saved&&saved.area===area?saved.territories||[]:[]}catch(e){wanted=[]}}setSelectedTerritories(wanted.filter(x=>list.includes(x)));sel.onchange=()=>{const vals=selectedTerritories();const salesman=document.getElementById("visitedBy")?.value||"";localStorage.setItem("shadab_current_area_v1",area||"");localStorage.setItem("shadab_current_territories_v1",JSON.stringify({salesman,area,territories:vals}));showStoreSuggestions();saveDraft()}}
 function openTerritoryManager(area){document.getElementById("territoryModal").classList.add("show");if(area)document.getElementById("territoryArea").value=area;renderTerritoryList()}
 function closeTerritoryManager(){document.getElementById("territoryModal").classList.remove("show")}
 function renderTerritoryList(){const area=document.getElementById("territoryArea").value,box=document.getElementById("territoryList");box.innerHTML=(territories[area]||[]).length?(territories[area]||[]).map((x,i)=>`<div class="territory-item"><span>${esc(x)}</span><button onclick="renameTerritory(${i})">✎</button><button onclick="deleteTerritory(${i})">×</button></div>`).join(""):'<span class="notice">No territories added yet.</span>'}
@@ -1326,9 +1386,15 @@ async function saveVisit(){
  const visitedBy=document.getElementById("visitedBy").value,type=document.getElementById("visitType").value,area=document.getElementById("area").value,territory=selectedTerritories().join(", ");
  const store=document.getElementById("storeName").value.trim(),person=document.getElementById("personName").value.trim(),phone=document.getElementById("personPhone").value.trim(),notes=document.getElementById("notes").value.trim();
  const status=document.getElementById("visitStatus")?.value||"Completed",followup=document.getElementById("followupDate")?.value||"";
- if(!store||!person)return toast("Store name and person name are required");
- if(!territory)return toast("Please select a territory");
- if(voiceRecording)return toast("Please stop the voice recording first");
+ const missing=[];
+ if(!visitedBy)missing.push("Visited By");
+ if(!type)missing.push("Visit Type");
+ if(!area)missing.push("Area");
+ if(!territory)missing.push("Territory");
+ if(!store)missing.push("Store / Pharmacy Name");
+ if(!person)missing.push("Person Name");
+ if(missing.length){ alert("Please fill the following required field(s):\n\n• " + missing.join("\n• ")); return false; }
+ if(voiceRecording){ alert("Please stop the voice recording first."); return false; }
  const loc=await getLocation(), d=new Date(), id=editingId||uid();
  const old=editingId?visits.find(v=>v.id===editingId):null;
  const obj={id,visitedBy,type,area,territory,store,person,phone,notes,status,followup,date:d.toISOString().slice(0,10),time:d.toLocaleTimeString("en-PK",{hour:"2-digit",minute:"2-digit"}),photo:capturedData||"",location:loc,createdAt:old?.createdAt||d.toISOString(),voiceNoteKey:old?.voiceNoteKey||""};
@@ -1344,7 +1410,7 @@ function editVisit(id){
  window.scrollTo({top:0,behavior:"smooth"});toast("Edit mode enabled");
 }
 function deleteVisit(id){if(confirm("Delete this visit? This cannot be undone.")){visits=visits.filter(v=>v.id!==id);saveData();renderRecords();updateStats();updatePremiumDashboard();toast("Visit deleted")}}
-function resetForm(){editingId=null;pendingVoiceBlob=null;stopVoiceNote();["storeName","personName","personPhone","notes"].forEach(id=>document.getElementById(id).value="");if(document.getElementById("visitStatus"))document.getElementById("visitStatus").value="Completed";if(document.getElementById("followupDate"))document.getElementById("followupDate").value="";document.getElementById("visitedBy").value="";document.getElementById("visitType").value="Doctor Pharmacy";document.getElementById("area").value="Sahiwal";capturedData=null;document.getElementById("photoPreview").classList.remove("show");const vp=document.getElementById("voicePlayer");if(vp){vp.hidden=true;vp.removeAttribute("src")}refreshTerritories();stopCamera()}
+function resetForm(){editingId=null;pendingVoiceBlob=null;stopVoiceNote();["storeName","personName","personPhone","notes"].forEach(id=>document.getElementById(id).value="");if(document.getElementById("visitStatus"))document.getElementById("visitStatus").value="Completed";if(document.getElementById("followupDate"))document.getElementById("followupDate").value="";document.getElementById("visitType").value="Doctor Pharmacy";capturedData=null;document.getElementById("photoPreview").classList.remove("show");const vp=document.getElementById("voicePlayer");if(vp){vp.hidden=true;vp.removeAttribute("src")}const salesman=localStorage.getItem("shadab_current_salesman_v1")||document.getElementById("visitedBy")?.value||"";if(document.getElementById("visitedBy"))document.getElementById("visitedBy").value=salesman;const d=adminSchedules[salesman];const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();const keepArea=d?.area||saved?.area||localStorage.getItem("shadab_current_area_v1")||"Sahiwal";document.getElementById("area").value=keepArea;refreshTerritories(d?((()=>{const day=new Date().toLocaleDateString("en-US",{weekday:"long"});return Array.isArray(d.days?.[day])?d.days[day]:[]})()):(saved?.salesman===salesman?saved.territories||[]:[]));stopCamera()}
 /* ===== END: VISIT CRUD FUNCTIONS ===== */
 
 /* ===== START: RECORD RENDERING & FILTERS ===== */
@@ -1747,63 +1813,168 @@ saveVisit=async function(){
   document.getElementById(id)?.addEventListener("change",saveDraft);
 });
 window.addEventListener("load",()=>{updateNetworkUI();updatePremiumDashboard();setTimeout(restoreDraft,500)});
-/* ===== START: OFFLINE VOICE NOTE FUNCTIONS ===== */
+/* ===== START: OFFLINE VOICE NOTE + SPEECH TO TEXT FUNCTIONS ===== */
 let voiceRecorder=null,voiceChunks=[],voiceRecording=false,pendingVoiceBlob=null;
+let voiceRecognition=null,voiceTranscriptBase="",voiceFinalText="",voiceSpeechSupported=false;
 const VOICE_DB="shadab_voice_notes_v1";
 function voiceDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(VOICE_DB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains("notes"))r.result.createObjectStore("notes")};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
 async function saveVoiceBlob(id,blob){try{const db=await voiceDB();await new Promise((res,rej)=>{const tx=db.transaction("notes","readwrite");tx.objectStore("notes").put(blob,id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}catch(e){console.warn(e)}}
 async function getVoiceBlob(id){try{const db=await voiceDB();return await new Promise((res,rej)=>{const tx=db.transaction("notes","readonly");const q=tx.objectStore("notes").get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})}catch(e){return null}}
 async function deleteVoiceBlob(id){try{const db=await voiceDB();const tx=db.transaction("notes","readwrite");tx.objectStore("notes").delete(id)}catch(e){}}
+function setupSpeechRecognition(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ voiceSpeechSupported=!!SR;
+ if(!voiceSpeechSupported)return null;
+ const r=new SR(); r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
+ r.lang=document.getElementById("voiceLanguage")?.value||"ur-PK";
+ r.onstart=()=>{const s=document.getElementById("voiceState");if(s){s.classList.add("live");s.textContent="Recording + converting speech to Notes…"}};
+ r.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0]?.transcript||"";if(e.results[i].isFinal)voiceFinalText+=(voiceFinalText?" ":"")+t.trim();else interim+=(interim?" ":"")+t.trim()}const ta=document.getElementById("notes");if(ta){const join=voiceFinalText?" ":"";ta.value=(voiceTranscriptBase+(voiceFinalText?join+voiceFinalText:"" )+(interim?(voiceFinalText?" ":"")+interim:"" )).trim();ta.dispatchEvent(new Event("input",{bubbles:true}))}};
+ r.onerror=e=>{if(e.error!=="no-speech"&&e.error!=="aborted"){const s=document.getElementById("voiceState");if(s)s.textContent="Audio is still recording; speech-to-text is unavailable right now."}};
+ r.onend=()=>{if(voiceRecording){try{r.lang=document.getElementById("voiceLanguage")?.value||"ur-PK";r.start()}catch(e){}}};
+ return r;
+}
 async function toggleVoiceNote(){if(voiceRecording){stopVoiceNote();return}startVoiceNote()}
 async function startVoiceNote(){
  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)return toast("Voice recording is not supported on this browser");
- try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});voiceChunks=[];voiceRecorder=new MediaRecorder(stream);voiceRecording=true;const b=document.getElementById("voiceBtn"),s=document.getElementById("voiceState");b.classList.add("recording");b.innerHTML="⏹️<span>Stop</span>";s.classList.add("live");s.textContent="Recording voice note… tap Stop when finished";voiceRecorder.ondataavailable=e=>{if(e.data.size)voiceChunks.push(e.data)};voiceRecorder.onstop=()=>{const type=voiceRecorder.mimeType||"audio/webm";pendingVoiceBlob=new Blob(voiceChunks,{type});stream.getTracks().forEach(t=>t.stop());voiceRecording=false;b.classList.remove("recording");b.innerHTML="🎙️<span>Mic</span>";s.classList.remove("live");s.classList.add("ready");s.textContent="Voice note captured. It will be saved with this visit.";};voiceRecorder.start();setTimeout(()=>{if(voiceRecording)stopVoiceNote()},60000)}catch(e){toast("Microphone permission denied or unavailable")}}
+ try{
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true}); voiceChunks=[]; voiceTranscriptBase=(document.getElementById("notes")?.value||"").trim(); voiceFinalText="";
+  voiceRecorder=new MediaRecorder(stream); voiceRecording=true;
+  const b=document.getElementById("voiceBtn"),s=document.getElementById("voiceState"); b.classList.add("recording"); b.innerHTML="⏹️<span>Stop</span>";
+  if(voiceSpeechSupported){try{voiceRecognition=setupSpeechRecognition();voiceRecognition?.start()}catch(e){voiceRecognition=null}}
+  if(s){s.classList.add("live");s.textContent=voiceRecognition?"Recording + converting speech to Notes…":"Recording voice note… speech-to-text not supported here"}
+  voiceRecorder.ondataavailable=e=>{if(e.data.size)voiceChunks.push(e.data)};
+  voiceRecorder.onstop=()=>{const type=voiceRecorder.mimeType||"audio/webm";pendingVoiceBlob=new Blob(voiceChunks,{type});stream.getTracks().forEach(t=>t.stop());voiceRecording=false;
+   try{voiceRecognition?.stop()}catch(e){} voiceRecognition=null;
+   const ta=document.getElementById("notes"); if(ta&&voiceFinalText){ta.value=(voiceTranscriptBase?voiceTranscriptBase+" ":"")+voiceFinalText;ta.dispatchEvent(new Event("input",{bubbles:true}))}
+   b.classList.remove("recording");b.innerHTML="🎙️<span>Mic</span>";if(s){s.classList.remove("live");s.classList.add("ready");s.textContent=voiceFinalText?"Voice + text captured. Both will be saved with this visit.":"Voice note captured. It will be saved with this visit."}
+  }; voiceRecorder.start(); setTimeout(()=>{if(voiceRecording)stopVoiceNote()},60000)
+ }catch(e){voiceRecording=false;toast("Microphone permission denied or unavailable")}
+}
 function stopVoiceNote(){if(voiceRecorder&&voiceRecording)voiceRecorder.stop()}
 async function loadVoiceForVisit(id){const blob=await getVoiceBlob(id),p=document.getElementById("voicePlayer");if(blob&&p){if(p._url)URL.revokeObjectURL(p._url);p._url=URL.createObjectURL(blob);p.src=p._url;p.hidden=false;const s=document.getElementById("voiceState");s.classList.add("ready");s.textContent="Saved voice note available — press play."}}
 async function playVoiceNote(id){const blob=await getVoiceBlob(id);if(!blob)return toast("Voice note not found on this device");const url=URL.createObjectURL(blob),a=new Audio(url);a.onended=()=>URL.revokeObjectURL(url);a.play().catch(()=>toast("Tap again to play voice note"))}
-/* ===== END: OFFLINE VOICE NOTE FUNCTIONS ===== */
+/* ===== END: OFFLINE VOICE NOTE + SPEECH TO TEXT FUNCTIONS ===== */
 /* ===== END: PREMIUM OFFLINE + ANALYTICS + BACKUP ===== */
 
 /* ===== START: SHADAB ADMIN / SALESman WEEKLY ASSIGNMENT ===== */
 const ADMIN_USER="admin",ADMIN_PASS="shadab@1303",ADMIN_SCHEDULE_KEY="shadab_pharmacy_fixed_salesman_schedule_v2";
 const ADMIN_DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const SALESMAN_KEY="shadab_pharmacy_custom_salesmen_v1";
 let adminSchedules=JSON.parse(localStorage.getItem(ADMIN_SCHEDULE_KEY)||localStorage.getItem("shadab_pharmacy_fixed_salesman_schedule_v1")||"{}");
 let adminLoggedIn=false;
-function adminSalesmanNames(){return [...document.querySelectorAll("#visitedBy option")].map(o=>o.value).filter(Boolean)}
+function customSalesmanNames(){try{const a=JSON.parse(localStorage.getItem(SALESMAN_KEY)||"[]");return Array.isArray(a)?a.filter(Boolean):[]}catch(e){return []}}
+function saveCustomSalesmanNames(list){localStorage.setItem(SALESMAN_KEY,JSON.stringify([...new Set((list||[]).map(x=>String(x).trim()).filter(Boolean))]))}
+function adminSalesmanNames(){const base=[...document.querySelectorAll("#visitedBy option")].map(o=>o.value).filter(Boolean);return [...new Set([...base,...customSalesmanNames()])]}
+function ensureSalesmanOptions(){const sel=document.getElementById("visitedBy");if(!sel)return;const current=sel.value||localStorage.getItem("shadab_current_salesman_v1")||"";const existing=new Set([...sel.options].map(o=>o.value));customSalesmanNames().forEach(n=>{if(!existing.has(n)){const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o)}});if(current)sel.value=current}
+function ensureAdminSalesmanOptions(){const sel=document.getElementById("adminSalesman");if(!sel)return;const current=sel.value;sel.innerHTML=adminSalesmanNames().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(current&&adminSalesmanNames().includes(current))sel.value=current}
+function addSalesman(name){name=String(name||"").trim();if(!name)return false;if(adminSalesmanNames().some(n=>n.toLowerCase()===name.toLowerCase()))return false;const names=customSalesmanNames();names.push(name);saveCustomSalesmanNames(names);ensureSalesmanOptions();ensureAdminSalesmanOptions();return true}
+function openComingNextSalesman(){ensureSalesmanOptions();renderComingNextSalesmanList();document.getElementById("comingNextSalesmanModal")?.classList.add("show")}
+function closeComingNextSalesman(){document.getElementById("comingNextSalesmanModal")?.classList.remove("show")}
+function renderComingNextSalesmanList(){
+ ensureSalesmanOptions();const box=document.getElementById("comingNextSalesmanList"),current=document.getElementById("visitedBy")?.value||localStorage.getItem("shadab_current_salesman_v1")||"";const currentBox=document.getElementById("comingNextCurrent");
+ if(currentBox){const d=adminSchedules[current]?normalizeAdminSchedule(current):null,day=new Date().toLocaleDateString("en-US",{weekday:"long"}),active=d?.assignments?.filter(a=>(a.days?.[day]||[]).length)||[],trs=active.flatMap(a=>a.days?.[day]||[]);currentBox.innerHTML=current?`<b>Selected: ${esc(current)}</b>${d?`<div class="admin-assignment-meta">${d.assignments.map(a=>`<span>📍 ${esc(a.area)}</span>`).join("")}<span>🧭 ${trs.length} today territor${trs.length===1?"y":"ies"}</span><span>🏪 ${active.reduce((n,a)=>n+(a.days?.[day]||[]).reduce((m,t)=>m+territoryStoreCount(a.area,t),0),0)} stores</span></div>`:`<div class="admin-assignment-meta"><span>No Admin assignment saved yet</span></div>`}`:"No salesman selected."}
+ const names=adminSalesmanNames();box.innerHTML=names.length?names.map(n=>{const initials=n.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase(),d=adminSchedules[n]?normalizeAdminSchedule(n):null,areas=d?d.assignments.map(a=>a.area).join(" • "):"",stats=d?adminTotalStats(n):null;return `<button type="button" class="salesman-picker-row" onclick='selectComingNextSalesman(${JSON.stringify(n)})'><span class="salesman-picker-avatar">${esc(initials)}</span><span><b>${esc(n)}</b><small>${d?`${esc(areas)} • ${stats.territories} territories • ${stats.stores} stores`:'No Admin assignment yet'}</small></span></button>`}).join(""):"<div class='empty-state'>No salesman found.</div>"
+}
+function selectComingNextSalesman(name){ensureSalesmanOptions();const sel=document.getElementById("visitedBy");if(!sel)return;sel.value=name;onSalesmanChanged();localStorage.setItem("shadab_current_salesman_v1",name);closeComingNextSalesman();openFieldVisitManager();toast(`${name} selected — Field Manager assignment loaded`)}
+function addSalesmanFromComingNext(){const input=document.getElementById("comingNextNewSalesman"),name=input?.value.trim()||"";if(!name)return toast("Enter salesman name");if(!addSalesman(name))return toast("Salesman already exists");input.value="";const sel=document.getElementById("visitedBy");if(sel)sel.value=name;onSalesmanChanged();renderComingNextSalesmanList();toast(`${name} added and selected`)}
 function saveAdminSchedules(){localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.stringify(adminSchedules))}
 function openAdmin(){document.getElementById("adminModal").classList.add("show");if(adminLoggedIn)showAdminDashboard();else showAdminLogin()}
 function closeAdmin(){document.getElementById("adminModal").classList.remove("show")}
 function showAdminLogin(){document.getElementById("adminLoginBox").style.display="block";document.getElementById("adminDashboardBox").style.display="none";setTimeout(()=>document.getElementById("adminUsername")?.focus(),80)}
 function adminLogin(){const u=document.getElementById("adminUsername").value.trim(),p=document.getElementById("adminPassword").value;if(u===ADMIN_USER&&p===ADMIN_PASS){adminLoggedIn=true;document.getElementById("adminUsername").value="";document.getElementById("adminPassword").value="";showAdminDashboard();toast("Admin login successful")}else toast("Invalid Admin username or password")}
 function logoutAdmin(){adminLoggedIn=false;showAdminLogin();toast("Admin logged out")}
-function scheduleFor(salesman){if(!adminSchedules[salesman])adminSchedules[salesman]={area:"Sahiwal",days:{}};if(!adminSchedules[salesman].days)adminSchedules[salesman].days={};return adminSchedules[salesman]}
+function normalizeAdminSchedule(salesman){
+ let d=adminSchedules[salesman];
+ if(!d){d={assignments:[{area:"Sahiwal",town:"",days:{}}]};adminSchedules[salesman]=d;}
+ if(!Array.isArray(d.assignments)){
+   d={assignments:[{area:d.area||"Sahiwal",town:d.town||d.route||"",days:d.days||{}}]};
+   adminSchedules[salesman]=d;
+ }
+ d.assignments=d.assignments.map(a=>({area:a.area||"Sahiwal",town:a.town||a.route||"",days:a.days||{}}));
+ if(!d.assignments.length)d.assignments=[{area:"Sahiwal",town:"",days:{}}];
+ return d;
+}
+function scheduleFor(salesman){return normalizeAdminSchedule(salesman)}
 function territoryStoreCount(area,tr){return storeDatabase.filter(s=>s.area===area&&s.territory===tr).length}
+let adminActiveAssignment=0;
+function currentAdminData(){const s=document.getElementById("adminSalesman")?.value;if(!s)return null;const d=normalizeAdminSchedule(s);if(adminActiveAssignment>=d.assignments.length)adminActiveAssignment=d.assignments.length-1;return d.assignments[adminActiveAssignment]}
+function adminTotalStats(salesman){const d=normalizeAdminSchedule(salesman),areas=d.assignments;let territoriesCount=0,stores=0,days=0;areas.forEach(a=>{const set=new Set();ADMIN_DAYS.forEach(day=>(a.days?.[day]||[]).forEach(t=>set.add(a.area+"|"+t)));territoriesCount+=set.size;areas.forEach(()=>{});ADMIN_DAYS.forEach(day=>{if((a.days?.[day]||[]).length)days++});set.forEach(k=>{const [ar,tr]=k.split("|");stores+=territoryStoreCount(ar,tr)})});return {areas:areas.length,territories:territoriesCount,stores,days}}
+function refreshAdminDashboard(){showAdminDashboard();toast("Admin planner refreshed")}
 function showAdminDashboard(){
  document.getElementById("adminLoginBox").style.display="none";document.getElementById("adminDashboardBox").style.display="block";
- const sel=document.getElementById("adminSalesman");if(!sel)return;const old=sel.value;sel.innerHTML=adminSalesmanNames().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(old&&adminSalesmanNames().includes(old))sel.value=old;
- renderAdminUnified();
+ ensureSalesmanOptions();const sel=document.getElementById("adminSalesman");if(!sel)return;const old=sel.value;sel.innerHTML=adminSalesmanNames().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(old&&adminSalesmanNames().includes(old))sel.value=old;
+ else if(localStorage.getItem("shadab_current_salesman_v1")&&adminSalesmanNames().includes(localStorage.getItem("shadab_current_salesman_v1")))sel.value=localStorage.getItem("shadab_current_salesman_v1");
+ adminActiveAssignment=0;renderAdminUnified();
 }
-function resetAdminAssignment(){const s=document.getElementById("adminSalesman");if(s)s.value=adminSalesmanNames()[0]||"";document.getElementById("adminScheduleArea").value="Sahiwal";renderAdminUnified()}
+function resetAdminAssignment(){const s=document.getElementById("adminSalesman");if(s)s.value=adminSalesmanNames()[0]||"";adminActiveAssignment=0;const d=s?.value?normalizeAdminSchedule(s.value):null;if(d)d.assignments=[{area:"Sahiwal",town:"",days:{}}];document.getElementById("adminScheduleArea").value="Sahiwal";document.getElementById("adminScheduleTown").value="";renderAdminUnified();markAdminUnsaved()}
 function renderAdminUnified(){
- const salesman=document.getElementById("adminSalesman")?.value;if(!salesman)return;const area=document.getElementById("adminScheduleArea")?.value||"Sahiwal";const data=scheduleFor(salesman);
- document.getElementById("adminScheduleGrid").innerHTML=ADMIN_DAYS.map((day,i)=>{const chosen=Array.isArray(data.days?.[day])?data.days[day]:[];const open=i===0;return `<div class="admin-day-row${open?" open":""}" data-admin-day="${esc(day)}"><button type="button" class="admin-day-toggle" onclick="toggleAdminDay('${esc(day)}')"><span>${esc(day)}</span><span class="day-meta">${chosen.length?chosen.length+" selected":"Select territories"}</span><span class="day-chevron">⌄</span></button><div class="admin-day-content"><div class="admin-territory-list">${(territories[area]||[]).map(tr=>`<label><input type="checkbox" class="admin-day-territory" data-day="${esc(day)}" value="${esc(tr)}" ${chosen.includes(tr)?"checked":""}>${esc(tr)} <small>(${territoryStoreCount(area,tr)})</small></label>`).join("")||"<small>No territories configured for this city.</small>"}</div></div></div>`}).join("");
- document.getElementById("adminScheduleSummary").textContent=`${salesman} • ${area} • Select a day to assign one or more territories`;renderAdminSavedSchedules();
+ const salesman=document.getElementById("adminSalesman")?.value;if(!salesman)return;const data=normalizeAdminSchedule(salesman);if(adminActiveAssignment>=data.assignments.length)adminActiveAssignment=0;const a=data.assignments[adminActiveAssignment];
+ document.getElementById("adminScheduleArea").value=a.area||"Sahiwal";document.getElementById("adminScheduleTown").value=a.town||"";document.getElementById("adminCurrentAreaBadge").textContent=a.area||"Sahiwal";
+ const tabs=document.getElementById("adminAssignmentTabs");tabs.innerHTML=data.assignments.map((x,i)=>{let n=0;ADMIN_DAYS.forEach(day=>n+=(x.days?.[day]||[]).length);return `<button type="button" class="admin-assignment-tab${i===adminActiveAssignment?" active":""}" onclick="selectAdminArea(${i})"><b>📍 ${esc(x.area)}</b><small>${n} territory selections • ${esc(x.town||"Route not set")}</small></button>`}).join("");
+ document.getElementById("adminScheduleGrid").innerHTML=ADMIN_DAYS.map((day,i)=>{const chosen=Array.isArray(a.days?.[day])?a.days[day]:[];const open=i===0||chosen.length>0;return `<div class="admin-day-row${open?" open":""}" data-admin-day="${esc(day)}"><button type="button" class="admin-day-toggle" onclick="toggleAdminDay('${esc(day)}')"><span>${esc(day)}</span><span class="day-meta"><span class="admin-day-meta-pill">${chosen.length?chosen.length+" territories":"Plan route"}</span></span><span class="day-chevron">⌄</span></button><div class="admin-day-content"><div class="admin-territory-list">${(territories[a.area]||[]).map(tr=>`<label><input type="checkbox" class="admin-day-territory" data-day="${esc(day)}" value="${esc(tr)}" ${chosen.includes(tr)?"checked":""}>${esc(tr)} <small>(${territoryStoreCount(a.area,tr)})</small></label>`).join("")||"<small>No territories configured for this city.</small>"}</div></div></div>`}).join("");
+ const stats=adminTotalStats(salesman);document.getElementById("adminKpiGrid").innerHTML=`<div class="admin-kpi"><b>${stats.areas}</b><span>Assigned Areas</span></div><div class="admin-kpi"><b>${stats.territories}</b><span>Territories Planned</span></div><div class="admin-kpi"><b>${stats.stores}</b><span>Stores Covered</span></div><div class="admin-kpi"><b>${stats.days}</b><span>Day Routes</span></div>`;
+ const snap=document.getElementById("adminSalesmanSnapshot");snap.innerHTML=`<div class="admin-snapshot-main">${esc(salesman)}</div><div class="admin-snapshot-meta">${data.assignments.map(x=>`<span>📍 ${esc(x.area)}</span>`).join("")||"<span>No area yet</span>"}</div>`;
+ const summary=document.getElementById("adminScheduleSummary");summary.innerHTML=`<div class="admin-summary-grid">${data.assignments.map((x,i)=>{let ds=ADMIN_DAYS.filter(day=>(x.days?.[day]||[]).length);let ts=[...new Set(ADMIN_DAYS.flatMap(day=>x.days?.[day]||[]))];let sc=ts.reduce((n,t)=>n+territoryStoreCount(x.area,t),0);return `<div class="admin-summary-chip"><b>📍 ${esc(x.area)}</b><small>${esc(x.town||"No town/route")} • ${ds.length} active days • ${ts.length} territories • ${sc} stores</small></div>`}).join("")}</div>`;
+ renderAdminSavedSchedules();
 }
+function selectAdminArea(i){const s=document.getElementById("adminSalesman")?.value;if(!s)return;adminActiveAssignment=i;renderAdminUnified();}
+function addAdminAreaAssignment(){const s=document.getElementById("adminSalesman")?.value;if(!s)return toast("Select a salesman first");const d=normalizeAdminSchedule(s);d.assignments.push({area:"Sahiwal",town:"",days:{}});adminActiveAssignment=d.assignments.length-1;renderAdminUnified();markAdminUnsaved();toast("New area added — choose its city")}
+function removeCurrentAdminArea(){const s=document.getElementById("adminSalesman")?.value;if(!s)return;const d=normalizeAdminSchedule(s);if(d.assignments.length<=1)return toast("Keep at least one area assignment");d.assignments.splice(adminActiveAssignment,1);adminActiveAssignment=Math.max(0,adminActiveAssignment-1);renderAdminUnified();markAdminUnsaved();toast("Area removed from draft")}
+function markAdminUnsaved(){const b=document.getElementById("adminUnsavedBadge");if(b){b.textContent="Unsaved changes";b.classList.add("unsaved")}}
+function markAdminSaved(){const b=document.getElementById("adminUnsavedBadge");if(b){b.textContent="Saved";b.classList.remove("unsaved")}}
+function updateCurrentAdminAreaFromUI(){const s=document.getElementById("adminSalesman")?.value;if(!s)return;const d=normalizeAdminSchedule(s),a=d.assignments[adminActiveAssignment];if(!a)return;a.area=document.getElementById("adminScheduleArea").value;a.town=(document.getElementById("adminScheduleTown").value||"").trim();}
+function autoPlanCurrentAdminArea(){const s=document.getElementById("adminSalesman")?.value;if(!s)return;updateCurrentAdminAreaFromUI();const d=normalizeAdminSchedule(s),a=d.assignments[adminActiveAssignment],list=territories[a.area]||[];if(!list.length)return toast("No territories configured for this city");const dayNames=ADMIN_DAYS;let first=0;dayNames.forEach((day,i)=>{if(!a.days[day]||!a.days[day].length)a.days[day]=[list[i%list.length]]});renderAdminUnified();markAdminUnsaved();toast(`${a.area} smart weekly draft created`)}
 function toggleAdminDay(day){document.querySelector(`.admin-day-row[data-admin-day="${CSS.escape(day)}"]`)?.classList.toggle("open")}
 function saveAdminSchedule(){
- const salesman=document.getElementById("adminSalesman").value,area=document.getElementById("adminScheduleArea").value;if(!salesman)return toast("Select a salesman");const data={area,days:{}};
- ADMIN_DAYS.forEach(day=>data.days[day]=[...document.querySelectorAll(`.admin-day-territory[data-day="${day}"]:checked`)].map(x=>x.value));adminSchedules[salesman]=data;saveAdminSchedules();
- if(document.getElementById("visitedBy")?.value===salesman)onSalesmanChanged();renderAdminUnified();toast(`${salesman} assignment saved`);
+ const salesman=document.getElementById("adminSalesman").value;if(!salesman)return toast("Select a salesman");const data=normalizeAdminSchedule(salesman);updateCurrentAdminAreaFromUI();
+ ADMIN_DAYS.forEach(day=>data.assignments[adminActiveAssignment].days[day]=[...document.querySelectorAll(`.admin-day-territory[data-day="${day}"]:checked`)].map(x=>x.value));
+ adminSchedules[salesman]=data;saveAdminSchedules();if(document.getElementById("visitedBy")?.value===salesman)onSalesmanChanged();renderAdminUnified();markAdminSaved();toast(`${salesman} weekly plan saved`);
 }
-function renderAdminSavedSchedules(){const box=document.getElementById("adminSavedSchedules");if(!box)return;const names=Object.keys(adminSchedules);box.innerHTML=names.length?names.map(n=>{const d=adminSchedules[n],days=ADMIN_DAYS.filter(day=>(d.days?.[day]||[]).length);return `<div class="admin-saved-row"><div><b>${esc(n)}</b><small>${esc(d.area||"")} • ${days.length?days.map(day=>`${day}: ${(d.days[day]||[]).join(", ")}`).join(" • "):"No territories assigned"}</small></div><button class="mini" onclick="editAdminSchedule('${esc(n)}')">Edit</button></div>`}).join(""):"<div class=\"empty-state\">No saved salesman assignments yet.</div>"}
-function editAdminSchedule(name){const d=adminSchedules[name];if(!d)return;document.getElementById("adminSalesman").value=name;document.getElementById("adminScheduleArea").value=d.area||"Sahiwal";renderAdminUnified()}
+function renderAdminSavedSchedules(){const box=document.getElementById("adminSavedSchedules");if(!box)return;const names=Object.keys(adminSchedules);box.classList.add("admin-saved-modern");box.innerHTML=names.length?names.map(n=>{const d=normalizeAdminSchedule(n),stats=adminTotalStats(n),areas=d.assignments.map(a=>a.area).join(" • ");return `<div class="admin-saved-row"><div><b>${esc(n)}</b><small>${esc(areas||"No area")} • ${stats.areas} areas • ${stats.territories} territories • ${stats.stores} stores</small></div><button class="mini" onclick="editAdminSchedule('${esc(n)}')">Open</button></div>`}).join(""):"<div class=\"empty-state\">No saved salesman assignments yet.</div>"}
+function editAdminSchedule(name){const d=normalizeAdminSchedule(name);document.getElementById("adminSalesman").value=name;adminActiveAssignment=0;renderAdminUnified();}
+function promptAddSalesmanAdmin(){const name=prompt("Enter new salesman name:");if(!name)return;if(!addSalesman(name))return toast("Salesman already exists");const sel=document.getElementById("adminSalesman");sel.value=name;normalizeAdminSchedule(name);adminActiveAssignment=0;renderAdminUnified();toast(`${name} added`)}
+
 function applyScheduledTasksForSalesman(salesman,force=false){
- const data=adminSchedules[salesman];if(!data)return;const area=data.area||"Sahiwal",dayName=new Date().toLocaleDateString("en-US",{weekday:"long"}),trs=Array.isArray(data.days?.[dayName])?data.days[dayName]:[];
- const scheduled=storeDatabase.filter(s=>s.area===area&&trs.includes(s.territory));const key=taskBucketKey(salesman,todayISO()),old=routeTasks[key]||{stores:[]},oldByKey=new Map((old.stores||[]).map(x=>[x.key,x]));
- routeTasks[key]={area,territories:trs,stores:scheduled.map(s=>{const k=todayTaskStoreKey(s),prev=oldByKey.get(k);return {key:k,code:s.code,name:s.name,area:s.area,territory:s.territory,status:prev?.status||"Planned",visitId:prev?.visitId||"",person:prev?.person||"",time:prev?.time||"",followup:prev?.followup||"",notes:prev?.notes||""}}),salesman};saveRouteTasks();renderTodayTasks();updatePremiumDashboard();
+ const data=adminSchedules[salesman];if(!data)return;const normalized=normalizeAdminSchedule(salesman),dayName=new Date().toLocaleDateString("en-US",{weekday:"long"});
+ const activeAssignments=normalized.assignments.filter(a=>Array.isArray(a.days?.[dayName])&&a.days[dayName].length);const allTerritories=activeAssignments.flatMap(a=>a.days[dayName].map(t=>({area:a.area,territory:t,town:a.town||""})));const scheduled=storeDatabase.filter(s=>allTerritories.some(x=>x.area===s.area&&x.territory===s.territory));
+ const key=taskBucketKey(salesman,todayISO()),old=routeTasks[key]||{stores:[]},oldByKey=new Map((old.stores||[]).map(x=>[x.key,x]));
+ routeTasks[key]={area:activeAssignments[0]?.area||normalized.assignments[0]?.area||"",town:activeAssignments[0]?.town||normalized.assignments[0]?.town||"",territories:allTerritories.map(x=>x.territory),assignments:activeAssignments.map(a=>({area:a.area,town:a.town||"",territories:a.days[dayName]||[]})),stores:scheduled.map(s=>{const k=todayTaskStoreKey(s),prev=oldByKey.get(k);const aa=activeAssignments.find(a=>a.area===s.area);return {key:k,code:s.code,name:s.name,area:s.area,territory:s.territory,town:s.town||aa?.town||"",status:prev?.status||"Planned",visitId:prev?.visitId||"",person:prev?.person||"",time:prev?.time||"",followup:prev?.followup||"",notes:prev?.notes||""}}),salesman};saveRouteTasks();
+ const rs=document.getElementById("routeAssignedSummary");if(rs)rs.innerHTML=`<b>${esc(salesman)}</b><div class="admin-assignment-meta">${activeAssignments.map(a=>`<span>📍 ${esc(a.area)}</span><span>🛣️ ${esc(a.town||"Route")}</span><span>🧭 ${(a.days[dayName]||[]).length} territories</span>`).join("")}<span>🏪 ${scheduled.length} stores</span></div>`;
+ renderTodayTasks();updatePremiumDashboard();
 }
-function onSalesmanChanged(){const salesman=document.getElementById("visitedBy")?.value||"";localStorage.setItem("shadab_current_salesman_v1",salesman);const d=adminSchedules[salesman];if(d){document.getElementById("area").value=d.area||"Sahiwal";refreshTerritories();const day=new Date().toLocaleDateString("en-US",{weekday:"long"}),assigned=Array.isArray(d.days?.[day])?d.days[day]:[];setSelectedTerritories(assigned);applyScheduledTasksForSalesman(salesman,true);showStoreSuggestions()}else{document.getElementById("area").value="";refreshTerritories();showStoreSuggestions();renderTodayTasks();updatePremiumDashboard()}}
+function onSalesmanChanged(){const salesman=document.getElementById("visitedBy")?.value||"";localStorage.setItem("shadab_current_salesman_v1",salesman);ensureSalesmanOptions();const d=adminSchedules[salesman];if(d){const normalized=normalizeAdminSchedule(salesman),day=new Date().toLocaleDateString("en-US",{weekday:"long"}),active=normalized.assignments.filter(a=>Array.isArray(a.days?.[day])&&a.days[day].length);const first=active[0]||normalized.assignments[0];document.getElementById("area").value=first?.area||"Sahiwal";refreshTerritories();const assigned=first?.days?.[day]||[];setSelectedTerritories(assigned);localStorage.setItem("shadab_current_territories_v1",JSON.stringify({salesman,area:first?.area||"Sahiwal",territories:assigned}));applyScheduledTasksForSalesman(salesman,true);showStoreSuggestions()}else{const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();const area=(saved&&saved.salesman===salesman&&saved.area)||localStorage.getItem("shadab_current_area_v1")||"Sahiwal";document.getElementById("area").value=area;refreshTerritories(saved&&saved.salesman===salesman?saved.territories||[]:[]);const rs=document.getElementById("routeAssignedSummary");if(rs)rs.innerHTML='<span class="field-manager-badge">No Field Manager assignment for this salesman</span>';showStoreSuggestions();renderTodayTasks();updatePremiumDashboard()}}
+
+/* ===== START: SMART ADMIN LIVE EDIT HOOKS ===== */
+document.addEventListener("change",e=>{
+ if(e.target?.id==="adminSalesman"){adminActiveAssignment=0;renderAdminUnified();markAdminSaved();return}
+ if(e.target?.id==="adminScheduleArea"){
+   const s=document.getElementById("adminSalesman")?.value;if(!s)return;
+   const d=normalizeAdminSchedule(s),a=d.assignments[adminActiveAssignment],oldArea=a.area;
+   a.area=e.target.value;
+   if(oldArea!==a.area)a.days={};
+   renderAdminUnified();markAdminUnsaved();return
+ }
+ if(e.target?.id==="adminScheduleTown"){updateCurrentAdminAreaFromUI();markAdminUnsaved();return}
+ if(e.target?.classList?.contains("admin-day-territory")){
+   const s=document.getElementById("adminSalesman")?.value;if(!s)return;
+   const d=normalizeAdminSchedule(s),a=d.assignments[adminActiveAssignment];
+   ADMIN_DAYS.forEach(day=>a.days[day]=[...document.querySelectorAll(`.admin-day-territory[data-day="${day}"]:checked`)].map(x=>x.value));
+   markAdminUnsaved();renderAdminUnified();
+ }
+});
+/* ===== END: SMART ADMIN LIVE EDIT HOOKS ===== */
+
 /* ===== END: SHADAB ADMIN / SALESman WEEKLY ASSIGNMENT ===== */
+/* ===== START: FIELD MANAGER AUTO-SYNC ===== */
+window.addEventListener("storage",e=>{
+ if([ADMIN_SCHEDULE_KEY,TASK_KEY,"shadab_pharmacy_visits_v1"].includes(e.key)){
+  try{adminSchedules=JSON.parse(localStorage.getItem(ADMIN_SCHEDULE_KEY)||"{}")}catch(_){}
+  try{routeTasks=JSON.parse(localStorage.getItem(TASK_KEY)||"{}")}catch(_){}
+  const s=document.getElementById("visitedBy")?.value||"";if(s&&adminSchedules[s]){applyScheduledTasksForSalesman(s,false)}else{renderTodayTasks();updatePremiumDashboard()}
+ }
+});
+/* ===== END: FIELD MANAGER AUTO-SYNC ===== */
+
 let smartRouteMode="remaining";
 function smartRouteRows(mode="remaining"){
  const day=currentTodayTasks(),stores=Array.isArray(day.stores)?day.stores.slice():[];
@@ -1885,8 +2056,8 @@ function closeTaskNames(){document.getElementById("taskNamesModal").classList.re
 
 /* ===== START: APP INITIALIZATION ===== */
 loadTheme(); document.getElementById("filterDate").value=todayISO(); updateDbCount();
-(function(){const s=document.getElementById("visitedBy"),k="shadab_current_salesman_v1";if(s){const old=localStorage.getItem(k);if(old&&[...s.options].some(o=>o.value===old)){s.value=old}s.addEventListener("change",onSalesmanChanged);}})();
-refreshTerritories();renderRecords();updateStats();(function(){const s=document.getElementById("visitedBy")?.value;if(s&&adminSchedules[s])applyScheduledTasksForSalesman(s,false)})();updatePremiumDashboard();renderTodayTasks();showStoreSuggestions();
+(function(){ensureSalesmanOptions();const s=document.getElementById("visitedBy"),k="shadab_current_salesman_v1";if(s){const old=localStorage.getItem(k);if(old&&[...s.options].some(o=>o.value===old))s.value=old;s.addEventListener("change",onSalesmanChanged)}})();
+(function(){const s=document.getElementById("visitedBy"),salesman=s?.value||"";if(salesman&&adminSchedules[salesman])onSalesmanChanged();else{const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();if(saved&&saved.salesman===salesman&&saved.area){document.getElementById("area").value=saved.area;refreshTerritories(saved.territories||[])}else refreshTerritories()}})();renderRecords();updateStats();(function(){const s=document.getElementById("visitedBy")?.value;if(s&&adminSchedules[s])applyScheduledTasksForSalesman(s,false)})();updatePremiumDashboard();renderTodayTasks();showStoreSuggestions();
 window.addEventListener("beforeunload",stopCamera);
 /* ===== END: APP INITIALIZATION ===== */
 </script>
