@@ -323,6 +323,13 @@ body.section-modal-open .section-modal-close { display:block !important; }
 .admin-kicker,.admin-section-label{font-size:10px;letter-spacing:.14em;font-weight:900;color:#56b8ff}.admin-hero h3{margin:4px 0 5px;font-size:22px}.admin-hero p{margin:0;color:var(--muted);font-size:12px;max-width:650px}.admin-hero-actions{display:flex;gap:8px}.admin-icon-btn{width:40px;height:40px;border-radius:13px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.07);color:inherit;font-size:20px;cursor:pointer}.admin-icon-btn.danger{color:#ff8b8b}.admin-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.admin-kpi{padding:13px 14px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 8px 22px rgba(0,0,0,.06)}.admin-kpi b{display:block;font-size:20px}.admin-kpi span{font-size:10px;color:var(--muted)}.admin-planner-grid{display:grid;grid-template-columns:.75fr 1.65fr;gap:12px}.admin-card{border:1px solid var(--line);border-radius:20px;padding:14px;background:var(--card);box-shadow:0 10px 28px rgba(0,0,0,.05)}.admin-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.admin-card-head h4{margin:2px 0 0;font-size:16px}.admin-add-btn,.admin-auto-btn,.admin-remove-btn{border:1px solid var(--line);border-radius:11px;padding:8px 10px;background:var(--soft);color:inherit;font-weight:800;font-size:11px;cursor:pointer}.admin-auto-btn{color:#0a83d8;background:rgba(10,131,216,.09)}.admin-remove-btn{color:#d44;background:rgba(220,50,50,.07)}.admin-premium-select,.admin-route-editor input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:var(--soft);color:inherit;font:inherit}.admin-salesman-snapshot{margin-top:12px}.admin-snapshot-main{font-weight:900;font-size:17px}.admin-snapshot-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.admin-snapshot-meta span{font-size:10px;padding:5px 7px;border-radius:9px;background:var(--soft);border:1px solid var(--line)}.admin-assignment-tabs{display:flex;gap:8px;overflow:auto;padding:2px 1px 9px}.admin-assignment-tab{min-width:120px;padding:10px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:inherit;text-align:left;cursor:pointer}.admin-assignment-tab.active{border-color:#3fa9ff;box-shadow:0 0 0 2px rgba(63,169,255,.12);background:rgba(63,169,255,.10)}.admin-assignment-tab b{display:block;font-size:12px}.admin-assignment-tab small{display:block;margin-top:3px;color:var(--muted);font-size:9px}.admin-route-topline{display:flex;justify-content:space-between;align-items:center;margin:2px 0 12px}.admin-current-area{font-size:18px;font-weight:900;margin-top:3px}.admin-week-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:14px 0 8px}.admin-week-title small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.admin-summary-card{margin-top:12px}.admin-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.admin-summary-chip{padding:10px;border-radius:13px;background:var(--soft);border:1px solid var(--line)}.admin-summary-chip b{display:block}.admin-summary-chip small{color:var(--muted)}.admin-status-badge{padding:6px 9px;border-radius:999px;font-size:10px;font-weight:900;background:rgba(32,201,107,.1);color:#159b50}.admin-status-badge.unsaved{background:rgba(255,174,0,.12);color:#b56d00}.admin-saved-block{margin-top:12px}.admin-saved-modern{display:grid;gap:8px}.admin-saved-modern .admin-saved-row{margin:0;padding:12px;border-radius:15px;background:var(--soft);border:1px solid var(--line)}.admin-day-row{background:var(--soft)!important;border-color:var(--line)!important}.admin-territory-list label{background:transparent!important;border-color:var(--line)!important}.admin-territory-list input{accent-color:#159fe8}.admin-day-toggle{padding:11px 12px}.admin-day-content{padding:0 12px 12px}.admin-day-meta-pill{font-size:10px;padding:4px 7px;border-radius:8px;background:rgba(63,169,255,.10);color:#1788ca}.admin-actions{margin-top:12px}.salesman-picker-row .salesman-picker-avatar{background:linear-gradient(135deg,#138fe8,#6b5cff)!important;color:#fff!important;border:0!important;box-shadow:0 7px 18px rgba(19,143,232,.22)}
 @media(max-width:800px){.admin-planner-grid{grid-template-columns:1fr}.admin-kpi-grid{grid-template-columns:repeat(2,1fr)}.admin-summary-grid{grid-template-columns:1fr 1fr}.admin-hero h3{font-size:19px}}
 </style>
+<style id="sp35-account-menu-style">
+#sp35AccountMenu{display:none;position:fixed;inset:0;z-index:100020;background:rgba(5,12,20,.18)}
+#sp35AccountMenu.show{display:block}
+.sp35-account-menu-card{position:fixed;top:58px;right:12px;min-width:190px;padding:10px;border:1px solid var(--line,#d9e2ea);border-radius:14px;background:var(--card,#fff);box-shadow:0 12px 35px rgba(0,0,0,.18);color:inherit}
+.sp35-account-menu-name{padding:8px 10px 10px;font-size:12px;font-weight:800;border-bottom:1px solid var(--line,#e5e7eb);margin-bottom:7px}
+.sp35-account-logout{width:100%;border:0;border-radius:10px;padding:10px;text-align:left;font-weight:800;font-size:12px;background:rgba(220,50,50,.08);color:#d33;cursor:pointer}
+</style>
 </head>
 <body>
 <div class="app">
@@ -351,7 +358,7 @@ body.section-modal-open .section-modal-close { display:block !important; }
 </header>
 
 <main>
-<div class="offline-bar" id="offlineBar"><span class="offline-dot"></span><b id="networkText">Online</b><span id="syncText">Ready — local saving is active</span><button id="shadabSyncRefresh" type="button" title="Refresh & Sync" aria-label="Refresh & Sync" onclick="sp35ManualSync()">↻</button></div>
+<div class="offline-bar" id="offlineBar"><span class="offline-dot"></span><b id="networkText">Online</b><span id="syncText">Ready — local saving is active</span></div>
 <div class="sp-alert" id="shadabAlertBar" aria-live="polite"><div class="sp-alert-label">🔔 ALERT</div><div class="sp-alert-window"><div class="sp-alert-track" id="shadabAlertText">Welcome to SHADAB PHARMACY</div></div></div>
 <style id="shadab-top-action-icons-style">
 .top-action-icons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 16px}
@@ -780,12 +787,7 @@ function nowText(){return new Intl.DateTimeFormat("en-PK",{dateStyle:"medium",ti
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2300)}
-function saveData(){
- localStorage.setItem(APP_KEY,JSON.stringify(visits));
- localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));
- localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));
- try{if(typeof window.sp35AutoSyncUserData==='function')window.sp35AutoSyncUserData()}catch(e){console.warn('Auto Firebase sync:',e)}
-}
+function saveData(){localStorage.setItem(APP_KEY,JSON.stringify(visits));localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase))}
 function formatDate(iso){if(!iso)return "";return new Date(iso+"T00:00:00").toLocaleDateString("en-PK",{day:"2-digit",month:"short",year:"numeric"})}
 function normalizePhone(p){return (p||"").replace(/\D/g,"").replace(/^0/,"92")}
 function visitText(v){return `Shadab Pharmacy
@@ -1896,25 +1898,7 @@ function saveAdminSchedules(){localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.strin
 function openAdmin(){document.getElementById("adminModal").classList.add("show");if(adminLoggedIn)showAdminDashboard();else showAdminLogin()}
 function closeAdmin(){document.getElementById("adminModal").classList.remove("show")}
 function showAdminLogin(){document.getElementById("adminLoginBox").style.display="block";document.getElementById("adminDashboardBox").style.display="none";setTimeout(()=>document.getElementById("adminUsername")?.focus(),80)}
-async function adminLogin(){
- const u=document.getElementById("adminUsername").value.trim(),p=document.getElementById("adminPassword").value;
- if(u!==ADMIN_USER||p!==ADMIN_PASS)return toast("Invalid Admin username or password");
- const a=window.firebase&&firebase.auth?firebase.auth():null;
- if(!a)return toast("Firebase Authentication is not available");
- try{
-   let cred;
-   try{cred=await a.signInWithEmailAndPassword('admin@shadabpharmacy.com',p)}
-   catch(e){
-     if(e.code==='auth/user-not-found')cred=await a.createUserWithEmailAndPassword('admin@shadabpharmacy.com',p);
-     else throw e;
-   }
-   adminLoggedIn=true;
-   document.getElementById("adminUsername").value="";document.getElementById("adminPassword").value="";
-   showAdminDashboard();
-   toast("Admin login successful • Firebase synced");
-   setTimeout(async()=>{try{await window.sp35LoadMasterDataFromFirebase();await window.sp35LoadAdminPlanFromFirebase();if(typeof renderAdminUnified==='function')renderAdminUnified()}catch(e){console.warn(e)}},250);
- }catch(e){toast("Admin Firebase login failed: "+(e.code||e.message||e))}
-}
+function adminLogin(){const u=document.getElementById("adminUsername").value.trim(),p=document.getElementById("adminPassword").value;if(u===ADMIN_USER&&p===ADMIN_PASS){adminLoggedIn=true;document.getElementById("adminUsername").value="";document.getElementById("adminPassword").value="";showAdminDashboard();toast("Admin login successful")}else toast("Invalid Admin username or password")}
 function logoutAdmin(){adminLoggedIn=false;showAdminLogin();toast("Admin logged out")}
 function normalizeAdminSchedule(salesman){
  let d=adminSchedules[salesman];
@@ -2281,12 +2265,38 @@ window.sp35FirebaseProbe=()=>{const d=db();if(!d)return toast35('Firebase SDK un
 window.sp35Point34=()=>{document.getElementById('sp35WorkBody').innerHTML='<div class="sp35-form"><div><label>App Name</label><input id="sp35AppName" value="SHADAB PHARMACY"></div><div><label>Default Theme</label><select id="sp35Theme"><option value="dark">Dark</option><option value="light">Light</option></select></div></div><div class="actions"><button class="sp35-btn primary" onclick="sp35SaveSettings()">Save Settings</button></div>'};
 window.sp35SaveSettings=()=>{const n=document.getElementById('sp35AppName')?.value.trim()||'SHADAB PHARMACY';localStorage.setItem('shadab_app_name_v1',n);const th=document.getElementById('sp35Theme')?.value;if(th){localStorage.setItem('shadab_theme',th);if(typeof loadTheme==='function')loadTheme()}toast35('Settings saved');log35('Settings updated',{appName:n,theme:th})};
 window.sp35Point35=()=>{document.getElementById('sp35WorkBody').innerHTML='<div class="notice">Backup and restore use the existing app JSON backup. Important records are not deleted by this panel.</div><div class="actions"><button class="sp35-btn primary" onclick="exportBackup()">Download Backup</button><button class="sp35-btn" onclick="document.getElementById(\'restoreInput\')?.click()">Restore Backup</button></div>'};
-window.sp35UpdateHeaderLoginButton=(name)=>{const b=document.getElementById('sp35LoginButton');if(!b)return;const n=String(name||'').trim();b.textContent=n||'Salesman Login';b.title=n?`Logged in as ${n}`:'Salesman Login';b.dataset.loggedIn=n?'1':'0'};
-window.sp35HeaderAccountAction=()=>{const u=auth()?.currentUser;if(u){toast35(`Logged in as ${u.displayName||u.email||'Salesman'}`);return}sp35OpenAuth('login')};
+window.sp35UpdateHeaderLoginButton=(name)=>{const b=document.getElementById('sp35LoginButton');if(!b)return;const n=String(name||'').trim();b.textContent=n||'Salesman Login';b.title=n?`Logged in as ${n}`:'Salesman Login'};
+window.sp35HeaderAccountAction=function(){
+ const u=auth()?.currentUser;
+ if(u){sp35ShowAccountMenu();return}
+ sp35OpenAuth('login');
+};
+window.sp35ShowAccountMenu=function(){
+ let m=document.getElementById('sp35AccountMenu');
+ if(!m){
+  m=document.createElement('div');m.id='sp35AccountMenu';
+  m.innerHTML='<div class=\"sp35-account-menu-card\"><div class=\"sp35-account-menu-name\" id=\"sp35AccountMenuName\"></div><button type=\"button\" class=\"sp35-account-logout\" onclick=\"sp35Logout()\">↪ Logout</button></div>';
+  document.body.appendChild(m);
+  m.addEventListener('click',e=>{if(e.target===m)m.remove()});
+ }
+ const u=auth()?.currentUser;
+ const n=document.getElementById('sp35AccountMenuName');
+ if(n)n.textContent=u?.displayName||u?.email||'Salesman';
+ m.classList.add('show');
+};
+window.sp35Logout=async function(){
+ try{const a=auth();if(a)await a.signOut()}catch(e){console.warn('Salesman logout:',e)}
+ ['shadab_current_salesman_v1','shadab_last_salesman_v1','shadab_current_area_v1','shadab_current_territories_v1'].forEach(k=>localStorage.removeItem(k));
+ const s=document.getElementById('visitedBy');if(s){s.disabled=false;s.value='';}
+ const m=document.getElementById('sp35AccountMenu');if(m)m.remove();
+ sp35UpdateHeaderLoginButton('Salesman Login');
+ try{if(typeof renderTodayTasks==='function')renderTodayTasks();if(typeof updatePremiumDashboard==='function')updatePremiumDashboard();}catch(e){}
+ toast35('Salesman logged out');
+};
 window.sp35OpenAuth=(mode)=>{document.getElementById('sp35AuthModal')?.classList.add('show');sp35ShowAuth(mode)};
 window.sp35CloseAuth=()=>document.getElementById('sp35AuthModal')?.classList.remove('show');
 window.sp35ShowAuth=(mode)=>{document.getElementById('sp35LoginForm').style.display=mode==='login'?'block':'none';document.getElementById('sp35RegisterForm').style.display=mode==='register'?'block':'none';document.getElementById('sp35LoginTab').classList.toggle('primary',mode==='login');document.getElementById('sp35RegisterTab').classList.toggle('primary',mode==='register');document.getElementById('sp35AuthTitle').textContent=mode==='login'?'Salesman Login':'Salesman Registration'};
-window.sp35Login=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');const email=document.getElementById('sp35LoginEmail').value.trim(),pass=document.getElementById('sp35LoginPassword').value;if(!email||!pass)return toast35('Email and password are required');try{if(a.setPersistence&&firebase.auth?.Auth?.Persistence?.LOCAL)await a.setPersistence(firebase.auth.Auth.Persistence.LOCAL);const c=await a.signInWithEmailAndPassword(email,pass);await sp35Profile(c.user);localStorage.setItem('shadab_current_salesman_v1',c.user.displayName||'');sp35UpdateHeaderLoginButton(c.user.displayName||c.user.email||'Salesman');sp35CloseAuth();toast35('Salesman login successful');setTimeout(()=>{try{window.loadSignedInAssignment?window.loadSignedInAssignment():loadSignedInAssignment()}catch(e){}},100)}catch(e){const m=e.code==='auth/invalid-credential'?'Email or password is incorrect.':e.code==='auth/user-not-found'?'This salesman account is not registered in Firebase.':e.code==='auth/invalid-email'?'Please enter a valid email address.':e.code==='auth/too-many-requests'?'Too many attempts. Try again after a short while.':(e.message||'Login failed');toast35(m)}};
+window.sp35Login=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');try{const c=await a.signInWithEmailAndPassword(document.getElementById('sp35LoginEmail').value.trim(),document.getElementById('sp35LoginPassword').value);await sp35Profile(c.user);sp35CloseAuth();toast35('Salesman login successful')}catch(e){toast35(e.message||'Login failed')}};
 window.sp35Register=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');const name=document.getElementById('sp35RegName').value.trim(),email=document.getElementById('sp35RegEmail').value.trim(),mobile=document.getElementById('sp35RegMobile').value.trim(),pass=document.getElementById('sp35RegPassword').value;if(!name||!email||pass.length<6)return toast35('Name, email and a 6+ character password are required');try{const c=await a.createUserWithEmailAndPassword(email,pass);await c.user.updateProfile({displayName:name});await sp35Profile(c.user,{fullName:name,mobile,email,status:'Active',createdAt:now()});await c.user.sendEmailVerification();toast35('Account created. Verification email sent.');sp35CloseAuth()}catch(e){toast35(e.message||'Registration failed')}};
 window.sp35Forgot=async()=>{const email=document.getElementById('sp35LoginEmail').value.trim();if(!email)return toast35('Enter the salesman email first');try{await auth().sendPasswordResetEmail(email);toast35('Password reset email sent')}catch(e){toast35(e.message||'Reset failed')}};
 async function sp35Profile(user,extra={}){const d=db();const data={uid:user.uid,fullName:user.displayName||extra.fullName||'',email:user.email||extra.email||'',mobile:extra.mobile||'',status:'Active',lastSeen:now(),updatedAt:now(),...extra};try{if(d)await d.collection('salesmen').doc(user.uid).set(data,{merge:true})}catch(e){console.warn(e)};localStorage.setItem('shadab_last_salesman_v1',data.fullName||data.email);localStorage.setItem('shadab_admin_profile_'+user.uid,JSON.stringify(data));log35('Salesman activity',{uid:user.uid})}
@@ -2414,18 +2424,92 @@ window.sp35FirebaseCheckNew=async()=>{const r=$('sp35FirebaseResult');if(!r)retu
 window.sp35SyncNew=async()=>{const a=auth(),d=db();if(!a?.currentUser||!d)return toast35('Salesman Firebase login is required for server sync.');try{const u=a.currentUser,p={uid:u.uid,updatedAt:new Date().toISOString(),visits:typeof visits!=='undefined'?visits:[],stores:typeof storeDatabase!=='undefined'?storeDatabase:[],territories:typeof territories!=='undefined'?territories:{},routeTasks:typeof routeTasks!=='undefined'?routeTasks:{}};await d.collection('user_data').doc(u.uid).set(p,{merge:true});if(typeof shadabFirebaseStatus==='function')shadabFirebaseStatus('firebase-connected','Firebase connected • Data synced');$('sp35FirebaseResult')&&( $('sp35FirebaseResult').innerHTML='🟢 Local data synced to Firebase.');toast35('Data synced')}catch(e){$('sp35FirebaseResult')&&( $('sp35FirebaseResult').innerHTML='🔴 Sync failed: '+ex(e.code||e.message||e));toast35('Firebase sync failed')}};
 window.sp35Point34=()=>{const b=getBody(),n=localStorage.getItem('shadab_app_name_v1')||'SHADAB PHARMACY',th=localStorage.getItem('shadab_theme')||'dark';b.innerHTML=`<div class="sp35-form-final"><div class="sp35-field-final"><label>App Name</label><input id="sp35AppNameNew" value="${ex(n)}"></div><div class="sp35-field-final"><label>Theme</label><select id="sp35ThemeNew"><option value="dark" ${th==='dark'?'selected':''}>Dark</option><option value="light" ${th==='light'?'selected':''}>Light</option></select></div></div><div class="sp35-actions-final"><button class="sp35-btn-final primary" onclick="sp35SaveSettingsNew()">Save Settings</button></div>`};window.sp35SaveSettingsNew=async()=>{const n=$('sp35AppNameNew')?.value.trim()||'SHADAB PHARMACY',th=$('sp35ThemeNew')?.value||'dark';localStorage.setItem('shadab_app_name_v1',n);localStorage.setItem('shadab_theme',th);if(typeof loadTheme==='function')loadTheme();try{const d=db();if(d)await d.collection('app_settings').doc('general').set({appName:n,theme:th,updatedAt:new Date().toISOString()},{merge:true})}catch(e){}log35('Settings updated',{appName:n,theme:th});toast35('Settings saved')};
 window.sp35Point35=()=>{const b=getBody();b.innerHTML='<div class="sp35-notice-final">Backup protects your local records. Restore uses the existing app restore flow.</div><div class="sp35-actions-final"><button class="sp35-btn-final primary" onclick="exportBackup()">Download Backup</button><button class="sp35-btn-final" onclick="document.getElementById(\'restoreInput\')?.click()">Restore Backup</button></div>'};
-// ===== SHARED FIREBASE ASSIGNMENT + SALESMAN DATA SYNC =====
-function sp35BuildRouteStores(){const out={};try{const schedules=typeof adminSchedules!=='undefined'?adminSchedules:{};Object.values(schedules||{}).forEach(plan=>(plan?.assignments||[]).forEach(a=>Object.values(a.days||{}).forEach(list=>(list||[]).forEach(tr=>{const key=String(a.area||'')+'::'+String(tr||'');if(!out[key])out[key]=[];(typeof storeDatabase!=='undefined'?storeDatabase:[]).filter(st=>String(st.area||'')===String(a.area||'')&&String(st.territory||'')===String(tr||'')).forEach(st=>{const item={name:st.name||'',area:st.area||a.area||'',territory:st.territory||tr||'',type:st.type||'',code:st.code||'',address:st.address||''};if(!out[key].some(x=>(x.code&&String(x.code)===String(item.code))||(!x.code&&!item.code&&x.name===item.name&&x.address===item.address)))out[key].push(item)})}))));}catch(e){console.warn('Route store build:',e)}return out}
-window.sp35SaveAdminPlanToFirebase=async()=>{const d=db();if(!d)return{ok:false,error:'firebase-unavailable'};const payload={schedules:typeof adminSchedules!=='undefined'?adminSchedules:{},routeStores:sp35BuildRouteStores(),territories:typeof territories!=='undefined'?territories:{},routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},updatedAt:new Date().toISOString(),updatedBy:'admin'};try{await d.collection('app_settings').doc('adminSchedules').set(payload,{merge:true});localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));return{ok:true}}catch(e){console.warn('Admin schedule Firebase save:',e);localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));return{ok:false,error:e}}};
-window.sp35LoadAdminPlanFromFirebase=async()=>{const d=db();if(!d)return{ok:false,error:'firebase-unavailable'};try{const q=await d.collection('app_settings').doc('adminSchedules').get({source:'server'});if(!q.exists)return{ok:false,error:{code:'not-found',message:'Admin assignment document does not exist in Firebase yet.'}};const x=q.data()||{};if(x.schedules&&typeof x.schedules==='object'){adminSchedules=x.schedules;localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.stringify(adminSchedules))}if(x.territories&&typeof x.territories==='object'){territories=x.territories;localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories))}if(x.routeTasks&&typeof x.routeTasks==='object'){routeTasks=x.routeTasks;localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks))}if(x.routeStores&&typeof x.routeStores==='object'){const merged=[...(typeof storeDatabase!=='undefined'?storeDatabase:[])],keyOf=v=>String(v.name||'')+'|'+String(v.area||'')+'|'+String(v.territory||'')+'|'+String(v.code||''),seen=new Set(merged.map(keyOf));Object.values(x.routeStores).flat().forEach(st=>{const k=keyOf(st);if(!seen.has(k)){merged.push(st);seen.add(k)}});storeDatabase=merged;localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase))}localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));return{ok:true}}catch(e){console.warn('Admin schedule Firebase read:',e);localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));return{ok:false,error:e}}};
-window.sp35AutoSyncUserData=async()=>{const u=auth()?.currentUser,d=db();if(!u||!d||!navigator.onLine)return{ok:false,skipped:true};try{const payload={uid:u.uid,fullName:u.displayName||'',updatedAt:new Date().toISOString(),visits:typeof visits!=='undefined'?visits:[],stores:typeof storeDatabase!=='undefined'?storeDatabase:[],territories:typeof territories!=='undefined'?territories:{},routeTasks:typeof routeTasks!=='undefined'?routeTasks:{}};await d.collection('user_data').doc(u.uid).set(payload,{merge:true});localStorage.setItem('shadab_last_user_sync_v1',JSON.stringify({ok:true,at:Date.now()}));return{ok:true}}catch(e){console.warn('Salesman data Firebase sync:',e);localStorage.setItem('shadab_last_user_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));return{ok:false,error:e}}};
-window.sp35WatchSharedAdminPlan=()=>{const d=db();if(!d||window._sp35AdminPlanUnsub)return;try{window._sp35AdminPlanUnsub=d.collection('app_settings').doc('adminSchedules').onSnapshot(s=>{if(!s.exists)return;const x=s.data()||{};if(x.schedules){adminSchedules=x.schedules;localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.stringify(adminSchedules))}if(x.territories){territories=x.territories;localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories))}if(x.routeTasks){routeTasks=x.routeTasks;localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks))}if(x.routeStores){const merged=[...(typeof storeDatabase!=='undefined'?storeDatabase:[])],keyOf=v=>String(v.name||'')+'|'+String(v.area||'')+'|'+String(v.territory||'')+'|'+String(v.code||''),seen=new Set(merged.map(keyOf));Object.values(x.routeStores).flat().forEach(st=>{const k=keyOf(st);if(!seen.has(k)){merged.push(st);seen.add(k)}});storeDatabase=merged;localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase))}const u=auth()?.currentUser;if(u&&typeof loadSignedInAssignment==='function')setTimeout(loadSignedInAssignment,0)},e=>console.warn('Admin plan realtime sync:',e))}catch(e){console.warn('Admin plan watcher:',e)}};
-const _saveAdminSchedules=window.saveAdminSchedules;window.saveAdminSchedules=async function(){if(_saveAdminSchedules)_saveAdminSchedules.apply(this,arguments);const r=await sp35SaveAdminPlanToFirebase();if(r.ok)toast35('Weekly plan + assigned stores synced to Firebase');else toast35('Firebase assignment sync failed: '+(r.error?.code||r.error?.message||r.error))};
-const _saveRouteTasks=window.saveRouteTasks;window.saveRouteTasks=async function(){if(_saveRouteTasks)_saveRouteTasks.apply(this,arguments);if(typeof adminLoggedIn!=='undefined'&&adminLoggedIn)await sp35SaveAdminPlanToFirebase()};
+// ===== SHARED FIREBASE ASSIGNMENT SYNC =====
+// Admin saves the weekly plan AND the store records needed by those assigned territories.
+// This keeps a salesman phone from depending on another phone's localStorage.
+function sp35BuildRouteStores(){
+  const out={};
+  try{
+    const schedules=typeof adminSchedules!=='undefined'?adminSchedules:{};
+    Object.values(schedules||{}).forEach(plan=>{
+      (plan?.assignments||[]).forEach(a=>{
+        Object.values(a.days||{}).forEach(list=>(list||[]).forEach(tr=>{
+          const key=String(a.area||'')+'::'+String(tr||'');
+          if(!out[key])out[key]=[];
+          (typeof storeDatabase!=='undefined'?storeDatabase:[]).filter(st=>String(st.area||'')===String(a.area||'')&&String(st.territory||'')===String(tr||'')).forEach(st=>{
+            const item={name:st.name||'',area:st.area||a.area||'',territory:st.territory||tr||'',type:st.type||'',code:st.code||'',address:st.address||''};
+            if(!out[key].some(x=>String(x.code||'')&&String(x.code||'')===String(item.code||'')) && !out[key].some(x=>!x.code&&x.name===item.name&&x.address===item.address))out[key].push(item);
+          });
+        }));
+      });
+    });
+  }catch(e){console.warn('Route store build:',e)}
+  return out;
+}
+window.sp35SaveAdminPlanToFirebase=async()=>{
+  const d=db();if(!d)return {ok:false,error:'firebase-unavailable'};
+  const schedules=typeof adminSchedules!=='undefined'?adminSchedules:{};
+  const routeStores=sp35BuildRouteStores();
+  const sharedTerritories=typeof territories!=='undefined'?territories:{};
+  const payload={schedules,routeStores,territories:sharedTerritories,routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},updatedAt:new Date().toISOString(),updatedBy:'admin'};
+  try{
+    await d.collection('app_settings').doc('adminSchedules').set(payload,{merge:true});
+    localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
+    return {ok:true};
+  }catch(e){
+    console.warn('Admin schedule Firebase save:',e);
+    localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));
+    return {ok:false,error:e};
+  }
+};
+window.sp35LoadAdminPlanFromFirebase=async()=>{
+  const d=db();if(!d)return {ok:false,error:'firebase-unavailable'};
+  try{
+    const q=await d.collection('app_settings').doc('adminSchedules').get({source:'server'});
+    if(!q.exists)return {ok:false,error:{code:'not-found',message:'Admin assignment document does not exist in Firebase yet.'}};
+    const x=q.data()||{};
+    if(x.schedules&&typeof x.schedules==='object'){adminSchedules=x.schedules;localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.stringify(adminSchedules));}
+    if(x.territories&&typeof x.territories==='object'){territories=x.territories;localStorage.setItem('shadab_pharmacy_territories_v1',JSON.stringify(territories));}
+    if(x.routeTasks&&typeof x.routeTasks==='object'){routeTasks=x.routeTasks;localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks));}
+    if(x.routeStores&&typeof x.routeStores==='object'){
+      const merged=[...(typeof storeDatabase!=='undefined'?storeDatabase:[])];
+      const keyOf=v=>String(v.name||'')+'|'+String(v.area||'')+'|'+String(v.territory||'')+'|'+String(v.code||'');
+      const seen=new Set(merged.map(keyOf));
+      Object.values(x.routeStores).flat().forEach(st=>{const k=keyOf(st);if(!seen.has(k)){merged.push(st);seen.add(k)}});
+      storeDatabase=merged;localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));
+    }
+    localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
+    return {ok:true};
+  }catch(e){
+    console.warn('Admin schedule Firebase read:',e);
+    localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));
+    return {ok:false,error:e};
+  }
+};
+// Wrap the existing save function without replacing its local behavior.
+const _saveAdminSchedules=window.saveAdminSchedules;window.saveAdminSchedules=async function(){if(_saveAdminSchedules)_saveAdminSchedules.apply(this,arguments);const ok=await sp35SaveAdminPlanToFirebase();if(ok)toast35('Weekly plan + assigned stores synced to Firebase');};
+const _saveRouteTasks=window.saveRouteTasks;window.saveRouteTasks=async function(){if(_saveRouteTasks)_saveRouteTasks.apply(this,arguments);if(typeof adminLoggedIn!=='undefined'&&adminLoggedIn){await sp35SaveAdminPlanToFirebase()}};
 const _showAdminDashboard=window.showAdminDashboard;window.showAdminDashboard=async function(){if(_showAdminDashboard)_showAdminDashboard.apply(this,arguments);await sp35LoadAdminPlanFromFirebase();if(typeof renderAdminUnified==='function')renderAdminUnified()};
-async function loadSignedInAssignment(){try{const u=auth()?.currentUser;if(!u)return;const d=db();if(d){const q=await d.collection('salesmen').doc(u.uid).get({source:'server'});if(q.exists&&String(q.data()?.status||'Active').toLowerCase()==='disabled'){await auth().signOut();toast35('This salesman account is disabled by Admin.');return}}const sync=await sp35LoadAdminPlanFromFirebase();if(!sync.ok){toast35('Firebase assignment sync failed: '+(sync.error?.code||sync.error?.message||sync.error));return}const profile=(()=>{try{return JSON.parse(localStorage.getItem('shadab_admin_profile_'+u.uid)||'null')}catch(e){return null}})()||{};const n=profile.fullName||u.displayName||localStorage.getItem('shadab_current_salesman_v1')||'';if(n){localStorage.setItem('shadab_current_salesman_v1',n);sp35UpdateHeaderLoginButton(n);if(typeof ensureSalesmanOptions==='function')ensureSalesmanOptions();const s=$('visitedBy');if(s){s.value=n;if(typeof onSalesmanChanged==='function')onSalesmanChanged()}}if(typeof renderTodayTasks==='function')renderTodayTasks();if(typeof updatePremiumDashboard==='function')updatePremiumDashboard();await sp35AutoSyncUserData()}catch(e){console.warn('Auto assignment:',e);toast35('Firebase sync error: '+(e.code||e.message||e))}}
-function autoAssignment(){loadSignedInAssignment()}
-window.addEventListener('load',()=>setTimeout(()=>{loadSignedInAssignment();sp35WatchSharedAdminPlan()},1200));
+// When a salesman signs in, FIRST download the shared Admin plan/store data, THEN apply today's assignment.
+async function loadSignedInAssignment(){
+  try{
+    const u=auth()?.currentUser;if(!u)return;
+    const d=db();
+    if(d){
+      const q=await d.collection('salesmen').doc(u.uid).get({source:'server'});
+      if(q.exists&&String(q.data()?.status||'Active').toLowerCase()==='disabled'){await auth().signOut();toast35('This salesman account is disabled by Admin.');return}
+    }
+    const sync=await sp35LoadAdminPlanFromFirebase();
+    if(!sync.ok){toast35('Firebase assignment sync failed: '+(sync.error?.code||sync.error?.message||sync.error)); return;}
+    const profile=(()=>{try{return JSON.parse(localStorage.getItem('shadab_admin_profile_'+u.uid)||'null')}catch(e){return null}})()||{};
+    const n=profile.fullName||u.displayName||localStorage.getItem('shadab_current_salesman_v1')||'';
+    if(n&&typeof ensureSalesmanOptions==='function'&&typeof onSalesmanChanged==='function'){
+      ensureSalesmanOptions();
+      const s=$('visitedBy');
+      if(s){s.value=n;onSalesmanChanged();if(typeof renderTodayTasks==='function')renderTodayTasks();if(typeof updatePremiumDashboard==='function')updatePremiumDashboard()}
+    }
+  }catch(e){console.warn('Auto assignment:',e)}
+}
 const oldProfile=window.sp35Profile;
 function autoAssignment(){loadSignedInAssignment();}
 window.addEventListener('load',()=>setTimeout(loadSignedInAssignment,1200));
@@ -2482,21 +2566,10 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     const s=document.getElementById('visitedBy'); if(!s)return;
     const name=loggedSalesmanName();
     if(!name)return;
-    /* Firebase profile names are authoritative. Always create the option if this
-       phone did not previously know the salesman. Setting select.value to a
-       missing option leaves it blank, which was causing Save Visit to reject
-       an otherwise valid logged-in salesman. */
     try{ensureSalesmanOptions?.()}catch(e){}
-    let opt=[...s.options].find(o=>String(o.value).trim()===String(name).trim());
-    if(!opt){
-      opt=document.createElement('option');
-      opt.value=name;
-      opt.textContent=name;
-      s.appendChild(opt);
-    }
     s.value=name;
     s.disabled=true;
-    s.title='Salesman is linked to the logged-in Firebase account';
+    s.title='Salesman is linked to the logged-in account';
     const label=s.closest('.field')?.querySelector('label');
     if(label)label.textContent='Salesman (Logged-in Account)';
     localStorage.setItem('shadab_current_salesman_v1',name);
@@ -2584,285 +2657,3 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
 </script>
 </body>
 </html>
-
-<style id="shadab-sync-refresh-style">
-#shadabSyncRefresh{margin-left:auto;border:0;background:rgba(255,255,255,.12);color:inherit;width:30px;height:30px;border-radius:50%;font-size:18px;line-height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}#shadabSyncRefresh:active{transform:rotate(180deg)}#shadabSyncRefresh.syncing{animation:shadabSyncSpin .8s linear infinite}@keyframes shadabSyncSpin{to{transform:rotate(360deg)}}
-</style>
-<script id="shadab-final-cross-device-sync-fix">
-(function(){
-  const $=id=>document.getElementById(id);
-  const dbx=()=>window.firebase&&firebase.firestore?firebase.firestore():null;
-  const authx=()=>window.firebase&&firebase.auth?firebase.auth():null;
-  const ADMIN_FIREBASE_EMAIL='admin@shadabpharmacy.com';
-  const isAdminFirebase=()=>String(authx()?.currentUser?.email||'').toLowerCase()===ADMIN_FIREBASE_EMAIL;
-  const toastx=m=>{try{if(typeof toast==='function')toast(m);else console.log(m)}catch(e){console.log(m)}};
-  const escx=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-  function profileName(u){
-    if(!u)return '';
-    let p=null;
-    try{p=JSON.parse(localStorage.getItem('shadab_admin_profile_'+u.uid)||'null')}catch(e){}
-    return String(p?.fullName||u.displayName||localStorage.getItem('shadab_last_salesman_v1')||u.email||'').trim();
-  }
-  function forceHeader(){
-    const u=authx()?.currentUser, b=$('sp35LoginButton');
-    if(!b)return;
-    if(u){
-      const n=profileName(u);
-      b.textContent=n||'Salesman';
-      b.title=n?`Logged in as ${n}`:'Logged in';
-      b.dataset.loggedIn='1';
-      localStorage.setItem('shadab_current_salesman_v1',n);
-    }else{
-      b.textContent='Salesman Login'; b.title='Salesman Login'; b.dataset.loggedIn='0';
-    }
-  }
-  window.sp35UpdateHeaderLoginButton=function(name){
-    const u=authx()?.currentUser, n=String(name||profileName(u)||'').trim();
-    const b=$('sp35LoginButton');
-    if(!b)return;
-    b.textContent=n||'Salesman Login';
-    b.title=n?`Logged in as ${n}`:'Salesman Login';
-    b.dataset.loggedIn=n?'1':'0';
-  };
-  window.sp35HeaderAccountAction=function(){
-    const u=authx()?.currentUser;
-    if(u){forceHeader();toastx(`Logged in as ${profileName(u)}`);return;}
-    if(typeof sp35OpenAuth==='function')sp35OpenAuth('login');
-  };
-
-  // ===== MASTER DATA SYNC =====
-  // The master application publishes the complete store + territory database.
-  // Other devices download this first; assignment data is layered on top.
-  window.sp35SaveMasterDataToFirebase=async function(){
-    const d=dbx(); if(!d||!isAdminFirebase())return {ok:false,error:'admin-firebase-login-required'};
-    try{
-      const payload={
-        stores:typeof storeDatabase!=='undefined'?storeDatabase:[],
-        territories:typeof territories!=='undefined'?territories:{},
-        updatedAt:new Date().toISOString(),updatedBy:ADMIN_FIREBASE_EMAIL
-      };
-      await d.collection('app_settings').doc('masterData').set(payload,{merge:true});
-      return {ok:true};
-    }catch(e){console.error('MASTER DATA FIREBASE SAVE FAILED',e);return {ok:false,error:e}}
-  };
-  window.sp35LoadMasterDataFromFirebase=async function(){
-    const d=dbx(); if(!d)return {ok:false,error:'firebase-unavailable'};
-    try{
-      const q=await d.collection('app_settings').doc('masterData').get({source:'server'});
-      if(!q.exists)return {ok:false,error:{code:'not-found',message:'Master store database has not been published to Firebase yet.'}};
-      const x=q.data()||{};
-      if(Array.isArray(x.stores)){storeDatabase=x.stores;localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));}
-      if(x.territories&&typeof x.territories==='object'){territories=x.territories;localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));}
-      return {ok:true,data:x};
-    }catch(e){console.warn('MASTER DATA FIREBASE READ FAILED',e);return {ok:false,error:e}}
-  };
-
-  // Firebase is the source of truth for assignments. Do not merge another phone's local assignment into it.
-  window.sp35LoadAdminPlanFromFirebase=async function(){
-    const d=dbx(); if(!d)return {ok:false,error:'firebase-unavailable'};
-    try{
-      const q=await d.collection('app_settings').doc('adminSchedules').get({source:'server'});
-      if(!q.exists)return {ok:false,error:{code:'not-found',message:'No shared Admin assignment exists in Firebase yet.'}};
-      const x=q.data()||{};
-      if(x.schedules&&typeof x.schedules==='object'){
-        adminSchedules=x.schedules;
-        localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.stringify(adminSchedules));
-      }
-      if(x.territories&&typeof x.territories==='object'){
-        territories=x.territories;
-        localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));
-      }
-      if(x.routeTasks&&typeof x.routeTasks==='object'){
-        routeTasks=x.routeTasks;
-        localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks));
-      }
-      /* Keep the complete Master store database. routeStores is only an
-         assignment-layer/cache; replacing storeDatabase with it made a
-         salesman phone lose the Master stores when routeStores was empty or
-         incomplete. Merge assigned records on top of Master data instead. */
-      if(x.routeStores&&typeof x.routeStores==='object'){
-        const merged=Array.isArray(storeDatabase)?storeDatabase.slice():[];
-        const keyOf=v=>String(v.code||'')+'|'+String(v.name||'')+'|'+String(v.area||'')+'|'+String(v.territory||'');
-        const seen=new Set(merged.map(keyOf));
-        Object.values(x.routeStores).flat().filter(Boolean).forEach(st=>{
-          const k=keyOf(st);
-          if(!seen.has(k)){merged.push(st);seen.add(k)}
-        });
-        storeDatabase=merged;
-        localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));
-      }
-      localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
-      return {ok:true,data:x};
-    }catch(e){
-      console.warn('Shared assignment read failed',e);
-      localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));
-      return {ok:false,error:e};
-    }
-  };
-
-  // Save the Admin plan to the same Firebase document. This is deliberately the only assignment source for other devices.
-  window.sp35SaveAdminPlanToFirebase=async function(){
-    const d=dbx(); if(!d)return {ok:false,error:'firebase-unavailable'};
-    const payload={
-      schedules:typeof adminSchedules!=='undefined'?adminSchedules:{},
-      routeStores:typeof sp35BuildRouteStores==='function'?sp35BuildRouteStores():{},
-      territories:typeof territories!=='undefined'?territories:{},
-      routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},
-      updatedAt:new Date().toISOString(), updatedBy:'admin'
-    };
-    try{
-      await d.collection('app_settings').doc('adminSchedules').set(payload,{merge:true});
-      await window.sp35SaveMasterDataToFirebase();
-      localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
-      return {ok:true};
-    }catch(e){
-      console.error('ADMIN FIREBASE SAVE FAILED',e);
-      localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));
-      return {ok:false,error:e};
-    }
-  };
-
-  // A salesman phone uploads only its own working records. It must never upload its local master/assignment data as the shared source.
-  window.sp35AutoSyncUserData=async function(){
-    const u=authx()?.currentUser,d=dbx();
-    if(!u||!d||!navigator.onLine)return {ok:false,skipped:true};
-    try{
-      const payload={uid:u.uid,fullName:profileName(u),updatedAt:new Date().toISOString(),visits:typeof visits!=='undefined'?visits:[],routeTasks:typeof routeTasks!=='undefined'?routeTasks:{}};
-      await d.collection('user_data').doc(u.uid).set(payload,{merge:true});
-      localStorage.setItem('shadab_last_user_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
-      return {ok:true};
-    }catch(e){
-      console.warn('Salesman working-data sync failed',e);
-      localStorage.setItem('shadab_last_user_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));
-      return {ok:false,error:e};
-    }
-  };
-
-  async function restoreWorkingData(){
-    const u=authx()?.currentUser,d=dbx(); if(!u||!d)return;
-    try{
-      const q=await d.collection('user_data').doc(u.uid).get({source:'server'});
-      if(!q.exists)return;
-      const x=q.data()||{};
-      if(Array.isArray(x.visits)){
-        visits=x.visits;
-        localStorage.setItem('shadab_pharmacy_visits_v1',JSON.stringify(visits));
-      }
-      // Admin assignment remains authoritative; only use routeTasks as salesman working status.
-      if(x.routeTasks&&typeof x.routeTasks==='object'){
-        routeTasks={...(typeof routeTasks==='object'?routeTasks:{}),...x.routeTasks};
-        localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks));
-      }
-      if(typeof renderRecords==='function')renderRecords();
-      if(typeof updateStats==='function')updateStats();
-      if(typeof renderTodayTasks==='function')renderTodayTasks();
-      if(typeof updatePremiumDashboard==='function')updatePremiumDashboard();
-    }catch(e){console.warn('Working data restore failed',e)}
-  }
-
-  window.loadSignedInAssignment=async function(){
-    try{
-      const u=authx()?.currentUser; if(!u)return;
-      const d=dbx();
-      if(d){
-        const q=await d.collection('salesmen').doc(u.uid).get({source:'server'});
-        if(q.exists&&String(q.data()?.status||'Active').toLowerCase()==='disabled'){
-          await authx().signOut(); forceHeader(); toastx('This salesman account is disabled by Admin.'); return;
-        }
-        if(q.exists){
-          const p=q.data()||{};
-          if(p.fullName){
-            localStorage.setItem('shadab_last_salesman_v1',p.fullName);
-            localStorage.setItem('shadab_admin_profile_'+u.uid,JSON.stringify({...p,uid:u.uid}));
-          }
-        }
-      }
-      forceHeader();
-      const master=await window.sp35LoadMasterDataFromFirebase();
-      if(!master.ok && master.error?.code!=='not-found') console.warn('Master data sync:',master.error);
-      const sync=await window.sp35LoadAdminPlanFromFirebase();
-      if(!sync.ok){
-        toastx('Firebase assignment sync failed: '+(sync.error?.code||sync.error?.message||sync.error));
-        return;
-      }
-      const n=profileName(u);
-      localStorage.setItem('shadab_current_salesman_v1',n);
-      if(typeof ensureSalesmanOptions==='function')ensureSalesmanOptions();
-      const s=$('visitedBy');
-      if(s){
-        s.value=n;
-        if(typeof onSalesmanChanged==='function')onSalesmanChanged();
-      }
-      await restoreWorkingData();
-      await window.sp35AutoSyncUserData();
-      forceHeader();
-    }catch(e){
-      console.warn('Cross-device assignment sync error',e);
-      toastx('Firebase sync error: '+(e.code||e.message||e));
-    }
-  };
-
-  // ===== CROSS-DEVICE WORKING DATA SYNC =====
-  window.sp35SaveWorkingDataNow=async function(){
-    const u=authx()?.currentUser,d=dbx();
-    if(!u||!d||!navigator.onLine)return {ok:false,skipped:true};
-    try{
-      const payload={uid:u.uid,fullName:profileName(u),updatedAt:new Date().toISOString(),visits:typeof visits!=='undefined'?visits:[],routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},currentArea:$('area')?.value||''};
-      await d.collection('user_data').doc(u.uid).set(payload,{merge:true});
-      return {ok:true};
-    }catch(e){console.warn('Working data upload failed',e);return {ok:false,error:e}}
-  };
-  window.sp35LoadAllSalesmanWorkingData=async function(){
-    const d=dbx();if(!d||!navigator.onLine)return {ok:false,skipped:true};
-    try{const snap=await d.collection('user_data').get({source:'server'}),all={};snap.forEach(doc=>{all[doc.id]=doc.data()||{}});window.sp35AllSalesmanWorkingData=all;localStorage.setItem('shadab_all_salesman_working_v1',JSON.stringify(all));return {ok:true,data:all}}
-    catch(e){console.warn('Admin working data read failed',e);return {ok:false,error:e}}
-  };
-  const _saveDataCrossDevice=window.saveData;
-  window.saveData=async function(){if(_saveDataCrossDevice)_saveDataCrossDevice.apply(this,arguments);try{if(isAdminFirebase())await window.sp35SaveMasterDataToFirebase();}catch(e){} try{await window.sp35SaveWorkingDataNow()}catch(e){}};
-  window.sp35RefreshAdminWorkingData=async function(){const r=await window.sp35LoadAllSalesmanWorkingData();if(r.ok)toastx('Salesman working data synced from Firebase');else if(!r.skipped)toastx('Working-data sync failed: '+(r.error?.code||r.error?.message||r.error));return r};
-
-  window.sp35ManualSync=async function(){
-    const btn=$('shadabSyncRefresh'); if(btn)btn.classList.add('syncing');
-    try{
-      const u=authx()?.currentUser;
-      if(isAdminFirebase()){
-        await window.sp35LoadMasterDataFromFirebase();
-        await window.sp35LoadAdminPlanFromFirebase();
-        if(typeof renderAdminUnified==='function')renderAdminUnified();
-        toastx('Master data + assignments refreshed');
-      }else if(u){
-        await window.sp35LoadMasterDataFromFirebase();
-        await window.loadSignedInAssignment();
-        toastx('Data synchronized from Firebase');
-      }else{
-        location.reload(); return;
-      }
-    }catch(e){toastx('Sync failed: '+(e.code||e.message||e));}
-    finally{if(btn)btn.classList.remove('syncing');}
-  };
-
-  // Realtime refresh: when Admin saves a plan, every logged-in salesman gets it without reopening the app.
-  window.sp35WatchSharedAdminPlan=function(){
-    const d=dbx(); if(!d||window._sp35AdminPlanUnsub)return;
-    try{
-      window._sp35AdminPlanUnsub=d.collection('app_settings').doc('adminSchedules').onSnapshot(async s=>{
-        if(!s.exists)return;
-        const u=authx()?.currentUser; if(!u)return;
-        await window.sp35LoadAdminPlanFromFirebase();
-        await restoreWorkingData();
-        const n=profileName(u),sel=$('visitedBy');
-        if(sel){sel.value=n;if(typeof onSalesmanChanged==='function')onSalesmanChanged();}
-        forceHeader();
-      },e=>console.warn('Realtime assignment listener failed',e));
-    }catch(e){console.warn('Realtime assignment watcher failed',e)}
-  };
-
-  // Keep the logged-in name visible in the header even if another legacy render refreshes the header.
-  setInterval(forceHeader,700);
-  window.addEventListener('load',()=>setTimeout(()=>{
-    forceHeader();
-    if(authx()?.currentUser){window.loadSignedInAssignment();window.sp35WatchSharedAdminPlan();}
-  },900));
-})();
-</script>
