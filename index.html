@@ -358,7 +358,7 @@ body.section-modal-open .section-modal-close { display:block !important; }
 </header>
 
 <main>
-<div class="offline-bar" id="offlineBar"><span class="offline-dot"></span><b id="networkText">Online</b><span id="syncText">Ready — local saving is active</span></div>
+<div class="offline-bar" id="offlineBar"><span class="offline-dot"></span><b id="networkText">Online</b><span id="syncText">Ready — local saving is active</span><button id="sp35SyncRefreshBtn" type="button" title="Refresh Firebase server data" onclick="sp35ManualServerRefresh()" style="margin-left:auto;border:0;background:transparent;color:inherit;font-size:16px;font-weight:900;cursor:pointer;padding:2px 7px;line-height:1">↻</button></div>
 <div class="sp-alert" id="shadabAlertBar" aria-live="polite"><div class="sp-alert-label">🔔 ALERT</div><div class="sp-alert-window"><div class="sp-alert-track" id="shadabAlertText">Welcome to SHADAB PHARMACY</div></div></div>
 <style id="shadab-top-action-icons-style">
 .top-action-icons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 16px}
@@ -1874,7 +1874,7 @@ async function playVoiceNote(id){const blob=await getVoiceBlob(id);if(!blob)retu
 /* ===== END: PREMIUM OFFLINE + ANALYTICS + BACKUP ===== */
 
 /* ===== START: SHADAB ADMIN / SALESman WEEKLY ASSIGNMENT ===== */
-const ADMIN_USER="admin",ADMIN_PASS="shadab@1303",ADMIN_SCHEDULE_KEY="shadab_pharmacy_fixed_salesman_schedule_v2";
+const ADMIN_USER="admin",ADMIN_PASS="shadab@1303",ADMIN_FIREBASE_EMAIL="admin@shadabpharmacy.com",ADMIN_SCHEDULE_KEY="shadab_pharmacy_fixed_salesman_schedule_v2";
 const ADMIN_DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const SALESMAN_KEY="shadab_pharmacy_custom_salesmen_v1";
 let adminSchedules=JSON.parse(localStorage.getItem(ADMIN_SCHEDULE_KEY)||localStorage.getItem("shadab_pharmacy_fixed_salesman_schedule_v1")||"{}");
@@ -1898,8 +1898,26 @@ function saveAdminSchedules(){localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.strin
 function openAdmin(){document.getElementById("adminModal").classList.add("show");if(adminLoggedIn)showAdminDashboard();else showAdminLogin()}
 function closeAdmin(){document.getElementById("adminModal").classList.remove("show")}
 function showAdminLogin(){document.getElementById("adminLoginBox").style.display="block";document.getElementById("adminDashboardBox").style.display="none";setTimeout(()=>document.getElementById("adminUsername")?.focus(),80)}
-function adminLogin(){const u=document.getElementById("adminUsername").value.trim(),p=document.getElementById("adminPassword").value;if(u===ADMIN_USER&&p===ADMIN_PASS){adminLoggedIn=true;document.getElementById("adminUsername").value="";document.getElementById("adminPassword").value="";showAdminDashboard();toast("Admin login successful")}else toast("Invalid Admin username or password")}
-function logoutAdmin(){adminLoggedIn=false;showAdminLogin();toast("Admin logged out")}
+async function adminLogin(){
+ const u=document.getElementById("adminUsername").value.trim(),p=document.getElementById("adminPassword").value;
+ if(u!==ADMIN_USER||p!==ADMIN_PASS)return toast("Invalid Admin username or password");
+ const a=auth();
+ if(!a)return toast("Firebase Auth is not available");
+ try{
+   await a.signInWithEmailAndPassword(ADMIN_FIREBASE_EMAIL,ADMIN_PASS);
+   adminLoggedIn=true;
+   document.getElementById("adminUsername").value="";
+   document.getElementById("adminPassword").value="";
+   showAdminDashboard();
+   toast("Admin login successful • Firebase connected");
+ }catch(e){
+   adminLoggedIn=false;
+   const code=String(e?.code||"");
+   if(code.includes("invalid-credential")||code.includes("user-not-found"))toast("Admin Firebase account not found or password is incorrect");
+   else toast("Admin Firebase login failed: "+(e?.message||code||"Unknown error"));
+ }
+}
+async function logoutAdmin(){try{const a=auth();if(a&&a.currentUser?.email===ADMIN_FIREBASE_EMAIL)await a.signOut()}catch(e){}adminLoggedIn=false;showAdminLogin();toast("Admin logged out")}
 function normalizeAdminSchedule(salesman){
  let d=adminSchedules[salesman];
  if(!d){d={assignments:[{area:"Sahiwal",town:"",days:{}}]};adminSchedules[salesman]=d;}
@@ -2296,11 +2314,38 @@ window.sp35Logout=async function(){
 window.sp35OpenAuth=(mode)=>{document.getElementById('sp35AuthModal')?.classList.add('show');sp35ShowAuth(mode)};
 window.sp35CloseAuth=()=>document.getElementById('sp35AuthModal')?.classList.remove('show');
 window.sp35ShowAuth=(mode)=>{document.getElementById('sp35LoginForm').style.display=mode==='login'?'block':'none';document.getElementById('sp35RegisterForm').style.display=mode==='register'?'block':'none';document.getElementById('sp35LoginTab').classList.toggle('primary',mode==='login');document.getElementById('sp35RegisterTab').classList.toggle('primary',mode==='register');document.getElementById('sp35AuthTitle').textContent=mode==='login'?'Salesman Login':'Salesman Registration'};
-window.sp35Login=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');try{const c=await a.signInWithEmailAndPassword(document.getElementById('sp35LoginEmail').value.trim(),document.getElementById('sp35LoginPassword').value);await sp35Profile(c.user);sp35CloseAuth();toast35('Salesman login successful')}catch(e){toast35(e.message||'Login failed')}};
+window.sp35Login=async()=>{
+ const a=auth();if(!a)return toast35('Firebase Auth SDK not available');
+ const email=document.getElementById('sp35LoginEmail')?.value.trim()||'',pass=document.getElementById('sp35LoginPassword')?.value||'';
+ if(!email||!pass)return toast35('Email and password are required');
+ const btn=document.querySelector('#sp35LoginForm button.btn.primary');
+ if(btn){btn.disabled=true;btn.dataset.oldText=btn.textContent;btn.textContent='🔄 Signing in…'}
+ try{
+   const c=await a.signInWithEmailAndPassword(email,pass);
+   const name=c.user.displayName||email;
+   sp35UpdateHeaderLoginButton(name);
+   sp35CloseAuth();
+   toast35('Salesman login successful');
+   /* Do not wait for Firestore profile/assignment before closing Login. */
+   Promise.allSettled([
+     (async()=>{try{await sp35Profile(c.user)}catch(e){console.warn('Salesman profile sync:',e)}})(),
+     (async()=>{try{if(typeof loadSignedInAssignment==='function')await loadSignedInAssignment()}catch(e){console.warn('Assignment sync after login:',e)}})()
+   ]).then(()=>{
+     const n=c.user.displayName||localStorage.getItem('shadab_current_salesman_v1')||email;
+     sp35UpdateHeaderLoginButton(n);
+     if(typeof sp35RenderHeaderState==='function')sp35RenderHeaderState();
+   });
+ }catch(e){
+   const m=e.code==='auth/invalid-credential'?'Email or password is incorrect.':e.code==='auth/user-not-found'?'This salesman account is not registered in Firebase.':e.code==='auth/invalid-email'?'Please enter a valid email address.':e.code==='auth/too-many-requests'?'Too many attempts. Try again after a short while.':(e.message||'Login failed');
+   toast35(m);
+ }finally{
+   if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'🔐 Login'}
+ }
+};
 window.sp35Register=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');const name=document.getElementById('sp35RegName').value.trim(),email=document.getElementById('sp35RegEmail').value.trim(),mobile=document.getElementById('sp35RegMobile').value.trim(),pass=document.getElementById('sp35RegPassword').value;if(!name||!email||pass.length<6)return toast35('Name, email and a 6+ character password are required');try{const c=await a.createUserWithEmailAndPassword(email,pass);await c.user.updateProfile({displayName:name});await sp35Profile(c.user,{fullName:name,mobile,email,status:'Active',createdAt:now()});await c.user.sendEmailVerification();toast35('Account created. Verification email sent.');sp35CloseAuth()}catch(e){toast35(e.message||'Registration failed')}};
 window.sp35Forgot=async()=>{const email=document.getElementById('sp35LoginEmail').value.trim();if(!email)return toast35('Enter the salesman email first');try{await auth().sendPasswordResetEmail(email);toast35('Password reset email sent')}catch(e){toast35(e.message||'Reset failed')}};
 async function sp35Profile(user,extra={}){const d=db();const data={uid:user.uid,fullName:user.displayName||extra.fullName||'',email:user.email||extra.email||'',mobile:extra.mobile||'',status:'Active',lastSeen:now(),updatedAt:now(),...extra};try{if(d)await d.collection('salesmen').doc(user.uid).set(data,{merge:true})}catch(e){console.warn(e)};localStorage.setItem('shadab_last_salesman_v1',data.fullName||data.email);localStorage.setItem('shadab_admin_profile_'+user.uid,JSON.stringify(data));log35('Salesman activity',{uid:user.uid})}
-function install(){if(!window.firebase)return;try{if(!firebase.apps.length)firebase.initializeApp(FC)}catch(e){};if(firebase.auth){firebase.auth().onAuthStateChanged(async u=>{const badge=document.getElementById('sp35UserBadge');if(badge){badge.classList.remove('show');badge.innerHTML=''}sp35UpdateHeaderLoginButton(u?(u.displayName||u.email||'Salesman'):'Salesman Login');if(u){try{const d=db();const q=d?await d.collection('salesmen').doc(u.uid).get({source:'server'}):null;const profile=q&&q.exists?q.data():null;if(profile&&String(profile.status||'Active').toLowerCase()==='disabled'){await firebase.auth().signOut();sp35UpdateHeaderLoginButton('Salesman Login');toast35('This salesman account is disabled by Admin.');return}await sp35Profile(u,profile||{});sp35UpdateHeaderLoginButton(profile?.fullName||u.displayName||u.email||'Salesman');}catch(e){await sp35Profile(u);sp35UpdateHeaderLoginButton(u.displayName||u.email||'Salesman')}if(document.getElementById('visitedBy')){const nm=u.displayName||localStorage.getItem('shadab_current_salesman_v1')||'';if(nm){ensureSalesmanOptions();document.getElementById('visitedBy').value=nm;if(typeof onSalesmanChanged==='function')onSalesmanChanged()}}sp35RenderHeaderState()}})}}
+function install(){if(!window.firebase)return;try{if(!firebase.apps.length)firebase.initializeApp(FC)}catch(e){};if(firebase.auth){firebase.auth().onAuthStateChanged(async u=>{const badge=document.getElementById('sp35UserBadge');if(badge){badge.classList.remove('show');badge.innerHTML=''}sp35UpdateHeaderLoginButton(u?(u.displayName||u.email||'Salesman'):'Salesman Login');if(u&&String(u.email||'').toLowerCase()===String(ADMIN_FIREBASE_EMAIL||'').toLowerCase()){sp35UpdateHeaderLoginButton('Salesman Login');sp35RenderHeaderState();return;}if(u){try{const d=db();const q=d?await d.collection('salesmen').doc(u.uid).get({source:'server'}):null;const profile=q&&q.exists?q.data():null;if(profile&&String(profile.status||'Active').toLowerCase()==='disabled'){await firebase.auth().signOut();sp35UpdateHeaderLoginButton('Salesman Login');toast35('This salesman account is disabled by Admin.');return}await sp35Profile(u,profile||{});sp35UpdateHeaderLoginButton(profile?.fullName||u.displayName||u.email||'Salesman');}catch(e){await sp35Profile(u);sp35UpdateHeaderLoginButton(u.displayName||u.email||'Salesman')}if(document.getElementById('visitedBy')){const nm=u.displayName||localStorage.getItem('shadab_current_salesman_v1')||'';if(nm){ensureSalesmanOptions();document.getElementById('visitedBy').value=nm;if(typeof onSalesmanChanged==='function')onSalesmanChanged()}}sp35RenderHeaderState()}})}}
 function ensure35Panel(){const d=document.getElementById('adminDashboardBox');if(!d)return;let panel=document.getElementById('sp35Panel');if(!panel){panel=document.createElement('section');panel.id='sp35Panel';panel.className='admin-card';const hero=d.querySelector('.admin-hero');if(hero&&hero.nextSibling)d.insertBefore(panel,hero.nextSibling);else d.insertBefore(panel,d.firstElementChild);renderPanel()}else if(!panel.innerHTML.trim())renderPanel();}
 window.addEventListener('load',()=>setTimeout(ensure35Panel,600));setInterval(ensure35Panel,1500);
 window.sp35LaunchFromAdmin=()=>sp35Open();
@@ -2447,7 +2492,9 @@ function sp35BuildRouteStores(){
   return out;
 }
 window.sp35SaveAdminPlanToFirebase=async()=>{
-  const d=db();if(!d)return {ok:false,error:'firebase-unavailable'};
+  const d=db(),a=auth(),u=a?.currentUser;
+  if(!d)return {ok:false,error:'firebase-unavailable'};
+  if(!u||String(u.email||'').toLowerCase()!==String(ADMIN_FIREBASE_EMAIL||'').toLowerCase())return {ok:false,error:{code:'admin-auth-required',message:'Admin Firebase account is not signed in'}};
   const schedules=typeof adminSchedules!=='undefined'?adminSchedules:{};
   const routeStores=sp35BuildRouteStores();
   const sharedTerritories=typeof territories!=='undefined'?territories:{};
@@ -2490,6 +2537,33 @@ window.sp35LoadAdminPlanFromFirebase=async()=>{
 const _saveAdminSchedules=window.saveAdminSchedules;window.saveAdminSchedules=async function(){if(_saveAdminSchedules)_saveAdminSchedules.apply(this,arguments);const ok=await sp35SaveAdminPlanToFirebase();if(ok)toast35('Weekly plan + assigned stores synced to Firebase');};
 const _saveRouteTasks=window.saveRouteTasks;window.saveRouteTasks=async function(){if(_saveRouteTasks)_saveRouteTasks.apply(this,arguments);if(typeof adminLoggedIn!=='undefined'&&adminLoggedIn){await sp35SaveAdminPlanToFirebase()}};
 const _showAdminDashboard=window.showAdminDashboard;window.showAdminDashboard=async function(){if(_showAdminDashboard)_showAdminDashboard.apply(this,arguments);await sp35LoadAdminPlanFromFirebase();if(typeof renderAdminUnified==='function')renderAdminUnified()};
+// Manual server refresh for the small ↻ control beside Firebase status.
+window.sp35ManualServerRefresh=async function(){
+  const btn=document.getElementById('sp35SyncRefreshBtn');
+  if(btn){btn.disabled=true;btn.textContent='⟳';}
+  try{
+    if(!navigator.onLine){toast35('Offline — server refresh is unavailable.');return;}
+    const a=auth(),u=a?.currentUser;
+    if(u&&String(u.email||'').toLowerCase()===String(ADMIN_FIREBASE_EMAIL||'').toLowerCase()){
+      const r=await sp35LoadAdminPlanFromFirebase();
+      if(!r.ok)throw r.error||new Error('Admin plan refresh failed');
+      if(typeof renderAdminUnified==='function')renderAdminUnified();
+      toast35('Firebase server data refreshed');
+      return;
+    }
+    if(u){
+      await loadSignedInAssignment();
+      toast35('Firebase assignment refreshed');
+      return;
+    }
+    if(typeof window.shadabFirebaseRecheck==='function')window.shadabFirebaseRecheck();
+    toast35('Firebase status refreshed');
+  }catch(e){
+    toast35('Refresh failed: '+(e?.code||e?.message||e));
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='↻';}
+  }
+};
 // When a salesman signs in, FIRST download the shared Admin plan/store data, THEN apply today's assignment.
 async function loadSignedInAssignment(){
   try{
