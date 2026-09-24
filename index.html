@@ -18,7 +18,7 @@
 function toggleShadabMenu(){const p=document.getElementById("shadabMenuPanel");if(p){p.classList.toggle("open");document.getElementById("shadabHamburger")?.querySelector(".shadab-menu-btn")?.setAttribute("aria-expanded",p.classList.contains("open"));}}
 function closeShadabMenu(){const p=document.getElementById("shadabMenuPanel");if(p)p.classList.remove("open");document.getElementById("shadabHamburger")?.querySelector(".shadab-menu-btn")?.setAttribute("aria-expanded","false");}
 document.addEventListener("click",e=>{const w=document.getElementById("shadabHamburger"),p=document.getElementById("shadabMenuPanel");if(p&&w&&!w.contains(e.target))closeShadabMenu();});
-function menuGo(target){closeShadabMenu();if(target==="admin")return openAdmin();if(target==="customer")return openCustomerModal();if(target==="territory")return openTerritoryManager(document.getElementById("area")?.value||"Sahiwal");if(target==="database")return openStoreDatabase();if(target==="records")return document.getElementById("records")?.scrollIntoView({behavior:"smooth",block:"start"});if(target==="pdf")return downloadPDFForDate(document.getElementById("filterDate")?.value||todayISO());if(target==="print")return printDateReport(document.getElementById("filterDate")?.value||todayISO());if(target==="analytics")return openAnalytics();if(target==="theme")return toggleTheme();}
+function menuGo(target){closeShadabMenu();if(target==="admin")return openAdmin();if(target==="customer")return openCustomerModal();if(target==="territory")return openTerritoryManager(document.getElementById("area")?.value||"Sahiwal");if(target==="uploadTerritory")return openUploadTerritoryModal();if(target==="database")return openStoreDatabase();if(target==="records")return document.getElementById("records")?.scrollIntoView({behavior:"smooth",block:"start"});if(target==="pdf")return downloadPDFForDate(document.getElementById("filterDate")?.value||todayISO());if(target==="print")return printDateReport(document.getElementById("filterDate")?.value||todayISO());if(target==="analytics")return openAnalytics();if(target==="theme")return toggleTheme();}
 /* ===== END: HAMBURGER MENU FUNCTIONS ===== */
 if("serviceWorker" in navigator&&location.protocol.startsWith("http"))window.addEventListener("load",async()=>{try{await navigator.serviceWorker.register("./sw.js",{scope:"./"});}catch(e){console.warn("Offline shell registration failed",e)}});
 </script>
@@ -345,6 +345,7 @@ body.section-modal-open .section-modal-close { display:block !important; }
         <button class="shadab-menu-item" onclick="menuGo('admin')"><span>🔐</span><strong>Admin Login</strong><small>Salesman & territory schedule</small></button>
         <button class="shadab-menu-item" onclick="menuGo('customer')"><span>＋</span><strong>Add Customer</strong><small>Add a new store/customer</small></button>
         <button class="shadab-menu-item" onclick="menuGo('territory')"><span>⌖</span><strong>Territories</strong><small>Manage area territories</small></button>
+        <button class="shadab-menu-item" onclick="menuGo('uploadTerritory')"><span>📄</span><strong>Upload Territory</strong><small>Assign PDF stores to a territory</small></button>
         <button class="shadab-menu-item" onclick="menuGo('database')"><span>▦</span><strong>Store Database</strong><small>Browse imported stores</small></button>
         <button class="shadab-menu-item" onclick="menuGo('analytics')"><span>◔</span><strong>Follow-up Analytics</strong><small>Orders, follow-ups & status graph</small></button>
         <button class="shadab-menu-item" onclick="menuGo('records')"><span>☷</span><strong>Visit Records</strong><small>View and edit saved visits</small></button>
@@ -582,6 +583,25 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
 <div class="actions"><button class="btn secondary" onclick="downloadPDFTemplate()">Download PDF Template</button><button class="btn danger" onclick="clearStoreDatabase()">Clear Store Database</button></div>
 </div>
 </div>
+
+<!-- ===== START: TERRITORY PDF UPLOAD MODAL ===== -->
+<div class="modal" id="uploadTerritoryModal">
+ <div class="modal-box modal-wide">
+  <div class="modal-head"><h3>📄 Upload Territory PDF</h3><button class="close" type="button" onclick="closeUploadTerritoryModal()">×</button></div>
+  <p class="notice" style="margin-top:0">Select City → Territory, then upload the PDF. Existing stores are matched by Store Code first, then by Store Name + City, so the same store is not duplicated. Matching stores are moved into the selected territory.</p>
+  <div class="form-grid">
+   <div class="field"><label for="uploadTerritoryArea">City / Area</label><select id="uploadTerritoryArea" onchange="refreshUploadTerritories()"></select></div>
+   <div class="field"><label for="uploadTerritoryName">Territory</label><select id="uploadTerritoryName"></select></div>
+   <div class="field full"><label for="uploadTerritoryFile">Territory PDF</label><input id="uploadTerritoryFile" type="file" accept=".pdf,application/pdf"></div>
+  </div>
+  <div class="actions">
+   <button class="btn secondary" type="button" onclick="closeUploadTerritoryModal()">Cancel</button>
+   <button class="btn primary" type="button" onclick="uploadAndAssignTerritoryPDF()">Upload & Assign</button>
+  </div>
+  <div class="notice" id="uploadTerritoryStatus">Ready. Select a territory and choose its PDF.</div>
+ </div>
+</div>
+<!-- ===== END: TERRITORY PDF UPLOAD MODAL ===== -->
 
 <div class="modal" id="customerModal">
 <div class="modal-box">
@@ -920,6 +940,146 @@ function openTaskStore(name,area,territory){document.getElementById("area").valu
 function openStoreDatabase(){document.getElementById("storeDatabaseModal").classList.add("show");updateDbCount()}
 function closeStoreDatabase(){document.getElementById("storeDatabaseModal").classList.remove("show")}
 function updateDbCount(){document.getElementById("dbCount").textContent=`${storeDatabase.length} store records saved on this device.`}
+
+/* ===== START: TERRITORY PDF UPLOAD & DEDUPLICATION ===== */
+function openUploadTerritoryModal(){
+  const modal=document.getElementById("uploadTerritoryModal");
+  if(!modal)return;
+  const areaSel=document.getElementById("uploadTerritoryArea");
+  const current=document.getElementById("area")?.value||"Sahiwal";
+  areaSel.innerHTML=AREAS.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join("");
+  areaSel.value=AREAS.includes(current)?current:"Sahiwal";
+  refreshUploadTerritories();
+  const file=document.getElementById("uploadTerritoryFile");
+  if(file)file.value="";
+  const status=document.getElementById("uploadTerritoryStatus");
+  if(status)status.textContent="Ready. Select a territory and choose its PDF.";
+  modal.classList.add("show");
+}
+function closeUploadTerritoryModal(){
+  document.getElementById("uploadTerritoryModal")?.classList.remove("show");
+}
+function refreshUploadTerritories(){
+  const area=document.getElementById("uploadTerritoryArea")?.value||"Sahiwal";
+  const sel=document.getElementById("uploadTerritoryName");
+  if(!sel)return;
+  const list=Array.isArray(territories[area])?territories[area]:[];
+  sel.innerHTML=list.length?list.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join(""):'<option value="">No territories available</option>';
+}
+function setUploadTerritoryStatus(message){
+  const el=document.getElementById("uploadTerritoryStatus");
+  if(el)el.textContent=message;
+}
+function territoryCellParts(row){
+  return String(row||"").split(/\s*\|\s*|\t| {2,}/).map(cleanCell).filter(Boolean);
+}
+function extractTerritoryStoreCode(cells){
+  const candidates=cells.map(cleanCell).filter(Boolean);
+  for(const cell of candidates){
+    if(/^\d{4,18}$/.test(cell))return cell;
+    const m=cell.match(/\b(10\d{10,15}|\d{5,8})\b/);
+    if(m)return m[1];
+  }
+  return "";
+}
+function parseTerritoryPDFRows(rows, selectedArea){
+  const parsed=[];
+  const normalizedArea=normalizeArea(selectedArea)||selectedArea;
+  for(const raw of rows){
+    const cells=territoryCellParts(raw);
+    if(!cells.length)continue;
+    const joined=cells.join(" ");
+    if(/^(store|store name|medical store|pharmacy|customer|code|sr\.?|s\.?no\.?)\b/i.test(joined))continue;
+    if(/(?:store|medical|pharmacy|chemist|shop|outlet)/i.test(joined)===false)continue;
+    const code=extractTerritoryStoreCode(cells);
+    let name="";
+    const nameIndex=cells.findIndex(c=>/(?:medical|pharmacy|chemist|store|shop|outlet)/i.test(c)&&c.length>2&&!/^\d+$/.test(c));
+    if(nameIndex>=0)name=cells[nameIndex];
+    if(!name){
+      const fallback=cells.find(c=>c.length>2&&!/^\d+$/.test(c)&&!normalizeArea(c)&&!/^(territory|area|city|town|code)$/i.test(c));
+      name=fallback||"";
+    }
+    if(!name||name.length<2)continue;
+    if(/^(store name|medical store|pharmacy name|name|shop name)$/i.test(name))continue;
+    const type=inferStoreType(name);
+    parsed.push({name:cleanCell(name),area:normalizedArea,territory:"",type,code});
+  }
+  const seen=new Set();
+  return parsed.filter(x=>{
+    const key=`${x.code||""}|${x.name}|${x.area}`.toLowerCase().replace(/\s+/g," ").trim();
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
+}
+async function uploadAndAssignTerritoryPDF(){
+  const area=document.getElementById("uploadTerritoryArea")?.value||"";
+  const territory=document.getElementById("uploadTerritoryName")?.value||"";
+  const file=document.getElementById("uploadTerritoryFile")?.files?.[0];
+  if(!area||!territory)return toast("Select City and Territory first");
+  if(!file)return toast("Choose a PDF file first");
+  if(!/\.pdf$/i.test(file.name))return toast("Please select a PDF file");
+  try{
+    setUploadTerritoryStatus("Reading PDF…");
+    const arrayBuffer=await file.arrayBuffer();
+    const pdfjs=await import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs");
+    pdfjs.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+    const pdf=await pdfjs.getDocument({data:arrayBuffer}).promise;
+    const allRows=[];
+    for(let pageNo=1;pageNo<=pdf.numPages;pageNo++){
+      const page=await pdf.getPage(pageNo);
+      const content=await page.getTextContent();
+      allRows.push(...groupPDFItemsIntoRows(content.items.filter(x=>String(x.str||"").trim())));
+    }
+    let imported=parseTerritoryPDFRows(allRows,area);
+    if(!imported.length){
+      imported=parseMedicalStoreRows(allRows).map(x=>({...x,area,territory:""}));
+    }
+    if(!imported.length){
+      setUploadTerritoryStatus("No readable store rows found. Use a selectable-text PDF.");
+      return toast("No readable store rows found");
+    }
+    const norm=v=>String(v||"").toLowerCase().replace(/[^a-z0-9]+/g,"").trim();
+    const codeKey=v=>String(v||"").replace(/\s+/g,"").toLowerCase();
+    let moved=0,added=0,merged=0;
+    imported.forEach(item=>{
+      const incomingCode=codeKey(item.code);
+      const incomingName=norm(item.name);
+      let found=-1;
+      if(incomingCode){
+        found=storeDatabase.findIndex(s=>codeKey(s.code)===incomingCode&&String(s.area||"").toLowerCase()===String(area).toLowerCase());
+      }
+      if(found<0){
+        found=storeDatabase.findIndex(s=>norm(s.name)===incomingName&&String(s.area||"").toLowerCase()===String(area).toLowerCase());
+      }
+      if(found>=0){
+        const store=storeDatabase[found];
+        if(store.territory!==territory){store.territory=territory;moved++;}
+        if(!store.code&&item.code)store.code=item.code;
+        merged++;
+      }else{
+        const newStore={...item,area,territory,code:item.code||("TERRITORY-PDF-"+uid())};
+        storeDatabase.push(newStore);
+        added++;
+      }
+    });
+    if(!territories[area])territories[area]=[];
+    if(!territories[area].some(t=>String(t).toLowerCase()===String(territory).toLowerCase()))territories[area].push(territory);
+    saveData();
+    if(typeof updateDbCount==="function")updateDbCount();
+    if(typeof refreshTerritories==="function")refreshTerritories(territory);
+    if(typeof refreshAssignmentTerritories==="function")refreshAssignmentTerritories();
+    if(typeof renderTodayTasks==="function")renderTodayTasks();
+    setUploadTerritoryStatus(`Done. ${merged} matched, ${added} new, ${moved} moved to ${territory}.`);
+    toast(`${merged+added} stores assigned to ${territory}`);
+    document.getElementById("uploadTerritoryFile").value="";
+  }catch(err){
+    console.error("Territory PDF upload failed:",err);
+    setUploadTerritoryStatus("PDF could not be read. Use a selectable-text PDF.");
+    toast("PDF could not be read");
+  }
+}
+/* ===== END: TERRITORY PDF UPLOAD & DEDUPLICATION ===== */
 
 /* ===== START: PDF DATABASE IMPORT ===== */
 async function importStorePDF(event){
@@ -2206,7 +2366,7 @@ window.addEventListener("keydown",e=>{if(e.key==="Escape")closeSectionModal();})
 @media(max-width:800px){.sp35-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sp35-kpis{grid-template-columns:repeat(2,1fr)}.sp35-form{grid-template-columns:1fr}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<div class="modal" id="sp35AuthModal"><div class="modal-box"><div class="modal-head"><h3 id="sp35AuthTitle">Salesman Login</h3><button class="close" onclick="sp35CloseAuth()">×</button></div><div class="sp35-tabs"><button class="sp35-btn primary" id="sp35LoginTab" onclick="sp35ShowAuth('login')">Login</button><button class="sp35-btn" id="sp35RegisterTab" onclick="sp35ShowAuth('register')">Register</button></div><div id="sp35LoginForm"><div class="field"><label>Email</label><input id="sp35LoginEmail" type="email" autocomplete="username"></div><div class="field"><label>Password</label><input id="sp35LoginPassword" type="password" autocomplete="current-password"></div><div class="actions"><button class="btn primary" onclick="sp35Login()">🔐 Login</button><button class="btn secondary" onclick="sp35Forgot()">Forgot Password?</button></div></div><div id="sp35RegisterForm" style="display:none"><div class="sp35-form"><div><label>Full Name</label><input id="sp35RegName"></div><div><label>Mobile</label><input id="sp35RegMobile" inputmode="tel"></div><div class="full"><label>Email</label><input id="sp35RegEmail" type="email"></div><div class="full"><label>Create Password</label><input id="sp35RegPassword" type="password" minlength="6"></div></div><div class="actions"><button class="btn primary" onclick="sp35Register()">Create Salesman Account</button></div><small class="sp35-muted">Firebase Authentication stores the password securely; it is never written to Firestore.</small></div></div></div>
+<div class="modal" id="sp35AuthModal"><div class="modal-box"><div class="modal-head"><h3 id="sp35AuthTitle">Salesman Login</h3><button class="close" onclick="sp35CloseAuth()">×</button></div><div class="sp35-tabs"><button class="sp35-btn primary" id="sp35LoginTab" onclick="sp35ShowAuth('login')">Login</button><button class="sp35-btn" id="sp35RegisterTab" onclick="sp35ShowAuth('register')">Register</button></div><div id="sp35LoginForm"><div class="field"><label>Email</label><input id="sp35LoginEmail" type="email" autocomplete="username"></div><div class="field"><label>Password</label><input id="sp35LoginPassword" type="password" autocomplete="current-password"></div><label style="display:flex;align-items:center;gap:8px;margin:8px 0 12px;font-size:13px"><input id="sp35RememberMaster" type="checkbox" style="width:auto"> Remember this as Master Salesman on this device</label><div class="actions"><button class="btn primary" onclick="sp35Login()">🔐 Login</button><button class="btn secondary" onclick="sp35Forgot()">Forgot Password?</button></div><button class="sp35-btn" style="width:100%;margin-top:10px" onclick="sp35UseSavedMaster()">⚡ Use Saved Master Salesman</button></div><div id="sp35RegisterForm" style="display:none"><div class="sp35-form"><div><label>Full Name</label><input id="sp35RegName"></div><div><label>Mobile</label><input id="sp35RegMobile" inputmode="tel"></div><div class="full"><label>Email</label><input id="sp35RegEmail" type="email"></div><div class="full"><label>Create Password</label><input id="sp35RegPassword" type="password" minlength="6"></div></div><div class="actions"><button class="btn primary" onclick="sp35Register()">Create Salesman Account</button></div><small class="sp35-muted">Firebase Authentication stores the password securely; it is never written to Firestore.</small></div></div></div>
 <script id="shadab-real35-js">
 (function(){
 const FC={apiKey:'AIzaSyAi5c8pdkxxfZyvZEG9hi4q5nugVGXfKUc',authDomain:'shadab-pharmacy.firebaseapp.com',projectId:'shadab-pharmacy',storageBucket:'shadab-pharmacy.firebasestorage.app',messagingSenderId:'1070012641373',appId:'1:1070012641373:web:18abfbf95b71c692a41db4',measurementId:'G-Q92J0E4R23'};
@@ -2728,6 +2888,731 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
   setTimeout(bootSession,1400);
 })();
 /* ===== END FINAL VISIT FORM + SALESMAN SESSION FIX ===== */
+</script>
+
+<script id="shadab-final-sync-login-fix">
+/* SHADAB PHARMACY — FINAL AUTH + REALTIME MASTER SYNC */
+(function(){
+  'use strict';
+  const CFG={apiKey:'AIzaSyAi5c8pdkxxfZyvZEG9hi4q5nugVGXfKUc',authDomain:'shadab-pharmacy.firebaseapp.com',projectId:'shadab-pharmacy',storageBucket:'shadab-pharmacy.firebasestorage.app',messagingSenderId:'1070012641373',appId:'1:1070012641373:web:18abfbf95b71c692a41db4',measurementId:'G-Q92J0E4R23'};
+  const MASTER_DOC='masterData', SCHEDULE_DOC='adminSchedules';
+  let unsubMaster=null, unsubSchedules=null, remoteApplying=false, syncTimer=0;
+
+  function ensureFirebase(){
+    try{
+      if(!window.firebase) return null;
+      if(!firebase.apps.length) firebase.initializeApp(CFG);
+      return firebase;
+    }catch(e){ console.warn('Firebase init:',e); return null; }
+  }
+  function getAuth(){const f=ensureFirebase();return f&&typeof f.auth==='function'?f.auth():null}
+  function getDb(){const f=ensureFirebase();return f&&typeof f.firestore==='function'?f.firestore():null}
+  window.auth=getAuth; window.db=getDb;
+  window.shadabGetFirebaseAuth=getAuth; window.shadabGetFirestore=getDb;
+  window.SHADAB_FIREBASE_CONFIG=CFG;
+
+  function isAdminUser(u){return !!u && String(u.email||'').toLowerCase()===String(ADMIN_FIREBASE_EMAIL||'').toLowerCase()}
+  function toastSafe(m){try{if(typeof toast==='function')toast(m);else alert(m)}catch(e){}}
+  function stamp(){return new Date().toISOString()}
+  function scheduleUI(){
+    try{ensureSalesmanOptions?.();ensureAdminSalesmanOptions?.();}catch(e){}
+    try{renderAdminUnified?.();}catch(e){}
+    try{renderTodayTasks?.();updatePremiumDashboard?.();}catch(e){}
+    try{const area=document.getElementById('area')?.value;if(area)refreshTerritories?.();}catch(e){}
+    try{showStoreSuggestions?.();}catch(e){}
+  }
+
+  function currentMasterPayload(){
+    let disabledTerritories=[];
+    try{disabledTerritories=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}
+    return {
+      stores:Array.isArray(storeDatabase)?storeDatabase:[],
+      territories:(territories&&typeof territories==='object')?territories:{},
+      customSalesmen:customSalesmanNames?.()||[],
+      disabledTerritories,
+      appName:localStorage.getItem('shadab_app_name_v1')||'SHADAB PHARMACY',
+      theme:localStorage.getItem('shadab_theme')||'',
+      alertMessage:localStorage.getItem('shadab_alert_message_v1')||'',
+      updatedAt:stamp(), updatedBy:'admin'
+    };
+  }
+
+  function applyMasterData(x){
+    if(!x||typeof x!=='object')return;
+    remoteApplying=true;
+    try{
+      if(Array.isArray(x.stores)){storeDatabase=x.stores;localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));if(window.shadabRepairTerritoryStores)window.shadabRepairTerritoryStores();}
+      if(x.territories&&typeof x.territories==='object'){territories=x.territories;localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));}
+      if(Array.isArray(x.customSalesmen)){saveCustomSalesmanNames(x.customSalesmen);}
+      if(Array.isArray(x.disabledTerritories))localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(x.disabledTerritories));
+      if(typeof x.appName==='string')localStorage.setItem('shadab_app_name_v1',x.appName);
+      if(typeof x.theme==='string'&&x.theme)localStorage.setItem('shadab_theme',x.theme);
+      if(typeof x.alertMessage==='string'){
+        localStorage.setItem('shadab_alert_message_v1',x.alertMessage);
+        const t=document.getElementById('shadabAlertText');if(t)t.textContent=x.alertMessage;
+      }
+      localStorage.setItem('shadab_master_last_remote_v1',JSON.stringify({at:Date.now(),updatedAt:x.updatedAt||''}));
+    }catch(e){console.warn('Apply master data:',e)}
+    remoteApplying=false;
+    scheduleUI();
+  }
+
+  async function saveMasterData(reason){
+    if(remoteApplying)return {ok:true,skipped:true};
+    const a=getAuth(),d=getDb(),u=a?.currentUser;
+    if(!d||!isAdminUser(u))return {ok:false,skipped:true};
+    const payload=currentMasterPayload();payload.reason=reason||'master-change';
+    try{await d.collection('app_settings').doc(MASTER_DOC).set(payload,{merge:true});localStorage.setItem('shadab_master_last_sync_v1',JSON.stringify({ok:true,at:Date.now()}));return {ok:true};}
+    catch(e){console.warn('Master data sync:',e);localStorage.setItem('shadab_master_last_sync_v1',JSON.stringify({ok:false,at:Date.now(),code:e.code||'',message:e.message||String(e)}));return {ok:false,error:e};}
+  }
+  function queueMasterSync(reason){
+    if(remoteApplying)return;
+    clearTimeout(syncTimer);
+    syncTimer=setTimeout(()=>saveMasterData(reason),250);
+  }
+
+  async function saveScheduleNow(){
+    const a=getAuth(),d=getDb(),u=a?.currentUser;
+    if(!d||!isAdminUser(u))return {ok:false,skipped:true};
+    try{
+      const payload={
+        schedules:typeof adminSchedules!=='undefined'?adminSchedules:{},
+        routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},
+        updatedAt:stamp(),updatedBy:'admin'
+      };
+      await d.collection('app_settings').doc(SCHEDULE_DOC).set(payload,{merge:true});
+      localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
+      return {ok:true};
+    }catch(e){console.warn('Schedule sync:',e);return {ok:false,error:e};}
+  }
+
+  async function applySchedules(x){
+    if(!x||typeof x!=='object')return;
+    remoteApplying=true;
+    try{
+      if(x.schedules&&typeof x.schedules==='object'){adminSchedules=x.schedules;localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.stringify(adminSchedules));}
+      if(x.routeTasks&&typeof x.routeTasks==='object'){routeTasks=x.routeTasks;localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks));}
+    }catch(e){console.warn('Apply schedules:',e)}
+    remoteApplying=false;
+    scheduleUI();
+  }
+
+  function stopListeners(){try{unsubMaster?.()}catch(e){}try{unsubSchedules?.()}catch(e){}unsubMaster=null;unsubSchedules=null;}
+
+  async function startRealtimeForUser(u){
+    stopListeners();
+    const d=getDb();if(!d||!u)return;
+    try{await d.enableNetwork()}catch(e){}
+    unsubMaster=d.collection('app_settings').doc(MASTER_DOC).onSnapshot(s=>{
+      if(s.exists)applyMasterData(s.data()||{});
+      else if(isAdminUser(u))queueMasterSync('initial-master-seed');
+    },e=>console.warn('Realtime masterData:',e));
+    unsubSchedules=d.collection('app_settings').doc(SCHEDULE_DOC).onSnapshot(s=>{
+      if(s.exists)applySchedules(s.data()||{});
+      else if(isAdminUser(u))saveScheduleNow();
+    },e=>console.warn('Realtime adminSchedules:',e));
+  }
+
+  async function prepareAuthPersistence(a){
+    /* Android Chrome opening a downloaded HTML as content:// can block
+       Firebase's browser storage persistence. Do not let persistence stop login. */
+    try{
+      const proto=String(location?.protocol||'').toLowerCase();
+      const isLocalFile=(proto==='file:'||proto==='content:'||String(location?.origin||'')==='null');
+      if(!a?.setPersistence || !firebase?.auth?.Auth?.Persistence) return;
+      if(isLocalFile){
+        await a.setPersistence(firebase.auth.Auth.Persistence.NONE);
+      }else{
+        await a.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+      }
+    }catch(e){console.warn('Auth persistence skipped:',e)}
+  }
+
+  function withAuthTimeout(promise,ms){
+    return Promise.race([
+      promise,
+      new Promise((_,reject)=>setTimeout(()=>{const e=new Error('Firebase Authentication request timed out.');e.code='auth/network-request-failed';reject(e)},ms))
+    ]);
+  }
+
+  // Clean global Admin login. It authenticates first; Firestore sync is background/realtime.
+  window.adminLogin=async function(){
+    const uel=document.getElementById('adminUsername'),pel=document.getElementById('adminPassword');
+    const user=String(uel?.value||'').trim(),pass=String(pel?.value||'');
+    const btn=document.querySelector('#adminLoginBox button[onclick*="adminLogin"]');
+    if(user!==ADMIN_USER||pass!==ADMIN_PASS){toastSafe('Invalid Admin username or password');return;}
+    const a=getAuth();
+    if(!a){toastSafe('Firebase Authentication is not loaded. Please reopen the HTML file.');return;}
+    const old=btn?.textContent||'🔐 Login';if(btn){btn.disabled=true;btn.textContent='🔄 Signing in…';}
+    try{
+      await prepareAuthPersistence(a);
+      if(a.currentUser && !isAdminUser(a.currentUser)){try{await a.signOut()}catch(e){}}
+      const cred=await withAuthTimeout(a.signInWithEmailAndPassword(ADMIN_FIREBASE_EMAIL,ADMIN_PASS),15000);
+      if(!isAdminUser(cred?.user||a.currentUser))throw new Error('Unexpected Firebase account.');
+      adminLoggedIn=true;
+      try{localStorage.setItem('shadab_admin_logged_in_v2','1')}catch(e){}
+      if(uel)uel.value='';if(pel)pel.value='';
+      showAdminDashboard();
+      toastSafe('Admin login successful');
+      startRealtimeForUser(a.currentUser);
+      setTimeout(async()=>{try{await saveScheduleNow();await saveMasterData('admin-login-seed')}catch(e){}},350);
+    }catch(e){
+      adminLoggedIn=false;
+      const code=String(e?.code||'');
+      let m='Admin Firebase login failed.';
+      if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found')m='Admin Firebase email/password is incorrect.';
+      else if(code==='auth/operation-not-allowed')m='Firebase Email/Password sign-in is disabled for this Firebase project.';
+      else if(code==='auth/network-request-failed')m='Internet/Firebase connection failed. Please try again.';
+      else if(code==='auth/too-many-requests')m='Too many attempts. Please wait and try again.';
+      else if(code==='auth/invalid-api-key')m='The Firebase configuration in this HTML does not match the Firebase project.';
+      else m+=(e?.message?' '+e.message:'');
+      toastSafe(m);console.error('SHADAB ADMIN AUTH',e);
+    }finally{if(btn){btn.disabled=false;btn.textContent=old;}}
+  };
+
+  window.logoutAdmin=async function(){try{const a=getAuth();if(a)await a.signOut()}catch(e){}stopListeners();adminLoggedIn=false;try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}showAdminLogin();toastSafe('Admin logged out')};
+
+  // Clean salesman login. The login modal closes immediately after Firebase Auth succeeds.
+  window.sp35Login=async function(){
+    const a=getAuth();
+    if(!a){toastSafe('Firebase Authentication is not loaded.');return;}
+    const email=String(document.getElementById('sp35LoginEmail')?.value||'').trim().toLowerCase();
+    const pass=String(document.getElementById('sp35LoginPassword')?.value||'');
+    if(!email||!pass){toastSafe('Email and password are required');return;}
+    const btn=document.querySelector('#sp35LoginForm button.btn.primary');const old=btn?.textContent||'🔐 Login';
+    if(btn){btn.disabled=true;btn.textContent='🔄 Signing in…';}
+    try{
+      await prepareAuthPersistence(a);
+      if(a.currentUser){try{await a.signOut()}catch(e){}}
+      const cred=await withAuthTimeout(a.signInWithEmailAndPassword(email,pass),15000),u=cred.user;
+      if(isAdminUser(u))throw new Error('Please use Admin Login for the Admin account.');
+      sp35CloseAuth?.();
+      sp35UpdateHeaderLoginButton?.(u.displayName||u.email||'Salesman');
+      toastSafe('Salesman login successful');
+      startRealtimeForUser(u);
+      setTimeout(async()=>{
+        try{await sp35Profile?.(u); }catch(e){console.warn('Profile sync:',e)}
+        try{await loadSignedInAssignment?.();}catch(e){console.warn('Assignment sync:',e)}
+      },50);
+    }catch(e){
+      const code=String(e?.code||'');let m=e?.message||'Login failed.';
+      if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found')m='Email or password is incorrect.';
+      else if(code==='auth/invalid-email')m='Please enter a valid email address.';
+      else if(code==='auth/network-request-failed')m='Internet/Firebase connection failed.';
+      else if(code==='auth/too-many-requests')m='Too many attempts. Please wait and try again.';
+      toastSafe(m);console.error('SHADAB SALESMAN AUTH',e);
+    }finally{if(btn){btn.disabled=false;btn.textContent=old;}}
+  };
+
+  // Admin master writes: existing UI keeps its current behavior; this adds server sync.
+  const oldSaveData=window.saveData;
+  window.saveData=function(){
+    if(oldSaveData)oldSaveData.apply(this,arguments);
+    queueMasterSync('saveData');
+    const a=getAuth(),d=getDb(),u=a?.currentUser;
+    if(d&&u&&!isAdminUser(u)){
+      clearTimeout(window.__shadabUserSyncTimer);
+      window.__shadabUserSyncTimer=setTimeout(async()=>{
+        try{await d.collection('user_data').doc(u.uid).set({uid:u.uid,updatedAt:stamp(),visits:typeof visits!=='undefined'?visits:[],stores:typeof storeDatabase!=='undefined'?storeDatabase:[],territories:typeof territories!=='undefined'?territories:{},routeTasks:typeof routeTasks!=='undefined'?routeTasks:{}},{merge:true})}catch(e){console.warn('User data sync:',e)}
+      },500);
+    }
+  };
+
+  const oldSaveRouteTasks=window.saveRouteTasks;
+  window.saveRouteTasks=function(){if(oldSaveRouteTasks)oldSaveRouteTasks.apply(this,arguments);if(!remoteApplying)saveScheduleNow();};
+
+  const oldSaveAdminSchedules=window.saveAdminSchedules;
+  window.saveAdminSchedules=async function(){if(oldSaveAdminSchedules)oldSaveAdminSchedules.apply(this,arguments);if(!remoteApplying){const r=await saveScheduleNow();if(r.ok)toastSafe('Weekly plan synced to all devices');}};
+
+  // Territory enable/disable is stored separately in localStorage by the existing UI, so mirror it too.
+  function wrapTerritoryToggle(name){
+    const old=window[name];
+    if(typeof old!=='function')return;
+    window[name]=function(){const r=old.apply(this,arguments);queueMasterSync('territory-status');return r};
+  }
+  wrapTerritoryToggle('sp35ToggleTerr');
+  wrapTerritoryToggle('sp35ToggleTerrNew');
+  const oldSaveSettings=window.sp35SaveSettings;
+  window.sp35SaveSettings=function(){const r=oldSaveSettings?.apply(this,arguments);queueMasterSync('settings');return r};
+
+  // Alert + settings now use the Firestore path allowed by the user's rules: app_settings/masterData.
+  window.sp35SaveAlert=async function(){
+    if(!adminLoggedIn)return toastSafe('Admin login required');
+    const m=String(document.getElementById('sp35AlertText')?.value||'').trim();if(!m)return toastSafe('Please write an alert message first.');
+    localStorage.setItem('shadab_alert_message_v1',m);const t=document.getElementById('shadabAlertText');if(t)t.textContent=m;
+    try{const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');h.unshift({message:m,at:stamp(),by:'admin'});localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)))}catch(e){}
+    const r=await saveMasterData('alert');const s=document.getElementById('sp35AlertStatus');if(s)s.textContent=r.ok?'✓ Alert synced to all devices.':'Saved locally; Firebase sync failed.';toastSafe(r.ok?'Alert saved to all devices':'Alert saved locally');
+  };
+  window.sp35SaveAlertNew=async function(){
+    const m=String(document.getElementById('sp35AlertNew')?.value||'').trim();if(!m)return toastSafe('Write an alert message first.');
+    localStorage.setItem('shadab_alert_message_v1',m);const t=document.getElementById('shadabAlertText');if(t)t.textContent=m;
+    const r=await saveMasterData('alert');const s=document.getElementById('sp35AlertNewStatus');if(s)s.textContent=r.ok?'✓ Saved and synced to all devices.':'Saved locally; Firebase sync failed.';toastSafe(r.ok?'Alert saved':'Alert saved locally');
+  };
+  window.sp35SaveSettingsNew=async function(){
+    const n=String(document.getElementById('sp35AppNameNew')?.value||'SHADAB PHARMACY').trim()||'SHADAB PHARMACY';
+    const th=String(document.getElementById('sp35ThemeNew')?.value||'');localStorage.setItem('shadab_app_name_v1',n);if(th)localStorage.setItem('shadab_theme',th);try{loadTheme?.()}catch(e){}
+    const r=await saveMasterData('settings');toastSafe(r.ok?'Settings synced to all devices':'Settings saved locally');
+  };
+
+  // Realtime auth gate. Every signed-in app gets the same master snapshot.
+  const a=getAuth();
+  if(a){
+    a.onAuthStateChanged(async u=>{
+      if(!u){stopListeners();return;}
+      if(isAdminUser(u)){adminLoggedIn=true;try{localStorage.setItem('shadab_admin_logged_in_v2','1')}catch(e){};}
+      else{adminLoggedIn=false;}
+      await startRealtimeForUser(u);
+    });
+  }
+
+  // If an already-signed-in user opens the file, restore master data immediately.
+  setTimeout(()=>{const aa=getAuth();if(aa?.currentUser)startRealtimeForUser(aa.currentUser);},400);
+
+  // Make Firebase status truthful without requiring Firestore's forbidden paths.
+  window.shadabFirebaseRecheck=async function(){
+    const a=getAuth(),d=getDb();const dot=document.querySelector('#offlineBar .offline-dot'),tx=document.getElementById('syncText');
+    const set=(cls,m)=>{dot?.classList.remove('firebase-checking','firebase-connected','firebase-error');dot?.classList.add(cls);if(tx)tx.textContent=m};
+    if(!navigator.onLine){set('firebase-error','Offline — local data mode active');return}
+    if(!a||!d){set('firebase-error','Firebase SDK unavailable');return}
+    try{await d.enableNetwork();const u=a.currentUser;if(!u){set('firebase-connected','Firebase ready • Sign in to sync');return}await d.collection('app_settings').doc(MASTER_DOC).get({source:'server'});set('firebase-connected','Firebase connected • Realtime sync ready')}catch(e){set('firebase-error','Firebase online • Firestore sync unavailable')}
+  };
+  setTimeout(()=>window.shadabFirebaseRecheck?.(),700);
+})();
+
+</script>
+
+<script>
+(function(){
+  'use strict';
+
+  // One-time Master Salesman login for this Master device.
+  const MASTER_SALESMAN_SESSION_KEY='shadab_master_salesman_auth_v1';
+  function saveMasterSalesmanSession(s){try{localStorage.setItem(MASTER_SALESMAN_SESSION_KEY,JSON.stringify(s));localStorage.setItem('shadab_master_salesman_email_v1',s.email||'')}catch(e){}}
+  function loadMasterSalesmanSession(){try{return JSON.parse(localStorage.getItem(MASTER_SALESMAN_SESSION_KEY)||'null')}catch(e){return null}}
+  function clearMasterSalesmanSession(){try{localStorage.removeItem(MASTER_SALESMAN_SESSION_KEY);localStorage.removeItem('shadab_master_salesman_email_v1')}catch(e){}}
+  async function refreshRESTForSaved(saved){
+    if(!saved?.refreshToken)throw new Error('No saved Master Salesman session');
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),15000);
+    try{
+      const r=await fetch(REFRESH_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(saved.refreshToken),signal:controller.signal,cache:'no-store'});
+      const x=await parseResponse(r);
+      return {email:saved.email||'',uid:x.user_id||saved.uid,idToken:x.id_token,refreshToken:x.refresh_token||saved.refreshToken,expiresAt:Date.now()+Math.max(300000,(Number(x.expires_in)||3600)*1000-120000)};
+    }finally{clearTimeout(timer)}
+  }
+  window.sp35UseSavedMaster=async function(){
+    const saved=loadMasterSalesmanSession();
+    if(!saved?.refreshToken){safeToast('Master Salesman is not set up yet. Login once and tick “Remember this as Master Salesman”.');return}
+    try{const fresh=await refreshRESTForSaved(saved);session=fresh;saveSession();await loginSuccess(fresh,false);safeToast('Master Salesman restored on this device');}
+    catch(e){clearMasterSalesmanSession();safeToast('Saved Master Salesman session expired. Please login once again.')}
+  };
+
+  // FINAL LOCAL-FILE AUTH FIX
+  // This layer intentionally does NOT use Firebase Auth JS SDK for login.
+  // It uses Firebase's HTTPS Auth REST API + Firestore REST API, which works
+  // from a downloaded HTML file (file/content://) without Firebase Auth's
+  // browser-origin/persistence dependency.
+
+  const CFG = {
+    apiKey: 'AIzaSyAi5c8pdkxxfZyvZEG9hi4q5nugVGXfKUc',
+    projectId: 'shadab-pharmacy'
+  };
+  const ADMIN_EMAIL = 'admin@shadabpharmacy.com';
+  const ADMIN_USER = 'admin';
+  const ADMIN_PASS = 'shadab@1303';
+  const AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + encodeURIComponent(CFG.apiKey);
+  const SIGNUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + encodeURIComponent(CFG.apiKey);
+  const REFRESH_URL = 'https://securetoken.googleapis.com/v1/token?key=' + encodeURIComponent(CFG.apiKey);
+  const FS_BASE = 'https://firestore.googleapis.com/v1/projects/' + CFG.projectId + '/databases/(default)/documents/';
+  const MASTER_PATH = 'app_settings/masterData';
+  const SCHEDULE_PATH = 'app_settings/adminSchedules';
+  const SESSION_KEY = 'shadab_rest_auth_v3';
+  const POLL_MS = 3000;
+
+  let session = null;
+  let pollTimer = null;
+  let polling = false;
+  let applyingRemote = false;
+
+  const safeToast = (m)=>{try{typeof toast==='function'?toast(m):console.log(m)}catch(e){console.log(m)}};
+  const stamp = ()=>new Date().toISOString();
+  const get = id=>document.getElementById(id);
+
+  function jsonClone(v){try{return JSON.parse(JSON.stringify(v??null))}catch(e){return null}}
+  function loadSession(){
+    try{session=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(e){session=null}
+    if(session && (!session.refreshToken || !session.idToken)) session=null;
+  }
+  function saveSession(){
+    try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify(session));else localStorage.removeItem(SESSION_KEY)}catch(e){}
+  }
+  function clearSession(){session=null;saveSession()}
+
+  async function parseResponse(r){
+    let body=null; try{body=await r.json()}catch(e){}
+    if(!r.ok){const err=new Error(body?.error?.message||('HTTP '+r.status));err.httpStatus=r.status;err.api=body;throw err}
+    return body;
+  }
+
+  function authMessage(e){
+    const raw=String(e?.api?.error?.message||e?.message||'').toUpperCase();
+    if(raw.includes('INVALID_LOGIN_CREDENTIALS')||raw.includes('INVALID_PASSWORD')||raw.includes('EMAIL_NOT_FOUND'))return 'Email/password is incorrect.';
+    if(raw.includes('USER_DISABLED'))return 'This Firebase account is disabled.';
+    if(raw.includes('OPERATION_NOT_ALLOWED'))return 'Firebase Email/Password sign-in is disabled.';
+    if(raw.includes('TOO_MANY_ATTEMPTS'))return 'Too many login attempts. Please wait and try again.';
+    if(raw.includes('INVALID_EMAIL'))return 'Please enter a valid email address.';
+    if(e?.name==='TypeError')return 'Internet connection failed. Please check internet and try again.';
+    return 'Firebase login failed: '+(e?.api?.error?.message||e?.message||'Unknown error');
+  }
+
+  async function signInREST(email,password){
+    const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),15000);
+    try{
+      const r=await fetch(AUTH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true}),signal:controller.signal,cache:'no-store'});
+      const x=await parseResponse(r);
+      session={email:x.email||email,uid:x.localId,idToken:x.idToken,refreshToken:x.refreshToken,expiresAt:Date.now()+Math.max(300000,(Number(x.expiresIn)||3600)*1000-120000)};
+      saveSession();
+      return session;
+    }finally{clearTimeout(timer)}
+  }
+
+  async function signUpREST(email,password,displayName){
+    const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),15000);
+    try{
+      const r=await fetch(SIGNUP_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true}),signal:controller.signal,cache:'no-store'});
+      const x=await parseResponse(r);
+      const s={email:x.email||email,uid:x.localId,idToken:x.idToken,refreshToken:x.refreshToken,expiresAt:Date.now()+Math.max(300000,(Number(x.expiresIn)||3600)*1000-120000),displayName:displayName||''};
+      session=s;saveSession();return s;
+    }finally{clearTimeout(timer)}
+  }
+
+  async function refreshREST(){
+    if(!session?.refreshToken)throw new Error('No refresh token');
+    const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),15000);
+    try{
+      const r=await fetch(REFRESH_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(session.refreshToken),signal:controller.signal,cache:'no-store'});
+      const x=await parseResponse(r);
+      session.idToken=x.id_token;session.refreshToken=x.refresh_token||session.refreshToken;session.uid=x.user_id||session.uid;session.expiresAt=Date.now()+Math.max(300000,(Number(x.expires_in)||3600)*1000-120000);saveSession();return session;
+    }finally{clearTimeout(timer)}
+  }
+
+  async function ensureToken(){
+    if(!session?.idToken)throw new Error('Not signed in');
+    if(Date.now() < (session.expiresAt||0))return session.idToken;
+    return (await refreshREST()).idToken;
+  }
+
+  async function fsFetch(path,options={},retry=true){
+    const token=await ensureToken();
+    const headers=Object.assign({'Authorization':'Bearer '+token,'Content-Type':'application/json'},options.headers||{});
+    const r=await fetch(FS_BASE+path,Object.assign({},options,{headers,cache:'no-store'}));
+    if(r.status===401 && retry){await refreshREST();return fsFetch(path,options,false)}
+    return r;
+  }
+
+  function toValue(v){
+    if(v===null||v===undefined)return {nullValue:null};
+    if(typeof v==='boolean')return {booleanValue:v};
+    if(typeof v==='number')return Number.isInteger(v)?{integerValue:String(v)}:{doubleValue:v};
+    if(typeof v==='string')return {stringValue:v};
+    if(Array.isArray(v))return {arrayValue:{values:v.map(toValue)}};
+    if(typeof v==='object'){
+      const fields={};Object.keys(v).forEach(k=>{fields[k]=toValue(v[k])});
+      return {mapValue:{fields}};
+    }
+    return {stringValue:String(v)};
+  }
+  function fromValue(v){
+    if(!v)return null;
+    if('nullValue'in v)return null;
+    if('stringValue'in v)return v.stringValue;
+    if('booleanValue'in v)return v.booleanValue;
+    if('integerValue'in v)return Number(v.integerValue);
+    if('doubleValue'in v)return Number(v.doubleValue);
+    if('timestampValue'in v)return v.timestampValue;
+    if('referenceValue'in v)return v.referenceValue;
+    if('geoPointValue'in v)return v.geoPointValue;
+    if('bytesValue'in v)return v.bytesValue;
+    if('arrayValue'in v)return (v.arrayValue.values||[]).map(fromValue);
+    if('mapValue'in v){const o={};Object.keys(v.mapValue.fields||{}).forEach(k=>o[k]=fromValue(v.mapValue.fields[k]));return o}
+    return null;
+  }
+  function docFromObject(obj){const fields={};Object.keys(obj||{}).forEach(k=>{fields[k]=toValue(obj[k])});return {fields}}
+  function objectFromDoc(doc){const o={};Object.keys(doc?.fields||{}).forEach(k=>o[k]=fromValue(doc.fields[k]));return o}
+
+  async function readDoc(path){
+    const r=await fsFetch(path,{method:'GET'});
+    if(r.status===404)return null;
+    const x=await parseResponse(r);return objectFromDoc(x);
+  }
+  async function writeDoc(path,obj){
+    const r=await fsFetch(path,{method:'PATCH',body:JSON.stringify(docFromObject(obj))});
+    return parseResponse(r);
+  }
+
+  function masterPayload(reason){
+    return {
+      stores: typeof storeDatabase!=='undefined'?jsonClone(storeDatabase):[],
+      territories: typeof territories!=='undefined'?jsonClone(territories):{},
+      customSalesmen: (typeof customSalesmen!=='undefined'?jsonClone(customSalesmen):[]),
+      disabledTerritories: (JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')),
+      appName: localStorage.getItem('shadab_app_name_v1')||'SHADAB PHARMACY',
+      theme: localStorage.getItem('shadab_theme')||'',
+      alertMessage: localStorage.getItem('shadab_alert_message_v1')||'',
+      reason:reason||'sync',
+      updatedAt:stamp()
+    };
+  }
+  function schedulePayload(reason){
+    return {
+      schedules: typeof adminSchedules!=='undefined'?jsonClone(adminSchedules):{},
+      routeTasks: typeof routeTasks!=='undefined'?jsonClone(routeTasks):{},
+      reason:reason||'sync',updatedAt:stamp()
+    };
+  }
+
+  async function writeMaster(reason){
+    if(!session || session.email!==ADMIN_EMAIL)return {ok:false,reason:'not-admin'};
+    try{await writeDoc(MASTER_PATH,masterPayload(reason));return {ok:true}}catch(e){console.error('REST master write',e);return {ok:false,error:e}}
+  }
+  async function writeSchedules(reason){
+    if(!session || session.email!==ADMIN_EMAIL)return {ok:false,reason:'not-admin'};
+    try{await writeDoc(SCHEDULE_PATH,schedulePayload(reason));return {ok:true}}catch(e){console.error('REST schedule write',e);return {ok:false,error:e}}
+  }
+
+  function renderAfterMaster(){
+    try{if(typeof ensureSalesmanOptions==='function')ensureSalesmanOptions();}catch(e){}
+    try{if(typeof ensureAdminSalesmanOptions==='function')ensureAdminSalesmanOptions();}catch(e){}
+    try{if(typeof renderAdminUnified==='function')renderAdminUnified();}catch(e){}
+    try{if(typeof refreshTerritories==='function')refreshTerritories();}catch(e){}
+    try{if(typeof showStoreSuggestions==='function')showStoreSuggestions();}catch(e){}
+    try{if(typeof updatePremiumDashboard==='function')updatePremiumDashboard();}catch(e){}
+    try{if(typeof renderTodayTasks==='function')renderTodayTasks();}catch(e){}
+    try{if(typeof renderRecords==='function')renderRecords();}catch(e){}
+  }
+
+  async function applyMaster(x){
+    if(!x)return;
+    applyingRemote=true;
+    try{
+      if(Array.isArray(x.stores)&&typeof storeDatabase!=='undefined'){storeDatabase=x.stores;localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase))}
+      if(x.territories&&typeof x.territories==='object'&&typeof territories!=='undefined'){territories=x.territories;localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories))}
+      if(Array.isArray(x.customSalesmen)){try{customSalesmen=x.customSalesmen}catch(e){}try{localStorage.setItem('shadab_custom_salesmen_v1',JSON.stringify(x.customSalesmen))}catch(e){}}
+      if(Array.isArray(x.disabledTerritories))localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(x.disabledTerritories));
+      if(typeof x.appName==='string')localStorage.setItem('shadab_app_name_v1',x.appName);
+      if(typeof x.theme==='string'&&x.theme)localStorage.setItem('shadab_theme',x.theme);
+      if(typeof x.alertMessage==='string'){
+        localStorage.setItem('shadab_alert_message_v1',x.alertMessage);
+        const t=get('shadabAlertText');if(t)t.textContent=x.alertMessage;
+      }
+      renderAfterMaster();
+    }finally{applyingRemote=false}
+  }
+  async function applySchedules(x){
+    if(!x)return;
+    applyingRemote=true;
+    try{
+      if(x.schedules&&typeof x.schedules==='object'&&typeof adminSchedules!=='undefined'){adminSchedules=x.schedules;localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.stringify(adminSchedules))}
+      if(x.routeTasks&&typeof x.routeTasks==='object'&&typeof routeTasks!=='undefined'){routeTasks=x.routeTasks;localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks))}
+      try{if(typeof renderAdminUnified==='function')renderAdminUnified()}catch(e){}
+      try{if(typeof onSalesmanChanged==='function')onSalesmanChanged()}catch(e){}
+      try{if(typeof renderTodayTasks==='function')renderTodayTasks()}catch(e){}
+      try{if(typeof updatePremiumDashboard==='function')updatePremiumDashboard()}catch(e){}
+    }finally{applyingRemote=false}
+  }
+
+  async function pollRemote(){
+    if(polling||!session)return; polling=true;
+    try{
+      const [m,s]=await Promise.all([readDoc(MASTER_PATH),readDoc(SCHEDULE_PATH)]);
+      if(m)await applyMaster(m);
+      if(s)await applySchedules(s);
+      setStatus('firebase-connected','Cloud sync connected • checking every 3 sec');
+    }catch(e){
+      console.warn('REST sync',e);
+      if(String(e?.message||'').includes('401')){clearSession();}
+      setStatus('firebase-error','Cloud sync error • local data is safe');
+    }finally{polling=false}
+  }
+  function startPolling(){stopPolling();pollTimer=setInterval(pollRemote,POLL_MS);pollRemote()}
+  function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null}}
+  function setStatus(cls,msg){
+    try{const dot=document.querySelector('#offlineBar .offline-dot'),tx=get('syncText');dot?.classList.remove('firebase-checking','firebase-connected','firebase-error');dot?.classList.add(cls);if(tx)tx.textContent=msg}catch(e){}
+  }
+
+  async function loginSuccess(s,isAdmin){
+    try{localStorage.setItem('shadab_rest_login_v3','1');localStorage.setItem('shadab_current_email_v3',s.email||'')}catch(e){}
+    if(isAdmin){
+      try{adminLoggedIn=true}catch(e){}
+      try{localStorage.setItem('shadab_admin_logged_in_v2','1')}catch(e){}
+      try{showAdminDashboard()}catch(e){}
+      safeToast('Admin login successful');
+      startPolling();
+      // If the master document is empty/missing, seed it from this Admin device.
+      try{const m=await readDoc(MASTER_PATH);if(!m)await writeMaster('initial-admin-seed')}catch(e){console.warn('Initial master seed',e)}
+      try{const sdoc=await readDoc(SCHEDULE_PATH);if(!sdoc)await writeSchedules('initial-admin-seed')}catch(e){console.warn('Initial schedule seed',e)}
+    }else{
+      try{localStorage.setItem('shadab_current_salesman_email_v1',s.email||'')}catch(e){}
+      try{localStorage.setItem('shadab_current_salesman_uid_v1',s.uid||'')}catch(e){}
+      try{sp35CloseAuth?.()}catch(e){}
+      try{sp35UpdateHeaderLoginButton?.(s.email||'Salesman')}catch(e){}
+      safeToast('Salesman login successful');
+      startPolling();
+    }
+  }
+
+  // Completely bypass the old Firebase JS SDK login functions.
+  window.adminLogin=async function(){
+    const uel=get('adminUsername'),pel=get('adminPassword'),btn=document.querySelector('#adminLoginBox button[onclick*="adminLogin"]');
+    const user=String(uel?.value||'').trim(),pass=String(pel?.value||'');
+    if(user!==ADMIN_USER||pass!==ADMIN_PASS){safeToast('Invalid Admin username or password');return}
+    const old=btn?.textContent||'🔐 Login';if(btn){btn.disabled=true;btn.textContent='🔄 Connecting…'}
+    try{
+      if(session?.email===ADMIN_EMAIL && session.idToken){await ensureToken();await loginSuccess(session,true);return}
+      const s=await signInREST(ADMIN_EMAIL,pass);await loginSuccess(s,true);
+    }catch(e){console.error('REST ADMIN LOGIN',e);safeToast(authMessage(e))}
+    finally{if(btn){btn.disabled=false;btn.textContent=old}}
+  };
+
+  window.sp35Login=async function(){
+    const email=String(get('sp35LoginEmail')?.value||'').trim().toLowerCase(),pass=String(get('sp35LoginPassword')?.value||'');
+    const remember=!!get('sp35RememberMaster')?.checked;
+    const btn=document.querySelector('#sp35LoginForm button.btn.primary');const old=btn?.textContent||'🔐 Login';
+    if(!email||!pass){safeToast('Email and password are required');return}
+    if(email===ADMIN_EMAIL){safeToast('Please use Admin Login for the Admin account. Create one separate Master Salesman email once.');return}
+    if(btn){btn.disabled=true;btn.textContent='🔄 Connecting…'}
+    try{const s=await signInREST(email,pass);if(remember)saveMasterSalesmanSession(s);await loginSuccess(s,false)}catch(e){console.error('REST SALESMAN LOGIN',e);safeToast(authMessage(e))}
+    finally{if(btn){btn.disabled=false;btn.textContent=old}}
+  };
+
+  // Registration also uses REST, so it works from a downloaded content:// HTML file.
+  window.sp35Register=async function(){
+    const name=String(get('sp35RegName')?.value||'').trim(),mobile=String(get('sp35RegMobile')?.value||'').trim(),email=String(get('sp35RegEmail')?.value||'').trim().toLowerCase(),pass=String(get('sp35RegPassword')?.value||'');
+    if(!name||!email||pass.length<6){safeToast('Name, email and a 6+ character password are required');return}
+    try{
+      const s=await signUpREST(email,pass,name);
+      s.displayName=name;
+      try{await writeDoc('salesmen/'+encodeURIComponent(s.uid),{uid:s.uid,fullName:name,email,mobile,status:'Active',createdAt:stamp(),updatedAt:stamp()})}catch(e){}
+      safeToast('Salesman account created. Login once and tick Remember this as Master Salesman if this is the Master device.');
+      const ei=get('sp35LoginEmail'),pi=get('sp35LoginPassword');if(ei)ei.value=email;if(pi)pi.value=pass;
+      if(get('sp35RememberMaster'))get('sp35RememberMaster').checked=true;
+      sp35ShowAuth?.('login');
+    }catch(e){console.error('REST SALESMAN REGISTER',e);safeToast(authMessage(e))}
+  };
+
+  window.logoutAdmin=async function(){clearSession();stopPolling();try{adminLoggedIn=false}catch(e){}try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}try{showAdminLogin()}catch(e){}safeToast('Admin logged out')};
+  window.sp35Logout=async function(){clearSession();stopPolling();try{localStorage.removeItem('shadab_current_salesman_email_v1')}catch(e){}try{sp35CloseAuth?.()}catch(e){}safeToast('Logged out')};
+
+  // Kill the previous SDK sync entry points so they cannot hang or compete with REST sync.
+  window.queueMasterSync=function(){};
+  window.saveMasterData=async function(reason){return await writeMaster(reason||'master-change')};
+  window.saveScheduleNow=async function(){return await writeSchedules('schedule-change')};
+  window.startRealtimeForUser=async function(){startPolling()};
+  window.stopListeners=function(){stopPolling()};
+
+  // Local save + REST cloud sync. UI behaviour stays unchanged.
+  window.saveData=function(){
+    try{localStorage.setItem(APP_KEY,JSON.stringify(visits));localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase))}catch(e){}
+    if(applyingRemote)return;
+    if(session?.email===ADMIN_EMAIL){clearTimeout(window.__restMasterTimer);window.__restMasterTimer=setTimeout(()=>writeMaster('data-change'),350)}
+  };
+  window.saveRouteTasks=function(){
+    try{localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks))}catch(e){}
+    if(applyingRemote)return;
+    if(session?.email===ADMIN_EMAIL){clearTimeout(window.__restScheduleTimer);window.__restScheduleTimer=setTimeout(()=>writeSchedules('route-task-change'),350)}
+  };
+  window.saveAdminSchedules=async function(){
+    try{localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.stringify(adminSchedules))}catch(e){}
+    if(applyingRemote)return {ok:true};
+    const r=await writeSchedules('admin-schedule-change');if(r.ok)safeToast('Weekly plan synced to all devices');else safeToast('Plan saved locally; cloud sync failed');return r;
+  };
+
+  // Territory status changes were local-only before. Mirror them to master data.
+  ['sp35ToggleTerr','sp35ToggleTerrNew'].forEach(name=>{
+    const old=window[name];if(typeof old!=='function')return;
+    window[name]=function(){const r=old.apply(this,arguments);if(!applyingRemote&&session?.email===ADMIN_EMAIL)writeMaster('territory-status-change');return r};
+  });
+
+  window.shadabFirebaseRecheck=async function(){
+    if(!navigator.onLine){setStatus('firebase-error','Offline — local data mode active');return}
+    if(!session){setStatus('firebase-connected','Cloud ready • Sign in to sync');return}
+    try{await ensureToken();await readDoc(MASTER_PATH);setStatus('firebase-connected','Cloud sync connected • every 3 sec')}catch(e){setStatus('firebase-error','Cloud sync unavailable • local data safe')}
+  };
+
+  // Restore REST session when the downloaded file is reopened.
+  loadSession();
+  if(session){
+    ensureToken().then(()=>{
+      if(session.email===ADMIN_EMAIL){try{adminLoggedIn=true}catch(e){}try{localStorage.setItem('shadab_admin_logged_in_v2','1')}catch(e){}try{showAdminDashboard()}catch(e){}}
+      startPolling();
+    }).catch(()=>{clearSession();setStatus('firebase-connected','Cloud ready • Sign in to sync')});
+  }else setStatus('firebase-connected','Cloud ready • Sign in to sync');
+
+  // Expose a simple diagnostic helper for this file.
+  window.shadabRestAuthStatus=()=>({signedIn:!!session,email:session?.email||null,uid:session?.uid||null,mode:'Firebase REST + Firestore REST',localFile:true,pollMs:POLL_MS});
+})();
+
+</script>
+<script>
+(function(){
+  const oldShow=window.sp35ShowAuth;
+  window.sp35ShowAuth=function(mode){
+    if(oldShow)oldShow(mode);
+    if(mode==='login'){try{const email=localStorage.getItem('shadab_master_salesman_email_v1')||'';const i=document.getElementById('sp35LoginEmail');const c=document.getElementById('sp35RememberMaster');if(email&&i&&!i.value)i.value=email;if(email&&c)c.checked=true}catch(e){}}
+  };
+})();
+</script>
+
+<script id="shadab-territory-stores-clean-fix">
+(function(){
+  'use strict';
+  /* TERRITORY STORE FIX ONLY — no login, UI, Firebase auth or schedule logic changed. */
+  function repair(){
+    try{
+      if(typeof storeDatabase==='undefined' || !Array.isArray(storeDatabase)) return;
+      const byCode=new Map();
+      storeDatabase.forEach(s=>{
+        const c=String(s && s.code || '').trim();
+        if(c) byCode.set(c,s);
+      });
+      /* Restore the territory assignments already present in the supplied master/index data. */
+      if(typeof BUILTIN_STORE_DATABASE!=='undefined' && Array.isArray(BUILTIN_STORE_DATABASE)){
+        BUILTIN_STORE_DATABASE.forEach(src=>{
+          const c=String(src && src.code || '').trim();
+          const t=String(src && src.territory || '').trim();
+          const target=byCode.get(c);
+          if(target && t) target.territory=t;
+        });
+      }
+      /* The supplied working index contains these exact PDF territory-code maps. */
+      const maps=[];
+      if(typeof EXACT_PDF_TERRITORY_CODES!=='undefined') maps.push(EXACT_PDF_TERRITORY_CODES);
+      if(typeof COMPLETE_SAHIWAL_PDF_CODES!=='undefined') maps.push(COMPLETE_SAHIWAL_PDF_CODES);
+      maps.forEach(map=>{
+        if(!map || typeof map!=='object') return;
+        Object.keys(map).forEach(territory=>{
+          const codes=Array.isArray(map[territory])?map[territory]:[];
+          codes.forEach(code=>{
+            const target=byCode.get(String(code).trim());
+            if(target) target.territory=territory;
+          });
+        });
+      });
+      localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));
+      if(typeof refreshAssignmentTerritories==='function'){
+        try{refreshAssignmentTerritories()}catch(e){}
+      }
+      if(typeof showStoreSuggestions==='function'){
+        try{showStoreSuggestions()}catch(e){}
+      }
+    }catch(e){ console.warn('Territory store repair:',e); }
+  }
+  window.shadabRepairTerritoryStores=repair;
+  repair();
+  setTimeout(repair,300);
+  setTimeout(repair,1200);
+  setTimeout(repair,3000);
+  setInterval(repair,5000);
+})();
 </script>
 </body>
 </html>
