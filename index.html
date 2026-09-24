@@ -351,7 +351,7 @@ body.section-modal-open .section-modal-close { display:block !important; }
 </header>
 
 <main>
-<div class="offline-bar" id="offlineBar"><span class="offline-dot"></span><b id="networkText">Online</b><span id="syncText">Ready — local saving is active</span></div>
+<div class="offline-bar" id="offlineBar"><span class="offline-dot"></span><b id="networkText">Online</b><span id="syncText">Ready — local saving is active</span><button id="shadabSyncRefresh" type="button" title="Refresh & Sync" aria-label="Refresh & Sync" onclick="sp35ManualSync()">↻</button></div>
 <div class="sp-alert" id="shadabAlertBar" aria-live="polite"><div class="sp-alert-label">🔔 ALERT</div><div class="sp-alert-window"><div class="sp-alert-track" id="shadabAlertText">Welcome to SHADAB PHARMACY</div></div></div>
 <style id="shadab-top-action-icons-style">
 .top-action-icons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0 16px}
@@ -1896,7 +1896,25 @@ function saveAdminSchedules(){localStorage.setItem(ADMIN_SCHEDULE_KEY,JSON.strin
 function openAdmin(){document.getElementById("adminModal").classList.add("show");if(adminLoggedIn)showAdminDashboard();else showAdminLogin()}
 function closeAdmin(){document.getElementById("adminModal").classList.remove("show")}
 function showAdminLogin(){document.getElementById("adminLoginBox").style.display="block";document.getElementById("adminDashboardBox").style.display="none";setTimeout(()=>document.getElementById("adminUsername")?.focus(),80)}
-function adminLogin(){const u=document.getElementById("adminUsername").value.trim(),p=document.getElementById("adminPassword").value;if(u===ADMIN_USER&&p===ADMIN_PASS){adminLoggedIn=true;document.getElementById("adminUsername").value="";document.getElementById("adminPassword").value="";showAdminDashboard();toast("Admin login successful")}else toast("Invalid Admin username or password")}
+async function adminLogin(){
+ const u=document.getElementById("adminUsername").value.trim(),p=document.getElementById("adminPassword").value;
+ if(u!==ADMIN_USER||p!==ADMIN_PASS)return toast("Invalid Admin username or password");
+ const a=window.firebase&&firebase.auth?firebase.auth():null;
+ if(!a)return toast("Firebase Authentication is not available");
+ try{
+   let cred;
+   try{cred=await a.signInWithEmailAndPassword('admin@shadabpharmacy.com',p)}
+   catch(e){
+     if(e.code==='auth/user-not-found')cred=await a.createUserWithEmailAndPassword('admin@shadabpharmacy.com',p);
+     else throw e;
+   }
+   adminLoggedIn=true;
+   document.getElementById("adminUsername").value="";document.getElementById("adminPassword").value="";
+   showAdminDashboard();
+   toast("Admin login successful • Firebase synced");
+   setTimeout(async()=>{try{await window.sp35LoadMasterDataFromFirebase();await window.sp35LoadAdminPlanFromFirebase();if(typeof renderAdminUnified==='function')renderAdminUnified()}catch(e){console.warn(e)}},250);
+ }catch(e){toast("Admin Firebase login failed: "+(e.code||e.message||e))}
+}
 function logoutAdmin(){adminLoggedIn=false;showAdminLogin();toast("Admin logged out")}
 function normalizeAdminSchedule(salesman){
  let d=adminSchedules[salesman];
@@ -2268,7 +2286,7 @@ window.sp35HeaderAccountAction=()=>{const u=auth()?.currentUser;if(u){toast35(`L
 window.sp35OpenAuth=(mode)=>{document.getElementById('sp35AuthModal')?.classList.add('show');sp35ShowAuth(mode)};
 window.sp35CloseAuth=()=>document.getElementById('sp35AuthModal')?.classList.remove('show');
 window.sp35ShowAuth=(mode)=>{document.getElementById('sp35LoginForm').style.display=mode==='login'?'block':'none';document.getElementById('sp35RegisterForm').style.display=mode==='register'?'block':'none';document.getElementById('sp35LoginTab').classList.toggle('primary',mode==='login');document.getElementById('sp35RegisterTab').classList.toggle('primary',mode==='register');document.getElementById('sp35AuthTitle').textContent=mode==='login'?'Salesman Login':'Salesman Registration'};
-window.sp35Login=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');try{const c=await a.signInWithEmailAndPassword(document.getElementById('sp35LoginEmail').value.trim(),document.getElementById('sp35LoginPassword').value);await sp35Profile(c.user);localStorage.setItem('shadab_current_salesman_v1',c.user.displayName||'');sp35UpdateHeaderLoginButton(c.user.displayName||c.user.email||'Salesman');sp35CloseAuth();toast35('Salesman login successful');setTimeout(()=>{try{loadSignedInAssignment()}catch(e){}},50)}catch(e){toast35(e.message||'Login failed')}};
+window.sp35Login=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');const email=document.getElementById('sp35LoginEmail').value.trim(),pass=document.getElementById('sp35LoginPassword').value;if(!email||!pass)return toast35('Email and password are required');try{if(a.setPersistence&&firebase.auth?.Auth?.Persistence?.LOCAL)await a.setPersistence(firebase.auth.Auth.Persistence.LOCAL);const c=await a.signInWithEmailAndPassword(email,pass);await sp35Profile(c.user);localStorage.setItem('shadab_current_salesman_v1',c.user.displayName||'');sp35UpdateHeaderLoginButton(c.user.displayName||c.user.email||'Salesman');sp35CloseAuth();toast35('Salesman login successful');setTimeout(()=>{try{window.loadSignedInAssignment?window.loadSignedInAssignment():loadSignedInAssignment()}catch(e){}},100)}catch(e){const m=e.code==='auth/invalid-credential'?'Email or password is incorrect.':e.code==='auth/user-not-found'?'This salesman account is not registered in Firebase.':e.code==='auth/invalid-email'?'Please enter a valid email address.':e.code==='auth/too-many-requests'?'Too many attempts. Try again after a short while.':(e.message||'Login failed');toast35(m)}};
 window.sp35Register=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');const name=document.getElementById('sp35RegName').value.trim(),email=document.getElementById('sp35RegEmail').value.trim(),mobile=document.getElementById('sp35RegMobile').value.trim(),pass=document.getElementById('sp35RegPassword').value;if(!name||!email||pass.length<6)return toast35('Name, email and a 6+ character password are required');try{const c=await a.createUserWithEmailAndPassword(email,pass);await c.user.updateProfile({displayName:name});await sp35Profile(c.user,{fullName:name,mobile,email,status:'Active',createdAt:now()});await c.user.sendEmailVerification();toast35('Account created. Verification email sent.');sp35CloseAuth()}catch(e){toast35(e.message||'Registration failed')}};
 window.sp35Forgot=async()=>{const email=document.getElementById('sp35LoginEmail').value.trim();if(!email)return toast35('Enter the salesman email first');try{await auth().sendPasswordResetEmail(email);toast35('Password reset email sent')}catch(e){toast35(e.message||'Reset failed')}};
 async function sp35Profile(user,extra={}){const d=db();const data={uid:user.uid,fullName:user.displayName||extra.fullName||'',email:user.email||extra.email||'',mobile:extra.mobile||'',status:'Active',lastSeen:now(),updatedAt:now(),...extra};try{if(d)await d.collection('salesmen').doc(user.uid).set(data,{merge:true})}catch(e){console.warn(e)};localStorage.setItem('shadab_last_salesman_v1',data.fullName||data.email);localStorage.setItem('shadab_admin_profile_'+user.uid,JSON.stringify(data));log35('Salesman activity',{uid:user.uid})}
@@ -2555,11 +2573,17 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
 </script>
 </body>
 </html>
+
+<style id="shadab-sync-refresh-style">
+#shadabSyncRefresh{margin-left:auto;border:0;background:rgba(255,255,255,.12);color:inherit;width:30px;height:30px;border-radius:50%;font-size:18px;line-height:30px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}#shadabSyncRefresh:active{transform:rotate(180deg)}#shadabSyncRefresh.syncing{animation:shadabSyncSpin .8s linear infinite}@keyframes shadabSyncSpin{to{transform:rotate(360deg)}}
+</style>
 <script id="shadab-final-cross-device-sync-fix">
 (function(){
   const $=id=>document.getElementById(id);
   const dbx=()=>window.firebase&&firebase.firestore?firebase.firestore():null;
   const authx=()=>window.firebase&&firebase.auth?firebase.auth():null;
+  const ADMIN_FIREBASE_EMAIL='admin@shadabpharmacy.com';
+  const isAdminFirebase=()=>String(authx()?.currentUser?.email||'').toLowerCase()===ADMIN_FIREBASE_EMAIL;
   const toastx=m=>{try{if(typeof toast==='function')toast(m);else console.log(m)}catch(e){console.log(m)}};
   const escx=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
@@ -2594,6 +2618,33 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     const u=authx()?.currentUser;
     if(u){forceHeader();toastx(`Logged in as ${profileName(u)}`);return;}
     if(typeof sp35OpenAuth==='function')sp35OpenAuth('login');
+  };
+
+  // ===== MASTER DATA SYNC =====
+  // The master application publishes the complete store + territory database.
+  // Other devices download this first; assignment data is layered on top.
+  window.sp35SaveMasterDataToFirebase=async function(){
+    const d=dbx(); if(!d||!isAdminFirebase())return {ok:false,error:'admin-firebase-login-required'};
+    try{
+      const payload={
+        stores:typeof storeDatabase!=='undefined'?storeDatabase:[],
+        territories:typeof territories!=='undefined'?territories:{},
+        updatedAt:new Date().toISOString(),updatedBy:ADMIN_FIREBASE_EMAIL
+      };
+      await d.collection('app_settings').doc('masterData').set(payload,{merge:true});
+      return {ok:true};
+    }catch(e){console.error('MASTER DATA FIREBASE SAVE FAILED',e);return {ok:false,error:e}}
+  };
+  window.sp35LoadMasterDataFromFirebase=async function(){
+    const d=dbx(); if(!d)return {ok:false,error:'firebase-unavailable'};
+    try{
+      const q=await d.collection('app_settings').doc('masterData').get({source:'server'});
+      if(!q.exists)return {ok:false,error:{code:'not-found',message:'Master store database has not been published to Firebase yet.'}};
+      const x=q.data()||{};
+      if(Array.isArray(x.stores)){storeDatabase=x.stores;localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));}
+      if(x.territories&&typeof x.territories==='object'){territories=x.territories;localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));}
+      return {ok:true,data:x};
+    }catch(e){console.warn('MASTER DATA FIREBASE READ FAILED',e);return {ok:false,error:e}}
   };
 
   // Firebase is the source of truth for assignments. Do not merge another phone's local assignment into it.
@@ -2642,6 +2693,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     };
     try{
       await d.collection('app_settings').doc('adminSchedules').set(payload,{merge:true});
+      await window.sp35SaveMasterDataToFirebase();
       localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
       return {ok:true};
     }catch(e){
@@ -2707,6 +2759,8 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
         }
       }
       forceHeader();
+      const master=await window.sp35LoadMasterDataFromFirebase();
+      if(!master.ok && master.error?.code!=='not-found') console.warn('Master data sync:',master.error);
       const sync=await window.sp35LoadAdminPlanFromFirebase();
       if(!sync.ok){
         toastx('Firebase assignment sync failed: '+(sync.error?.code||sync.error?.message||sync.error));
@@ -2729,6 +2783,45 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     }
   };
 
+  // ===== CROSS-DEVICE WORKING DATA SYNC =====
+  window.sp35SaveWorkingDataNow=async function(){
+    const u=authx()?.currentUser,d=dbx();
+    if(!u||!d||!navigator.onLine)return {ok:false,skipped:true};
+    try{
+      const payload={uid:u.uid,fullName:profileName(u),updatedAt:new Date().toISOString(),visits:typeof visits!=='undefined'?visits:[],routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},currentArea:$('area')?.value||''};
+      await d.collection('user_data').doc(u.uid).set(payload,{merge:true});
+      return {ok:true};
+    }catch(e){console.warn('Working data upload failed',e);return {ok:false,error:e}}
+  };
+  window.sp35LoadAllSalesmanWorkingData=async function(){
+    const d=dbx();if(!d||!navigator.onLine)return {ok:false,skipped:true};
+    try{const snap=await d.collection('user_data').get({source:'server'}),all={};snap.forEach(doc=>{all[doc.id]=doc.data()||{}});window.sp35AllSalesmanWorkingData=all;localStorage.setItem('shadab_all_salesman_working_v1',JSON.stringify(all));return {ok:true,data:all}}
+    catch(e){console.warn('Admin working data read failed',e);return {ok:false,error:e}}
+  };
+  const _saveDataCrossDevice=window.saveData;
+  window.saveData=async function(){if(_saveDataCrossDevice)_saveDataCrossDevice.apply(this,arguments);try{if(isAdminFirebase())await window.sp35SaveMasterDataToFirebase();}catch(e){} try{await window.sp35SaveWorkingDataNow()}catch(e){}};
+  window.sp35RefreshAdminWorkingData=async function(){const r=await window.sp35LoadAllSalesmanWorkingData();if(r.ok)toastx('Salesman working data synced from Firebase');else if(!r.skipped)toastx('Working-data sync failed: '+(r.error?.code||r.error?.message||r.error));return r};
+
+  window.sp35ManualSync=async function(){
+    const btn=$('shadabSyncRefresh'); if(btn)btn.classList.add('syncing');
+    try{
+      const u=authx()?.currentUser;
+      if(isAdminFirebase()){
+        await window.sp35LoadMasterDataFromFirebase();
+        await window.sp35LoadAdminPlanFromFirebase();
+        if(typeof renderAdminUnified==='function')renderAdminUnified();
+        toastx('Master data + assignments refreshed');
+      }else if(u){
+        await window.sp35LoadMasterDataFromFirebase();
+        await window.loadSignedInAssignment();
+        toastx('Data synchronized from Firebase');
+      }else{
+        location.reload(); return;
+      }
+    }catch(e){toastx('Sync failed: '+(e.code||e.message||e));}
+    finally{if(btn)btn.classList.remove('syncing');}
+  };
+
   // Realtime refresh: when Admin saves a plan, every logged-in salesman gets it without reopening the app.
   window.sp35WatchSharedAdminPlan=function(){
     const d=dbx(); if(!d||window._sp35AdminPlanUnsub)return;
@@ -2737,6 +2830,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
         if(!s.exists)return;
         const u=authx()?.currentUser; if(!u)return;
         await window.sp35LoadAdminPlanFromFirebase();
+        await restoreWorkingData();
         const n=profileName(u),sel=$('visitedBy');
         if(sel){sel.value=n;if(typeof onSalesmanChanged==='function')onSalesmanChanged();}
         forceHeader();
