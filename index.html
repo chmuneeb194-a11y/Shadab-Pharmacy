@@ -2482,10 +2482,21 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     const s=document.getElementById('visitedBy'); if(!s)return;
     const name=loggedSalesmanName();
     if(!name)return;
+    /* Firebase profile names are authoritative. Always create the option if this
+       phone did not previously know the salesman. Setting select.value to a
+       missing option leaves it blank, which was causing Save Visit to reject
+       an otherwise valid logged-in salesman. */
     try{ensureSalesmanOptions?.()}catch(e){}
+    let opt=[...s.options].find(o=>String(o.value).trim()===String(name).trim());
+    if(!opt){
+      opt=document.createElement('option');
+      opt.value=name;
+      opt.textContent=name;
+      s.appendChild(opt);
+    }
     s.value=name;
     s.disabled=true;
-    s.title='Salesman is linked to the logged-in account';
+    s.title='Salesman is linked to the logged-in Firebase account';
     const label=s.closest('.field')?.querySelector('label');
     if(label)label.textContent='Salesman (Logged-in Account)';
     localStorage.setItem('shadab_current_salesman_v1',name);
@@ -2666,10 +2677,19 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
         routeTasks=x.routeTasks;
         localStorage.setItem(TASK_KEY,JSON.stringify(routeTasks));
       }
-      // Assigned stores from Admin replace this phone's old local store list for the field workflow.
+      /* Keep the complete Master store database. routeStores is only an
+         assignment-layer/cache; replacing storeDatabase with it made a
+         salesman phone lose the Master stores when routeStores was empty or
+         incomplete. Merge assigned records on top of Master data instead. */
       if(x.routeStores&&typeof x.routeStores==='object'){
-        const assigned=Object.values(x.routeStores).flat().filter(Boolean);
-        storeDatabase=assigned;
+        const merged=Array.isArray(storeDatabase)?storeDatabase.slice():[];
+        const keyOf=v=>String(v.code||'')+'|'+String(v.name||'')+'|'+String(v.area||'')+'|'+String(v.territory||'');
+        const seen=new Set(merged.map(keyOf));
+        Object.values(x.routeStores).flat().filter(Boolean).forEach(st=>{
+          const k=keyOf(st);
+          if(!seen.has(k)){merged.push(st);seen.add(k)}
+        });
+        storeDatabase=merged;
         localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));
       }
       localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
