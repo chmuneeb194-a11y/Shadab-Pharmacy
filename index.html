@@ -1279,6 +1279,16 @@ function showStoreSuggestions(){
   const input=document.getElementById("storeName");
   const box=document.getElementById("storeSuggestions");
   if(!input||!box)return;
+  /* Only show autocomplete while the Store/Pharmacy field is active.
+     Firebase's 3-second sync refresh also calls this function; without this
+     guard it re-opens an already-selected store while the user is typing
+     Person Name/Phone/Notes. */
+  if(document.activeElement!==input){
+    box.innerHTML="";
+    box.classList.remove("show");
+    window._visibleStoreSuggestions=[];
+    return;
+  }
   const raw=input.value.trim();
   if(!raw){
     box.innerHTML="";
@@ -2545,8 +2555,20 @@ function modal(){let m=$('sp35ControlModal');if(m)return m;m=document.createElem
 function render(){const g=$('sp35ControlGrid');if(!g)return;g.innerHTML=N.map((x,i)=>`<button class="sp35-control-card" type="button" onclick="sp35OpenControl(${i+1})"><span class="icon">${x[0]}</span><b>${x[1]}</b><small>${x[2]}</small></button>`).join('')}
 function ensure(){const d=$('adminDashboardBox');if(!d)return;let launch=$('sp35Launcher');if(!launch){launch=document.createElement('button');launch.id='sp35Launcher';launch.className='sp35-launcher';launch.type='button';launch.innerHTML=`<span class="sp35-launcher-icon">📊</span><span class="sp35-launcher-copy"><b>Admin Control Center</b><small>Salesmen • assignments • stores • reports • activity • settings</small></span><span class="sp35-launcher-arrow">›</span>`;launch.onclick=()=>{modal();render();$('sp35ControlModal').classList.add('show')};const hero=d.querySelector('.admin-hero');if(hero)hero.insertAdjacentElement('afterend',launch);else d.insertBefore(launch,d.firstChild)}
 }
-window.sp35CloseAll=()=>{$('sp35ControlModal')?.classList.remove('show');$('sp35WorkModal')?.classList.remove('show')};window.sp35BackToControls=()=>{$('sp35WorkModal')?.classList.remove('show');$('sp35ControlGrid')?.scrollIntoView({behavior:'smooth',block:'nearest'})};
-window.sp35OpenControl=async n=>{const item=N[n-1];if(!item)return;modal();$('sp35ControlModal').classList.add('show');$('sp35ControlGrid').style.display='none';const w=$('sp35WorkModal'),b=$('sp35WorkBodyNew');w.classList.add('show');$('sp35WorkTitleNew').textContent=item[1];$('sp35WorkSubNew').textContent=item[2];b.innerHTML='<div class="sp35-emptyx">Loading…</div>';try{const fn=window['sp35Point'+n];if(fn){const old=$('sp35WorkBody');const title=$('sp35WorkTitle');const sub=$('sp35WorkSub');if(old){old.id='sp35WorkBodyLegacyTemp';}fn();const legacy=$('sp35WorkBodyLegacyTemp');if(legacy&&legacy.innerHTML){b.innerHTML=legacy.innerHTML;legacy.id='sp35WorkBody';}}else b.innerHTML='<div class="sp35-emptyx">Control is not available.</div>';}catch(e){b.innerHTML='<div class="sp35-emptyx">Control error: '+escx(e.message||e)+'</div>'}w.scrollIntoView({behavior:'smooth',block:'start'});};
+window.sp35RestoreWorkTarget=()=>{const b=$('sp35WorkBody');if(b&&b.id==='sp35WorkBody')b.id='sp35WorkBodyNew';const legacy=$('sp35LegacyWorkBody');if(legacy)legacy.id='sp35WorkBody'};
+window.sp35CloseAll=()=>{sp35RestoreWorkTarget();const m=$('sp35ControlModal');if(m)m.classList.remove('show');const w=$('sp35WorkModal');if(w)w.classList.remove('show');const g=$('sp35ControlGrid');if(g)g.style.display='grid'};
+window.sp35BackToControls=()=>{sp35RestoreWorkTarget();const w=$('sp35WorkModal');if(w)w.classList.remove('show');const g=$('sp35ControlGrid');if(g){g.style.display='grid';g.scrollIntoView({behavior:'smooth',block:'nearest'})}};
+window.sp35OpenControl=async n=>{const item=N[n-1];if(!item)return;modal();$('sp35ControlModal').classList.add('show');const g=$('sp35ControlGrid');if(g)g.style.display='none';const w=$('sp35WorkModal'),b=$('sp35WorkBodyNew');w.classList.add('show');$('sp35WorkTitleNew').textContent=item[1];$('sp35WorkSubNew').textContent=item[2];b.innerHTML='<div class="sp35-emptyx">Loading…</div>';const previousId=b.id;const legacy=$('sp35WorkBody');if(legacy&&legacy!==b)legacy.id='sp35LegacyWorkBody';try{const fn=window['sp35Point'+n];if(!fn){b.innerHTML='<div class="sp35-emptyx">Control is not available.</div>';return}
+// The original controls (1–20) and the newer controls (21–35) use the shared
+// sp35WorkBody target. Keep that target alive for the entire control session,
+// including button clicks and async Firebase operations. The visible UI itself
+// remains the existing Admin Control Center.
+b.id='sp35WorkBody';
+await Promise.resolve(fn());
+// Keep the compatibility id intentionally. Older point handlers and their
+// Refresh/Edit buttons still target sp35WorkBody after the first render.
+if(b.id!=='sp35WorkBody')b.id=previousId;
+}catch(e){b.innerHTML='<div class="sp35-emptyx">Control error: '+escx(e.message||e)+'</div>'}w.scrollIntoView({behavior:'smooth',block:'start'});};
 // Safer direct render for controls that need richer editing/data views.
 window.sp35Point21=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');const users=(()=>{try{return JSON.parse(localStorage.getItem('shadab_admin_profiles_v1')||'[]')}catch(e){return[]}})();const stores=typeof storeDatabase!=='undefined'?storeDatabase:[];const visitsA=typeof visits!=='undefined'?visits:[];const orders=visitsA.filter(v=>['Order Received','Order Done'].includes(v.status)).length;b.innerHTML=`<div class="sp35-mini-kpis"><div class="sp35-mini-kpi"><b>${users.length}</b><small>Salesmen</small></div><div class="sp35-mini-kpi"><b>${stores.filter(s=>!s.disabled).length}</b><small>Stores</small></div><div class="sp35-mini-kpi"><b>${visitsA.length}</b><small>Visits</small></div><div class="sp35-mini-kpi"><b>${orders}</b><small>Orders</small></div></div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="sp35OpenControl(7)">Salesmen</button><button class="sp35-btnx" onclick="sp35OpenControl(24)">Stores</button><button class="sp35-btnx" onclick="sp35OpenControl(27)">Reports</button></div>`};
 window.sp35Point22=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');const names=typeof adminSalesmanNames==='function'?adminSalesmanNames():[];const days=typeof ADMIN_DAYS!=='undefined'?ADMIN_DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];b.innerHTML=`<div class="sp35-form-grid"><div class="sp35-field"><label>Salesman</label><select id="sp35CalSalesmanNew">${names.map(n=>`<option>${escx(n)}</option>`).join('')}</select></div><div class="sp35-field"><label>Day</label><select id="sp35CalDayNew">${days.map(d=>`<option>${escx(d)}</option>`).join('')}</select></div></div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="sp35ShowCalendarNew()">View Assignment</button></div><div id="sp35CalResultNew" class="sp35-emptyx">Choose a salesman and day.</div>`};
