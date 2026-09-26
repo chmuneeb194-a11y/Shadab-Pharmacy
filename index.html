@@ -6972,95 +6972,123 @@ setInterval(()=>{if(navigator.onLine&&sess()?.uid)hydrate()},600000);
 })();
 </script>
 
-<script id="shadab-sync-engine-final-v26">
+<script id="shadab-sync-engine-final-v28">
 (function(){
   'use strict';
-  /* START: V26 SYNC ENGINE — logic repair only; locked sync animation untouched */
+  /* START: V28 SYNC ROOT FIX
+     - refresh/validate the REST token before every cloud write
+     - restore the known-good V23 salesman payload shape (no stores field)
+     - keep shared PDFs outside masterData
+     - keep the existing locked sync animation/controller untouched
+  */
   const ADMIN='admin@shadabpharmacy.com';
-  const readSession=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-  const cloneSafe=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
-  const writeDoc=()=>window.shadabRestWriteDoc;
+  const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+  const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
   const stamp=()=>new Date().toISOString();
-  function errText(e){return String(e?.api?.error?.message||e?.message||e||'Unknown Firebase error')+(e?.httpStatus?' [HTTP '+e.httpStatus+']':'')}
-  function visitNoPhoto(v){
-    if(!v||typeof v!=='object')return v;
-    const x={...v};
-    if('photo' in x)x.photo='';
-    return x;
+  const errorText=e=>String(e?.api?.error?.message||e?.message||e||'Unknown Firebase error')+(e?.httpStatus?' [HTTP '+e.httpStatus+']':'');
+  const stripPhoto=v=>{if(!v||typeof v!=='object')return v;const x={...v};if('photo' in x)x.photo='';return x};
+
+  async function freshToken(){
+    if(typeof window.shadabRestCurrentSession!=='function')throw new Error('Firebase REST session is not available.');
+    if(typeof window.shadabRestEnsureToken==='function')return await window.shadabRestEnsureToken();
+    /* ensureToken is internal in the REST layer; force a harmless authenticated
+       read so its fsFetch() can refresh a stale token before our write. */
+    if(typeof window.shadabRestReadDoc==='function'){
+      await window.shadabRestReadDoc('app_settings/masterData');
+      return true;
+    }
+    throw new Error('Firebase REST sync engine is not loaded.');
   }
-  function salesmanPayload(uid,strip){
-    const vv=typeof visits!=='undefined'?(cloneSafe(visits)||[]):[];
+
+  async function write(path,obj){
+    if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST sync engine is not loaded.');
+    return await window.shadabRestWriteDoc(path,obj);
+  }
+
+  function salesmanPayload(uid,withoutPhotos){
+    const vv=typeof visits!=='undefined'?(clone(visits)||[]):[];
     return {
       uid,updatedAt:stamp(),
-      visits:strip?vv.map(visitNoPhoto):vv,
-      stores:typeof storeDatabase!=='undefined'?(cloneSafe(storeDatabase)||[]):[],
-      territories:typeof territories!=='undefined'?(cloneSafe(territories)||{}):{},
-      routeTasks:typeof routeTasks!=='undefined'?(cloneSafe(routeTasks)||{}):{},
+      visits:withoutPhotos?vv.map(stripPhoto):vv,
+      territories:typeof territories!=='undefined'?(clone(territories)||{}):{},
+      routeTasks:typeof routeTasks!=='undefined'?(clone(routeTasks)||{}):{},
       expenses:typeof window.shadabExpenseDataForSync==='function'?window.shadabExpenseDataForSync():{},
       summaryDetail:typeof window.shadabSummaryDataForSync==='function'?window.shadabSummaryDataForSync():{}
     };
   }
+
   async function syncSalesman(uid){
-    const write=writeDoc();
-    if(typeof write!=='function')throw new Error('Firebase REST sync engine is not loaded.');
+    await freshToken();
     let payload=salesmanPayload(uid,false);
     let bytes=new Blob([JSON.stringify(payload)]).size;
     let compacted=false;
-    if(bytes>750000){
-      payload=salesmanPayload(uid,true); bytes=new Blob([JSON.stringify(payload)]).size; compacted=true;
-    }
+    if(bytes>750000){payload=salesmanPayload(uid,true);bytes=new Blob([JSON.stringify(payload)]).size;compacted=true;}
     if(bytes>950000)throw new Error('Firebase record is too large ('+Math.round(bytes/1024)+' KB) even after removing visit photos.');
     try{
       await write('user_data/'+encodeURIComponent(uid),payload);
     }catch(e){
-      if(!compacted){
-        payload=salesmanPayload(uid,true); bytes=new Blob([JSON.stringify(payload)]).size; compacted=true;
-        if(bytes<=950000) await write('user_data/'+encodeURIComponent(uid),payload); else throw e;
+      /* A 401 can happen exactly between ensureToken() and PATCH. The REST
+         layer normally retries it; do one explicit token refresh as a final guard. */
+      if(e?.httpStatus===401 || String(e?.api?.error?.status||'').toUpperCase()==='UNAUTHENTICATED'){
+        try{await window.shadabRestReadDoc('app_settings/masterData');await write('user_data/'+encodeURIComponent(uid),payload);}
+        catch(e2){throw new Error('Firebase authentication/write failed: '+errorText(e2));}
+      }else if(!compacted){
+        payload=salesmanPayload(uid,true);bytes=new Blob([JSON.stringify(payload)]).size;compacted=true;
+        if(bytes<=950000)await write('user_data/'+encodeURIComponent(uid),payload);else throw e;
       }else throw e;
     }
     try{localStorage.setItem('shadab_last_manual_sync_v2',stamp())}catch(e){}
     window.__shadabLastFirebaseSync={at:stamp(),ok:true,compacted,uid};
     return true;
   }
+
   async function syncAdmin(){
-    const write=writeDoc();
-    if(typeof write!=='function')throw new Error('Firebase REST sync engine is not loaded.');
+    await freshToken();
     const t=stamp();
     const master={
-      stores:typeof storeDatabase!=='undefined'?(cloneSafe(storeDatabase)||[]):[],
-      territories:typeof territories!=='undefined'?(cloneSafe(territories)||{}):{},
-      customSalesmen:typeof customSalesmen!=='undefined'?(cloneSafe(customSalesmen)||[]):[],
+      stores:typeof storeDatabase!=='undefined'?(clone(storeDatabase)||[]):[],
+      territories:typeof territories!=='undefined'?(clone(territories)||{}):{},
+      customSalesmen:typeof customSalesmen!=='undefined'?(clone(customSalesmen)||[]):[],
       disabledTerritories:(()=>{try{return JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){return []}})(),
       appName:localStorage.getItem('shadab_app_name_v1')||'SHADAB PHARMACY',
       theme:localStorage.getItem('shadab_theme')||'',
       alertMessage:localStorage.getItem('shadab_alert_message_v1')||'',
-      // Shared PDFs are now stored in app_settings/sharedDocuments/{documentId}.
-      // Do NOT embed them in masterData; doing so can exceed Firestore's document limit.
       reason:'manual-sync',updatedAt:t
     };
     const schedules={
-      schedules:typeof adminSchedules!=='undefined'?(cloneSafe(adminSchedules)||{}):{},
-      routeTasks:typeof routeTasks!=='undefined'?(cloneSafe(routeTasks)||{}):{},
+      schedules:typeof adminSchedules!=='undefined'?(clone(adminSchedules)||{}):{},
+      routeTasks:typeof routeTasks!=='undefined'?(clone(routeTasks)||{}):{},
       reason:'manual-sync',updatedAt:t
     };
-    await write('app_settings/masterData',master);
-    await write('app_settings/adminSchedules',schedules);
+    try{await write('app_settings/masterData',master);await write('app_settings/adminSchedules',schedules);}
+    catch(e){throw new Error('Firebase Admin sync failed: '+errorText(e));}
     try{localStorage.setItem('shadab_last_manual_sync_v2',t)}catch(e){}
     window.__shadabLastFirebaseSync={at:t,ok:true,admin:true};
     return true;
   }
+
   async function finalSync(){
     if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
-    const s=readSession();
-    if(!s?.uid||!s?.idToken)throw new Error('Firebase session is not available on this GitHub app. Please sign in once on this app, then press Sync again.');
+    const s=session();
+    if(!s?.uid)throw new Error('Firebase session is not available. Please sign in on this GitHub app first.');
+    /* THIS WAS MISSING IN V26: always refresh/validate before PATCH. */
+    await freshToken();
     const isAdmin=String(s.email||'').toLowerCase()===ADMIN;
     return isAdmin?await syncAdmin():await syncSalesman(s.uid);
   }
+
   window.shadabSyncSalesmanNow=finalSync;
   window.sp35SyncNow=finalSync;
   window.sp35SyncNew=finalSync;
-  window.sp35V26Diagnostic=async()=>{try{const s=readSession();return {ok:!!s?.uid,origin:location.origin,email:s?.email||null,uid:s?.uid||null,online:navigator.onLine}}catch(e){return {ok:false,error:errText(e)}}};
-  /* END: V26 SYNC ENGINE */
+  window.sp35V28Diagnostic=async()=>{
+    try{
+      const s=session();
+      if(!s?.uid)return {ok:false,origin:location.origin,online:navigator.onLine,error:'No Firebase session'};
+      await freshToken();
+      return {ok:true,origin:location.origin,online:navigator.onLine,email:s.email,uid:s.uid};
+    }catch(e){return {ok:false,origin:location.origin,online:navigator.onLine,error:errorText(e),session:session()}}
+  };
+  /* END: V28 SYNC ROOT FIX */
 })();
 </script>
 </body>
