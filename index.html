@@ -437,6 +437,15 @@ body.dark .sp-route-lock .sp-terr-check-item.selected .sp-terr-check-name{
 @media(max-width:600px){#adminDashboardBox > .admin-hero{display:block!important}#adminDashboardBox > .admin-hero > .admin-hero-actions{position:absolute;right:14px;top:14px}#adminDashboardBox > .admin-hero > .sp-admin-direct-tools{grid-template-columns:1fr;margin-top:16px}}
 @media(max-width:900px){*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.app *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.08s!important}}
 </style>
+
+<style id="sp22-onsite-forensic-alignment">
+/* START: On-site Photo forensic alignment — actual DOM selectors */
+/* The actual top content is .camera-placeholder. Move the complete block together. */
+.camera .camera-placeholder { transform: translateY(-15px) !important; }
+/* Keep the bottom button row in place; move each icon and its label together by 3px. */
+.camera .camera-action i, .camera .camera-action span { transform: translateY(-3px) !important; }
+/* END: On-site Photo forensic alignment — actual DOM selectors */
+</style>
 </head>
 <body>
 <script id="shadab-global-jsonclone-fix">
@@ -1840,7 +1849,7 @@ body.dark .territory-multiselect,body.dark .admin-day-row,body.dark .admin-terri
 
 
 
-</body></html>`;
+</body>`;
   w.document.open();
   w.document.write(html);
   w.document.close();
@@ -2389,7 +2398,7 @@ body.dark .territory-multiselect,body.dark .admin-day-row,body.dark .admin-terri
 
 <!-- ===== END SHADAB PHARMACY: ADMIN 35-CONTROL LAUNCHER + WORKING CONTROLS ===== -->
 
-</body></html>`);w.document.close();w.onload=()=>setTimeout(()=>w.print(),250)}
+</body>`);w.document.close();w.onload=()=>setTimeout(()=>w.print(),250)}
 let activeTaskNameKind="planned";
 function getTaskNameData(kind){
  const stores=Array.isArray(currentTodayTasks().stores)?currentTodayTasks().stores:[];
@@ -2429,12 +2438,22 @@ function printTaskList(kind){const data=getTaskNameData(kind),rows=data.list;if(
 .field-hint{display:block;color:var(--muted);font-size:11px;margin-top:5px}
 .admin-week{display:grid;gap:8px;margin-top:14px}.admin-day-row{border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.78)}.admin-day-row.open .admin-day-content{display:block}.admin-day-content{display:none;padding:10px 12px 12px}.admin-saved-block{margin-top:18px}.admin-saved-block h4{margin:0 0 8px}.admin-day-toggle{width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;border:0;background:transparent;font-weight:800;cursor:pointer}.admin-day-toggle .day-meta{margin-left:auto;color:var(--muted);font-size:11px;font-weight:600}.admin-territory-list{display:flex;flex-wrap:wrap;gap:7px}.admin-territory-list label{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid rgba(0,0,0,.1);border-radius:11px;background:#fff;font-size:12px}.admin-territory-list input{accent-color:#0b63ce}
 body.dark .territory-multiselect,body.dark .admin-day-row,body.dark .admin-territory-list label{background:rgba(19,47,64,.72);color:#fff;border-color:rgba(255,255,255,.12)}
-</style></head><body><h1>SHADAB PHARMACY</h1><p>${esc(data.title)} — ${formatDate(todayISO())} • Total ${rows.length}</p><table><thead><tr><th>#</th><th>Medical Store</th><th>Area</th><th>Territory</th><th>Status</th></tr></thead><tbody>${tr}</tbody></table>
+</style>
+<style id="shadab-premium-sync-loader-v3">
+.sp35-sync-loader{display:inline-flex!important;align-items:center;justify-content:center;gap:3px;width:22px;height:18px;vertical-align:middle;margin-right:5px}
+.sp35-sync-loader i{display:block;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.35;animation:shadabSyncDot 1s ease-in-out infinite}
+.sp35-sync-loader i:nth-child(2){animation-delay:.16s}
+.sp35-sync-loader i:nth-child(3){animation-delay:.32s}
+@keyframes shadabSyncDot{0%,80%,100%{transform:translateY(0) scale(.75);opacity:.3}40%{transform:translateY(-4px) scale(1);opacity:1}}
+/* Never animate the arrow glyph itself. */
+.sp35-sync-spin{animation:none!important;transform:none!important}
+</style>
+</head><body><h1>SHADAB PHARMACY</h1><p>${esc(data.title)} — ${formatDate(todayISO())} • Total ${rows.length}</p><table><thead><tr><th>#</th><th>Medical Store</th><th>Area</th><th>Territory</th><th>Status</th></tr></thead><tbody>${tr}</tbody></table>
 
 
 <!-- ===== END SHADAB PHARMACY: ADMIN 35-CONTROL LAUNCHER + WORKING CONTROLS ===== -->
 
-</body></html>`);w.document.close();w.onload=()=>setTimeout(()=>w.print(),250)}
+</body>`);w.document.close();w.onload=()=>setTimeout(()=>w.print(),250)}
 function closeTaskNames(){document.getElementById("taskNamesModal").classList.remove("show")}
 /* ===== END: SHADAB ADMIN / FIXED WEEKLY SCHEDULE LOGIC ===== */
 
@@ -2728,8 +2747,7 @@ window.addEventListener("beforeunload",stopCamera);
   };
   window.sp35ManualSyncFinal=window.manualSync;
 })();
-</script></script>
-
+</script>
 
 <script id="shadab-section-modal-js">
 function closeSectionModal(){
@@ -2750,7 +2768,7 @@ window.addEventListener("keydown",e=>{if(e.key==="Escape")closeSectionModal();})
 </script>
 
 <!-- FIREBASE STATUS ONLY: appended without changing existing page markup -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <style>
 #offlineBar .offline-dot.firebase-checking{background:#ff9f0a!important;animation:shadabFirebaseBlink 1s infinite}
 #offlineBar .offline-dot.firebase-connected{background:#20c96b!important;animation:shadabFirebaseBlink 1.2s infinite}
@@ -2823,7 +2841,7 @@ window.addEventListener("keydown",e=>{if(e.key==="Escape")closeSectionModal();})
 #sp35AuthModal .modal-box{max-width:460px}.sp35-tabs{display:flex;gap:6px;margin-bottom:12px}.sp35-tabs button{flex:1}.sp35-user-badge{display:none;align-items:center;gap:7px;font-size:11px;color:#fff;margin-left:auto;margin-right:10px}.sp35-user-badge.show{display:flex}.sp35-user-badge b{font-size:12px}.sp35-login{color:#aeb8c5;font-size:11px;text-align:center;margin-top:3px}
 @media(max-width:800px){.sp35-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sp35-kpis{grid-template-columns:repeat(2,1fr)}.sp35-form{grid-template-columns:1fr}}
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <div class="modal" id="sp35AuthModal"><div class="modal-box"><div class="modal-head"><h3 id="sp35AuthTitle">Salesman Login</h3><button class="close" onclick="sp35CloseAuth()">×</button></div><div class="sp35-tabs"><button class="sp35-btn primary" id="sp35LoginTab" onclick="sp35ShowAuth('login')">Login</button><button class="sp35-btn" id="sp35RegisterTab" onclick="sp35ShowAuth('register')">Register</button></div><div id="sp35LoginForm"><div class="field"><label>Email</label><input id="sp35LoginEmail" type="email" autocomplete="username"></div><div class="field"><label>Password</label><input id="sp35LoginPassword" type="password" autocomplete="current-password"></div><label style="display:flex;align-items:center;gap:8px;margin:8px 0 12px;font-size:13px"><input id="sp35RememberMaster" type="checkbox" style="width:auto"> Remember this as Master Salesman on this device</label><div class="actions"><button class="btn primary" onclick="sp35Login()">🔐 Login</button><button class="btn secondary" onclick="sp35Forgot()">Forgot Password?</button></div><button class="sp35-btn" style="width:100%;margin-top:10px" onclick="sp35UseSavedMaster()">⚡ Use Saved Master Salesman</button></div><div id="sp35RegisterForm" style="display:none"><div class="sp35-form"><div><label>Salesman Name</label><select id="sp35RegName"><option value="">Select your salesman name</option></select></div><div><label>Mobile</label><input id="sp35RegMobile" inputmode="tel"></div><div class="full"><label>Email</label><input id="sp35RegEmail" type="email"></div><div class="full"><label>Create Password</label><input id="sp35RegPassword" type="password" minlength="6"></div></div><div class="actions"><button class="btn primary" onclick="sp35Register()">Create Salesman Account</button></div><small class="sp35-muted">Firebase Authentication stores the password securely; it is never written to Firestore.</small></div></div></div>
 <script id="shadab-shared-docs-runtime">
 (function(){
@@ -4175,19 +4193,40 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
 
   // Restore REST session when the downloaded file is reopened.
   loadSession();
-  if(session){
-    ensureToken().then(async()=>{
-      if(session.email===ADMIN_EMAIL){try{adminLoggedIn=false}catch(e){}try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}}
-      else{
-        let n=session.displayName||'';
-        try{const profile=await readDoc('salesmen/'+encodeURIComponent(session.uid));if(profile?.fullName)n=String(profile.fullName).trim();}catch(e){}
-        n=n||localStorage.getItem('shadab_current_salesman_v1')||'Salesman';
-        try{localStorage.setItem('shadab_current_salesman_v1',n)}catch(e){}
-        try{sp35UpdateHeaderLoginButton?.(n)}catch(e){}
+
+  // OFFLINE-FIRST BOOT: never block the local app on Firebase/network.
+  // Keep the saved session locally; refresh it only when internet is available.
+  async function resumeCloudAfterOnline(){
+    if(!navigator.onLine){setStatus('firebase-error','Offline — local data mode active');return;}
+    if(session){
+      try{
+        await ensureToken();
+        if(session.email===ADMIN_EMAIL){try{adminLoggedIn=false}catch(e){}try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}}
+        else{
+          let n=session.displayName||'';
+          try{const profile=await readDoc('salesmen/'+encodeURIComponent(session.uid));if(profile?.fullName)n=String(profile.fullName).trim();}catch(e){}
+          n=n||localStorage.getItem('shadab_current_salesman_v1')||'Salesman';
+          try{localStorage.setItem('shadab_current_salesman_v1',n)}catch(e){}
+          try{sp35UpdateHeaderLoginButton?.(n)}catch(e){}
+        }
+        startPolling();
+        setStatus('firebase-connected','Cloud sync connected • auto sync every 10 minutes');
+        // Upload anything saved locally while offline, using the existing sync engine.
+        setTimeout(()=>{try{window.sp35ManualSyncFinal?.()}catch(e){}},800);
+      }catch(e){
+        // Do NOT clear local session just because the network failed.
+        setStatus('firebase-error','Cloud sync unavailable • local data safe');
       }
-      startPolling();
-    }).catch(()=>{clearSession();setStatus('firebase-connected','Cloud ready • Sign in to sync')});
-  }else setStatus('firebase-connected','Cloud ready • Sign in to sync');
+    }else{
+      setStatus('firebase-connected','Cloud ready • Sign in to sync');
+    }
+  }
+
+  // First paint is always local. Network work happens only after the browser reports online.
+  if(navigator.onLine) setTimeout(resumeCloudAfterOnline,0);
+  else setStatus('firebase-error','Offline — local data mode active');
+  window.addEventListener('online',()=>setTimeout(resumeCloudAfterOnline,700));
+  window.addEventListener('offline',()=>{try{stopPolling()}catch(e){};setStatus('firebase-error','Offline — local data mode active')});
 
   // Expose a simple diagnostic helper for this file.
   window.shadabRestAuthStatus=()=>({signedIn:!!session,email:session?.email||null,uid:session?.uid||null,mode:'Firebase REST + Firestore REST',localFile:true,pollMs:POLL_MS});
@@ -6665,6 +6704,148 @@ try{const oldInstall=window.spLockedLicenseInstall; if(typeof oldInstall==='func
 @media(max-width:600px){#adminDashboardBox > .admin-hero > .sp-admin-direct-tools .shared-doc-icon{width:50px;height:50px;min-width:50px}}
 </style>
 
+
+
 </body>
 
+
+
+
+<script id="shadab-premium-sync-lock-runtime-v5">(function(){/* disabled */})();</script>
+
+
+<script id="shadab-sync-camera-final-v6-runtime"></script>
+
+
+
+
+
+
+
+
+
+<style id="shadab-final-camera-sync-clean-v14">
+/* ===== START: V14 CAMERA — compact, no page zoom, no oversized controls ===== */
+.camera{min-height:0!important;height:auto!important;aspect-ratio:4/3!important;max-height:260px!important;overflow:hidden!important;}
+.camera video,.camera canvas,.camera img{width:100%!important;height:100%!important;object-fit:contain!important;}
+.camera-tools{position:absolute!important;left:10px!important;right:10px!important;bottom:10px!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;padding:7px!important;margin:0!important;border-radius:16px!important;box-sizing:border-box!important;}
+.camera-action,.camera-tools label.camera-action{min-width:0!important;width:100%!important;height:52px!important;min-height:52px!important;padding:6px 3px!important;border-radius:12px!important;gap:2px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;overflow:hidden!important;line-height:1!important;}
+.camera-action i{width:22px!important;height:20px!important;font-size:14px!important;line-height:20px!important;display:grid!important;place-items:center!important;margin:0!important;}
+.camera-action span{font-size:9px!important;line-height:10px!important;height:10px!important;min-height:10px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;transform:none!important;}
+@media(max-width:520px){.camera{max-height:230px!important;aspect-ratio:4/3!important}.camera-tools{left:8px!important;right:8px!important;bottom:8px!important;gap:6px!important;padding:6px!important}.camera-action,.camera-tools label.camera-action{height:48px!important;min-height:48px!important;padding:5px 2px!important}.camera-action i{width:20px!important;height:18px!important;font-size:13px!important;line-height:18px!important}.camera-action span{font-size:8px!important;line-height:9px!important;height:9px!important;min-height:9px!important}}
+/* ===== END CAMERA ===== */
+/* ===== START: V14 MANUAL SYNC — one clean animation only ===== */
+.sp35-sync-spin{display:none!important;animation:none!important;transform:none!important}.sp35-premium-syncing::before,.sp35-premium-syncing::after{display:none!important;content:none!important;animation:none!important}
+.sp35-sync-ring{position:relative!important;display:inline-block!important;width:20px!important;height:20px!important;min-width:20px!important;flex:0 0 20px!important;border-radius:50%!important;border:3px solid #ff3b30!important;background:transparent!important;box-sizing:border-box!important;animation:none!important;transform:none!important;vertical-align:middle!important;}
+.sp35-sync-ring::before{content:""!important;position:absolute!important;inset:-3px!important;border-radius:50%!important;border:3px solid transparent!important;border-top-color:#39ff88!important;border-right-color:#bfffd6!important;box-sizing:border-box!important;animation:shadabV14Orbit .85s linear infinite!important;}
+.sp35-sync-ring::after{content:none!important;display:none!important;animation:none!important}
+@keyframes shadabV14Orbit{to{transform:rotate(360deg)}}
+.sp35-sync-ring.sp35-sync-success{border-color:#20d66b!important;background:#20d66b!important;box-shadow:0 0 9px rgba(32,214,107,.48)!important}.sp35-sync-ring.sp35-sync-success::before{animation:none!important;border-color:#20d66b!important}
+.sp35-sync-label{display:inline-block!important;line-height:1!important;vertical-align:middle!important}
+#sp35ManualSyncFinal.sp35-v14-syncing,#sp35SyncRefreshBtn.sp35-v14-syncing{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px!important}
+#sp35FirebaseResult.sp35-v14-visible{display:block!important;visibility:visible!important;opacity:1!important;min-height:34px!important}
+/* ===== END SYNC ===== */
+</style>
+<script id="shadab-v14-single-manual-sync-controller">
+(function(){
+'use strict';
+const IDS=['sp35ManualSyncFinal','sp35SyncRefreshBtn'];let running=false;
+function buttons(){return IDS.map(id=>document.getElementById(id)).filter(Boolean)}
+function showResult(html){const r=document.getElementById('sp35FirebaseResult');if(r){r.classList.add('sp35-v14-visible');r.innerHTML=html;}}
+function install(old){if(!old||old.dataset.v14SyncInstalled==='1')return old;const b=old.cloneNode(true);b.dataset.v14SyncInstalled='1';b.removeAttribute('onclick');old.replaceWith(b);b.addEventListener('click',async function(e){e.preventDefault();e.stopImmediatePropagation();if(running)return;running=true;const original=b.innerHTML;b.disabled=true;b.setAttribute('aria-busy','true');b.classList.add('sp35-v14-syncing');b.innerHTML='<span class="sp35-sync-ring" aria-hidden="true"></span><span class="sp35-sync-label">Syncing…</span>';showResult('🔄 <b>Syncing…</b> Uploading local data to Firebase…');try{if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');const fn=window.shadabSyncSalesmanNow;if(typeof fn!=='function')throw new Error('Firebase sync engine is not loaded.');const ok=await fn();if(ok===false)throw new Error('Firebase sync did not complete.');const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});const ring=b.querySelector('.sp35-sync-ring');if(ring)ring.classList.add('sp35-sync-success');showResult('🟢 <b>Sync Successful</b> — Firebase updated at '+t+'.<br><small>Your local data is now uploaded to the cloud.</small>');try{window.toast35?.('✓ Sync Successful — Firebase updated')}catch(_e){}await new Promise(r=>setTimeout(r,2200));}catch(err){showResult('🔴 <b>Sync Failed</b> — '+String(err?.message||err)+'<br><small>Local data remains safe on this device.</small>');try{window.toast35?.('✕ Firebase sync failed — local data is safe')}catch(_e){}await new Promise(r=>setTimeout(r,900));}finally{b.innerHTML=original;b.disabled=false;b.removeAttribute('aria-busy');b.classList.remove('sp35-v14-syncing');running=false;}},true);return b;}
+function hook(){buttons().forEach(install)}function init(){hook();setTimeout(hook,150);setTimeout(hook,600);setTimeout(hook,1200)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();new MutationObserver(hook).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+
+<style id="shadab-v16-final-camera-sync-lock">
+/* ===== START: V16 CAMERA — alignment only; V14 size/zoom stays LOCKED ===== */
+.camera-action i{transform:translateY(-7px)!important;}
+.camera-action span{transform:translateY(-7px)!important;}
+/* ===== END: CAMERA ===== */
+/* ===== START: V16 SYNC — keep V14 animation, fix success/time lifecycle ===== */
+#sp35FirebaseResult.sp35-v16-visible{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:20!important;min-height:34px!important;}
+/* ===== END: SYNC ===== */
+</style>
+<script id="shadab-v16-final-sync-controller">
+(function(){
+'use strict';
+const IDS=['sp35ManualSyncFinal','sp35SyncRefreshBtn'];
+let running=false;
+function getButtons(){return IDS.map(id=>document.getElementById(id)).filter(Boolean)}
+function result(html){const r=document.getElementById('sp35FirebaseResult');if(r){r.classList.add('sp35-v16-visible');r.style.setProperty('display','block','important');r.style.setProperty('visibility','visible','important');r.style.setProperty('opacity','1','important');r.innerHTML=html;}}
+function topStatus(text,cls){const r=document.getElementById('syncText');if(!r)return;r.textContent=text;r.classList.remove('firebase-connected','firebase-error','firebase-checking');if(cls)r.classList.add(cls)}
+function install(old){
+  if(!old || old.dataset.v16SyncInstalled==='1') return old;
+  const b=old.cloneNode(true);
+  b.dataset.v16SyncInstalled='1';
+  /* Tell the older V14 MutationObserver this clone is already handled. */
+  b.dataset.v14SyncInstalled='1';
+  b.removeAttribute('onclick');
+  old.replaceWith(b);
+  b.addEventListener('click',async function(e){
+    e.preventDefault();e.stopImmediatePropagation();
+    if(running)return;
+    running=true;
+    const original=b.innerHTML;
+    b.disabled=true;b.setAttribute('aria-busy','true');b.classList.add('sp35-v14-syncing');
+    /* EXACT V14 animation markup — do not change the animation. */
+    b.innerHTML='<span class="sp35-sync-ring" aria-hidden="true"></span><span class="sp35-sync-label">Syncing…</span>';
+    result('🔄 <b>Syncing…</b> Uploading local data to Firebase…');
+    topStatus('Syncing manually…','firebase-checking');
+    try{
+      if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
+      const fn=window.shadabSyncSalesmanNow;
+      if(typeof fn!=='function')throw new Error('Firebase sync engine is not loaded.');
+      const ok=await fn();
+      if(ok===false)throw new Error('Firebase sync did not complete.');
+      const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      const ring=b.querySelector('.sp35-sync-ring');
+      if(ring)ring.classList.add('sp35-sync-success');
+      const success='🟢 <b>Sync Successful</b> — Firebase updated at '+t+'.<br><small>Your local data is now uploaded to the cloud.</small>';
+      result(success);
+      topStatus('✓ Sync Successful • Firebase updated at '+t,'firebase-connected');
+      try{window.toast35?.('✓ Sync Successful — Firebase updated at '+t)}catch(_e){}
+      /* Keep the success state visible before returning to the normal 10-minute status. */
+      await new Promise(r=>setTimeout(r,3000));
+      topStatus('Cloud sync connected • auto sync every 10 minutes','firebase-connected');
+      result('<span style="opacity:.78">Cloud sync connected • auto sync every 10 minutes</span>');
+    }catch(err){
+      const msg=String(err?.message||err);
+      result('🔴 <b>Sync Failed</b> — '+msg+'<br><small>Local data remains safe on this device.</small>');
+      topStatus('✕ Sync Failed • local data is safe','firebase-error');
+      try{window.toast35?.('✕ Firebase sync failed — local data is safe')}catch(_e){}
+      await new Promise(r=>setTimeout(r,900));
+      topStatus('Cloud sync connected • auto sync every 10 minutes','firebase-connected');
+    }finally{
+      b.innerHTML=original;b.disabled=false;b.removeAttribute('aria-busy');b.classList.remove('sp35-v14-syncing');running=false;
+    }
+  },true);
+  return b;
+}
+function hook(){getButtons().forEach(install)}
+function init(){hook();setTimeout(hook,150);setTimeout(hook,500);setTimeout(hook,1200)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+new MutationObserver(hook).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+
+<style id="sp-onsite-final-v19">
+/* V19: On-site Photo vertical alignment only. Sync animation remains locked. */
+.camera-placeholder{transform:translateY(-10px)!important;}
+.camera-tools{bottom:4px!important;}
+@media(max-width:520px){.camera-tools{bottom:4px!important;}}
+</style>
+</body>
+<style id="sp-camera-onsite-final-lock">
+/* On-site Photo alignment only — sync UI untouched */
+.camera-action i{transform:translateY(-11px)!important;}
+.camera-action span{transform:translateY(-15px)!important;}
+</style>
+<style id="sp23-onsite-date-stamp-alignment">
+/* START: On-site Photo — date stamp only. Camera buttons/icons remain untouched. */
+.camera .camera-placeholder small{position:relative!important;top:-8px!important;transform:none!important;}
+/* END: On-site Photo — date stamp only. */
+</style>
 </html>
+
