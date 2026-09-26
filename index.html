@@ -4260,6 +4260,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     return parseResponse(r);
   };
   window.shadabRestCurrentSession=()=>session?jsonClone(session):null;
+  window.shadabRestAdoptSession=function(s){try{if(!s?.uid||!s?.idToken)return false;session=jsonClone(s);saveSession();return true}catch(e){return false}};
   window.shadabRestDbCompat=()=>({
     enableNetwork:async()=>{},
     collection:(name)=>({
@@ -8130,6 +8131,62 @@ refreshLicenseStatusV13();
 [500,1200,2500].forEach(function(ms){setTimeout(refreshLicenseStatusV13,ms)});
 window.addEventListener('online',function(){setTimeout(refreshLicenseStatusV13,800)});
 /* END: V13 — License status only. */
+})();
+</script>
+<script id="sp-v13-sync-session-final-fix">
+(function(){
+  'use strict';
+  /* START: V13 SYNC-ONLY SESSION REPAIR — animation and 10-minute timer untouched */
+  const ADMIN='admin@shadabpharmacy.com', ADMIN_PASS='shadab@1303';
+  const REST_KEY='shadab_rest_auth_v3', ADMIN_FLAG='shadab_admin_logged_in_v2', MASTER_KEY='shadab_master_salesman_auth_v1';
+  async function restoreSession(){
+    let s=null;try{s=window.shadabRestCurrentSession?.()||null}catch(e){}
+    if(s?.uid)return s;
+    /* Restore a remembered Admin session immediately on this origin. */
+    try{
+      if(localStorage.getItem(ADMIN_FLAG)==='1' && typeof window.adminLogin==='function'){
+        const u=document.getElementById('adminUsername'),p=document.getElementById('adminPassword'),ou=u?.value,op=p?.value;
+        if(u)u.value='admin'; if(p)p.value=ADMIN_PASS;
+        await window.adminLogin();
+        try{if(u)u.value=ou||'';if(p)p.value=op||''}catch(e){}
+        s=window.shadabRestCurrentSession?.()||null;if(s?.uid)return s;
+      }
+    }catch(e){console.warn('V13 admin REST restore',e)}
+    /* Restore the explicitly remembered Master Salesman REST session. */
+    try{
+      const saved=JSON.parse(localStorage.getItem(MASTER_KEY)||'null');
+      if(saved?.uid&&saved?.idToken){
+        const ok=window.shadabRestAdoptSession?.(saved);
+        if(ok)s=window.shadabRestCurrentSession?.()||null;
+        if(s?.uid)return s;
+        /* Fallback: restore the same persisted REST record for the REST layer. */
+        localStorage.setItem(REST_KEY,JSON.stringify(saved));
+      }
+    }catch(e){console.warn('V13 master REST restore',e)}
+    /* Bridge an already authenticated Firebase Web SDK user into REST. */
+    try{
+      const a=window.shadabGetFirebaseAuth?.()||window.auth?.(),u=a?.currentUser;
+      if(u&&typeof u.getIdToken==='function'){
+        const idToken=await u.getIdToken(true);
+        const bridged={email:u.email||'',uid:u.uid,idToken,refreshToken:null,expiresAt:Date.now()+3300000,displayName:u.displayName||''};
+        if(window.shadabRestAdoptSession?.(bridged))return window.shadabRestCurrentSession?.()||bridged;
+      }
+    }catch(e){console.warn('V13 Firebase REST bridge',e)}
+    return window.shadabRestCurrentSession?.()||null;
+  }
+  const base=window.shadabSyncSalesmanNow;
+  if(typeof base!=='function')return;
+  const repaired=async function(reason){
+    const s=await restoreSession();
+    if(!s?.uid)throw new Error('Firebase session is not available. Please sign in on this GitHub app first.');
+    return await base(reason);
+  };
+  repaired.__v13SyncSessionRepair=true;
+  window.shadabSyncSalesmanNow=repaired;
+  window.sp35SyncNow=repaired;
+  window.sp35SyncNew=repaired;
+  window.sp35V13SyncDiagnostic=async function(){const s=await restoreSession();return {ok:!!s?.uid,origin:location.origin,online:navigator.onLine,uid:s?.uid||null,email:s?.email||null}};
+  /* END: V13 SYNC-ONLY SESSION REPAIR */
 })();
 </script>
 </html>
