@@ -4198,6 +4198,19 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
   // Keep the saved session locally; refresh it only when internet is available.
   async function resumeCloudAfterOnline(){
     if(!navigator.onLine){setStatus('firebase-error','Offline — local data mode active');return;}
+    // GitHub Pages can preserve the visual Admin-login flag while the REST
+    // token was lost/cleared. Re-establish the same Firebase REST session
+    // before any sync is attempted.
+    if(!session){
+      try{
+        const adminFlag=localStorage.getItem('shadab_admin_logged_in_v2')==='1';
+        if(adminFlag){
+          const restored=await signInREST(ADMIN_EMAIL,ADMIN_PASS);
+          await loginSuccess(restored,true);
+          return;
+        }
+      }catch(e){console.warn('GitHub Admin REST session restore:',e)}
+    }
     if(session){
       try{
         await ensureToken();
@@ -6872,107 +6885,90 @@ new MutationObserver(hook).observe(document.documentElement,{childList:true,subt
 const DOC_BASE='app_settings/sharedDocuments';
 const DOC_PATH={orderForm:DOC_BASE+'/orderForm',supplySchedule:DOC_BASE+'/supplySchedule',license:DOC_BASE+'/license'};
 const ADMIN='admin@shadabpharmacy.com';
-const escV25=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const sessionV25=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-const toastV25=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
-const vaultReadV25=()=>{try{return JSON.parse(localStorage.getItem('shadab_locked_document_v1')||'{}')}catch(e){return {}}};
-const vaultWriteV25=v=>{try{localStorage.setItem('shadab_locked_document_v1',JSON.stringify(v))}catch(e){}};
-async function readCloud(path){const f=window.shadabRestReadDoc;if(typeof f!=='function')throw new Error('Firebase REST engine is not loaded.');return await f(path)}
-async function writeCloud(path,obj){const f=window.shadabRestWriteDoc;if(typeof f!=='function')throw new Error('Firebase REST engine is not loaded.');return await f(path,obj)}
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const toast=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
+const sess=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
+function exactError(e){
+  const a=e?.api?.error?.message||e?.message||String(e);
+  const code=e?.api?.error?.status||e?.code||'';
+  const http=e?.httpStatus?(' HTTP '+e.httpStatus):'';
+  return String(a)+(code&&String(code)!==String(a)?' ['+code+']':'')+http;
+}
 function currentPayload(){
- const clone=window.jsonClone||((x)=>JSON.parse(JSON.stringify(x)));
- const noPhoto=x=>{const y=clone(x)||{};if(y&&typeof y==='object'&&'photo'in y)y.photo='';return y};
  const all=typeof visits!=='undefined'?(clone(visits)||[]):[];
- let v=all, compacted=false;
- const make=(vv)=>({uid:sessionV25()?.uid,updatedAt:new Date().toISOString(),visits:vv,territories:typeof territories!=='undefined'?(clone(territories)||{}):{},routeTasks:typeof routeTasks!=='undefined'?(clone(routeTasks)||{}):{},expenses:typeof window.shadabExpenseDataForSync==='function'?window.shadabExpenseDataForSync():{},summaryDetail:typeof window.shadabSummaryDataForSync==='function'?window.shadabSummaryDataForSync():{},reason:'manual-sync'});
- let p=make(v),bytes=new Blob([JSON.stringify(p)]).size;
- if(bytes>700000){v=all.map(noPhoto);p=make(v);bytes=new Blob([JSON.stringify(p)]).size;compacted=true}
- if(bytes>950000)throw new Error('Firebase record is too large ('+Math.round(bytes/1024)+' KB). Photos were removed but the remaining data is still too large.');
+ const make=(vv)=>({uid:sess()?.uid||'',updatedAt:new Date().toISOString(),visits:vv,territories:typeof territories!=='undefined'?(clone(territories)||{}):{},routeTasks:typeof routeTasks!=='undefined'?(clone(routeTasks)||{}):{},expenses:typeof window.shadabExpenseDataForSync==='function'?window.shadabExpenseDataForSync():{},summaryDetail:typeof window.shadabSummaryDataForSync==='function'?window.shadabSummaryDataForSync():{},reason:'manual-sync'});
+ let p=make(all),bytes=new Blob([JSON.stringify(p)]).size,compacted=false;
+ if(bytes>700000){const stripped=all.map(x=>{const y=clone(x)||{};if(y&&typeof y==='object'&&'photo'in y)y.photo='';return y});p=make(stripped);bytes=new Blob([JSON.stringify(p)]).size;compacted=true}
+ if(bytes>950000)throw new Error('Firebase record is too large ('+Math.round(bytes/1024)+' KB) even after removing visit photos.');
  p._compacted=compacted;return p;
+}
+async function ensureGitHubSession(){
+ let s=sess();
+ if(s?.uid&&s?.idToken)return s;
+ // Give the REST layer one chance to restore its persisted token/session.
+ try{await window.shadabFirebaseRecheck?.()}catch(e){}
+ s=sess();
+ if(s?.uid&&s?.idToken)return s;
+ throw new Error('GitHub Firebase session is missing. Open the Salesman/Admin Login on this GitHub app and sign in once, then press Sync again.');
 }
 async function syncV25(){
  if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
- const s=sessionV25();
- if(!s?.uid)throw new Error('Firebase session is not available. Please sign in again on this GitHub app.');
- if(!s.idToken)throw new Error('Firebase authentication token is missing. Please sign in again.');
- // Force the existing REST layer to prove that the GitHub-hosted session can reach Firestore.
- try{await readCloud('salesmen/'+encodeURIComponent(s.uid))}catch(e){throw new Error('Firebase authentication/server access failed: '+(e?.message||e))}
- await writeCloud('user_data/'+encodeURIComponent(s.uid),currentPayload());
- try{window.__shadabLastFirebaseSync={at:new Date().toISOString(),ok:true}}catch(e){}
+ const s=await ensureGitHubSession();
+ const read=window.shadabRestReadDoc,write=window.shadabRestWriteDoc;
+ if(typeof read!=='function'||typeof write!=='function')throw new Error('Firebase REST engine is not loaded on this GitHub page.');
+ // First validate the actual authenticated Firestore request. This makes GitHub-origin
+ // failures visible instead of converting them into a generic Sync failed message.
+ try{await read('salesmen/'+encodeURIComponent(s.uid))}catch(e){throw new Error('GitHub → Firebase authentication/Firestore check failed: '+exactError(e))}
+ try{await write('user_data/'+encodeURIComponent(s.uid),currentPayload())}
+ catch(e){throw new Error('GitHub → Firebase write failed: '+exactError(e))}
+ window.__shadabLastFirebaseSync={at:new Date().toISOString(),ok:true,origin:location.origin||location.protocol};
  return true;
 }
+// IMPORTANT: only replace the cloud engine. The already-locked sync animation/controller
+// remains responsible for the button visuals.
 window.shadabSyncSalesmanNow=syncV25;
-window.sp35SyncNow=syncV25;window.sp35SyncNew=syncV25;
-// Keep the existing locked sync animation/controller; only replace its cloud engine.
-// If an older controller is still installed, this wrapper preserves its visual behavior.
-window.sp35ManualSyncFinal=async function(button){
- const b=button||document.getElementById('sp35ManualSyncFinal');
- const result=document.getElementById('sp35FirebaseResult');
- const old=b?.innerHTML;
- if(b){b.disabled=true;b.setAttribute('aria-busy','true');b.dataset.spV25Old=old||''}
- if(result)result.innerHTML='🔄 <b>Syncing…</b> Uploading local data to Firebase…';
- try{
-   await syncV25();
-   const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-   if(result)result.innerHTML='🟢 <b>Sync Successful</b> — Firebase updated at '+escV25(t);
-   toastV25('✓ Sync Successful — Firebase updated at '+t);
-   return true;
- }catch(e){
-   const msg=String(e?.message||e);
-   if(result)result.innerHTML='🔴 <b>Sync failed</b> — '+escV25(msg);
-   toastV25('✕ Firebase sync failed — '+msg);
-   console.error('Shadab Firebase V25 sync:',e);
-   return false;
- }finally{
-   if(b){b.disabled=false;b.removeAttribute('aria-busy');if(b.dataset.spV25Old)b.innerHTML=b.dataset.spV25Old}
- }
+window.sp35SyncNow=syncV25;
+window.sp35SyncNew=syncV25;
+window.sp35V25Diagnostic=async function(){
+ try{const s=await ensureGitHubSession();await window.shadabRestReadDoc('salesmen/'+encodeURIComponent(s.uid));return {ok:true,origin:location.origin,uid:s.uid,email:s.email}}
+ catch(e){return {ok:false,origin:location.origin,error:exactError(e),session:sess()}}
 };
+// Do NOT install another visual/manual-sync controller here. This was the source of
+// conflicting overrides in V25 and could replace the locked green-ring animation.
 
 async function fileDataV25(file){
  if(!file)throw new Error('Please select a file.');
  if(file.size>900000)throw new Error('File is too large. Please use a PDF/image under 900 KB.');
  return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({name:file.name,type:file.type,size:file.size,data:r.result,updatedAt:new Date().toISOString()});r.onerror=reject;r.readAsDataURL(file)})
 }
-function localAsset(t,a){const v=vaultReadV25();if(a)v[t]=a;else delete v[t];vaultWriteV25(v);try{window.shadabApplySharedAsset?.(t,a)}catch(e){}}
-function setUploadState(btn,state,text){if(!btn)return;btn.classList.remove('sp-v25-uploading','sp-v25-upload-success','sp-v25-upload-failed');if(state)btn.classList.add(state);btn.innerHTML=text;}
-async function publishDoc(type,input,btn){
- const s=sessionV25();
- if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');
- if(!navigator.onLine)throw new Error('Internet is required to publish this document.');
- const a=await fileDataV25(input?.files?.[0]);
- await writeCloud(DOC_PATH[type],a);
- localAsset(type,a);
- return a;
-}
-window.adminUploadSharedDocument=async function(type,input){
- const card=input?.closest?.('.shared-admin-card');const btn=card?.querySelector?.('.shared-admin-actions .primary');const old=btn?.innerHTML||'Upload / Replace';
- try{if(btn){btn.disabled=true;setUploadState(btn,'sp-v25-uploading','⏳ Uploading…')}await publishDoc(type,input,btn);if(btn){setUploadState(btn,'sp-v25-upload-success','✓ Upload Successful');setTimeout(()=>{btn.disabled=false;setUploadState(btn,null,old)},2200)}toastV25('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' uploaded and synced to all mobiles.')}catch(e){if(btn){setUploadState(btn,'sp-v25-upload-failed','✕ Upload Failed');setTimeout(()=>{btn.disabled=false;setUploadState(btn,null,old)},2200)}toastV25('Upload failed: '+(e?.message||e))}}
-window.adminDeleteSharedDocument=async function(type){
- const s=sessionV25();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)return toastV25('Admin login required');
- if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return;
- try{await writeCloud(DOC_PATH[type],{deleted:true,updatedAt:new Date().toISOString()});localAsset(type,null);toastV25('✓ Deleted and synced to all mobiles')}catch(e){toastV25('Delete failed: '+(e?.message||e))}
-};
-window.adminUploadLockedLicense=async function(input){
- const card=document.getElementById('spAdminLicenseCard'),btn=card?.querySelector?.('.sp-license-admin-actions .primary'),old=btn?.innerHTML||'Upload / Replace';
- try{const s=sessionV25();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');if(btn){btn.disabled=true;setUploadState(btn,'sp-v25-uploading','⏳ Uploading…')}const a=await fileDataV25(input?.files?.[0]);await writeCloud(DOC_PATH.license,a);localAsset('license',a);try{window.lockedStatus?.()}catch(e){}if(btn){setUploadState(btn,'sp-v25-upload-success','✓ Upload Successful');setTimeout(()=>{btn.disabled=false;setUploadState(btn,null,old)},2200)}toastV25('✓ SHADAB PHARMACY License uploaded and synced to all mobiles.')}catch(e){if(btn){setUploadState(btn,'sp-v25-upload-failed','✕ Upload Failed');setTimeout(()=>{btn.disabled=false;setUploadState(btn,null,old)},2200)}toastV25('License upload failed: '+(e?.message||e))}}
-window.adminDeleteLockedLicense=async function(){
- const s=sessionV25();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)return toastV25('Admin login required');if(!confirm('Delete SHADAB PHARMACY License for all mobiles?'))return;
- try{await writeCloud(DOC_PATH.license,{deleted:true,updatedAt:new Date().toISOString()});localAsset('license',null);toastV25('✓ SHADAB PHARMACY License deleted from all mobiles')}catch(e){toastV25('Delete failed: '+(e?.message||e))}
-};
-async function hydrateV25(){
+function vaultRead(){try{return JSON.parse(localStorage.getItem('shadab_locked_document_v1')||'{}')}catch(e){return {}}}
+function vaultWrite(v){try{localStorage.setItem('shadab_locked_document_v1',JSON.stringify(v))}catch(e){}}
+function localAsset(t,a){const v=vaultRead();if(a)v[t]=a;else delete v[t];vaultWrite(v);try{window.shadabApplySharedAsset?.(t,a)}catch(e){}}
+async function readCloud(path){if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestReadDoc(path)}
+async function writeCloud(path,obj){if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestWriteDoc(path,obj)}
+async function uploadDoc(type,input){
  try{
-  const v=vaultReadV25();
-  for(const t of ['orderForm','supplySchedule','license']){
-   try{const x=await readCloud(DOC_PATH[t]);if(x&&!x.deleted&&x.data){v[t]=x;try{window.shadabApplySharedAsset?.(t,x)}catch(e){}}}catch(e){console.warn('Shared document hydrate '+t,e)}
-  }
-  vaultWriteV25(v);
-  try{window.renderSharedDocuments?.()}catch(e){}
- }catch(e){console.warn('V25 document hydrate:',e)}
+  const s=sess();if(!s?.uid||String(s.email).toLowerCase()!==ADMIN)throw new Error('Admin login required.');
+  if(!navigator.onLine)throw new Error('Internet is required to publish this document.');
+  const a=await fileDataV25(input?.files?.[0]);
+  const path=DOC_PATH[type]; if(!path)throw new Error('Unknown document type.');
+  const b=input?.closest?.('.sp-doc-upload')||input?.parentElement; b?.classList.add('sp-v25-uploading');
+  await writeCloud(path,a);localAsset(type,a);
+  b?.classList.remove('sp-v25-uploading');b?.classList.add('sp-v25-upload-success');setTimeout(()=>b?.classList.remove('sp-v25-upload-success'),1800);
+  toast('✓ '+(type==='orderForm'?'Order Form':type==='supplySchedule'?'Supply Schedule':'License')+' uploaded successfully');
+  return true;
+ }catch(e){toast('✕ Upload failed — '+exactError(e));console.error('Shared document upload',e);return false}
 }
-window.spV25HydrateDocuments=hydrateV25;
-window.addEventListener('online',()=>setTimeout(hydrateV25,1200));
-setInterval(()=>{if(navigator.onLine&&sessionV25()?.uid)hydrateV25()},600000);
-setTimeout(()=>{if(navigator.onLine)hydrateV25()},1800);
+window.adminUploadSharedDocument=async function(type,input){return uploadDoc(type,input)};
+window.adminUploadLockedLicense=async function(input){return uploadDoc('license',input)};
+async function deleteDoc(type){
+ try{const s=sess();if(!s?.uid||String(s.email).toLowerCase()!==ADMIN)throw new Error('Admin login required.');await writeCloud(DOC_PATH[type],{deleted:true,updatedAt:new Date().toISOString(),name:'',type:'',size:0,data:''});localAsset(type,null);toast('✓ Document removed from Firebase');return true}catch(e){toast('✕ Delete failed — '+exactError(e));return false}}
+window.adminDeleteSharedDocument=deleteDoc;window.adminDeleteLockedLicense=async()=>deleteDoc('license');
+async function hydrate(){if(!navigator.onLine||!sess()?.uid)return;for(const t of ['orderForm','supplySchedule','license']){try{const a=await readCloud(DOC_PATH[t]);if(a?.deleted)localAsset(t,null);else if(a?.data)localAsset(t,a)}catch(e){console.warn('Shared document hydrate',t,e)}}}
+window.spV25HydrateSharedDocuments=hydrate;
+setTimeout(hydrate,1800);window.addEventListener('online',()=>setTimeout(hydrate,1200));
+setInterval(()=>{if(navigator.onLine&&sess()?.uid)hydrate()},600000);
 })();
 </script>
 </body>
