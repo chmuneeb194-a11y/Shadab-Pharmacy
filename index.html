@@ -3104,7 +3104,7 @@ window.sp35Point35=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');b.innerH
 const oldSave=window.sp35SaveAlert;window.sp35SaveAlert=async function(){if(oldSave)await oldSave.apply(this,arguments);const m=$('sp35AlertText')?.value?.trim();if(!m)return;const d=db();if(d){try{await d.collection('alert_history').add({message:m,at:new Date().toISOString(),by:'admin'})}catch(e){}}};
 // Open the launcher only after Admin Login; never show the full controls automatically.
 function syncLauncher(){const d=$('adminDashboardBox'),l=$('sp35Launcher');if(!d||!l)return;l.style.display=d.style.display==='none'?'none':'flex'}
-const observer=new MutationObserver(syncLauncher);window.addEventListener('load',()=>{setTimeout(()=>{ensure();syncLauncher()},250)});setInterval(()=>{ensure();syncLauncher()},700);observer.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['style','class']});
+const observer=new MutationObserver(syncLauncher);window.addEventListener('load',()=>{setTimeout(()=>{ensure();syncLauncher()},250)});setInterval(()=>{ensure();syncLauncher()},10000);observer.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['style','class']});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')sp35CloseAll()});
 })();
 </script>
@@ -3321,7 +3321,7 @@ const oldProfile=window.sp35Profile;
 function autoAssignment(){loadSignedInAssignment();}
 window.addEventListener('load',()=>setTimeout(loadSignedInAssignment,1200));
 function syncLauncher(){const d=$('adminDashboardBox'),l=$('sp35FinalLauncher');if(!d||!l)return;l.style.display=d.style.display==='none'?'none':'flex'}
-window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},300)});setInterval(()=>{launcher();syncLauncher()},700);
+window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},300)});setInterval(()=>{launcher();syncLauncher()},10000);
 })();
 </script>
 
@@ -4410,7 +4410,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
   setTimeout(repair,300);
   setTimeout(repair,1200);
   setTimeout(repair,3000);
-  setInterval(repair,5000);
+  setInterval(repair,30000);
 })();
 </script>
 <script id="FINAL-TODAY-TASK-DASHBOARD-RUNTIME">
@@ -7187,6 +7187,85 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
   window.addEventListener('online',reconnect);
   setTimeout(function(){if(navigator.onLine)flushAdmin()},900);
   /* END: POINT 2+3 */
+})();
+</script>
+<script id="shadab-alert-final-fix-v1">
+(function(){
+  'use strict';
+  const KEY='shadab_alert_message_v1';
+  const ID='shadabAlertText';
+  function clean(v){return String(v==null?'':v).trim()}
+  function put(v){
+    const m=clean(v); if(!m)return false;
+    try{localStorage.setItem(KEY,m)}catch(e){}
+    const el=document.getElementById(ID);
+    if(el){
+      el.textContent=m;
+      el.style.animation='none';
+      void el.offsetWidth;
+      el.style.animation='spAlertMove 20s linear infinite';
+    }
+    return true;
+  }
+  function local(){try{return clean(localStorage.getItem(KEY)||'')}catch(e){return ''}}
+  async function hydrate(){
+    const l=local(); if(l)put(l);
+    try{
+      if(typeof window.shadabRestReadDoc==='function'){
+        const x=await window.shadabRestReadDoc('app_settings/masterData');
+        const m=clean(x?.alertMessage);
+        if(m)put(m);
+      }
+    }catch(e){}
+  }
+  function hookSave(name){
+    const old=window[name]; if(typeof old!=='function'||old.__alertFinalWrapped)return;
+    const wrap=async function(){
+      const r=await old.apply(this,arguments);
+      const t=document.getElementById('sp35AlertText')||document.getElementById('sp35AlertNew');
+      const m=clean(t?.value); if(m)put(m);
+      return r;
+    };
+    wrap.__alertFinalWrapped=true; window[name]=wrap;
+  }
+  function init(){
+    hydrate();
+    hookSave('sp35SaveAlert'); hookSave('sp35SaveAlertNew');
+    setTimeout(hydrate,800); setTimeout(hydrate,2500);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
+
+<style id="sp-v13-alert-visible-performance">
+/* START: V13 Alert visibility + lightweight performance only */
+#shadabAlertText{padding-left:12px !important;animation:none !important;transform:none !important;white-space:nowrap !important;}
+/* END: V13 Alert visibility + lightweight performance only */
+</style>
+<script id="sp-v13-alert-visible-performance-js">
+(function(){
+  'use strict';
+  const KEY='shadab_current_salesman_v1';
+  function clean(v){return String(v==null?'':v).trim()}
+  function restoreHeader(){
+    try{
+      const b=document.getElementById('sp35LoginButton');
+      if(!b)return;
+      const u=(typeof auth==='function' ? auth()?.currentUser : null);
+      let name=clean(u?.displayName||'');
+      if(!name){const rs=window.shadabRestCurrentSession?.();name=clean(rs?.displayName||'')}
+      if(!name)name=clean(localStorage.getItem(KEY)||'');
+      if(name && name.toLowerCase()!=='admin'){
+        if(typeof window.sp35UpdateHeaderLoginButton==='function')window.sp35UpdateHeaderLoginButton(name);else b.textContent=name;
+      }
+      const vs=document.getElementById('visitedBy');
+      if(vs && name){try{window.ensureSalesmanOptions?.()}catch(e){};vs.value=name;vs.disabled=true}
+    }catch(e){}
+  }
+  function restoreAlert(){try{const el=document.getElementById('shadabAlertText');if(!el)return;const m=clean(localStorage.getItem('shadab_alert_message_v1')||'');if(m)el.textContent=m}catch(e){}}
+  function init(){restoreHeader();restoreAlert();setTimeout(restoreHeader,300);setTimeout(restoreAlert,500)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+  window.addEventListener('load',restoreHeader,{once:true});
 })();
 </script>
 </body>
