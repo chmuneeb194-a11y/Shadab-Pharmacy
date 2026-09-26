@@ -787,14 +787,8 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
  </div>
  <div class="modal-box modal-wide" id="adminDashboardBox" style="display:none">
   <div class="admin-hero">
-   <div><div class="admin-kicker">FIELD CONTROL CENTER</div><h3>Admin • Smart Route Planner</h3><p>Build a weekly route once. A salesman can have multiple cities, each with its own territories and days.</p></div>
+   <div><div class="admin-kicker">ADMIN ROUTE PLANNER</div><h3>Admin • Smart Route Planner</h3><p>Build a weekly route once. A salesman can have multiple cities, each with its own territories and days.</p></div>
    <div class="admin-hero-actions"><button class="admin-icon-btn" type="button" onclick="refreshAdminDashboard()" title="Refresh">↻</button><button class="admin-icon-btn danger" type="button" onclick="logoutAdmin()" title="Logout">↪</button></div>
-   <div class="sp-admin-direct-tools">
-    <button class="shared-doc-card sp-admin-tool-card" type="button" onclick="openTerritoryManager(document.getElementById('adminScheduleArea')?.value||'Sahiwal')"><span class="shared-doc-icon sp-admin-tool-icon">📍</span><span><b>Territory Master</b><small>City & territory management</small></span><i>›</i></button>
-    <button class="shared-doc-card sp-admin-tool-card" type="button" onclick="openUploadTerritoryModal()"><span class="shared-doc-icon sp-admin-tool-icon">📄</span><span><b>Territory PDF</b><small>Upload / manage territory PDF</small></span><i>›</i></button>
-    <button class="shared-doc-card sp-admin-tool-card" type="button" onclick="openStoreDatabase()"><span class="shared-doc-icon sp-admin-tool-icon">🏪</span><span><b>Store Database</b><small>Medical store master</small></span><i>›</i></button>
-    <button class="shared-doc-card sp-admin-tool-card" type="button" onclick="spLockedLicenseAdminOpen()"><span class="shared-doc-icon sp-admin-tool-icon">📜</span><span><b>SHADAB PHARMACY License</b><small>Upload / preview / delete</small></span><i>›</i></button>
-   </div>
   </div>
   <div class="admin-kpi-grid" id="adminKpiGrid"></div>
   <div class="admin-planner-grid">
@@ -837,7 +831,7 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
   <div id="spLicenseAdminMeta" class="sp-license-admin-meta">No license uploaded.</div>
   <div class="sp-license-admin-drop">
    <div class="shared-doc-icon sp-admin-tool-icon">📜</div><div><b>Upload License PDF / Image</b><small>Stored separately from the HTML file.</small></div>
-   <input id="spLicenseAdminFile" type="file" accept="application/pdf,image/*">
+   <input id="spLicenseAdminFile" type="file" accept="application/pdf,image/*" onchange="adminUploadLockedLicense(this)">
   </div>
   <div class="actions">
    <button class="btn primary" type="button" onclick="adminUploadLockedLicense(document.getElementById('spLicenseAdminFile'))">Upload / Replace</button>
@@ -2448,6 +2442,13 @@ body.dark .territory-multiselect,body.dark .admin-day-row,body.dark .admin-terri
 /* Never animate the arrow glyph itself. */
 .sp35-sync-spin{animation:none!important;transform:none!important}
 </style>
+<style id="sp-v6-admin-error-foreground">
+/* START: Admin error foreground only — no UI redesign */
+.toast, #toast, .toast.show { z-index: 1000000 !important; }
+#sp35FirebaseResult, .sp35-notice-final, .sp35-sync-failed, .sp35-sync-success { position:relative; z-index:1000001 !important; }
+#sp35ControlModal, #sp35FinalModal, #spLicenseAdminModal, #storeDatabaseModal, #territoryPdfModal, .modal.show { z-index:999999 !important; }
+/* END: Admin error foreground only */
+</style>
 </head><body><h1>SHADAB PHARMACY</h1><p>${esc(data.title)} — ${formatDate(todayISO())} • Total ${rows.length}</p><table><thead><tr><th>#</th><th>Medical Store</th><th>Area</th><th>Territory</th><th>Status</th></tr></thead><tbody>${tr}</tbody></table>
 
 
@@ -3051,9 +3052,9 @@ const N=[
 ['🔔','Main Screen Alert','Edit and save the front-page alert'],['👤','Salesman Registration','Create salesman accounts'],['🔐','Salesman Login','Sign in with Firebase Authentication'],['🔑','Forgot Password','Send password reset'],['🏠','Login Header','Review current login state'],['☰','Hamburger Menu','Account and app navigation'],['👨‍💼','Salesman Management','View salesman profiles and status'],['🟢','Active / Disable','Enable or disable a salesman'],['🕐','Last Seen','Server activity and last seen'],['🏙️','Assignment Structure','Salesman, city, territory and day'],['📍','Auto Assignment','Load today route automatically'],['🏪','Territory Store Filter','Show only assigned territory stores'],['☑️','Store Assignment','Assign and edit store checklist'],['📊','Today Task Cards','Planned, visited, orders, remaining'],['👆','Clickable Task Cards','Open matching store data'],['📄','PDF + WhatsApp','Download and share task lists'],['💾','Offline Mode','Continue field work without internet'],['📱','New Phone / Reinstall','Restore account data after sign-in'],['🔥','Firebase Architecture','Authentication and Firestore'],['🛑','Preserve Existing App','Keep the existing workflow intact'],['📊','Admin Dashboard','Salesmen, stores, visits and orders'],['🗓️','Assignment Calendar','View routes by date/day'],['🏙️','City & Territory Master','Add, edit and disable territories'],['🏪','Medical Store Master','Add, edit and disable stores'],['📍','Salesman Activity','Status, route and activity'],['📈','Salesman Performance','Assigned, visited, orders and remaining'],['📑','Reports Center','Daily, weekly, monthly reports'],['🔎','Global Search','Search salesman, store and route data'],['📥','Export Data','CSV, JSON backup and PDF'],['🔔','Alert History','Previous saved alerts'],['🔐','Admin Security','Current admin session protection'],['📝','Activity Log','Timestamped admin actions'],['☁️','Firebase Sync Status','Connection and sync tools'],['⚙️','App Settings','App defaults and alert settings'],['🗄️','Backup / Data Safety','Backup and restore data'],['📋','Order Form','Upload / replace the shared Order Form PDF for all salesmen'],['🚚','Supply Schedule','Upload / replace the shared Supply Schedule PDF for all salesmen']
 ];
 const $=id=>document.getElementById(id); const escx=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function modal(){let m=$('sp35ControlModal');if(m)return m;m=document.createElement('div');m.id='sp35ControlModal';m.innerHTML=`<div class="sp35-modal-box" role="dialog" aria-modal="true"><div class="sp35-modal-head"><div><h3>Admin Control Center</h3><small><span class="sp35-live-dot"></span>All controls are inside the existing Admin Login</small></div><button class="sp35-modal-close" onclick="sp35CloseAll()">×</button></div><div class="sp35-control-grid" id="sp35ControlGrid"></div><div class="sp35-work-modal" id="sp35WorkModal"><div class="sp35-work-head"><div><h4 id="sp35WorkTitleNew"></h4><small id="sp35WorkSubNew"></small></div><button class="sp35-work-back" onclick="sp35BackToControls()">Back</button></div><div class="sp35-work-body" id="sp35WorkBodyNew"></div></div></div>`;document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)sp35CloseAll()});return m}
+function modal(){let m=$('sp35ControlModal');if(m)return m;m=document.createElement('div');m.id='sp35ControlModal';m.innerHTML=`<div class="sp35-modal-box" role="dialog" aria-modal="true"><div class="sp35-modal-head"><div><h3>Admin Control Center</h3><small><span class="sp35-live-dot"></span>All controls are inside the existing Admin Login</small></div><button class="sp35-modal-close" onclick="sp35CloseAll()">×</button></div><div class="sp35-master-tools" id="sp35MasterTools"><button class="sp35-final-card sp35-master-tool" type="button" onclick="openTerritoryManager(document.getElementById('adminScheduleArea')?.value||'Sahiwal')"><i>📍</i><b>Territory Master</b><small>City & territory management</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openUploadTerritoryModal()"><i>📄</i><b>Territory PDF</b><small>Upload / manage territory PDF</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openStoreDatabase()"><i>🏪</i><b>Store Database</b><small>Medical store master</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="spLockedLicenseAdminOpen()"><i>📜</i><b>SHADAB PHARMACY License</b><small>Upload / preview / delete</small></button></div><div class="sp35-control-grid" id="sp35ControlGrid"></div><div class="sp35-work-modal" id="sp35WorkModal"><div class="sp35-work-head"><div><h4 id="sp35WorkTitleNew"></h4><small id="sp35WorkSubNew"></small></div><button class="sp35-work-back" onclick="sp35BackToControls()">Back</button></div><div class="sp35-work-body" id="sp35WorkBodyNew"></div></div></div>`;document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)sp35CloseAll()});return m}
 function render(){const g=$('sp35ControlGrid');if(!g)return;g.innerHTML=N.map((x,i)=>`<button class="sp35-control-card" type="button" onclick="sp35OpenControl(${i+1})"><span class="icon">${x[0]}</span><b>${x[1]}</b><small>${x[2]}</small></button>`).join('')}
-function ensure(){const d=$('adminDashboardBox');if(!d)return;let launch=$('sp35Launcher');if(!launch){launch=document.createElement('button');launch.id='sp35Launcher';launch.className='sp35-launcher';launch.type='button';launch.innerHTML=`<span class="sp35-launcher-icon">📊</span><span class="sp35-launcher-copy"><b>Admin Control Center</b><small>Salesmen • assignments • stores • reports • activity • settings</small></span><span class="sp35-launcher-arrow">›</span>`;launch.onclick=()=>{modal();render();$('sp35ControlModal').classList.add('show')};const hero=d.querySelector('.admin-hero');if(hero)hero.insertAdjacentElement('afterend',launch);else d.insertBefore(launch,d.firstChild)}
+function ensure(){const d=$('adminDashboardBox');if(!d)return;let launch=$('sp35Launcher');if(!launch){launch=document.createElement('button');launch.id='sp35Launcher';launch.className='sp35-launcher';launch.type='button';launch.innerHTML=`<span class="sp35-launcher-icon">📊</span><span class="sp35-launcher-copy"><b>Admin Control Center</b><small>Salesmen • assignments • stores • reports • activity • settings</small></span><span class="sp35-launcher-arrow">›</span>`;launch.onclick=()=>{modal();render();$('sp35ControlModal').classList.add('show')};const hero=d.querySelector('.admin-hero');if(hero)hero.insertAdjacentElement('beforebegin',launch);else d.insertBefore(launch,d.firstChild)}
 }
 window.sp35RestoreWorkTarget=()=>{const b=$('sp35WorkBody');if(b&&b.id==='sp35WorkBody')b.id='sp35WorkBodyNew';const legacy=$('sp35LegacyWorkBody');if(legacy)legacy.id='sp35WorkBody'};
 window.sp35CloseAll=()=>{sp35RestoreWorkTarget();const m=$('sp35ControlModal');if(m)m.classList.remove('show');const w=$('sp35WorkModal');if(w)w.classList.remove('show');const g=$('sp35ControlGrid');if(g)g.style.display='grid'};
@@ -4487,7 +4488,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
 .sex-modal-box{width:min(980px,96vw)!important;max-height:92vh;overflow:auto}.sex-hero{padding:14px 16px;border:1px solid rgba(0,122,255,.16);border-radius:20px;background:linear-gradient(145deg,rgba(0,122,255,.10),rgba(90,70,255,.06));margin-bottom:12px}.sex-hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.sex-hero h3{margin:0;font-size:21px}.sex-muted{color:var(--muted);font-size:11px}.sex-date{display:flex;align-items:center;gap:8px}.sex-date input{min-width:145px}.sex-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.sex-card{border:1px solid var(--line);border-radius:20px;padding:14px;background:var(--card);box-shadow:0 9px 25px rgba(0,0,0,.06)}.sex-card.full{grid-column:1/-1}.sex-card h4{margin:0 0 10px;font-size:15px}.sex-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.sex-field label{display:block;font-size:10px;font-weight:800;color:var(--muted);margin:0 0 5px}.sex-field input,.sex-field select,.sex-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px 11px;background:var(--soft);color:inherit;font:inherit}.sex-field textarea{min-height:68px;resize:vertical}.sex-calc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.sex-stat{padding:10px;border-radius:14px;background:var(--soft);border:1px solid var(--line)}.sex-stat span{display:block;color:var(--muted);font-size:9px}.sex-stat b{display:block;font-size:17px;margin-top:3px}.sex-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.sex-btn{border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:var(--soft);color:inherit;font-weight:850;cursor:pointer}.sex-btn.primary{background:linear-gradient(135deg,#0a8ff0,#376cf6);color:#fff;border-color:transparent}.sex-btn.success{background:rgba(24,190,105,.12);color:#07904b;border-color:rgba(24,190,105,.22)}.sex-btn.danger{background:rgba(220,60,60,.08);color:#c43b3b}.sex-total{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(0,122,255,.12),rgba(85,80,255,.10));border:1px solid rgba(0,122,255,.16);margin-top:10px}.sex-total b{font-size:23px}.sex-out-row{display:grid;grid-template-columns:1.2fr repeat(5,1fr);gap:7px;align-items:end;padding:9px;border:1px solid var(--line);border-radius:15px;background:var(--soft);margin-top:8px}.sex-out-row input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card);color:inherit}.sex-out-row label{display:block;font-size:8px;color:var(--muted);font-weight:800;margin-bottom:3px}.sex-out-list{max-height:230px;overflow:auto}.sex-table-wrap{overflow:auto;margin-top:8px}.sex-table{width:100%;border-collapse:collapse;font-size:10px}.sex-table th,.sex-table td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.sex-table th{color:var(--muted);font-size:9px}.sex-empty{padding:18px;text-align:center;color:var(--muted);font-size:11px}.sex-lock-note{font-size:10px;color:var(--muted);margin-top:6px}body.dark .sex-hero{background:linear-gradient(145deg,rgba(0,122,255,.15),rgba(90,70,255,.10))}@media(max-width:720px){.sex-grid{grid-template-columns:1fr}.sex-card.full{grid-column:auto}.sex-fields{grid-template-columns:1fr 1fr}.sex-calc{grid-template-columns:repeat(2,1fr)}.sex-out-row{grid-template-columns:1fr 1fr}.sex-out-row .sex-out-city{grid-column:1/-1}}
 .sex-bottom-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:14px 16px;border-radius:18px;background:linear-gradient(135deg,rgba(0,122,255,.14),rgba(36,211,122,.10));border:1px solid rgba(0,145,255,.24);box-shadow:0 10px 28px rgba(0,0,0,.08)}.sex-bottom-total span{display:block;font-size:12px;font-weight:900;letter-spacing:.3px}.sex-bottom-total small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.sex-bottom-total strong{font-size:24px;line-height:1}.sex-actions .sex-btn{min-height:42px}.sex-actions .sex-btn.primary{box-shadow:0 8px 20px rgba(10,143,240,.18)}.sex-actions .sex-btn.success{box-shadow:0 8px 20px rgba(24,190,105,.10)}
 </style>
-<div class="modal" id="salesmanExpensesModal"><div class="modal-box sex-modal-box"><div class="modal-head"><h3>💳 Salesman Expenses</h3><button class="close" type="button" onclick="closeSalesmanExpenses()">×</button></div><div class="sex-hero"><div class="sex-hero-top"><div><h3>Daily Mileage & Expenses</h3><div class="sex-muted">Offline-first • auto syncs every 10 minutes when internet is available</div></div><div class="sex-date"><label class="sex-muted">Date</label><input id="sexDate" type="date" onchange="renderSalesmanExpenses()"><div class="fin-history-actions"><button type="button" class="sex-btn" onclick="clearSalesmanExpenseView()">🧹 Clear View</button><span class="sex-muted">Record stays saved • choose any date to view history</span></div></div></div><div class="sex-total"><div><span class="sex-muted">Today's total expense</span><div class="sex-muted" id="sexTotalBreakdown">Petrol + local + outstation</div></div><b id="sexTotalAmount">Rs 0</b></div></div><div class="sex-grid"><section class="sex-card full sex-exp-salesman-card"><h4>👤 Salesman & City</h4><div class="sex-salesman-line"><div class="sex-salesman-city"><label>City / Area</label><select id="sexCity"><option value="">Select city…</option><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select></div><select id="sexSalesmanPicker"></select><button class="sex-btn" type="button" onclick="addExpenseSelectedSalesman()">＋ Add</button><input id="sexSalesmanNew" placeholder="Type another salesman name"><button class="sex-btn primary" type="button" onclick="addExpenseTypedSalesman()">Add Name</button></div><div id="sexSalesmanChips" class="sex-salesman-chips"></div><div class="sex-muted">Multiple salesmen can share one town/day. This record will be tagged to all selected names.</div></section><section class="sex-card"><h4>🏍️ Mileage & Petrol</h4><div class="sex-fields"><div class="sex-field"><label>Start meter reading</label><input id="sexStartMeter" type="number" inputmode="decimal" min="0" step="0.1" oninput="sexRecalc()"></div><div class="sex-field"><label>End meter reading</label><input id="sexEndMeter" type="number" inputmode="decimal" min="0" step="0.1" oninput="sexRecalc()"></div><div class="sex-field"><label>Petrol price / liter</label><input id="sexPetrolPrice" type="number" inputmode="decimal" min="0" step="0.01" oninput="sexRecalc();sexSaveSettings()"></div><div class="sex-field"><label>Bike average (km / liter)</label><input id="sexAverage" type="number" inputmode="decimal" min="0.1" step="0.1" oninput="sexRecalc();sexSaveSettings()"></div></div><div class="sex-calc"><div class="sex-stat"><span>Total KM</span><b id="sexKm">0</b></div><div class="sex-stat"><span>Petrol liters</span><b id="sexLiters">0</b></div><div class="sex-stat"><span>Petrol amount</span><b id="sexPetrolAmount">Rs 0</b></div><div class="sex-stat"><span>Average</span><b id="sexAverageView">0 km/L</b></div></div><div class="sex-lock-note">Price and average stay saved for the next day. Change them anytime when petrol rate or bike average changes.</div></section><section class="sex-card"><h4>🧾 Daily Expenses</h4><div class="sex-fields"><div class="sex-field"><label>Lunch</label><input id="sexLunch" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Rickshaw / Transport</label><input id="sexRickshaw" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Tea</label><input id="sexTea" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Mobile Load</label><input id="sexMobile" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Other</label><input id="sexOther" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Other expense note</label><input id="sexOtherNote" placeholder="e.g. parking / toll"></div></div></section><section class="sex-card full"><h4>🚌 Outstation Expenses</h4><div class="sex-muted">If a salesman goes to another city, add that city's separate expense here.</div><div class="sex-out-row"><div class="sex-out-city"><label>City / Outstation</label><input id="sexOutCity" placeholder="e.g. Lahore"></div><div><label>Lunch</label><input id="sexOutLunch" type="number" min="0" step="1"></div><div><label>Rickshaw / Transport</label><input id="sexOutRickshaw" type="number" min="0" step="1"></div><div><label>Tea</label><input id="sexOutTea" type="number" min="0" step="1"></div><div><label>Mobile Load</label><input id="sexOutMobile" type="number" min="0" step="1"></div><div><label>Other</label><input id="sexOutOther" type="number" min="0" step="1"></div></div><div class="sex-actions"><button class="sex-btn primary" type="button" onclick="addOutstationExpense()">＋ Add Outstation Expense</button></div><div class="sex-out-list" id="sexOutList"></div></section><section class="sex-card full"><h4>📊 Today's Expense Summary</h4><div class="sex-table-wrap"><table class="sex-table"><thead><tr><th>Expense</th><th>Amount</th><th>Details</th></tr></thead><tbody id="sexSummaryRows"></tbody></table></div></section></div><div class="sex-bottom-total"><div><span>Final Daily Total</span><small id="sexBottomBreakdown">Petrol + daily + outstation</small></div><strong id="sexBottomTotalAmount">Rs 0</strong></div><div class="sex-actions"><button class="sex-btn primary" type="button" onclick="saveSalesmanExpenseDay()">💾 Save Day Expense</button><button class="sex-btn" type="button" onclick="downloadSalesmanExpensePDF()" title="Download PDF">⬇️ Download PDF</button><button class="sex-btn success" type="button" onclick="shareSalesmanExpensePDF()">📲 WhatsApp PDF</button><button class="sex-btn" type="button" onclick="downloadSalesmanExpenseMonthlyPDF()" title="Download monthly PDF">⬇️ Monthly PDF</button><button class="sex-btn success" type="button" onclick="shareSalesmanExpenseMonthlyPDF()">📲 Monthly WhatsApp</button><button class="sex-btn" type="button" onclick="clearSalesmanExpenseView()">🧹 Clear View</button><button class="sex-btn" type="button" onclick="closeSalesmanExpenses()">Close</button></div></div></div>
+<div class="modal" id="salesmanExpensesModal"><div class="modal-box sex-modal-box"><div class="modal-head"><h3>💳 Salesman Expenses</h3><button class="close" type="button" onclick="closeSalesmanExpenses()">×</button></div><div class="sex-hero"><div class="sex-hero-top"><div><h3>Daily Mileage & Expenses</h3><div class="sex-muted">Offline-first • auto syncs every 10 minutes when internet is available</div></div><div class="sex-date"><label class="sex-muted">Date</label><input id="sexDate" type="date" onchange="renderSalesmanExpenses()"><div class="fin-history-actions"><button type="button" class="sex-btn" onclick="clearSalesmanExpenseView()">🧹 Clear View</button><span class="sex-muted">Record stays saved • choose any date to view history</span></div></div></div><div class="sex-total"><div><span class="sex-muted">Today's total expense</span><div class="sex-muted" id="sexTotalBreakdown">Petrol + local + outstation</div></div><b id="sexTotalAmount">Rs 0</b></div></div><div class="sex-grid"><section class="sex-card full sex-exp-salesman-card"><h4>👤 Salesman & City</h4><div class="sex-salesman-line"><div class="sex-salesman-city"><label>City / Area</label><select id="sexCity"><option value="">Select city…</option><option>Sahiwal</option><option>Chichawatni</option><option>Pakpattan</option><option>Arifwala</option></select></div><select id="sexSalesmanPicker"></select><button class="sex-btn" type="button" onclick="addExpenseSelectedSalesman()">＋ Add</button><input id="sexSalesmanNew" placeholder="Type another salesman name"><button class="sex-btn primary" type="button" onclick="addExpenseTypedSalesman()">Add Name</button></div><div id="sexSalesmanChips" class="sex-salesman-chips"></div><div class="sex-muted">Multiple salesmen can share one town/day. This record will be tagged to all selected names.</div></section><section class="sex-card"><h4>🏍️ Mileage & Petrol</h4><div class="sex-fields"><div class="sex-field"><label>Start meter reading</label><input id="sexStartMeter" type="number" inputmode="decimal" min="0" step="0.1" oninput="sexRecalc()"></div><div class="sex-field"><label>End meter reading</label><input id="sexEndMeter" type="number" inputmode="decimal" min="0" step="0.1" oninput="sexRecalc()"></div><div class="sex-field"><label>Petrol price / liter</label><input id="sexPetrolPrice" type="number" inputmode="decimal" min="0" step="0.01" oninput="sexRecalc();sexSaveSettings()"></div><div class="sex-field"><label>Bike average (km / liter)</label><input id="sexAverage" type="number" inputmode="decimal" min="0.1" step="0.1" oninput="sexRecalc();sexSaveSettings()"></div></div><div class="sex-calc"><div class="sex-stat"><span>Total KM</span><b id="sexKm">0</b></div><div class="sex-stat"><span>Petrol liters</span><b id="sexLiters">0</b></div><div class="sex-stat"><span>Petrol amount</span><b id="sexPetrolAmount">Rs 0</b></div><div class="sex-stat"><span>Average</span><b id="sexAverageView">0 km/L</b></div></div><div class="sex-lock-note">Price and average stay saved for the next day. Change them anytime when petrol rate or bike average changes.</div></section><section class="sex-card"><h4>🧾 Daily Expenses</h4><div class="sex-fields"><div class="sex-field"><label>Lunch</label><input id="sexLunch" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Rickshaw / Transport</label><input id="sexRickshaw" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Tea</label><input id="sexTea" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Mobile Load</label><input id="sexMobile" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Other</label><input id="sexOther" type="number" min="0" step="1" inputmode="decimal"></div><div class="sex-field"><label>Other expense note</label><input id="sexOtherNote" placeholder="e.g. parking / toll"></div></div></section><section class="sex-card full"><h4>🚌 Outstation Expenses</h4><div class="sex-muted">If a salesman goes to another city, add that city's separate expense here.</div><div class="sex-out-row"><div class="sex-out-city"><label>City / Outstation</label><input id="sexOutCity" placeholder="e.g. Lahore"></div><div><label>Lunch</label><input id="sexOutLunch" type="number" min="0" step="1"></div><div><label>Rickshaw / Transport</label><input id="sexOutRickshaw" type="number" min="0" step="1"></div><div><label>Tea</label><input id="sexOutTea" type="number" min="0" step="1"></div><div><label>Mobile Load</label><input id="sexOutMobile" type="number" min="0" step="1"></div><div><label>Other</label><input id="sexOutOther" type="number" min="0" step="1"></div></div><div class="sex-actions"><button class="sex-btn primary" type="button" onclick="addOutstationExpense()">＋ Add Outstation Expense</button></div><div class="sex-out-list" id="sexOutList"></div></section><section class="sex-card full"><h4>📊 Today's Expense Summary</h4><div class="sex-table-wrap"><table class="sex-table"><thead><tr><th>Expense</th><th>Amount</th><th>Details</th></tr></thead><tbody id="sexSummaryRows"></tbody></table></div></section></div><div class="sex-bottom-total"><div><span>Final Daily Total</span><small id="sexBottomBreakdown">Petrol + daily + outstation</small></div><strong id="sexBottomTotalAmount">Rs 0</strong></div><div class="sex-actions sex-bottom-actions"><button id="sexSaveWhatsAppBtn" class="sex-btn success sex-merged-save-whatsapp" type="button" onclick="saveAndWhatsAppSalesmanExpense()">💾📲 Save • WhatsApp PDF</button><div id="sexExpenseEntryStatus" class="sex-entry-status"><span id="sexExpenseEntryCount" class="sex-entry-count">Saved • Local</span><span id="sexExpenseDownloadTime" class="sex-download-time"></span></div><button class="sex-btn" type="button" onclick="downloadSalesmanExpensePDF()" title="Download PDF">⬇️ Download PDF</button><button class="sex-btn" type="button" onclick="downloadSalesmanExpenseMonthlyPDF()" title="Download monthly PDF">⬇️ Monthly PDF</button><button class="sex-btn success" type="button" onclick="shareSalesmanExpenseMonthlyPDF()">📲 Monthly WhatsApp</button><button class="sex-btn clear-view-btn" type="button" onclick="clearSalesmanExpenseView()">🧹 Clear View</button><button class="sex-btn" type="button" onclick="closeSalesmanExpenses()">Close</button></div></div></div>
 <!-- ===== END: SALESMAN EXPENSES SYSTEM ===== -->
 
 <style id="shadab-admin-day-toggle-style">
@@ -4611,23 +4612,23 @@ function blankDay(){const st=settings();return {salesman:currentName(),city:'',d
 function getDay(date){const all=read();return all[date]||blankDay()}
 function calc(d){const start=Number(d.startMeter||0),end=Number(d.endMeter||0),km=Math.max(0,end-start),avg=Number(d.average||0),price=Number(d.petrolPrice||0),liters=avg>0?km/avg:0,petrol=liters*price,local=Number(d.lunch||0)+Number(d.rickshaw||0)+Number(d.tea||0)+Number(d.mobile||0)+Number(d.other||0),out=(d.outstation||[]).reduce((a,x)=>a+Number(x.total||0),0);return {km,avg,price,liters,petrol,local,out,total:petrol+local+out}}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function collect(){const date=document.getElementById('sexDate')?.value||today(),old=getDay(date),selected=Array.isArray(window.__sexSalesmenSelected)?window.__sexSalesmenSelected.slice():(Array.isArray(old.salesmen)?old.salesmen.slice():[]),primary=selected[0]||old.salesman||currentName();return {...old,salesman:primary,salesmen:selected,city:document.getElementById('sexCity')?.value||old.city||'',date,startMeter:document.getElementById('sexStartMeter')?.value||'',endMeter:document.getElementById('sexEndMeter')?.value||'',petrolPrice:num('sexPetrolPrice'),average:num('sexAverage'),lunch:num('sexLunch'),rickshaw:num('sexRickshaw'),tea:num('sexTea'),mobile:num('sexMobile'),other:num('sexOther'),otherNote:document.getElementById('sexOtherNote')?.value||'',updatedAt:new Date().toISOString()}}
-window.sexRecalc=function(){const d=collect(),c=calc(d),set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};const breakdown=`Petrol ${money(c.petrol)} • Daily ${money(c.local)} • Outstation ${money(c.out)}`;set('sexKm',c.km.toFixed(c.km%1?1:0));set('sexLiters',c.liters.toFixed(2));set('sexPetrolAmount',money(c.petrol));set('sexAverageView',(c.avg||0)+' km/L');set('sexTotalAmount',money(c.total));set('sexTotalBreakdown',breakdown);set('sexBottomTotalAmount',money(c.total));set('sexBottomBreakdown',breakdown)}
+function collectSalesmanExpense(){const date=document.getElementById('sexDate')?.value||today(),old=getDay(date),selected=Array.isArray(window.__sexSalesmenSelected)?window.__sexSalesmenSelected.slice():(Array.isArray(old.salesmen)?old.salesmen.slice():[]),primary=selected[0]||old.salesman||currentName();return {...old,salesman:primary,salesmen:selected,city:document.getElementById('sexCity')?.value||old.city||'',date,startMeter:document.getElementById('sexStartMeter')?.value||'',endMeter:document.getElementById('sexEndMeter')?.value||'',petrolPrice:num('sexPetrolPrice'),average:num('sexAverage'),lunch:num('sexLunch'),rickshaw:num('sexRickshaw'),tea:num('sexTea'),mobile:num('sexMobile'),other:num('sexOther'),otherNote:document.getElementById('sexOtherNote')?.value||'',updatedAt:new Date().toISOString()}}
+window.sexRecalc=function(){const d=collectSalesmanExpense(),c=calc(d),set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};const breakdown=`Petrol ${money(c.petrol)} • Daily ${money(c.local)} • Outstation ${money(c.out)}`;set('sexKm',c.km.toFixed(c.km%1?1:0));set('sexLiters',c.liters.toFixed(2));set('sexPetrolAmount',money(c.petrol));set('sexAverageView',(c.avg||0)+' km/L');set('sexTotalAmount',money(c.total));set('sexTotalBreakdown',breakdown);set('sexBottomTotalAmount',money(c.total));set('sexBottomBreakdown',breakdown)}
 function renderOutstation(d){const box=document.getElementById('sexOutList');if(!box)return;const arr=d.outstation||[];box.innerHTML=arr.length?arr.map((x)=>`<div class="sex-out-row"><div class="sex-out-city"><label>City</label><input value="${esc(x.city)}" readonly></div><div><label>Lunch</label><input value="${money(x.lunch)}" readonly></div><div><label>Transport</label><input value="${money(x.rickshaw)}" readonly></div><div><label>Tea</label><input value="${money(x.tea)}" readonly></div><div><label>Mobile</label><input value="${money(x.mobile)}" readonly></div><div><label>Other</label><input value="${money(x.other)}" readonly></div></div>`).join(''):'<div class="sex-empty">No outstation expenses added for this day.</div>'}
 function renderSummary(d){const body=document.getElementById('sexSummaryRows');if(!body)return;const c=calc(d),rows=[['Petrol',c.petrol,`${c.km.toFixed(1)} km • ${c.liters.toFixed(2)} L @ ${money(c.price)}/L`],['Lunch',d.lunch||0,'Daily'],['Rickshaw / Transport',d.rickshaw||0,'Daily'],['Tea',d.tea||0,'Daily'],['Mobile Load',d.mobile||0,'Daily'],['Other',d.other||0,d.otherNote||'Daily']];(d.outstation||[]).forEach(x=>rows.push([`Outstation — ${x.city}`,x.total||0,'Lunch / transport / tea / mobile / other']));body.innerHTML=rows.filter(r=>Number(r[1])>0).map(r=>`<tr><td><b>${esc(r[0])}</b></td><td>${money(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')||'<tr><td colspan="3" class="sex-empty">No expenses entered yet.</td></tr>'}
 window.renderSalesmanExpenses=function(){const date=document.getElementById('sexDate')?.value||today(),d=getDay(date),set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};set('sexCity',d.city||'');set('sexStartMeter',d.startMeter);set('sexEndMeter',d.endMeter);set('sexPetrolPrice',d.petrolPrice||settings().petrolPrice||0);set('sexAverage',d.average||settings().average||DEFAULT_AVG);set('sexLunch',d.lunch||0);set('sexRickshaw',d.rickshaw||0);set('sexTea',d.tea||0);set('sexMobile',d.mobile||0);set('sexOther',d.other||0);set('sexOtherNote',d.otherNote||'');const selected=Array.isArray(d.salesmen)&&d.salesmen.length?d.salesmen:(d.salesman?[d.salesman]:[]);renderExpenseSalesmen(selected);renderOutstation(d);sexRecalc();renderSummary(d)}
 window.openSalesmanExpenses=function(){const modal=document.getElementById('salesmanExpensesModal');if(!modal)return;const date=document.getElementById('sexDate');if(date)date.value=today();modal.classList.add('show');renderSalesmanExpenses()}
 window.closeSalesmanExpenses=function(){document.getElementById('salesmanExpensesModal')?.classList.remove('show')}
-window.saveSalesmanExpenseDay=function(){const d=collect();if(Number(d.endMeter||0)<Number(d.startMeter||0)){toast35?.('End meter cannot be less than start meter');return}const all=read();all[d.date]=d;write(all);sexSaveSettings();renderSalesmanExpenses();toast35?.('✓ Day expenses saved locally — auto sync will upload them')}
-window.addOutstationExpense=function(){const date=document.getElementById('sexDate')?.value||today(),d=collect(),city=String(document.getElementById('sexOutCity')?.value||'').trim();if(!city){toast35?.('Enter outstation city');return}const item={city,lunch:num('sexOutLunch'),rickshaw:num('sexOutRickshaw'),tea:num('sexOutTea'),mobile:num('sexOutMobile'),other:num('sexOutOther')};item.total=item.lunch+item.rickshaw+item.tea+item.mobile+item.other;d.outstation=Array.isArray(d.outstation)?d.outstation:[];d.outstation.push(item);const all=read();all[date]={...d,date};write(all);['sexOutCity','sexOutLunch','sexOutRickshaw','sexOutTea','sexOutMobile','sexOutOther'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});renderSalesmanExpenses();toast35?.('Outstation expense added')}
+window.saveSalesmanExpenseDay=function(){const d=collectSalesmanExpense();if(Number(d.endMeter||0)<Number(d.startMeter||0)){toast35?.('End meter cannot be less than start meter');return}const all=read();all[d.date]=d;write(all);sexSaveSettings();renderSalesmanExpenses();toast35?.('✓ Day expenses saved locally — auto sync will upload them')}
+window.addOutstationExpense=function(){const date=document.getElementById('sexDate')?.value||today(),d=collectSalesmanExpense(),city=String(document.getElementById('sexOutCity')?.value||'').trim();if(!city){toast35?.('Enter outstation city');return}const item={city,lunch:num('sexOutLunch'),rickshaw:num('sexOutRickshaw'),tea:num('sexOutTea'),mobile:num('sexOutMobile'),other:num('sexOutOther')};item.total=item.lunch+item.rickshaw+item.tea+item.mobile+item.other;d.outstation=Array.isArray(d.outstation)?d.outstation:[];d.outstation.push(item);const all=read();all[date]={...d,date};write(all);['sexOutCity','sexOutLunch','sexOutRickshaw','sexOutTea','sexOutMobile','sexOutOther'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});renderSalesmanExpenses();toast35?.('Outstation expense added')}
 window.removeOutstationExpense=function(){toast35?.('Daily financial records are permanent and cannot be deleted')}
 window.clearSalesmanExpenseDay=function(){toast35?.('Daily financial records are permanent and cannot be deleted')}
-async function buildPDF(){
+async function buildSalesmanExpensePDF(){
   if(typeof loadPDFLib==='function')await loadPDFLib();
   if(!window.jspdf)throw new Error('PDF engine is not available');
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-  const date=document.getElementById('sexDate')?.value||today(),d=collect(),c=calc(d);
+  const date=document.getElementById('sexDate')?.value||today(),d=collectSalesmanExpense(),c=calc(d);
   const W=210,L=14,R=196;
   const navy=[9,24,38],blue=[0,122,255],cyan=[15,172,232],muted=[92,105,120],line=[220,226,232],soft=[245,248,251],green=[18,170,96],orange=[241,157,20];
   const moneyPDF=v=>`Rs ${Number(v||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
@@ -4676,6 +4677,7 @@ async function buildPDF(){
   doc.setTextColor(...muted);doc.setFontSize(7);doc.text('SHADAB PHARMACY • Offline-first expense manager • Expense report',105,288,{align:'center'});
   return doc;
 }
+window.buildSalesmanExpensePDF=buildSalesmanExpensePDF;
 async function buildSalesmanExpenseMonthlyPDF(month){
   if(typeof loadPDFLib==='function')await loadPDFLib(); if(!window.jspdf)throw new Error('PDF engine is not available');
   const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
@@ -4692,9 +4694,9 @@ async function buildSalesmanExpenseMonthlyPDF(month){
 }
 window.downloadSalesmanExpenseMonthlyPDF=async function(){try{const month=(document.getElementById('sexDate')?.value||today()).slice(0,7),doc=await buildSalesmanExpenseMonthlyPDF(month);doc.save(`Shadab-Pharmacy-Expenses-${month}.pdf`);toast35?.('✓ Monthly expense PDF downloaded')}catch(e){toast35?.('Monthly PDF failed: '+(e?.message||e))}};
 window.shareSalesmanExpenseMonthlyPDF=async function(){try{const month=(document.getElementById('sexDate')?.value||today()).slice(0,7),doc=await buildSalesmanExpenseMonthlyPDF(month),name=`Shadab-Pharmacy-Expenses-${month}.pdf`,blob=doc.output('blob'),file=new File([blob],name,{type:'application/pdf'});if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:'SHADAB PHARMACY — Monthly Expenses',text:`${currentName()} • Monthly Expense Report • ${month}`,files:[file]});return}doc.save(name);window.open('https://wa.me/?text='+encodeURIComponent(`SHADAB PHARMACY — Monthly Expense Report — ${month}`),'_blank');toast35?.('Monthly PDF downloaded. WhatsApp opened — attach the PDF.')}catch(e){if(e?.name!=='AbortError')toast35?.('Monthly share failed: '+(e?.message||e))}};
-window.downloadSalesmanExpensePDF=async function(){try{const doc=await buildPDF(),date=document.getElementById('sexDate')?.value||today();doc.save(`Shadab-Pharmacy-Expenses-${date}.pdf`);toast35?.('✓ Expense PDF downloaded')}catch(e){toast35?.('PDF failed: '+(e?.message||e))}}
-window.shareSalesmanExpensePDF=async function(){try{const doc=await buildPDF(),date=document.getElementById('sexDate')?.value||today(),name=`Shadab-Pharmacy-Expenses-${date}.pdf`,blob=doc.output('blob'),file=new File([blob],name,{type:'application/pdf'});if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:'SHADAB PHARMACY — Expense Report',text:`${currentName()} • Expense Report • ${date}`,files:[file]});toast35?.('Share sheet opened — select WhatsApp');return}doc.save(name);window.open('https://wa.me/?text='+encodeURIComponent(`SHADAB PHARMACY — ${currentName()} Expense Report — ${date}`),'_blank');toast35?.('PDF downloaded. WhatsApp opened — attach the PDF.')}catch(e){if(e?.name==='AbortError')return;toast35?.('Share failed: '+(e?.message||e))}}
-function queueExpenseAutosave(){clearTimeout(window.__expenseAutosaveTimer);window.__expenseAutosaveTimer=setTimeout(()=>{try{if(document.getElementById('salesmanExpensesModal')?.classList.contains('show')){const d=collect();d.salesmen=window.__sexSalesmenSelected?.slice()||d.salesmen||[];if(Number(d.endMeter||0)>=Number(d.startMeter||0)){const all=read();all[d.date]=d;write(all);sexSaveSettings()}}}catch(e){}},700)}
+window.downloadSalesmanExpensePDF=async function(){try{const doc=await buildSalesmanExpensePDF(),date=document.getElementById('sexDate')?.value||today();doc.save(`Shadab-Pharmacy-Expenses-${date}.pdf`);toast35?.('✓ Expense PDF downloaded')}catch(e){toast35?.('PDF failed: '+(e?.message||e))}}
+window.shareSalesmanExpensePDF=async function(){try{const doc=await buildSalesmanExpensePDF(),date=document.getElementById('sexDate')?.value||today(),name=`Shadab-Pharmacy-Expenses-${date}.pdf`,blob=doc.output('blob'),file=new File([blob],name,{type:'application/pdf'});if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){await navigator.share({title:'SHADAB PHARMACY — Expense Report',text:`${currentName()} • Expense Report • ${date}`,files:[file]});toast35?.('Share sheet opened — select WhatsApp');return}doc.save(name);window.open('https://wa.me/?text='+encodeURIComponent(`SHADAB PHARMACY — ${currentName()} Expense Report — ${date}`),'_blank');toast35?.('PDF downloaded. WhatsApp opened — attach the PDF.')}catch(e){if(e?.name==='AbortError')return;toast35?.('Share failed: '+(e?.message||e))}}
+function queueExpenseAutosave(){clearTimeout(window.__expenseAutosaveTimer);window.__expenseAutosaveTimer=setTimeout(()=>{try{if(document.getElementById('salesmanExpensesModal')?.classList.contains('show')){const d=collectSalesmanExpense();d.salesmen=window.__sexSalesmenSelected?.slice()||d.salesmen||[];if(Number(d.endMeter||0)>=Number(d.startMeter||0)){const all=read();all[d.date]=d;write(all);sexSaveSettings()}}}catch(e){}},700)}
 window.shadabExpenseDataForSync=function(){return read()};window.shadabApplyExpenseData=function(x){if(!x||typeof x!=='object')return;try{localStorage.setItem(KEY,JSON.stringify(x));if(document.getElementById('salesmanExpensesModal')?.classList.contains('show'))renderSalesmanExpenses();if(document.getElementById('summaryDetailModal')?.classList.contains('show'))renderSummaryDetail()}catch(e){}};
 try{document.addEventListener('input',e=>{if(e.target?.closest?.('#salesmanExpensesModal'))queueExpenseAutosave();if(e.target?.closest?.('#summaryDetailModal'))window.shadabQueueSummaryAutosave?.()});document.addEventListener('change',e=>{if(e.target?.closest?.('#salesmanExpensesModal'))queueExpenseAutosave();if(e.target?.closest?.('#summaryDetailModal'))window.shadabQueueSummaryAutosave?.()})}catch(e){}
 })();
@@ -5759,7 +5761,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
   };
 
   /* Re-run layout ordering after dynamic Summary Detail renders. */
-  setInterval(placeClearMonthSecondLast,2000);
+  
 })();
 </script>
 
@@ -5802,7 +5804,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
     const p=document.getElementById('sdSalesmanPicker');
     if(p){p.innerHTML='<option value="">Select salesman…</option>'+ORIGINAL.map(n=>`<option value="${esc4(n)}">${esc4(n)}</option>`).join('')}
   }
-  document.addEventListener('DOMContentLoaded',lockSummarySalesmanUI);setTimeout(lockSummarySalesmanUI,300);setInterval(lockSummarySalesmanUI,2000);
+  document.addEventListener('DOMContentLoaded',lockSummarySalesmanUI,{once:true});setTimeout(lockSummarySalesmanUI,300);
 
   /* FIELD VISIT TERRITORY ENGINE: the old file references these functions but
      they are absent in the current build. Recreate the canonical Area -> Territory
@@ -6579,7 +6581,7 @@ function addAdminLicenseCard(){
  const grid=document.querySelector('#sp35Panel .shared-admin-grid');
  if(grid&&!document.getElementById('spAdminLicenseCard')){
   const card=document.createElement('div');card.id='spAdminLicenseCard';card.className='shared-admin-card sp-license-admin-card';
-  card.innerHTML='<b>📜 SHADAB PHARMACY License</b><small id="adminSharedLicenseMeta">No file uploaded</small><input id="adminLicenseFile" type="file" accept="application/pdf,image/*"><div class="sp-license-admin-actions"><button class="primary" type="button" onclick="adminUploadLockedLicense(document.getElementById(\'adminLicenseFile\'))">Upload / Replace</button><button type="button" onclick="spLockedLicensePreview()">Preview</button><button type="button" class="danger" onclick="adminDeleteLockedLicense()">Delete</button></div><small class="sp-locked-badge">🔒 Data stays saved when HTML is replaced/edited. Delete only from Admin.</small>';
+  card.innerHTML='<b>📜 SHADAB PHARMACY License</b><small id="adminSharedLicenseMeta">No file uploaded</small><input id="adminLicenseFile" type="file" accept="application/pdf,image/*" onchange="adminUploadLockedLicense(this)"><div class="sp-license-admin-actions"><button class="primary" type="button" onclick="adminUploadLockedLicense(document.getElementById(\'adminLicenseFile\'))">Upload / Replace</button><button type="button" onclick="spLockedLicensePreview()">Preview</button><button type="button" class="danger" onclick="adminDeleteLockedLicense()">Delete</button></div><small class="sp-locked-badge">🔒 Data stays saved when HTML is replaced/edited. Delete only from Admin.</small>';
   grid.appendChild(card);
  }
 }
@@ -6781,16 +6783,7 @@ try{const oldInstall=window.spLockedLicenseInstall; if(typeof oldInstall==='func
 #sp35FirebaseResult.sp35-v14-visible{display:block!important;visibility:visible!important;opacity:1!important;min-height:34px!important}
 /* ===== END SYNC ===== */
 </style>
-<script id="shadab-v14-single-manual-sync-controller">
-(function(){
-'use strict';
-const IDS=['sp35ManualSyncFinal','sp35SyncRefreshBtn'];let running=false;
-function buttons(){return IDS.map(id=>document.getElementById(id)).filter(Boolean)}
-function showResult(html){const r=document.getElementById('sp35FirebaseResult');if(r){r.classList.add('sp35-v14-visible');r.innerHTML=html;}}
-function install(old){if(!old||old.dataset.v14SyncInstalled==='1')return old;const b=old.cloneNode(true);b.dataset.v14SyncInstalled='1';b.removeAttribute('onclick');old.replaceWith(b);b.addEventListener('click',async function(e){e.preventDefault();e.stopImmediatePropagation();if(running)return;running=true;const original=b.innerHTML;b.disabled=true;b.setAttribute('aria-busy','true');b.classList.add('sp35-v14-syncing');b.innerHTML='<span class="sp35-sync-ring" aria-hidden="true"></span><span class="sp35-sync-label">Syncing…</span>';showResult('🔄 <b>Syncing…</b> Uploading local data to Firebase…');try{if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');const fn=window.shadabSyncSalesmanNow;if(typeof fn!=='function')throw new Error('Firebase sync engine is not loaded.');const ok=await fn();if(ok===false)throw new Error('Firebase sync did not complete.');const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});const ring=b.querySelector('.sp35-sync-ring');if(ring)ring.classList.add('sp35-sync-success');showResult('🟢 <b>Sync Successful</b> — Firebase updated at '+t+'.<br><small>Your local data is now uploaded to the cloud.</small>');try{window.toast35?.('✓ Sync Successful — Firebase updated')}catch(_e){}await new Promise(r=>setTimeout(r,2200));}catch(err){showResult('🔴 <b>Sync Failed</b> — '+String(err?.message||err)+'<br><small>Local data remains safe on this device.</small>');try{window.toast35?.('✕ Firebase sync failed — local data is safe')}catch(_e){}await new Promise(r=>setTimeout(r,900));}finally{b.innerHTML=original;b.disabled=false;b.removeAttribute('aria-busy');b.classList.remove('sp35-v14-syncing');running=false;}},true);return b;}
-function hook(){buttons().forEach(install)}function init(){hook();setTimeout(hook,150);setTimeout(hook,600);setTimeout(hook,1200)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();new MutationObserver(hook).observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
+<script id="shadab-v14-single-manual-sync-controller">(function(){/* disabled: single final controller below owns the locked sync animation */})();</script>
 
 
 <style id="shadab-v16-final-camera-sync-lock">
@@ -6802,68 +6795,7 @@ function hook(){buttons().forEach(install)}function init(){hook();setTimeout(hoo
 #sp35FirebaseResult.sp35-v16-visible{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:20!important;min-height:34px!important;}
 /* ===== END: SYNC ===== */
 </style>
-<script id="shadab-v16-final-sync-controller">
-(function(){
-'use strict';
-const IDS=['sp35ManualSyncFinal','sp35SyncRefreshBtn'];
-let running=false;
-function getButtons(){return IDS.map(id=>document.getElementById(id)).filter(Boolean)}
-function result(html){const r=document.getElementById('sp35FirebaseResult');if(r){r.classList.add('sp35-v16-visible');r.style.setProperty('display','block','important');r.style.setProperty('visibility','visible','important');r.style.setProperty('opacity','1','important');r.innerHTML=html;}}
-function topStatus(text,cls){const r=document.getElementById('syncText');if(!r)return;r.textContent=text;r.classList.remove('firebase-connected','firebase-error','firebase-checking');if(cls)r.classList.add(cls)}
-function install(old){
-  if(!old || old.dataset.v16SyncInstalled==='1') return old;
-  const b=old.cloneNode(true);
-  b.dataset.v16SyncInstalled='1';
-  /* Tell the older V14 MutationObserver this clone is already handled. */
-  b.dataset.v14SyncInstalled='1';
-  b.removeAttribute('onclick');
-  old.replaceWith(b);
-  b.addEventListener('click',async function(e){
-    e.preventDefault();e.stopImmediatePropagation();
-    if(running)return;
-    running=true;
-    const original=b.innerHTML;
-    b.disabled=true;b.setAttribute('aria-busy','true');b.classList.add('sp35-v14-syncing');
-    /* EXACT V14 animation markup — do not change the animation. */
-    b.innerHTML='<span class="sp35-sync-ring" aria-hidden="true"></span><span class="sp35-sync-label">Syncing…</span>';
-    result('🔄 <b>Syncing…</b> Uploading local data to Firebase…');
-    topStatus('Syncing manually…','firebase-checking');
-    try{
-      if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
-      const fn=window.shadabSyncSalesmanNow;
-      if(typeof fn!=='function')throw new Error('Firebase sync engine is not loaded.');
-      const ok=await fn();
-      if(ok===false)throw new Error('Firebase sync did not complete.');
-      const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      const ring=b.querySelector('.sp35-sync-ring');
-      if(ring)ring.classList.add('sp35-sync-success');
-      const success='🟢 <b>Sync Successful</b> — Firebase updated at '+t+'.<br><small>Your local data is now uploaded to the cloud.</small>';
-      result(success);
-      topStatus('✓ Sync Successful • Firebase updated at '+t,'firebase-connected');
-      try{window.toast35?.('✓ Sync Successful — Firebase updated at '+t)}catch(_e){}
-      /* Keep the success state visible before returning to the normal 10-minute status. */
-      await new Promise(r=>setTimeout(r,3000));
-      topStatus('Cloud sync connected • auto sync every 10 minutes','firebase-connected');
-      result('<span style="opacity:.78">Cloud sync connected • auto sync every 10 minutes</span>');
-    }catch(err){
-      const msg=String(err?.message||err);
-      result('🔴 <b>Sync Failed</b> — '+msg+'<br><small>Local data remains safe on this device.</small>');
-      topStatus('✕ Sync Failed • local data is safe','firebase-error');
-      try{window.toast35?.('✕ Firebase sync failed — local data is safe')}catch(_e){}
-      await new Promise(r=>setTimeout(r,900));
-      topStatus('Cloud sync connected • auto sync every 10 minutes','firebase-connected');
-    }finally{
-      b.innerHTML=original;b.disabled=false;b.removeAttribute('aria-busy');b.classList.remove('sp35-v14-syncing');running=false;
-    }
-  },true);
-  return b;
-}
-function hook(){getButtons().forEach(install)}
-function init(){hook();setTimeout(hook,150);setTimeout(hook,500);setTimeout(hook,1200)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-new MutationObserver(hook).observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
+<script id="shadab-v16-final-sync-controller">(function(){/* disabled: single final controller below owns the locked sync animation */})();</script>
 
 <style id="sp-onsite-final-v19">
 /* V19: On-site Photo vertical alignment only. Sync animation remains locked. */
@@ -7091,6 +7023,171 @@ setInterval(()=>{if(navigator.onLine&&sess()?.uid)hydrate()},600000);
   /* END: V28 SYNC ROOT FIX */
 })();
 </script>
+
+<style id="sp-v3-expense-summary-ui">
+/* START: Point 10 — Salesman Expenses bottom actions match Summary Detail */
+.sex-bottom-actions{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;margin-top:12px!important}
+.sex-bottom-actions>.sex-btn,.sex-bottom-actions>.sex-merged-save-whatsapp{width:100%!important;min-height:46px!important;display:flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important}
+.sex-merged-save-whatsapp{background:#00c86b!important;border-color:#00c86b!important;color:#fff!important;box-shadow:0 8px 20px rgba(0,200,107,.16)}
+.sex-entry-status{width:100%;min-height:40px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;box-sizing:border-box;padding:9px 12px;border:1px solid rgba(120,170,210,.18);border-radius:15px;background:rgba(255,255,255,.025);color:var(--muted);font-size:11px;font-weight:800}
+.sex-entry-count{color:var(--muted)}.sex-download-time{color:#7f93a5}
+/* END: Point 10 */
+</style>
+<style id="sp-final-points-1-11-ui">
+.admin-day-row{padding-right:0!important}.admin-day-power{right:14px!important;top:10px!important;min-width:52px!important;height:30px!important;padding:0 11px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;z-index:5!important;line-height:1!important;box-sizing:border-box!important}.admin-day-toggle{padding-right:82px!important}
+#salesmanExpensesLauncher.financial-tool-card,#summaryDetailLauncher.financial-tool-card,.financial-tool-card{min-height:76px;display:flex;align-items:center;gap:12px;box-sizing:border-box}.financial-tool-icon{width:46px;height:46px;min-width:46px;display:grid;place-items:center;border-radius:14px}
+.sp-alert{border-color:rgba(25,185,107,.38)!important;background:rgba(25,185,107,.08)!important}.sp-alert-label{background:#19b96b!important}.sp-alert-track{color:#159c59!important}body.dark .sp-alert{background:rgba(25,185,107,.07)!important;border-color:rgba(25,185,107,.34)!important}.sp-alert-window{min-width:0;overflow:hidden}
+.sp35-master-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 14px 4px}.sp35-master-tool{min-height:94px!important;display:grid!important;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left}.sp35-master-tool i{grid-row:1 / span 2;margin:0!important;font-size:28px!important;font-style:normal}.sp35-master-tool b{font-size:13px!important;display:block}.sp35-master-tool small{font-size:10px!important;line-height:1.3}@media(max-width:900px){.sp35-master-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.sp35-master-tools{grid-template-columns:1fr}}
+</style>
+<script id="sp-final-points-admin-repair">
+(function(){'use strict';
+function toastM(msg){try{window.toast35?.(msg);window.toast?.(msg)}catch(e){}}
+async function syncAdminChange(reason){try{if(!navigator.onLine)return false;const fn=window.shadabSyncSalesmanNow;if(typeof fn==='function'&&typeof window.shadabRestCurrentSession==='function'&&window.shadabRestCurrentSession()?.uid){await fn();return true}if(typeof window.saveMasterData==='function'){const r=await window.saveMasterData(reason||'admin-change');return !!(r?.ok!==false)}}catch(e){console.warn('Admin change sync:',e)}return false}
+function persistMasterLocal(){try{localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories||{}));localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase||[]))}catch(e){}}
+window.sp35RenderTerrNew=function(){
+ const b=document.getElementById('sp35TerrListNew');if(!b)return;let dis=[];try{dis=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}
+ const groups=Object.entries(territories||{}).map(function(entry){
+  const a=entry[0],ts=entry[1]||[];
+  const rows=ts.map(function(t){
+   const d=dis.includes(a+'|'+t),aa=JSON.stringify(a),tt=JSON.stringify(t);
+   return '<span class=\"pill sp35-territory-row\" style=\"display:inline-flex;gap:5px;margin:3px;align-items:center\">'+ex(t)+(d?' <small>(disabled)</small>':'')+'<button type=\"button\" class=\"sp35-btn-final\" onclick=\'sp35EditTerrNew('+aa+','+tt+')\'>Edit</button><button type=\"button\" class=\"sp35-btn-final '+(d?'primary':'danger')+'\" onclick=\'sp35ToggleTerrNew('+aa+','+tt+')\'>'+(d?'Enable':'Disable')+'</button></span>';
+  }).join('');
+  return '<div class=\"sp35-notice-final\"><b>'+ex(a)+'</b><br>'+rows+'</div>';
+ }).join('');
+ b.innerHTML=groups||'<div class=\"sp35-empty-final\">No territories configured.</div>';
+};
+window.sp35AddTerrNew=async function(){const a=document.getElementById('sp35CityNew')?.value||'',t=document.getElementById('sp35TerrNew')?.value.trim()||'';if(!a||!t)return toastM('City and territory are required');territories[a]=Array.isArray(territories[a])?territories[a]:[];if(territories[a].some(x=>String(x).trim().toLowerCase()===t.toLowerCase()))return toastM('Territory already exists');territories[a].push(t);persistMasterLocal();try{window.log35?.('Territory added',{area:a,territory:t})}catch(e){}const ok=await syncAdminChange('territory-added');window.sp35RenderTerrNew();if(document.getElementById('sp35TerrNew'))document.getElementById('sp35TerrNew').value='';toastM(ok?'✓ Territory added and synced':'✓ Territory added locally')};
+window.sp35EditTerrNew=async function(a,t){const n=prompt('New territory name',t);if(n===null)return;const name=n.trim();if(!name||name===t)return;if((territories[a]||[]).some(x=>String(x).toLowerCase()===name.toLowerCase()&&x!==t))return toastM('Territory already exists');territories[a]=(territories[a]||[]).map(x=>x===t?name:x);storeDatabase.forEach(s=>{if(s.area===a&&s.territory===t)s.territory=name});let dis=[];try{dis=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}const oldKey=a+'|'+t,newKey=a+'|'+name;dis=dis.map(x=>x===oldKey?newKey:x);localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify([...new Set(dis)]));persistMasterLocal();try{window.log35?.('Territory edited',{area:a,from:t,to:name})}catch(e){}const ok=await syncAdminChange('territory-edited');window.sp35RenderTerrNew();toastM(ok?'✓ Territory updated and synced':'✓ Territory updated locally')};
+window.sp35ToggleTerrNew=async function(a,t){let x=[];try{x=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}const k=a+'|'+t,disabled=x.includes(k);x=disabled?x.filter(v=>v!==k):x.concat(k);localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(x));try{window.log35?.('Territory status changed',{area:a,territory:t,disabled:!disabled})}catch(e){}const ok=await syncAdminChange('territory-status-change');window.sp35RenderTerrNew();toastM(ok?(disabled?'✓ Territory enabled and synced':'✓ Territory disabled and synced'):(disabled?'✓ Territory enabled locally':'✓ Territory disabled locally'))};
+window.sp35EditStoreNew=async function(code){const s=(storeDatabase||[]).find(x=>String(x.code)===String(code));if(!s)return;const n=prompt('Store name',s.name||'');if(n===null)return;const a=prompt('City / Area',s.area||'');if(a===null)return;const t=prompt('Territory',s.territory||'');if(t===null)return;const ad=prompt('Address',s.address||'');if(ad===null)return;Object.assign(s,{name:n.trim(),area:a.trim(),territory:t.trim(),address:ad.trim()});persistMasterLocal();try{window.log35?.('Store updated',{code})}catch(e){}const ok=await syncAdminChange('store-updated');window.sp35RenderStoreNew?.();toastM(ok?'✓ Store updated and synced':'✓ Store updated locally')};
+window.sp35DisableStoreNew=async function(code){const s=(storeDatabase||[]).find(x=>String(x.code)===String(code));if(!s)return;s.disabled=true;persistMasterLocal();try{window.log35?.('Store disabled',{code})}catch(e){}const ok=await syncAdminChange('store-disabled');window.sp35RenderStoreNew?.();toastM(ok?'✓ Store disabled and synced':'✓ Store disabled locally')};
+const oldSaveAlert=window.sp35SaveAlert;if(typeof oldSaveAlert==='function'&&!oldSaveAlert.__scrollRepair){const wrapped=async function(){const r=await oldSaveAlert.apply(this,arguments);try{document.documentElement.style.overflowY='auto';document.body.style.overflowY='auto'}catch(e){}return r};wrapped.__scrollRepair=true;window.sp35SaveAlert=wrapped}
+const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedLicense=async function(input){const btn=(input?.closest?.('.sp-license-admin-drop')?.parentElement?.querySelector?.('.actions .primary'))||document.querySelector('#spLicenseAdminModal .actions .primary')||document.querySelector('#spAdminLicenseCard .sp-license-admin-actions .primary');const old=btn?.innerHTML||'Upload / Replace';if(btn){btn.disabled=true;btn.innerHTML='⏳ Uploading…';btn.classList.add('sp-license-uploading')}try{const fn=window.adminUploadSharedDocument;if(typeof fn!=='function')throw new Error('Shared document upload engine is not loaded.');const ok=await fn('license',input);if(ok===false)throw new Error('License upload failed.');if(btn){btn.innerHTML='✓ Upload Successful';btn.classList.remove('sp-license-uploading');btn.classList.add('sp-license-upload-success')}setTimeout(()=>{if(btn){btn.innerHTML=old;btn.disabled=false;btn.classList.remove('sp-license-upload-success')}},2200);return true}catch(e){if(btn){btn.innerHTML='✕ Upload Failed';btn.classList.remove('sp-license-uploading');btn.classList.add('sp-license-upload-failed');setTimeout(()=>{btn.innerHTML=old;btn.disabled=false;btn.classList.remove('sp-license-upload-failed')},2200)}toastM('✕ License upload failed — '+(e.message||e));return false}}
+})();
+</script>
+<script id="sp-final-single-locked-sync-controller">
+(function(){'use strict';const IDS=['sp35ManualSyncFinal','sp35SyncRefreshBtn'];let running=false;const wait=ms=>new Promise(r=>setTimeout(r,ms));function buttons(){return IDS.map(id=>document.getElementById(id)).filter(Boolean)}function result(html){const r=document.getElementById('sp35FirebaseResult');if(r){r.classList.add('sp35-v16-visible');r.style.setProperty('display','block','important');r.style.setProperty('visibility','visible','important');r.style.setProperty('opacity','1','important');r.innerHTML=html}}function status(t,c){const r=document.getElementById('syncText');if(!r)return;r.textContent=t;r.classList.remove('firebase-connected','firebase-error','firebase-checking');if(c)r.classList.add(c)}function install(old){if(!old||old.dataset.finalSyncInstalled==='1')return old;const b=old.cloneNode(true);b.dataset.finalSyncInstalled='1';b.dataset.v14SyncInstalled='1';b.dataset.v16SyncInstalled='1';b.removeAttribute('onclick');old.replaceWith(b);b.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();if(running)return;running=true;const original=b.dataset.finalOriginal||b.innerHTML;b.dataset.finalOriginal=original;b.disabled=true;b.setAttribute('aria-busy','true');b.classList.add('sp35-v14-syncing');b.innerHTML='<span class="sp35-sync-ring" aria-hidden="true"></span><span class="sp35-sync-label">Syncing…</span>';result('🔄 <b>Syncing…</b> Uploading local data to Firebase…');status('Syncing manually…','firebase-checking');try{if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');const fn=window.shadabSyncSalesmanNow;if(typeof fn!=='function')throw new Error('Firebase sync engine is not loaded.');const ok=await fn();if(ok===false||ok?.ok===false)throw new Error(ok?.error?.message||'Firebase sync did not complete.');const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});const ring=b.querySelector('.sp35-sync-ring');if(ring)ring.classList.add('sp35-sync-success');result('🟢 <b>Sync Successful</b> — Firebase updated at '+t+'.<br><small>Your local data is now uploaded to the cloud.</small>');status('✓ Sync Successful • Firebase updated at '+t,'firebase-connected');try{window.toast35?.('✓ Sync Successful — Firebase updated at '+t)}catch(_e){}await wait(3000);status('Cloud sync connected • auto sync every 10 minutes','firebase-connected');result('<span style="opacity:.78">Cloud sync connected • auto sync every 10 minutes</span>')}catch(err){const msg=String(err?.message||err);result('🔴 <b>Sync Failed</b> — '+msg+'<br><small>Local data remains safe on this device.</small>');status('✕ Sync Failed • local data is safe','firebase-error');try{window.toast35?.('✕ Firebase Sync Failed — '+msg)}catch(_e){}await wait(900);status('Cloud sync connected • auto sync every 10 minutes','firebase-connected')}finally{b.innerHTML=original;b.disabled=false;b.removeAttribute('aria-busy');b.classList.remove('sp35-v14-syncing');running=false}},true);return b}function hook(){buttons().forEach(install)}function init(){hook();setTimeout(hook,200);setTimeout(hook,700);setTimeout(hook,1500)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();new MutationObserver(hook).observe(document.documentElement,{childList:true,subtree:true})})();
+</script>
+
+<script id="sp-final-user-points-1-3">
+(function(){
+  'use strict';
+  /* START: POINT 1 — Admin Control Center return-to-same-icon */
+  const ACTIVE_KEY='shadab_admin_control_active_icon_v1';
+  const SCROLL_KEY='shadab_admin_control_scroll_v1';
+  const oldOpen=window.sp35OpenControl;
+  if(typeof oldOpen==='function'&&!oldOpen.__point1){
+    const wrapped=async function(n){
+      try{localStorage.setItem(ACTIVE_KEY,String(n));}catch(e){}
+      try{localStorage.setItem(SCROLL_KEY,String(window.scrollY||0));}catch(e){}
+      return await oldOpen.apply(this,arguments);
+    };
+    wrapped.__point1=true;
+    window.sp35OpenControl=wrapped;
+  }
+  const oldBack=window.sp35BackToControls;
+  if(typeof oldBack==='function'&&!oldBack.__point1){
+    const wrapped=async function(){
+      const r=await oldBack.apply(this,arguments);
+      setTimeout(function(){
+        try{
+          const n=Number(localStorage.getItem(ACTIVE_KEY)||'0');
+          const grid=document.getElementById('sp35ControlGrid');
+          const card=grid?.querySelector('.sp35-control-card:nth-child('+n+')');
+          if(card){
+            card.setAttribute('data-last-opened','1');
+            card.scrollIntoView({behavior:'smooth',block:'center'});
+            try{card.focus({preventScroll:true})}catch(e){}
+          }else{
+            const y=Number(localStorage.getItem(SCROLL_KEY)||'0');
+            if(Number.isFinite(y))window.scrollTo({top:y,behavior:'smooth'});
+          }
+        }catch(e){}
+      },120);
+      return r;
+    };
+    wrapped.__point1=true;
+    window.sp35BackToControls=wrapped;
+  }
+  /* Clear remembered icon only when the entire Admin Control Center is closed. */
+  const oldClose=window.sp35CloseAll;
+  if(typeof oldClose==='function'&&!oldClose.__point1){
+    const wrapped=function(){
+      try{localStorage.removeItem(ACTIVE_KEY);localStorage.removeItem(SCROLL_KEY)}catch(e){}
+      return oldClose.apply(this,arguments);
+    };
+    wrapped.__point1=true;
+    window.sp35CloseAll=wrapped;
+  }
+  /* END: POINT 1 */
+
+  /* START: POINT 2+3 — offline-first master sync queue + immediate reconnect */
+  const PENDING_MASTER='shadab_pending_master_sync_v2';
+  const PENDING_SCHEDULE='shadab_pending_schedule_sync_v2';
+  const adminOnline=()=>navigator.onLine&&String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='admin@shadabpharmacy.com';
+  function mark(key,reason){try{localStorage.setItem(key,JSON.stringify({pending:true,reason:reason||'change',at:new Date().toISOString()}))}catch(e){}}
+  function clear(key){try{localStorage.removeItem(key)}catch(e){}}
+  function has(key){try{return !!JSON.parse(localStorage.getItem(key)||'null')?.pending}catch(e){return false}}
+
+  const oldMaster=window.saveMasterData;
+  window.saveMasterData=async function(reason){
+    if(!adminOnline()){if(String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='admin@shadabpharmacy.com')mark(PENDING_MASTER,reason);return {ok:false,offline:true,pending:true}}
+    try{
+      const r=await oldMaster.apply(this,arguments);
+      if(r?.ok!==false)clear(PENDING_MASTER);else mark(PENDING_MASTER,reason);
+      return r;
+    }catch(e){mark(PENDING_MASTER,reason);return {ok:false,error:e,pending:true}}
+  };
+
+  const oldSchedule=window.saveScheduleNow;
+  window.saveScheduleNow=async function(reason){
+    if(!adminOnline()){if(String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='admin@shadabpharmacy.com')mark(PENDING_SCHEDULE,reason);return {ok:false,offline:true,pending:true}}
+    try{
+      const r=await oldSchedule.apply(this,arguments);
+      if(r?.ok!==false)clear(PENDING_SCHEDULE);else mark(PENDING_SCHEDULE,reason);
+      return r;
+    }catch(e){mark(PENDING_SCHEDULE,reason);return {ok:false,error:e,pending:true}}
+  };
+
+  async function flushAdmin(){
+    if(!navigator.onLine)return;
+    const s=window.shadabRestCurrentSession?.();
+    if(!s?.uid||String(s.email||'').toLowerCase()!=='admin@shadabpharmacy.com')return;
+    try{
+      if(has(PENDING_MASTER)&&typeof window.saveMasterData==='function'){
+        const r=await window.saveMasterData('offline-reconnect-master');
+        if(r?.ok!==false)clear(PENDING_MASTER);
+      }
+      if(has(PENDING_SCHEDULE)&&typeof window.saveScheduleNow==='function'){
+        const r=await window.saveScheduleNow('offline-reconnect-schedule');
+        if(r?.ok!==false)clear(PENDING_SCHEDULE);
+      }
+      /* One complete cloud write also covers master/schedule changes made by
+         Admin controls that use the direct sync helper. */
+      if(typeof window.shadabSyncSalesmanNow==='function'){
+        try{await window.shadabSyncSalesmanNow()}catch(e){console.warn('Admin reconnect sync:',e)}
+      }
+      try{window.toast35?.('✓ Internet restored — Admin data sync completed')}catch(e){}
+    }catch(e){console.warn('Admin pending sync:',e)}
+  }
+  window.sp35FlushPendingAdminSync=flushAdmin;
+
+  /* Salesman/offline device: when internet returns, immediately run the same
+     10-minute polling/sync engine instead of waiting for the next interval. */
+  function reconnect(){
+    setTimeout(async function(){
+      try{
+        if(typeof window.shadabRestResumeSync==='function')await window.shadabRestResumeSync();
+        else if(typeof window.startRealtimeForUser==='function')await window.startRealtimeForUser();
+      }catch(e){console.warn('Reconnect sync:',e)}
+      await flushAdmin();
+    },500);
+  }
+  window.addEventListener('online',reconnect);
+  setTimeout(function(){if(navigator.onLine)flushAdmin()},900);
+  /* END: POINT 2+3 */
+})();
+</script>
 </body>
 <style id="sp-camera-onsite-final-lock">
 /* On-site Photo alignment only — sync UI untouched */
@@ -7102,5 +7199,937 @@ setInterval(()=>{if(navigator.onLine&&sess()?.uid)hydrate()},600000);
 .camera .camera-placeholder small{position:relative!important;top:-8px!important;transform:none!important;}
 /* END: On-site Photo — date stamp only. */
 </style>
-</html>
 
+<style id="sp-v3-final-requested-fixes">
+/* START: Requested fixes only — License / Admin position / Expense UI */
+#spLicenseAdminModal .sp-license-admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+#spLicenseAdminModal .sp-license-admin-actions .primary{min-width:150px}
+#adminDashboardBox>.sp35-launcher{order:0}
+/* END: Requested fixes only */
+</style>
+<script id="sp-v3-final-requested-fixes">
+(function(){
+'use strict';
+const ACTIVE='shadab_admin_control_active_icon_v1';
+const SCROLL='shadab_admin_control_scroll_v1';
+
+function saveActive(n){
+  try{localStorage.setItem(ACTIVE,String(n));localStorage.setItem(SCROLL,String(window.scrollY||0))}catch(e){}
+}
+function restoreCard(gridSelector,n){
+  try{
+    const grid=document.getElementById(gridSelector);
+    if(!grid||!n)return;
+    const card=grid.querySelector('.sp35-control-card:nth-child('+n+')')||grid.querySelector('.sp35-final-card:nth-child('+n+')');
+    if(!card)return;
+    card.setAttribute('data-last-opened','1');
+    card.scrollIntoView({behavior:'smooth',block:'center'});
+    try{card.focus({preventScroll:true})}catch(e){}
+  }catch(e){}
+}
+
+/* Point 1: both Admin Control Center implementations remember the opened icon. */
+try{
+  const oldOpen=window.sp35OpenControl;
+  if(typeof oldOpen==='function'&&!oldOpen.__v3sameIcon){
+    const f=async function(n){saveActive(n);return oldOpen.apply(this,arguments)};
+    f.__v3sameIcon=true; window.sp35OpenControl=f;
+  }
+  const oldBack=window.sp35BackToControls;
+  if(typeof oldBack==='function'&&!oldBack.__v3sameIcon){
+    const f=async function(){
+      const r=await oldBack.apply(this,arguments);
+      setTimeout(()=>restoreCard('sp35ControlGrid',Number(localStorage.getItem(ACTIVE)||0)),120);
+      return r;
+    };
+    f.__v3sameIcon=true; window.sp35BackToControls=f;
+  }
+  const oldFinalOpen=window.sp35FinalOpen;
+  if(typeof oldFinalOpen==='function'&&!oldFinalOpen.__v3sameIcon){
+    const f=async function(n){saveActive(n);return oldFinalOpen.apply(this,arguments)};
+    f.__v3sameIcon=true; window.sp35FinalOpen=f;
+  }
+  const oldFinalBack=window.sp35FinalBack;
+  if(typeof oldFinalBack==='function'&&!oldFinalBack.__v3sameIcon){
+    const f=function(){
+      const r=oldFinalBack.apply(this,arguments);
+      setTimeout(()=>restoreCard('sp35FinalGrid',Number(localStorage.getItem(ACTIVE)||0)),120);
+      return r;
+    };
+    f.__v3sameIcon=true; window.sp35FinalBack=f;
+  }
+}catch(e){console.warn('Admin same-icon restore:',e)}
+
+/* Point 7: License upload follows the same shared-document engine as the working PDFs,
+   with one extra authenticated REST refresh before the upload. */
+window.adminUploadLockedLicense=async function(input){
+  const modalBtn=document.querySelector('#spLicenseAdminModal .sp-license-admin-actions .primary');
+  const cardBtn=document.querySelector('#spAdminLicenseCard .sp-license-admin-actions .primary');
+  const btn=modalBtn||cardBtn;
+  const old=btn?.innerHTML||'Upload / Replace';
+  try{
+    if(typeof navigator!=='undefined'&&!navigator.onLine)throw new Error('Internet is required to publish this document.');
+    let s=null;
+    try{s=window.shadabRestCurrentSession?.()||null}catch(e){}
+    if(!s?.uid){
+      try{await window.shadabRestResumeSync?.()}catch(e){}
+      try{s=window.shadabRestCurrentSession?.()||null}catch(e){}
+    }
+    if(!s?.uid||String(s.email||'').toLowerCase()!=='admin@shadabpharmacy.com'){
+      throw new Error('Admin Firebase session is not ready. Open Admin Login once on this GitHub app and try again.');
+    }
+    /* Force the REST layer to refresh/validate its token before the document write. */
+    if(typeof window.shadabRestReadDoc==='function')await window.shadabRestReadDoc('app_settings/masterData');
+    if(btn){btn.disabled=true;btn.innerHTML='⏳ Uploading…';btn.classList.remove('sp-license-upload-success','sp-license-upload-failed');btn.classList.add('sp-license-uploading')}
+    if(typeof window.adminUploadSharedDocument!=='function')throw new Error('Shared document upload engine is not loaded.');
+    const ok=await window.adminUploadSharedDocument('license',input);
+    if(ok!==true)throw new Error('License upload failed. Check the Firebase error shown above.');
+    if(btn){btn.innerHTML='✓ Upload Successful';btn.classList.remove('sp-license-uploading');btn.classList.add('sp-license-upload-success')}
+    setTimeout(()=>{if(btn){btn.innerHTML=old;btn.disabled=false;btn.classList.remove('sp-license-upload-success')}},2200);
+    return true;
+  }catch(e){
+    if(btn){btn.innerHTML='✕ Upload Failed';btn.disabled=false;btn.classList.remove('sp-license-uploading');btn.classList.add('sp-license-upload-failed');setTimeout(()=>btn.classList.remove('sp-license-upload-failed'),2200)}
+    try{window.toast35?.('✕ License upload failed — '+(e.message||e));window.toast?.('✕ License upload failed — '+(e.message||e))}catch(_e){}
+    return false;
+  }
+};
+
+/* Point 10: exact Summary Detail-style combined Save + WhatsApp flow for Expenses. */
+window.saveAndWhatsAppSalesmanExpense=async function(){
+  const btn=document.getElementById('sexSaveWhatsAppBtn');
+  const old=btn?.innerHTML||'💾📲 Save • WhatsApp PDF';
+  try{
+    const d=(typeof collectSalesmanExpense==='function')?collectSalesmanExpense():null;
+    if(d&&Number(d.endMeter||0)<Number(d.startMeter||0))throw new Error('End meter cannot be less than start meter');
+    if(typeof window.saveSalesmanExpenseDay==='function')window.saveSalesmanExpenseDay();
+    const date=document.getElementById('sexDate')?.value||((typeof today==='function')?today():new Date().toISOString().slice(0,10));
+    if(typeof window.buildSalesmanExpensePDF!=='function')throw new Error('Expense PDF builder not available');
+    if(btn){btn.disabled=true;btn.innerHTML='⏳ Creating PDF…'}
+    const doc=await window.buildSalesmanExpensePDF();
+    if(!doc||typeof doc.output!=='function')throw new Error('Expense PDF could not be created');
+    const name=`Shadab-Pharmacy-Expenses-${date}.pdf`;
+    const blob=doc.output('blob');
+    if(!blob||!blob.size)throw new Error('PDF file is empty');
+    const file=new File([blob],name,{type:'application/pdf'});
+    let shared=false;
+    if(typeof navigator.share==='function'){
+      let can=false;
+      try{can=typeof navigator.canShare==='function'?navigator.canShare({files:[file]}):true}catch(e){can=false}
+      if(can){
+        try{await navigator.share({title:'SHADAB PHARMACY — Expense Report',text:`${(typeof currentName==='function'?currentName():'Salesman')} • Expense Report • ${date}`,files:[file]});shared=true}catch(e){if(e?.name==='AbortError'){shared=true}else{console.warn('Native expense PDF share failed:',e)}}
+      }
+    }
+    const status=document.getElementById('sexExpenseDownloadTime');
+    if(status)status.textContent=shared?`✓ Saved • WhatsApp share ready • ${new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})}`:`✓ Saved • PDF ready • ${new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})}`;
+    if(!shared){
+      doc.save(name);
+      const phone=(Array.isArray(window.WA_NUMBERS)&&window.WA_NUMBERS[0])||'03006901869';
+      const msg=`SHADAB PHARMACY — Expense Report\nDate: ${date}\nPDF saved: ${name}`;
+      try{window.location.href=`whatsapp://send?phone=${phone}&text=${encodeURIComponent(msg)}`}catch(e){}
+      try{window.toast35?.('✓ PDF saved. WhatsApp opened — attach the PDF.')}catch(e){}
+    }else{try{window.toast35?.('✓ Saved — WhatsApp share sheet opened')}catch(e){}}
+    if(btn){btn.classList.add('sex-upload-success');btn.innerHTML='✓ Saved • WhatsApp PDF';setTimeout(()=>{btn.classList.remove('sex-upload-success');btn.innerHTML=old;btn.disabled=false},1800)}
+    return true;
+  }catch(e){
+    try{window.toast35?.('✕ Save / WhatsApp failed — '+(e?.message||e));window.toast?.('✕ Save / WhatsApp failed — '+(e?.message||e))}catch(_e){}
+    if(btn){btn.innerHTML='✕ Failed';btn.classList.add('sex-upload-failed');setTimeout(()=>{btn.classList.remove('sex-upload-failed');btn.innerHTML=old;btn.disabled=false},1800)}
+    return false;
+  }
+};
+
+/* Points 2+3: when internet returns, immediately push the current Admin master/schedule
+   and the current salesman local data, then let the existing 10-minute polling continue. */
+let reconnectBusy=false;
+async function immediateReconnectSync(){
+  if(reconnectBusy||!navigator.onLine)return;
+  reconnectBusy=true;
+  try{
+    try{await window.shadabRestResumeSync?.()}catch(e){}
+    const s=window.shadabRestCurrentSession?.();
+    if(s?.uid){
+      try{
+        if(typeof window.shadabSyncSalesmanNow==='function')await window.shadabSyncSalesmanNow();
+      }catch(e){console.warn('Immediate reconnect sync:',e)}
+      try{await window.pollRemote?.()}catch(e){console.warn('Immediate remote refresh:',e)}
+    }
+  }finally{reconnectBusy=false}
+}
+window.addEventListener('online',()=>setTimeout(immediateReconnectSync,900));
+
+/* Also keep the Master app current: any already-open Admin page gets an immediate
+   complete write after a control change when online. */
+setTimeout(()=>{
+  try{
+    if(typeof window.flushAdmin==='function'&&navigator.onLine)window.flushAdmin();
+  }catch(e){}
+},1200);
+})();
+</script>
+
+<style id="sp-v4-admin-modal-and-controls-fix">
+/* START: Requested repair — Admin child modals + Control Center functions */
+/* Any window opened from Admin Control Center must appear above the Control Center itself. */
+#sharedDocModal,
+#uploadTerritoryModal,
+#storeDatabaseModal,
+#territoryModal,
+#territoryAssignmentModal,
+#customerModal,
+#spLicenseAdminModal,
+#sectionModalBackdrop,
+#sp35AuthModal{
+  z-index:100200 !important;
+}
+#sharedDocModal .modal-box,
+#uploadTerritoryModal .modal-box,
+#storeDatabaseModal .modal-box,
+#territoryModal .modal-box,
+#territoryAssignmentModal .modal-box,
+#customerModal .modal-box,
+#spLicenseAdminModal .modal-box,
+#sp35AuthModal .modal-box{
+  position:relative;
+  z-index:100201 !important;
+}
+/* Keep the 35+ control work area usable when a control writes to the legacy target id. */
+#sp35ControlModal .sp35-work-modal{position:relative;z-index:4}
+#sp35ControlModal .sp35-work-body{position:relative;z-index:5;overflow:auto;max-height:calc(94vh - 150px)}
+/* END: Requested repair */
+</style>
+<script id="sp-v4-admin-modal-and-controls-fix-js">
+(function(){
+  'use strict';
+
+  /* Make every Admin child modal foreground-safe, including dynamically created modals. */
+  const CHILD_IDS=['sharedDocModal','uploadTerritoryModal','storeDatabaseModal','territoryModal','territoryAssignmentModal','customerModal','spLicenseAdminModal','sp35AuthModal','sectionModalBackdrop'];
+  function raiseChild(id){
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.style.setProperty('z-index','100200','important');
+    const box=el.querySelector('.modal-box');
+    if(box)box.style.setProperty('z-index','100201','important');
+  }
+  function raiseAll(){CHILD_IDS.forEach(raiseChild)}
+  raiseAll();
+  setTimeout(raiseAll,300);setTimeout(raiseAll,1000);
+  new MutationObserver(raiseAll).observe(document.body,{childList:true,subtree:true});
+
+  /* Keep all Admin Control Center point handlers on the visible work-body target. */
+  const oldOpen=window.sp35OpenControl;
+  if(typeof oldOpen==='function'&&!oldOpen.__v4bodyfix){
+    const wrapped=async function(n){
+      const r=await oldOpen.apply(this,arguments);
+      const b=document.getElementById('sp35WorkBody')||document.getElementById('sp35WorkBodyNew');
+      if(b){b.style.display='block';b.style.visibility='visible';}
+      raiseAll();
+      return r;
+    };
+    wrapped.__v4bodyfix=true;
+    window.sp35OpenControl=wrapped;
+  }
+
+  /* License must use exactly the same shared-document upload engine as Order Form/Supply Schedule.
+     Do not add an extra masterData read here; that read was an unnecessary failure point. */
+  window.adminUploadLockedLicense=async function(input){
+    const btn=document.querySelector('#spLicenseAdminModal .sp-license-admin-actions .primary')||document.querySelector('#spAdminLicenseCard .sp-license-admin-actions .primary');
+    const old=btn?.dataset.v4Old||btn?.innerHTML||'Upload / Replace';
+    if(btn){btn.dataset.v4Old=old;btn.disabled=true;btn.innerHTML='⏳ Uploading…';btn.classList.remove('sp-license-upload-success','sp-license-upload-failed');btn.classList.add('sp-license-uploading')}
+    try{
+      if(typeof window.adminUploadSharedDocument!=='function')throw new Error('Shared document upload engine is not loaded.');
+      const ok=await window.adminUploadSharedDocument('license',input);
+      if(ok!==true)throw new Error('License upload failed. Check the Firebase session and document size.');
+      if(btn){btn.innerHTML='✓ Upload Successful';btn.classList.remove('sp-license-uploading');btn.classList.add('sp-license-upload-success')}
+      try{window.toast35?.('✓ SHADAB PHARMACY License uploaded successfully')}catch(e){}
+      setTimeout(()=>{if(btn){btn.innerHTML=btn.dataset.v4Old||old;btn.disabled=false;btn.classList.remove('sp-license-upload-success')}},2200);
+      return true;
+    }catch(e){
+      if(btn){btn.innerHTML='✕ Upload Failed';btn.classList.remove('sp-license-uploading');btn.classList.add('sp-license-upload-failed');setTimeout(()=>{if(btn){btn.innerHTML=btn.dataset.v4Old||old;btn.disabled=false;btn.classList.remove('sp-license-upload-failed')}},2200)}
+      try{window.toast35?.('✕ License upload failed — '+(e.message||e))}catch(_e){}
+      return false;
+    }
+  };
+
+  /* Ensure the shared document preview itself is foreground-safe when opened from Admin. */
+  const oldOpenShared=window.openSharedDocument;
+  if(typeof oldOpenShared==='function'&&!oldOpenShared.__v4modalfix){
+    const f=function(){const r=oldOpenShared.apply(this,arguments);raiseChild('sharedDocModal');return r};
+    f.__v4modalfix=true;window.openSharedDocument=f;
+  }
+})();
+</script>
+
+<style id="sp-v5-license-sync-final">
+/* START: V5 — License upload + Firebase sync reliability only */
+.sp-v5-license-working{opacity:.82!important;pointer-events:none!important}
+.sp-v5-license-success{background:#19b96b!important;border-color:#19b96b!important;color:#fff!important}
+.sp-v5-license-failed{background:#d94848!important;border-color:#d94848!important;color:#fff!important}
+/* END: V5 */
+</style>
+<script id="sp-v5-license-sync-final">
+(function(){
+'use strict';
+const ADMIN='admin@shadabpharmacy.com';
+const BASE='app_settings/sharedDocuments';
+const manifestPath=BASE+'/license';
+const CHUNK_PREFIX=BASE+'/license_chunk_';
+const CHUNK_SIZE=500000;
+const exact=e=>String(e?.api?.error?.message||e?.message||e||'Unknown Firebase error')+(e?.httpStatus?' [HTTP '+e.httpStatus+']':'');
+const toast=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
+const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+const read=async p=>{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return window.shadabRestReadDoc(p)};
+const write=async(p,v)=>{if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return window.shadabRestWriteDoc(p,v)};
+const localVault=()=>{try{return JSON.parse(localStorage.getItem('shadab_locked_document_v1')||'{}')}catch(e){return {}}};
+const saveLocal=(type,a)=>{const v=localVault();if(a)v[type]=a;else delete v[type];try{localStorage.setItem('shadab_locked_document_v1',JSON.stringify(v))}catch(e){}try{window.shadabApplySharedAsset?.(type,a)}catch(e){}};
+function fileData(file){
+ return new Promise((resolve,reject)=>{if(!file)return reject(new Error('Please select a License PDF/image.'));const r=new FileReader();r.onload=()=>{const data=String(r.result||'');const comma=data.indexOf(',');resolve({name:file.name,type:file.type||'application/pdf',size:file.size,data,base64:comma>=0?data.slice(comma+1):data,updatedAt:new Date().toISOString()})};r.onerror=()=>reject(new Error('Could not read the selected License file.'));r.readAsDataURL(file)})
+}
+function setButton(btn,text,cls){if(!btn)return;btn.disabled=!!cls;btn.textContent=text;btn.classList.remove('sp-v5-license-working','sp-v5-license-success','sp-v5-license-failed');if(cls)btn.classList.add(cls)}
+async function uploadLicense(input){
+ const btn=document.querySelector('#spLicenseAdminModal .sp-license-admin-actions .primary')||document.querySelector('#spAdminLicenseCard .sp-license-admin-actions .primary');
+ const old=btn?.dataset.spV5Old||btn?.textContent||'Upload / Replace';
+ try{
+  const s=session();
+  if(!navigator.onLine)throw new Error('Offline — License upload needs internet. Local app remains safe.');
+  if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin Firebase session is not ready. Open Admin Login once on this GitHub app.');
+  if(typeof window.shadabRestReadDoc==='function')await window.shadabRestReadDoc('app_settings/masterData');
+  const a=await fileData(input?.files?.[0]);
+  if(btn){btn.dataset.spV5Old=old;setButton(btn,'⏳ Uploading…','sp-v5-license-working')}
+  /* Small files use the same shared-document shape as the other PDFs. Larger
+     License files are chunked so Firestore's ~1 MiB document limit cannot make
+     an otherwise valid License upload fail. */
+  const now=new Date().toISOString();
+  if(a.base64.length<=CHUNK_SIZE){
+    await write(manifestPath,{name:a.name,type:a.type,size:a.size,data:a.data,updatedAt:now,chunked:false});
+  }else{
+    const count=Math.ceil(a.base64.length/CHUNK_SIZE);
+    for(let i=0;i<count;i++)await write(CHUNK_PREFIX+i,{index:i,total:count,data:a.base64.slice(i*CHUNK_SIZE,(i+1)*CHUNK_SIZE),updatedAt:now});
+    await write(manifestPath,{name:a.name,type:a.type,size:a.size,data:'',updatedAt:now,chunked:true,total:count,chunkSize:CHUNK_SIZE});
+  }
+  saveLocal('license',{name:a.name,type:a.type,size:a.size,data:a.data,updatedAt:now});
+  if(btn){setButton(btn,'✓ Upload Successful','sp-v5-license-success');setTimeout(()=>{if(btn){btn.textContent=old;btn.disabled=false;btn.classList.remove('sp-v5-license-success')}},2200)}
+  toast('✓ SHADAB PHARMACY License uploaded successfully and synced');
+  return true;
+ }catch(e){
+  const msg=exact(e);
+  if(btn){btn.disabled=false;btn.textContent='✕ Upload Failed';btn.classList.remove('sp-v5-license-working','sp-v5-license-success');btn.classList.add('sp-v5-license-failed');setTimeout(()=>{if(btn){btn.textContent=old;btn.classList.remove('sp-v5-license-failed')}},2600)}
+  toast('✕ License upload failed — '+msg);
+  console.error('V5 License upload:',e);
+  return false;
+ }
+}
+window.adminUploadLockedLicense=uploadLicense;
+async function hydrateLicense(){
+ if(!navigator.onLine||!session()?.uid)return;
+ try{
+  const m=await read(manifestPath);
+  if(!m||m.deleted){saveLocal('license',null);return}
+  if(!m.chunked&&m.data){saveLocal('license',m);return}
+  if(m.chunked&&Number(m.total)>0){
+   const rows=[];for(let i=0;i<Number(m.total);i++)rows.push(await read(CHUNK_PREFIX+i));
+   const base64=rows.map(x=>x?.data||'').join('');
+   if(!base64)throw new Error('License chunks are incomplete.');
+   saveLocal('license',{name:m.name,type:m.type,size:m.size,data:'data:'+(m.type||'application/pdf')+';base64,'+base64,updatedAt:m.updatedAt});
+  }
+ }catch(e){console.warn('V5 License hydrate:',e)}
+}
+window.spV5HydrateLicense=hydrateLicense;
+setTimeout(hydrateLicense,1400);window.addEventListener('online',()=>setTimeout(hydrateLicense,900));
+
+/* Harden the final Sync engine without touching its locked visual animation. */
+const oldSync=window.shadabSyncSalesmanNow;
+if(typeof oldSync==='function'&&!oldSync.__v5verify){
+ const sync=async function(){
+  const r=await oldSync.apply(this,arguments);
+  const s=session();
+  if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
+  if(!s?.uid)throw new Error('Firebase session is not available. Please sign in on this GitHub app first.');
+  if(String(s.email||'').toLowerCase()===ADMIN){
+   try{
+    const m=await read('app_settings/masterData');const q=await read('app_settings/adminSchedules');
+    if(!m||!q)throw new Error('Firebase write completed but Admin master/schedule verification failed.');
+   }catch(e){throw new Error('Firebase Admin sync verification failed: '+exact(e))}
+  }else{
+   try{const d=await read('user_data/'+encodeURIComponent(s.uid));if(!d)throw new Error('Firebase write completed but salesman data verification failed.')}catch(e){throw new Error('Firebase salesman sync verification failed: '+exact(e))}
+  }
+  return r;
+ };
+ sync.__v5verify=true;
+ window.shadabSyncSalesmanNow=sync;
+ window.sp35SyncNow=sync;
+ window.sp35SyncNew=sync;
+}
+})();
+</script>
+
+<style id="sp-v7-forensic-fixes">
+/* START: V7 forensic fixes — only requested Sync/PDF/Admin error/WhatsApp issues */
+#spAdminForegroundError{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:2000000!important;width:min(92vw,620px);display:none;padding:14px 16px;border:1px solid rgba(255,90,90,.5);border-radius:16px;background:rgba(35,8,10,.97);color:#fff;box-shadow:0 18px 50px rgba(0,0,0,.45);font-size:13px;font-weight:800;line-height:1.4;backdrop-filter:blur(14px)}
+#spAdminForegroundError.show{display:block;animation:spV7ErrIn .18s ease-out}
+#spAdminForegroundError .sp-v7-error-close{float:right;margin-left:10px;border:0;border-radius:9px;background:rgba(255,255,255,.12);color:#fff;padding:5px 9px;cursor:pointer;font-weight:900}
+@keyframes spV7ErrIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.sp-v7-pdf-tools{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:4px}
+.sp-v7-pdf-tools .sp35-final-card{min-height:86px}
+@media(max-width:900px){.sp-v7-pdf-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.sp-v7-pdf-tools{grid-template-columns:1fr}}
+/* END: V7 forensic fixes */
+</style>
+<script id="sp-v7-forensic-final">
+(function(){
+'use strict';
+/* ---------- 0) Reliable global toast used by older handlers ---------- */
+if(typeof window.toast35!=='function'){
+  window.toast35=function(message){
+    try{
+      if(typeof window.toast==='function'){window.toast(message);return;}
+      let t=document.getElementById('spV7Toast');
+      if(!t){t=document.createElement('div');t.id='spV7Toast';t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2000001!important;max-width:92vw;padding:12px 16px;border-radius:14px;background:rgba(12,18,25,.97);color:#fff;box-shadow:0 14px 35px rgba(0,0,0,.35);font-weight:800;font-size:13px;text-align:center';document.body.appendChild(t)}
+      t.textContent=String(message||'');t.style.display='block';clearTimeout(t._hide);t._hide=setTimeout(()=>{t.style.display='none'},3200);
+    }catch(e){}
+  };
+}
+function exact(e){return String(e?.api?.error?.message||e?.message||e||'Unknown Firebase error')+(e?.httpStatus?' [HTTP '+e.httpStatus+']':'')}
+function showAdminError(msg){
+  let el=document.getElementById('spAdminForegroundError');
+  if(!el){el=document.createElement('div');el.id='spAdminForegroundError';el.innerHTML='<button class="sp-v7-error-close" type="button">×</button><span class="sp-v7-error-text"></span>';document.body.appendChild(el);el.querySelector('.sp-v7-error-close').onclick=()=>el.classList.remove('show')}
+  el.querySelector('.sp-v7-error-text').textContent=String(msg||'Unknown Admin error');el.classList.add('show');clearTimeout(el._hide);el._hide=setTimeout(()=>el.classList.remove('show'),9000);
+  try{window.toast35('✕ '+msg)}catch(e){}
+}
+window.spV7ShowAdminError=showAdminError;
+
+/* ---------- 1) One authoritative Admin/Salesman sync engine ---------- */
+const ADMIN='admin@shadabpharmacy.com';
+const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
+const stamp=()=>new Date().toISOString();
+async function freshToken(){
+  const s=session();if(!s?.uid)throw new Error('Firebase session is not available. Please sign in on this GitHub app first.');
+  if(typeof window.shadabRestReadDoc!=='function'||typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST sync engine is not loaded.');
+  /* This authenticated read goes through the REST layer and refreshes a stale token there. */
+  await window.shadabRestReadDoc('app_settings/masterData');
+}
+async function write(path,obj){return await window.shadabRestWriteDoc(path,obj)}
+function masterPayload(reason){
+  return {
+    stores:typeof storeDatabase!=='undefined'?(clone(storeDatabase)||[]):[],
+    territories:typeof territories!=='undefined'?(clone(territories)||{}):{},
+    territoryMasterLocked:typeof isTerritoryMasterLocked==='function'?!!isTerritoryMasterLocked():false,
+    territoryMaster:typeof loadTerritoryMasterData==='function'?(loadTerritoryMasterData()||null):null,
+    customSalesmen:typeof customSalesmen!=='undefined'?(clone(customSalesmen)||[]):[],
+    disabledTerritories:(()=>{try{return JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){return []}})(),
+    appName:localStorage.getItem('shadab_app_name_v1')||'SHADAB PHARMACY',
+    theme:localStorage.getItem('shadab_theme')||'',
+    alertMessage:localStorage.getItem('shadab_alert_message_v1')||'',
+    updatedAt:stamp(),reason:reason||'admin-change'
+  };
+}
+function schedulePayload(reason){
+  return {schedules:typeof adminSchedules!=='undefined'?(clone(adminSchedules)||{}):{},routeTasks:typeof routeTasks!=='undefined'?(clone(routeTasks)||{}):{},updatedAt:stamp(),reason:reason||'admin-schedule-change'};
+}
+async function syncAdmin(reason){
+  if(!navigator.onLine)throw new Error('Offline — Admin changes are saved locally and will sync when internet returns.');
+  await freshToken();
+  try{await write('app_settings/masterData',masterPayload(reason));await write('app_settings/adminSchedules',schedulePayload(reason));}
+  catch(e){throw new Error('Firebase Admin sync failed: '+exact(e))}
+  try{window.__shadabLastFirebaseSync={at:stamp(),ok:true,admin:true}}catch(e){}
+  return true;
+}
+function salesmanPayload(uid){
+  const visitsLocal=typeof visits!=='undefined'?(clone(visits)||[]):[];
+  let p={uid,updatedAt:stamp(),visits:visitsLocal,territories:typeof territories!=='undefined'?(clone(territories)||{}):{},routeTasks:typeof routeTasks!=='undefined'?(clone(routeTasks)||{}):{},expenses:typeof window.shadabExpenseDataForSync==='function'?window.shadabExpenseDataForSync():{},summaryDetail:typeof window.shadabSummaryDataForSync==='function'?window.shadabSummaryDataForSync():{}};
+  let bytes=new Blob([JSON.stringify(p)]).size;
+  if(bytes>750000){p.visits=p.visits.map(v=>{if(!v||typeof v!=='object')return v;const x={...v};if('photo'in x)x.photo='';return x});}
+  bytes=new Blob([JSON.stringify(p)]).size;if(bytes>950000)throw new Error('Firebase record is too large ('+Math.round(bytes/1024)+' KB). Please sync in smaller batches.');
+  return p;
+}
+async function syncSalesman(uid){
+  if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
+  await freshToken();
+  const p=salesmanPayload(uid);
+  try{await write('user_data/'+encodeURIComponent(uid),p)}catch(e){throw new Error('Firebase salesman sync failed: '+exact(e))}
+  try{window.__shadabLastFirebaseSync={at:stamp(),ok:true,uid}}catch(e){}
+  return true;
+}
+async function finalSync(reason){
+  const s=session();if(!s?.uid)throw new Error('Firebase session is not available. Please sign in on this GitHub app first.');
+  const isAdmin=String(s.email||'').toLowerCase()===ADMIN;
+  return isAdmin?syncAdmin(reason||'manual-sync'):syncSalesman(s.uid);
+}
+window.spV7FinalSync=finalSync;
+window.shadabSyncSalesmanNow=finalSync;
+window.sp35SyncNow=finalSync;
+window.sp35SyncNew=finalSync;
+window.sp35ManualServerRefresh=async function(){
+  try{await finalSync('manual-sync');const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});const x=document.getElementById('syncText');if(x)x.textContent='✓ Sync Successful • Firebase updated at '+t;return true}
+  catch(e){showAdminError('Sync failed: '+exact(e));const x=document.getElementById('syncText');if(x)x.textContent='✕ Sync Failed • local data is safe';return false}
+};
+
+/* ---------- 2) Admin foreground error + reliable master save ---------- */
+async function adminCloudSync(reason){
+  const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)return {ok:false,reason:'not-admin'};
+  if(!navigator.onLine){try{localStorage.setItem('shadab_pending_admin_sync_v7',JSON.stringify({reason,at:stamp()}))}catch(e){};return {ok:false,offline:true,pending:true}};
+  try{await syncAdmin(reason);try{localStorage.removeItem('shadab_pending_admin_sync_v7')}catch(e){};return {ok:true}}
+  catch(e){try{localStorage.setItem('shadab_pending_admin_sync_v7',JSON.stringify({reason,at:stamp()}))}catch(_e){};showAdminError(exact(e));return {ok:false,error:e,pending:true}}
+}
+window.spV7AdminCloudSync=adminCloudSync;
+window.saveMasterData=async function(reason){
+  try{localStorage.setItem('shadab_alert_message_v1',localStorage.getItem('shadab_alert_message_v1')||'')}catch(e){}
+  return await adminCloudSync(reason||'master-change');
+};
+window.saveScheduleNow=async function(reason){return await adminCloudSync(reason||'schedule-change')};
+window.sp35SaveAlert=async function(){
+  if(typeof adminLoggedIn!=='undefined'&&!adminLoggedIn){showAdminError('Admin login required.');return {ok:false}}
+  const ta=document.getElementById('sp35AlertText')||document.getElementById('sp35AlertNew');
+  const st=document.getElementById('sp35AlertStatus')||document.getElementById('sp35AlertNewStatus');
+  const m=String(ta?.value||'').trim();if(!m){showAdminError('Please write an alert message first.');return {ok:false}}
+  localStorage.setItem('shadab_alert_message_v1',m);const main=document.getElementById('shadabAlertText');if(main)main.textContent=m;
+  try{const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');h.unshift({message:m,at:stamp(),by:'admin'});localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)))}catch(e){}
+  const r=await adminCloudSync('alert');
+  if(st)st.textContent=r.ok?'✓ Alert synced to all devices.':r.offline?'Saved locally — waiting for internet.':'Firebase sync failed — see error above.';
+  if(r.ok)window.toast35('✓ Alert saved and synced to all devices');
+  return r;
+};
+window.sp35SaveAlertNew=window.sp35SaveAlert;
+
+/* Wrap the common local-save entry points so Admin changes immediately use the
+   same authoritative REST write. Existing UI/data models remain unchanged. */
+(function(){
+  const oldSaveData=window.saveData;
+  window.saveData=function(){
+    try{oldSaveData?.apply(this,arguments)}catch(e){}
+    if(typeof window.shadabRestCurrentSession==='function'&&String(window.shadabRestCurrentSession()?.email||'').toLowerCase()===ADMIN&&!window.__spV7ApplyingRemote){
+      clearTimeout(window.__spV7MasterTimer);window.__spV7MasterTimer=setTimeout(()=>adminCloudSync('saveData'),120);
+    }
+  };
+  const oldRoute=window.saveRouteTasks;
+  window.saveRouteTasks=function(){
+    try{oldRoute?.apply(this,arguments)}catch(e){}
+    if(String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()===ADMIN&&!window.__spV7ApplyingRemote){clearTimeout(window.__spV7ScheduleTimer);window.__spV7ScheduleTimer=setTimeout(()=>adminCloudSync('route-task-change'),120)}
+  };
+  const oldAdminSchedules=window.saveAdminSchedules;
+  window.saveAdminSchedules=async function(){
+    try{oldAdminSchedules?.apply(this,arguments)}catch(e){}
+    return await adminCloudSync('admin-schedule-change');
+  };
+})();
+
+/* ---------- 3) Same upload mechanism for Order / Supply / License ---------- */
+const DOC_BASE='app_settings/sharedDocuments';
+const DOC_PATH={orderForm:DOC_BASE+'/orderForm',supplySchedule:DOC_BASE+'/supplySchedule',license:DOC_BASE+'/license'};
+const CHUNK_SIZE=500000;
+function localVault(){try{return JSON.parse(localStorage.getItem('shadab_locked_document_v1')||'{}')}catch(e){return {}}}
+function setLocalAsset(t,a){const v=localVault();if(a)v[t]=a;else delete v[t];try{localStorage.setItem('shadab_locked_document_v1',JSON.stringify(v))}catch(e){};try{window.shadabApplySharedAsset?.(t,a)}catch(e){}}
+function getLocalAsset(t){return localVault()[t]||null}
+function readDoc(path){return window.shadabRestReadDoc(path)}
+function writeDoc(path,obj){return window.shadabRestWriteDoc(path,obj)}
+async function makeAsset(file){
+  if(!file)throw new Error('Please select a file.');
+  return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>{const data=String(r.result||'');const comma=data.indexOf(',');resolve({name:file.name,type:file.type||'application/pdf',size:file.size,data,base64:comma>=0?data.slice(comma+1):data,updatedAt:stamp()})};r.onerror=()=>reject(new Error('Could not read the selected file.'));r.readAsDataURL(file)})
+}
+function docButton(type,input){
+  return document.querySelector(type==='license'?'#spLicenseAdminModal .sp-license-admin-actions .primary':type==='orderForm'?'#sp35WorkModal .sp35-actionsx .sp35-btnx.primary, #sp35WorkBodyNew .sp35-actionsx .sp35-btnx.primary':'#sp35WorkModal .sp35-actionsx .sp35-btnx.primary');
+}
+async function uploadShared(type,input){
+  const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin Firebase session is not ready. Open Admin Login once on this GitHub app.');
+  if(!navigator.onLine)throw new Error('Offline — document upload needs internet. The last local copy remains safe.');
+  await freshToken();
+  const a=await makeAsset(input?.files?.[0]);
+  const path=DOC_PATH[type];if(!path)throw new Error('Unknown document type.');
+  const manifest={name:a.name,type:a.type,size:a.size,updatedAt:a.updatedAt,deleted:false};
+  if(a.base64.length<=CHUNK_SIZE){manifest.data=a.data;manifest.chunked=false;await writeDoc(path,manifest)}
+  else{
+    const total=Math.ceil(a.base64.length/CHUNK_SIZE);
+    for(let i=0;i<total;i++)await writeDoc(path+'__chunk_'+i,{index:i,total,data:a.base64.slice(i*CHUNK_SIZE,(i+1)*CHUNK_SIZE),updatedAt:a.updatedAt});
+    manifest.data='';manifest.chunked=true;manifest.total=total;manifest.chunkSize=CHUNK_SIZE;await writeDoc(path,manifest);
+  }
+  setLocalAsset(type,{name:a.name,type:a.type,size:a.size,data:a.data,updatedAt:a.updatedAt});
+  return true;
+}
+function uploadButtonFor(type){
+  if(type==='license')return document.querySelector('#spLicenseAdminModal .sp-license-admin-actions .primary')||document.querySelector('#spAdminLicenseCard .sp-license-admin-actions .primary');
+  return document.querySelector('#sp35WorkModal .sp35-actionsx .sp35-btnx.primary')||document.querySelector('#sp35FinalBody .sp35-actionsx .sp35-btnx.primary');
+}
+async function uploadWithUI(type,input){
+  const btn=uploadButtonFor(type),old=btn?.innerHTML||'Upload / Replace';
+  try{
+    if(btn){btn.disabled=true;btn.innerHTML='⏳ Uploading…';}
+    await uploadShared(type,input);
+    if(btn){btn.innerHTML='✓ Upload Successful';btn.classList.add('sp-license-upload-success');setTimeout(()=>{btn.innerHTML=old;btn.disabled=false;btn.classList.remove('sp-license-upload-success')},2200)}
+    window.toast35('✓ '+(type==='license'?'SHADAB PHARMACY License':type==='orderForm'?'Order Form':'Supply Schedule')+' uploaded and synced to all devices');
+    return true;
+  }catch(e){
+    if(btn){btn.innerHTML='✕ Upload Failed';btn.disabled=false;setTimeout(()=>{btn.innerHTML=old},2400)}
+    showAdminError((type==='license'?'License':type==='orderForm'?'Order Form':'Supply Schedule')+' upload failed: '+exact(e));
+    return false;
+  }
+}
+window.adminUploadSharedDocument=async function(type,input){return await uploadWithUI(type,input)};
+window.adminUploadLockedLicense=async function(input){return await uploadWithUI('license',input)};
+window.adminDeleteSharedDocument=async function(type){
+  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return false;await freshToken();await writeDoc(DOC_PATH[type],{deleted:true,name:'',type:'',size:0,data:'',updatedAt:stamp()});setLocalAsset(type,null);window.toast35('✓ Document deleted and synced to all devices');return true}catch(e){showAdminError('Document delete failed: '+exact(e));return false}
+};
+window.adminDeleteLockedLicense=async function(){try{await freshToken();await writeDoc(DOC_PATH.license,{deleted:true,name:'',type:'',size:0,data:'',updatedAt:stamp()});setLocalAsset('license',null);window.toast35('✓ License deleted and synced to all devices');return true}catch(e){showAdminError('License delete failed: '+exact(e));return false}};
+async function hydrateSharedAll(){
+  if(!navigator.onLine||!session()?.uid)return;
+  for(const t of ['orderForm','supplySchedule','license']){
+    try{
+      const m=await readDoc(DOC_PATH[t]);if(!m||m.deleted){continue}
+      if(!m.chunked&&m.data){setLocalAsset(t,m);continue}
+      if(m.chunked&&Number(m.total)>0){let b='';for(let i=0;i<Number(m.total);i++){const c=await readDoc(DOC_PATH[t]+'__chunk_'+i);if(!c?.data)throw new Error(t+' document is missing chunk '+(i+1)+' of '+m.total);b+=c.data}setLocalAsset(t,{name:m.name,type:m.type,size:m.size,data:'data:'+(m.type||'application/pdf')+';base64,'+b,updatedAt:m.updatedAt})}
+    }catch(e){console.warn('V7 shared document hydrate',t,e)}
+  }
+}
+window.spV7HydrateSharedDocuments=hydrateSharedAll;
+setTimeout(hydrateSharedAll,1500);window.addEventListener('online',()=>setTimeout(hydrateSharedAll,800));
+
+/* ---------- 4) Keep all PDF upload controls together in Admin Control Center ---------- */
+function addPdfTools(){
+  const tools=document.getElementById('sp35MasterTools');if(!tools||tools.dataset.v7PdfTools==='1')return;
+  tools.dataset.v7PdfTools='1';
+  const wrap=document.createElement('div');wrap.className='sp-v7-pdf-tools';
+  wrap.innerHTML='<button class="sp35-final-card sp35-master-tool" type="button" onclick="sp35Point36()"><i>📋</i><b>Order Form PDF</b><small>Upload / replace / share</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="sp35Point37()"><i>🚚</i><b>Supply Schedule PDF</b><small>Upload / replace / share</small></button>';
+  tools.appendChild(wrap);
+}
+const mo=new MutationObserver(()=>{try{addPdfTools()}catch(e){}});mo.observe(document.documentElement,{childList:true,subtree:true});setTimeout(addPdfTools,500);setTimeout(addPdfTools,1800);
+
+/* ---------- 5) Fix the old Save+WhatsApp expense failure caused by bare toast35 ---------- */
+window.saveAndWhatsAppSalesmanExpense=async function(){
+  const btn=document.getElementById('sexSaveWhatsAppBtn'),old=btn?.innerHTML||'💾📲 Save • WhatsApp PDF';
+  try{
+    const d=typeof collectSalesmanExpense==='function'?collectSalesmanExpense():null;
+    if(d&&Number(d.endMeter||0)<Number(d.startMeter||0))throw new Error('End meter cannot be less than start meter');
+    if(typeof window.saveSalesmanExpenseDay==='function')window.saveSalesmanExpenseDay();
+    const date=document.getElementById('sexDate')?.value||((typeof today==='function')?today():new Date().toISOString().slice(0,10));
+    const builder=window.buildSalesmanExpensePDF;if(typeof builder!=='function')throw new Error('Expense PDF builder not available');
+    if(btn){btn.disabled=true;btn.innerHTML='⏳ Creating PDF…'}
+    const doc=await builder();if(!doc||typeof doc.output!=='function')throw new Error('Expense PDF could not be created');
+    const name='Shadab-Pharmacy-Expenses-'+date+'.pdf',blob=doc.output('blob');if(!blob?.size)throw new Error('PDF file is empty');
+    const file=new File([blob],name,{type:'application/pdf'});let shared=false;
+    if(typeof navigator.share==='function'){
+      let can=false;try{can=typeof navigator.canShare==='function'?navigator.canShare({files:[file]}):true}catch(e){can=false}
+      if(can){try{await navigator.share({title:'SHADAB PHARMACY — Expense Report',text:'Salesman Expense Report • '+date,files:[file]});shared=true}catch(e){if(e?.name==='AbortError')return true}}
+    }
+    if(!shared){doc.save(name);const phone=(Array.isArray(window.WA_NUMBERS)&&window.WA_NUMBERS[0])||'03006901869';const msg='SHADAB PHARMACY — Expense Report\nDate: '+date+'\nPDF saved: '+name;try{window.location.href='whatsapp://send?phone='+phone+'&text='+encodeURIComponent(msg)}catch(e){}setTimeout(()=>{try{window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank')}catch(e){}},500)}
+    const st=document.getElementById('sexExpenseDownloadTime');if(st)st.textContent='✓ Saved • '+(shared?'WhatsApp share ready':'PDF saved • WhatsApp opened')+' • '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+    if(btn){btn.innerHTML='✓ Saved • WhatsApp PDF';btn.classList.add('sex-upload-success');setTimeout(()=>{btn.disabled=false;btn.innerHTML=old;btn.classList.remove('sex-upload-success')},1800)}
+    window.toast35(shared?'✓ Saved — WhatsApp share sheet opened':'✓ PDF saved — WhatsApp opened');return true;
+  }catch(e){if(btn){btn.innerHTML='✕ Failed';btn.classList.add('sex-upload-failed');setTimeout(()=>{btn.disabled=false;btn.innerHTML=old;btn.classList.remove('sex-upload-failed')},1800)}window.toast35('✕ Save / WhatsApp failed — '+exact(e));return false}
+};
+
+/* ---------- 6) Pending Admin sync + reconnect ---------- */
+async function flushPending(){
+  if(!navigator.onLine)return;
+  const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)return;
+  try{if(localStorage.getItem('shadab_pending_admin_sync_v7')){await syncAdmin('offline-reconnect');localStorage.removeItem('shadab_pending_admin_sync_v7');window.toast35('✓ Internet restored — Admin data synced to Firebase')}}catch(e){showAdminError('Reconnect sync failed: '+exact(e))}
+}
+window.spV7FlushPending=flushPending;window.addEventListener('online',()=>setTimeout(flushPending,900));setTimeout(flushPending,1200);
+
+})();
+</script>
+
+<style id="sp-v8-two-requested-fixes-only">
+/* V8: ONLY the two requested PDF fixes. */
+.sp-v7-pdf-tools{display:none!important}
+#sp35ControlGrid .sp35-control-card:nth-child(n+36){display:none!important}
+.sp-v8-top-pdf-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+@media(max-width:620px){.sp-v8-top-pdf-tools{grid-template-columns:1fr}}
+</style>
+<script id="sp-v8-two-requested-fixes-only">
+(function(){
+'use strict';
+/* START: V8 — move the EXISTING Order/Supply controls to the top master-tools area. */
+function placeOldPdfControls(){
+  const tools=document.getElementById('sp35MasterTools');
+  if(!tools||tools.dataset.v8OldPdfControls==='1')return;
+  tools.dataset.v8OldPdfControls='1';
+  const wrap=document.createElement('div');
+  wrap.className='sp-v8-top-pdf-tools';
+  wrap.innerHTML='<button class="sp35-final-card sp35-master-tool" type="button" onclick="sp35Point36()"><i>📋</i><b>Order Form PDF</b><small>Upload / replace / share</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="sp35Point37()"><i>🚚</i><b>Supply Schedule PDF</b><small>Upload / replace / share</small></button>';
+  tools.appendChild(wrap);
+}
+function hideLegacyExtraPdfTools(){
+  document.querySelectorAll('.sp-v7-pdf-tools').forEach(x=>x.remove());
+}
+function hookPdfPlacement(){hideLegacyExtraPdfTools();placeOldPdfControls()}
+hookPdfPlacement();setTimeout(hookPdfPlacement,300);setTimeout(hookPdfPlacement,900);setTimeout(hookPdfPlacement,1800);
+new MutationObserver(hookPdfPlacement).observe(document.documentElement,{childList:true,subtree:true});
+/* END: V8 — move the EXISTING Order/Supply controls to the top master-tools area. */
+
+/* START: V8 — use the same proven masterData upload mechanism for Order/Supply/License. */
+const ADMIN='admin@shadabpharmacy.com';
+const MASTER='app_settings/masterData';
+function session(){try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}}
+function exact(e){return String(e?.api?.error?.message||e?.message||e||'Unknown Firebase error')+(e?.httpStatus?' [HTTP '+e.httpStatus+']':'')}
+function vault(){try{return JSON.parse(localStorage.getItem('shadab_locked_document_v1')||'{}')}catch(e){return {}}}
+function setLocal(type,a){const v=vault();if(a)v[type]=a;else delete v[type];try{localStorage.setItem('shadab_locked_document_v1',JSON.stringify(v))}catch(e){}try{window.shadabApplySharedAsset?.(type,a)}catch(e){}}
+async function readMaster(){if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestReadDoc(MASTER)||{}}
+async function writeMaster(v){if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestWriteDoc(MASTER,v)}
+async function readFile(file){
+  if(!file)throw new Error('Please select a file.');
+  if(file.size>850000)throw new Error('File is too large. Please use a PDF/image under about 850 KB.');
+  return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({name:file.name,type:file.type||'application/pdf',size:file.size,data:String(r.result||''),updatedAt:new Date().toISOString()});r.onerror=()=>reject(new Error('Could not read the selected file.'));r.readAsDataURL(file)})
+}
+function uploadButton(type){
+  if(type==='license')return document.querySelector('#spLicenseAdminModal .sp-license-admin-actions .primary')||document.querySelector('#spAdminLicenseCard .sp-license-admin-actions .primary');
+  return document.querySelector('#sp35WorkModal .sp35-actionsx .sp35-btnx.primary')||document.querySelector('#sp35WorkBody .sp35-actionsx .sp35-btnx.primary');
+}
+async function provenUpload(type,input){
+  const s=session();
+  if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin Firebase session is not ready. Open Admin Login once on this app.');
+  if(!navigator.onLine)throw new Error('Offline — document saved locally only; internet is required to publish it.');
+  const a=await readFile(input?.files?.[0]);
+  const master=await readMaster();
+  master[type]=a;
+  master.updatedAt=new Date().toISOString();
+  await writeMaster(master);
+  setLocal(type,a);
+  return a;
+}
+async function uploadUI(type,input){
+  const btn=uploadButton(type),old=btn?.innerHTML||'Upload / Replace';
+  try{
+    if(btn){btn.disabled=true;btn.innerHTML='⏳ Uploading…';btn.classList.remove('sp-license-upload-success','sp-license-upload-failed')}
+    await provenUpload(type,input);
+    if(btn){btn.innerHTML='✓ Upload Successful';btn.classList.add('sp-license-upload-success');setTimeout(()=>{btn.innerHTML=old;btn.disabled=false;btn.classList.remove('sp-license-upload-success')},2200)}
+    try{window.toast35('✓ '+(type==='license'?'SHADAB PHARMACY License':type==='orderForm'?'Order Form':'Supply Schedule')+' uploaded and synced to all devices')}catch(e){}
+    return true;
+  }catch(e){
+    const msg=(type==='license'?'License':type==='orderForm'?'Order Form':'Supply Schedule')+' upload failed: '+exact(e);
+    if(btn){btn.innerHTML='✕ Upload Failed';btn.disabled=false;btn.classList.add('sp-license-upload-failed');setTimeout(()=>{btn.innerHTML=old;btn.classList.remove('sp-license-upload-failed')},2400)}
+    try{window.spV7ShowAdminError?.(msg)}catch(_e){}
+    try{window.toast35('✕ '+msg)}catch(_e){}
+    return false;
+  }
+}
+window.adminUploadSharedDocument=async function(type,input){if(type!=='orderForm'&&type!=='supplySchedule')throw new Error('Unknown shared document.');return uploadUI(type,input)};
+window.adminUploadLockedLicense=async function(input){return uploadUI('license',input)};
+window.adminDeleteSharedDocument=async function(type){
+  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return false;const master=await readMaster();delete master[type];master.updatedAt=new Date().toISOString();await writeMaster(master);setLocal(type,null);window.toast35('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' deleted and synced to all devices');return true}catch(e){const msg='Document delete failed: '+exact(e);try{window.spV7ShowAdminError?.(msg)}catch(_e){}try{window.toast35('✕ '+msg)}catch(_e){}return false}
+};
+window.adminDeleteLockedLicense=async function(){
+  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');if(!confirm('Delete the current SHADAB PHARMACY License for all mobiles?'))return false;const master=await readMaster();delete master.license;master.updatedAt=new Date().toISOString();await writeMaster(master);setLocal('license',null);window.toast35('✓ SHADAB PHARMACY License deleted and synced to all devices');return true}catch(e){const msg='License delete failed: '+exact(e);try{window.spV7ShowAdminError?.(msg)}catch(_e){}try{window.toast35('✕ '+msg)}catch(_e){}return false}
+};
+async function hydrateProvenDocuments(){
+  if(!navigator.onLine||!session()?.uid)return;
+  try{const master=await readMaster();['orderForm','supplySchedule','license'].forEach(t=>{if(master?.[t]?.data)setLocal(t,master[t])})}catch(e){console.warn('V8 document hydrate:',e)}
+}
+setTimeout(hydrateProvenDocuments,1500);window.addEventListener('online',()=>setTimeout(hydrateProvenDocuments,800));
+/* END: V8 — use the same proven masterData upload mechanism for Order/Supply/License. */
+})();
+</script>
+
+<!-- V9 FINAL SURGICAL REPAIR: PDF CONTROLS + LICENSE STATUS + ADMIN REST COMPAT -->
+<style id="sp-v9-surgical-repair-style">
+/* START: V9 — only requested PDF/admin repair; existing sync/camera/summary UI untouched */
+.sp-v9-admin-doc-status{margin-top:8px!important;color:#69e6b1!important;font-weight:800!important;}
+/* END: V9 */
+</style>
+<script id="sp-v9-surgical-repair-runtime">
+(function(){
+  'use strict';
+  /* 1) The two PDF cards already use the proven old sp35Point36/37 handlers.
+        They must OPEN the existing Admin Control work view first; calling the
+        point directly leaves the work view hidden, which is why the cards looked dead. */
+  function fixPdfCardClicks(){
+    document.querySelectorAll('#sp35MasterTools [data-sp-v9-pdf-card]').forEach(function(b){
+      const n=b.getAttribute('data-sp-v9-pdf-card');
+      b.onclick=function(e){e.preventDefault();e.stopPropagation();if(typeof window.sp35OpenControl==='function')window.sp35OpenControl(Number(n));};
+    });
+    document.querySelectorAll('#sp35MasterTools button').forEach(function(b){
+      const txt=(b.textContent||'').trim();
+      if(txt.includes('Order Form PDF')){b.setAttribute('data-sp-v9-pdf-card','36');b.onclick=function(e){e.preventDefault();e.stopPropagation();window.sp35OpenControl?.(36);};}
+      if(txt.includes('Supply Schedule PDF')){b.setAttribute('data-sp-v9-pdf-card','37');b.onclick=function(e){e.preventDefault();e.stopPropagation();window.sp35OpenControl?.(37);};}
+    });
+  }
+  fixPdfCardClicks();
+  setTimeout(fixPdfCardClicks,300);setTimeout(fixPdfCardClicks,900);setTimeout(fixPdfCardClicks,1800);
+  new MutationObserver(fixPdfCardClicks).observe(document.documentElement,{childList:true,subtree:true});
+
+  /* 2) License upload really reaches Firebase, but the front-page badge was
+        reading a different local status key. Keep a tiny metadata/status marker
+        separate from the PDF bytes so a large PDF cannot make the badge disappear. */
+  function licenseMeta(){
+    try{return JSON.parse(localStorage.getItem('shadab_license_status_v1')||'null')}catch(e){return null}
+  }
+  function setLicenseMeta(a){
+    try{
+      if(a) localStorage.setItem('shadab_license_status_v1',JSON.stringify({name:a.name||'SHADAB PHARMACY License',type:a.type||'application/pdf',size:a.size||0,updatedAt:a.updatedAt||new Date().toISOString()}));
+      else localStorage.removeItem('shadab_license_status_v1');
+    }catch(e){}
+  }
+  function refreshLicenseStatus(){
+    let a=null;
+    try{a=window.spLockedGet?.('license')||null}catch(e){}
+    const meta=licenseMeta();
+    const has=!!(a||meta);
+    const ls=document.getElementById('sharedLicenseStatus');
+    if(ls){ls.textContent=has?'Available':'Not uploaded';ls.classList.toggle('sp-v9-admin-doc-status',has);}
+    const lm=document.getElementById('adminSharedLicenseMeta');
+    if(lm)lm.textContent=has?((a?.name||meta?.name||'SHADAB PHARMACY License')+' • '+(a?.type||meta?.type||'document')):'No file uploaded';
+    const meta2=document.getElementById('spLicenseAdminMeta');
+    if(meta2)meta2.textContent=has?((a?.name||meta?.name||'SHADAB PHARMACY License')+' • Saved'):'No license uploaded.';
+  }
+  window.spV9RefreshLicenseStatus=refreshLicenseStatus;
+  const oldLicenseUpload=window.adminUploadLockedLicense;
+  if(typeof oldLicenseUpload==='function'&&!oldLicenseUpload.__spV9){
+    const wrapped=async function(input){
+      const r=await oldLicenseUpload.apply(this,arguments);
+      if(r!==false){
+        try{setLicenseMeta(window.spLockedGet?.('license')||{name:input?.files?.[0]?.name||'SHADAB PHARMACY License',type:input?.files?.[0]?.type||'application/pdf',size:input?.files?.[0]?.size||0,updatedAt:new Date().toISOString()})}catch(e){}
+      }
+      refreshLicenseStatus();
+      return r;
+    };
+    wrapped.__spV9=true;window.adminUploadLockedLicense=wrapped;
+  }
+  const oldLicenseDelete=window.adminDeleteLockedLicense;
+  if(typeof oldLicenseDelete==='function'&&!oldLicenseDelete.__spV9){
+    const wrapped=async function(){const r=await oldLicenseDelete.apply(this,arguments);if(r!==false)setLicenseMeta(null);refreshLicenseStatus();return r};
+    wrapped.__spV9=true;window.adminDeleteLockedLicense=wrapped;
+  }
+  refreshLicenseStatus();
+  setTimeout(refreshLicenseStatus,700);setTimeout(refreshLicenseStatus,1800);
+  window.addEventListener('online',function(){setTimeout(refreshLicenseStatus,900)});
+
+  /* 3) Admin Control Center points were written against db()/auth(), while
+        the current GitHub Admin session is REST-authenticated. Give those
+        existing points the same REST-backed compatibility layer without
+        changing their UI or the locked sync engine. */
+  const sdkDb=window.db;
+  const sdkAuth=window.auth;
+  function restSession(){try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}}
+  function restCompat(){try{return window.shadabRestDbCompat?.()||null}catch(e){return null}}
+  window.db=function(){
+    const rs=restSession();
+    if(rs?.uid&&restCompat())return restCompat();
+    try{return typeof sdkDb==='function'?sdkDb():null}catch(e){return null}
+  };
+  window.auth=function(){
+    const a=(()=>{try{return typeof sdkAuth==='function'?sdkAuth():null}catch(e){return null}})();
+    if(a?.currentUser)return a;
+    const rs=restSession();
+    if(rs?.uid)return {currentUser:{uid:rs.uid,email:rs.email||'',displayName:rs.displayName||localStorage.getItem('shadab_last_salesman_v1')||rs.email||''}};
+    return a;
+  };
+
+  /* Existing Point 18 (reinstall/restore) should read through REST when the
+     current Admin/Salesman session is REST-authenticated. */
+  window.sp35Point18=async function(){
+    const b=document.getElementById('sp35WorkBody')||document.getElementById('sp35WorkBodyNew');
+    if(!b)return;
+    const rs=restSession();
+    const u=rs?.uid?{uid:rs.uid,email:rs.email||'',displayName:rs.displayName||rs.email||''}:(sdkAuth?.()?.currentUser||null);
+    if(!u){b.innerHTML='<div class="sp35-emptyx">Sign in with the same Firebase account on this device first.</div>';return}
+    b.innerHTML='<div class="sp35-emptyx">Reading server backup…</div>';
+    try{
+      let q;
+      if(rs?.uid&&typeof window.shadabRestReadDoc==='function')q=await window.shadabRestReadDoc('user_data/'+encodeURIComponent(rs.uid));
+      else {const d=typeof sdkDb==='function'?sdkDb():null;if(!d)throw new Error('Firebase is unavailable.');const snap=await d.collection('user_data').doc(u.uid).get({source:'server'});q=snap.exists?snap.data():null;}
+      if(!q){b.innerHTML='<div class="sp35-notice-final">No server backup exists yet. Use Firebase Sync first.</div>';return}
+      const x=q||{};if(Array.isArray(x.visits))visits=x.visits;if(Array.isArray(x.stores))storeDatabase=x.stores;if(x.territories&&typeof x.territories==='object')territories=x.territories;if(x.routeTasks&&typeof x.routeTasks==='object')routeTasks=x.routeTasks;
+      try{saveData()}catch(e){} try{if(typeof saveRouteTasks==='function')saveRouteTasks()}catch(e){}
+      try{renderRecords()}catch(e){} try{updateStats()}catch(e){} try{renderTodayTasks()}catch(e){} try{updatePremiumDashboard()}catch(e){}
+      b.innerHTML='<div class="sp35-notice-final">🟢 Server data restored.<br>Visits: '+visits.length+' • Stores: '+storeDatabase.length+'</div>';
+    }catch(e){b.innerHTML='<div class="sp35-empty-final">Restore failed: '+String(e?.message||e)+'</div>'}
+  };
+
+  /* Existing Firebase Sync Status control should use the same REST path as the
+     already-working manual sync, instead of requiring a second SDK session. */
+  window.sp35FirebaseCheckNew=async function(){
+    const r=document.getElementById('sp35FirebaseResult');if(!r)return;
+    if(!navigator.onLine){r.innerHTML='🟠 Offline — local mode is active.';return}
+    const rs=restSession();
+    if(!rs?.uid||typeof window.shadabRestReadDoc!=='function'){r.innerHTML='🟠 Firebase session is not ready on this app. Sign in once, then check again.';return}
+    try{await window.shadabRestReadDoc('salesmen/'+encodeURIComponent(rs.uid));r.innerHTML='🟢 Firebase + Firestore server access is working.'}
+    catch(e){r.innerHTML='🔴 Firebase rejected the request: '+String(e?.message||e)}
+  };
+
+  /* Re-render Admin Control Center after the compatibility layer is installed,
+     but do not replace any of its existing point handlers. */
+  setTimeout(function(){try{refreshLicenseStatus();fixPdfCardClicks()}catch(e){}},1200);
+})();
+</script>
+<!-- V13 — ONLY the two requested PDF/license fixes. No other app systems changed. -->
+<style id="sp-v13-only-pdf-location">
+/* Remove only the newly-added duplicate Order/Supply cards. */
+#sp35MasterTools .sp-v8-top-pdf-tools,
+#sp35MasterTools .sp-v7-pdf-tools{display:none!important}
+/* The original Order/Supply controls are moved into the existing Master Tools row. */
+.sp-v13-original-pdf-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+@media(max-width:620px){.sp-v13-original-pdf-tools{grid-template-columns:1fr}}
+</style>
+<script id="sp-v13-only-pdf-location">
+(function(){
+'use strict';
+/* START: V13 — preserve the ORIGINAL control cards and their original handlers. */
+let moved=false;
+function removeNewCopies(){
+  document.querySelectorAll('.sp-v8-top-pdf-tools,.sp-v7-pdf-tools').forEach(function(x){
+    if(x.parentElement && x.parentElement.id==='sp35MasterTools') x.remove();
+    else x.remove();
+  });
+}
+function moveOriginals(){
+  const tools=document.getElementById('sp35MasterTools');
+  const grid=document.getElementById('sp35ControlGrid');
+  if(!tools||!grid)return false;
+  const cards=Array.from(grid.children).filter(function(x){return x.classList&&x.classList.contains('sp35-control-card')});
+  const order=cards.filter(function(card){
+    const t=(card.textContent||'').replace(/\s+/g,' ').trim();
+    return t.includes('Order Form') || t.includes('Supply Schedule');
+  });
+  if(order.length<2)return false;
+  let wrap=document.getElementById('spV13OriginalPdfTools');
+  if(!wrap){
+    wrap=document.createElement('div');
+    wrap.id='spV13OriginalPdfTools';
+    wrap.className='sp-v13-original-pdf-tools';
+    tools.appendChild(wrap);
+  }
+  order.forEach(function(card){
+    /* Move the actual original DOM node — its original onclick/function wiring stays intact. */
+    wrap.appendChild(card);
+  });
+  moved=true;
+  return true;
+}
+function repair(){
+  removeNewCopies();
+  if(moveOriginals()){
+    /* Never run a continuous MutationObserver here: moving nodes itself creates mutations. */
+    return true;
+  }
+  return false;
+}
+function hook(){
+  repair();
+  [100,350,800,1500].forEach(function(ms){setTimeout(repair,ms)});
+}
+/* Admin modal is created dynamically, so observe only until the original cards have been moved. */
+const observer=new MutationObserver(function(){
+  if(moved){observer.disconnect();return;}
+  if(repair()){observer.disconnect();}
+});
+observer.observe(document.documentElement,{childList:true,subtree:true});
+hook();
+/* END: V13 — original PDF cards only. */
+
+/* START: V13 — License status only. Keep the existing upload engine untouched. */
+function refreshLicenseStatusV13(){
+  let a=null,meta=null;
+  try{a=window.spLockedGet?.('license')||null}catch(e){}
+  try{meta=JSON.parse(localStorage.getItem('shadab_license_status_v1')||'null')}catch(e){}
+  const has=!!(a||meta);
+  const ls=document.getElementById('sharedLicenseStatus');
+  if(ls)ls.textContent=has?'Available':'Not uploaded';
+  const lm=document.getElementById('adminSharedLicenseMeta');
+  if(lm)lm.textContent=has?((a?.name||meta?.name||'SHADAB PHARMACY License')+' • '+(a?.type||meta?.type||'document')):'No file uploaded';
+  const mm=document.getElementById('spLicenseAdminMeta');
+  if(mm)mm.textContent=has?((a?.name||meta?.name||'SHADAB PHARMACY License')+' • Saved'):'No license uploaded.';
+}
+refreshLicenseStatusV13();
+[500,1200,2500].forEach(function(ms){setTimeout(refreshLicenseStatusV13,ms)});
+window.addEventListener('online',function(){setTimeout(refreshLicenseStatusV13,800)});
+/* END: V13 — License status only. */
+})();
+</script>
+</html>
