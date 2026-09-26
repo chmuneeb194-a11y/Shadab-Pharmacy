@@ -6443,12 +6443,18 @@ body.dark .sp-route-lock .sp-terr-dropdown-trigger,body.dark .sp-route-lock .sp-
 .sp-license-admin-actions button{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--soft);color:inherit;font-weight:800;cursor:pointer}
 .sp-license-admin-actions .primary{background:#087fe8;color:#fff;border-color:#087fe8}.sp-license-admin-actions .danger{color:#c43b3b;background:rgba(220,60,60,.08)}
 </style>
+<style id="sp-license-upload-feedback">
+.sp-license-admin-actions .primary.sp-license-uploading{position:relative;opacity:.9}
+.sp-license-admin-actions .primary.sp-license-upload-success{background:#19b96b!important;border-color:#19b96b!important;color:#fff!important;box-shadow:0 0 0 3px rgba(25,185,107,.12),0 8px 20px rgba(25,185,107,.22);animation:spLicenseSuccessPulse .55s ease-out}
+.sp-license-admin-actions .primary.sp-license-upload-failed{background:#d94848!important;border-color:#d94848!important;color:#fff!important}
+@keyframes spLicenseSuccessPulse{0%{transform:scale(.97);box-shadow:0 0 0 0 rgba(25,185,107,.28)}100%{transform:scale(1);box-shadow:0 0 0 3px rgba(25,185,107,.12),0 8px 20px rgba(25,185,107,.22)}}
+</style>
 <script id="sp-locked-license-runtime">
 (function(){
 'use strict';
 const VAULT_KEY='shadab_locked_document_v1';
 const LICENSE_KEY='shadab_pharmacy_license_v1';
-const MASTER_PATH='app_settings/lockedDocuments';
+const MASTER_PATH='app_settings/masterData';
 let licenseActive=false;
 function vaultRead(){try{return JSON.parse(localStorage.getItem(VAULT_KEY)||'{}')}catch(e){return {}}}
 function vaultWrite(v){try{localStorage.setItem(VAULT_KEY,JSON.stringify(v))}catch(e){}}
@@ -6509,8 +6515,24 @@ window.spLockedLicenseShare=async()=>{
 window.spLockedLicenseDownload=()=>{const a=asset('license');if(!a)return toastL('No License uploaded yet.');const l=document.createElement('a');l.href=a.data;l.download=a.name||'Shadab-Pharmacy-License.pdf';l.click()};
 window.adminUploadLockedLicense=async input=>{
  if(!isAdminL())return toastL('Admin login required.');
- try{const a=await fileData(input?.files?.[0]);setAsset('license',a);const v=await cloudRead();v.license=a;v.updatedAt=new Date().toISOString();await cloudWrite(v);lockedStatus();toastL('✓ SHADAB PHARMACY License uploaded and locked.');}
- catch(e){toastL('License upload failed: '+(e.message||e))}
+ const card=input?.closest?.('#spAdminLicenseCard')||document.getElementById('spAdminLicenseCard');
+ const btn=card?.querySelector?.('.sp-license-admin-actions .primary');
+ const old=btn?.innerHTML||'Upload / Replace';
+ try{
+   if(btn){btn.disabled=true;btn.dataset.licenseOld=old;btn.innerHTML='⏳ Uploading…';btn.classList.add('sp-license-uploading')}
+   const a=await fileData(input?.files?.[0]);
+   setAsset('license',a);
+   const v=await cloudRead();
+   v.license=a;v.updatedAt=new Date().toISOString();
+   await cloudWrite(v);
+   lockedStatus();
+   if(btn){btn.innerHTML='✓ Upload Successful';btn.classList.remove('sp-license-uploading');btn.classList.add('sp-license-upload-success')}
+   toastL('✓ SHADAB PHARMACY License uploaded and locked.');
+   setTimeout(()=>{if(btn){btn.innerHTML=btn.dataset.licenseOld||old;btn.disabled=false;btn.classList.remove('sp-license-upload-success')}} ,2200);
+ }catch(e){
+   if(btn){btn.innerHTML='✕ Upload Failed';btn.classList.remove('sp-license-uploading');btn.classList.add('sp-license-upload-failed');setTimeout(()=>{if(btn){btn.innerHTML=btn.dataset.licenseOld||old;btn.disabled=false;btn.classList.remove('sp-license-upload-failed')}} ,2200)}
+   toastL('License upload failed: '+(e.message||e));
+ }
 };
 window.adminDeleteLockedLicense=async()=>{
  if(!isAdminL())return toastL('Admin login required.');
@@ -6836,6 +6858,123 @@ new MutationObserver(hook).observe(document.documentElement,{childList:true,subt
 .camera-tools{bottom:4px!important;}
 @media(max-width:520px){.camera-tools{bottom:4px!important;}}
 </style>
+
+<style id="sp-v25-cloud-doc-sync-style">
+.sp-v25-uploading{position:relative!important;overflow:hidden}
+.sp-v25-uploading::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-100%);animation:spV25UploadSweep 1s linear infinite}
+.sp-v25-upload-success{background:#19b96b!important;border-color:#19b96b!important;color:#fff!important;box-shadow:0 0 0 3px rgba(25,185,107,.13),0 8px 20px rgba(25,185,107,.20)}
+.sp-v25-upload-failed{background:#d94848!important;border-color:#d94848!important;color:#fff!important}
+@keyframes spV25UploadSweep{to{transform:translateX(100%)}}
+</style>
+<script id="sp-v25-cloud-sync-final">
+(function(){
+'use strict';
+const DOC_BASE='app_settings/sharedDocuments';
+const DOC_PATH={orderForm:DOC_BASE+'/orderForm',supplySchedule:DOC_BASE+'/supplySchedule',license:DOC_BASE+'/license'};
+const ADMIN='admin@shadabpharmacy.com';
+const escV25=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const sessionV25=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+const toastV25=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
+const vaultReadV25=()=>{try{return JSON.parse(localStorage.getItem('shadab_locked_document_v1')||'{}')}catch(e){return {}}};
+const vaultWriteV25=v=>{try{localStorage.setItem('shadab_locked_document_v1',JSON.stringify(v))}catch(e){}};
+async function readCloud(path){const f=window.shadabRestReadDoc;if(typeof f!=='function')throw new Error('Firebase REST engine is not loaded.');return await f(path)}
+async function writeCloud(path,obj){const f=window.shadabRestWriteDoc;if(typeof f!=='function')throw new Error('Firebase REST engine is not loaded.');return await f(path,obj)}
+function currentPayload(){
+ const clone=window.jsonClone||((x)=>JSON.parse(JSON.stringify(x)));
+ const noPhoto=x=>{const y=clone(x)||{};if(y&&typeof y==='object'&&'photo'in y)y.photo='';return y};
+ const all=typeof visits!=='undefined'?(clone(visits)||[]):[];
+ let v=all, compacted=false;
+ const make=(vv)=>({uid:sessionV25()?.uid,updatedAt:new Date().toISOString(),visits:vv,territories:typeof territories!=='undefined'?(clone(territories)||{}):{},routeTasks:typeof routeTasks!=='undefined'?(clone(routeTasks)||{}):{},expenses:typeof window.shadabExpenseDataForSync==='function'?window.shadabExpenseDataForSync():{},summaryDetail:typeof window.shadabSummaryDataForSync==='function'?window.shadabSummaryDataForSync():{},reason:'manual-sync'});
+ let p=make(v),bytes=new Blob([JSON.stringify(p)]).size;
+ if(bytes>700000){v=all.map(noPhoto);p=make(v);bytes=new Blob([JSON.stringify(p)]).size;compacted=true}
+ if(bytes>950000)throw new Error('Firebase record is too large ('+Math.round(bytes/1024)+' KB). Photos were removed but the remaining data is still too large.');
+ p._compacted=compacted;return p;
+}
+async function syncV25(){
+ if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
+ const s=sessionV25();
+ if(!s?.uid)throw new Error('Firebase session is not available. Please sign in again on this GitHub app.');
+ if(!s.idToken)throw new Error('Firebase authentication token is missing. Please sign in again.');
+ // Force the existing REST layer to prove that the GitHub-hosted session can reach Firestore.
+ try{await readCloud('salesmen/'+encodeURIComponent(s.uid))}catch(e){throw new Error('Firebase authentication/server access failed: '+(e?.message||e))}
+ await writeCloud('user_data/'+encodeURIComponent(s.uid),currentPayload());
+ try{window.__shadabLastFirebaseSync={at:new Date().toISOString(),ok:true}}catch(e){}
+ return true;
+}
+window.shadabSyncSalesmanNow=syncV25;
+window.sp35SyncNow=syncV25;window.sp35SyncNew=syncV25;
+// Keep the existing locked sync animation/controller; only replace its cloud engine.
+// If an older controller is still installed, this wrapper preserves its visual behavior.
+window.sp35ManualSyncFinal=async function(button){
+ const b=button||document.getElementById('sp35ManualSyncFinal');
+ const result=document.getElementById('sp35FirebaseResult');
+ const old=b?.innerHTML;
+ if(b){b.disabled=true;b.setAttribute('aria-busy','true');b.dataset.spV25Old=old||''}
+ if(result)result.innerHTML='🔄 <b>Syncing…</b> Uploading local data to Firebase…';
+ try{
+   await syncV25();
+   const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+   if(result)result.innerHTML='🟢 <b>Sync Successful</b> — Firebase updated at '+escV25(t);
+   toastV25('✓ Sync Successful — Firebase updated at '+t);
+   return true;
+ }catch(e){
+   const msg=String(e?.message||e);
+   if(result)result.innerHTML='🔴 <b>Sync failed</b> — '+escV25(msg);
+   toastV25('✕ Firebase sync failed — '+msg);
+   console.error('Shadab Firebase V25 sync:',e);
+   return false;
+ }finally{
+   if(b){b.disabled=false;b.removeAttribute('aria-busy');if(b.dataset.spV25Old)b.innerHTML=b.dataset.spV25Old}
+ }
+};
+
+async function fileDataV25(file){
+ if(!file)throw new Error('Please select a file.');
+ if(file.size>900000)throw new Error('File is too large. Please use a PDF/image under 900 KB.');
+ return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve({name:file.name,type:file.type,size:file.size,data:r.result,updatedAt:new Date().toISOString()});r.onerror=reject;r.readAsDataURL(file)})
+}
+function localAsset(t,a){const v=vaultReadV25();if(a)v[t]=a;else delete v[t];vaultWriteV25(v);try{window.shadabApplySharedAsset?.(t,a)}catch(e){}}
+function setUploadState(btn,state,text){if(!btn)return;btn.classList.remove('sp-v25-uploading','sp-v25-upload-success','sp-v25-upload-failed');if(state)btn.classList.add(state);btn.innerHTML=text;}
+async function publishDoc(type,input,btn){
+ const s=sessionV25();
+ if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');
+ if(!navigator.onLine)throw new Error('Internet is required to publish this document.');
+ const a=await fileDataV25(input?.files?.[0]);
+ await writeCloud(DOC_PATH[type],a);
+ localAsset(type,a);
+ return a;
+}
+window.adminUploadSharedDocument=async function(type,input){
+ const card=input?.closest?.('.shared-admin-card');const btn=card?.querySelector?.('.shared-admin-actions .primary');const old=btn?.innerHTML||'Upload / Replace';
+ try{if(btn){btn.disabled=true;setUploadState(btn,'sp-v25-uploading','⏳ Uploading…')}await publishDoc(type,input,btn);if(btn){setUploadState(btn,'sp-v25-upload-success','✓ Upload Successful');setTimeout(()=>{btn.disabled=false;setUploadState(btn,null,old)},2200)}toastV25('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' uploaded and synced to all mobiles.')}catch(e){if(btn){setUploadState(btn,'sp-v25-upload-failed','✕ Upload Failed');setTimeout(()=>{btn.disabled=false;setUploadState(btn,null,old)},2200)}toastV25('Upload failed: '+(e?.message||e))}}
+window.adminDeleteSharedDocument=async function(type){
+ const s=sessionV25();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)return toastV25('Admin login required');
+ if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return;
+ try{await writeCloud(DOC_PATH[type],{deleted:true,updatedAt:new Date().toISOString()});localAsset(type,null);toastV25('✓ Deleted and synced to all mobiles')}catch(e){toastV25('Delete failed: '+(e?.message||e))}
+};
+window.adminUploadLockedLicense=async function(input){
+ const card=document.getElementById('spAdminLicenseCard'),btn=card?.querySelector?.('.sp-license-admin-actions .primary'),old=btn?.innerHTML||'Upload / Replace';
+ try{const s=sessionV25();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');if(btn){btn.disabled=true;setUploadState(btn,'sp-v25-uploading','⏳ Uploading…')}const a=await fileDataV25(input?.files?.[0]);await writeCloud(DOC_PATH.license,a);localAsset('license',a);try{window.lockedStatus?.()}catch(e){}if(btn){setUploadState(btn,'sp-v25-upload-success','✓ Upload Successful');setTimeout(()=>{btn.disabled=false;setUploadState(btn,null,old)},2200)}toastV25('✓ SHADAB PHARMACY License uploaded and synced to all mobiles.')}catch(e){if(btn){setUploadState(btn,'sp-v25-upload-failed','✕ Upload Failed');setTimeout(()=>{btn.disabled=false;setUploadState(btn,null,old)},2200)}toastV25('License upload failed: '+(e?.message||e))}}
+window.adminDeleteLockedLicense=async function(){
+ const s=sessionV25();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)return toastV25('Admin login required');if(!confirm('Delete SHADAB PHARMACY License for all mobiles?'))return;
+ try{await writeCloud(DOC_PATH.license,{deleted:true,updatedAt:new Date().toISOString()});localAsset('license',null);toastV25('✓ SHADAB PHARMACY License deleted from all mobiles')}catch(e){toastV25('Delete failed: '+(e?.message||e))}
+};
+async function hydrateV25(){
+ try{
+  const v=vaultReadV25();
+  for(const t of ['orderForm','supplySchedule','license']){
+   try{const x=await readCloud(DOC_PATH[t]);if(x&&!x.deleted&&x.data){v[t]=x;try{window.shadabApplySharedAsset?.(t,x)}catch(e){}}}catch(e){console.warn('Shared document hydrate '+t,e)}
+  }
+  vaultWriteV25(v);
+  try{window.renderSharedDocuments?.()}catch(e){}
+ }catch(e){console.warn('V25 document hydrate:',e)}
+}
+window.spV25HydrateDocuments=hydrateV25;
+window.addEventListener('online',()=>setTimeout(hydrateV25,1200));
+setInterval(()=>{if(navigator.onLine&&sessionV25()?.uid)hydrateV25()},600000);
+setTimeout(()=>{if(navigator.onLine)hydrateV25()},1800);
+})();
+</script>
 </body>
 <style id="sp-camera-onsite-final-lock">
 /* On-site Photo alignment only — sync UI untouched */
