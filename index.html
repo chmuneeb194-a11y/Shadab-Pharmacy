@@ -262,8 +262,7 @@ body:not(.dark) .overview-card{background:linear-gradient(145deg,rgba(255,255,25
 body:not(.dark) .follow-stat{background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(239,247,252,.92))!important;border-color:rgba(72,146,190,.12)!important}
 /* ===== END: V10 PREMIUM COLOR CORRECTION ===== */
 </style>
-<style id="shadab-task-pdf-style">.task-pdf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:650px){.task-pdf-actions .btn{width:100%}}<style id="field-manager-upgrade-style">.voice-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:7px}.voice-tools select{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:var(--card);color:inherit;font-size:11px}.voice-hint{font-size:10px;color:var(--muted)}.field-manager-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:rgba(32,201,107,.10);color:#159b50;font-size:10px;font-weight:800}.admin-assignment-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.admin-assignment-meta span{padding:5px 8px;border:1px solid var(--line);border-radius:9px;font-size:10px;color:var(--muted)}body.dark .voice-tools select{background:#10283a;color:#eef8ff;border-color:rgba(101,206,255,.12)}</style>
-</style>
+<style id="shadab-task-pdf-style">.task-pdf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:650px){.task-pdf-actions .btn{width:100%}}</style><style id="field-manager-upgrade-style">.voice-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:7px}.voice-tools select{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:var(--card);color:inherit;font-size:11px}.voice-hint{font-size:10px;color:var(--muted)}.field-manager-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:rgba(32,201,107,.10);color:#159b50;font-size:10px;font-weight:800}.admin-assignment-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.admin-assignment-meta span{padding:5px 8px;border:1px solid var(--line);border-radius:9px;font-size:10px;color:var(--muted)}body.dark .voice-tools select{background:#10283a;color:#eef8ff;border-color:rgba(101,206,255,.12)}</style>
 <style id="shadab-admin-style">#routePlannerCard{display:none}.admin-schedule-grid{display:grid;gap:8px;margin-top:12px}.admin-day-row{display:block;padding:0;border:1px solid #0000000d;border-radius:14px;background:#ffffffaa;overflow:hidden}.admin-day-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:0;background:transparent;font:inherit;font-weight:700;text-align:left;cursor:pointer}.admin-day-toggle .day-meta{font-size:11px;color:var(--muted);font-weight:500;margin-left:auto}.admin-day-toggle .day-chevron{font-size:14px;transition:transform .15s ease}.admin-day-row.open .day-chevron{transform:rotate(180deg)}.admin-day-content{display:none;padding:0 12px 12px}.admin-day-row.open .admin-day-content{display:block}.admin-territory-list{display:flex;flex-wrap:wrap;gap:7px}.admin-territory-list label{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #dddde2;border-radius:12px;background:#fff;font-size:12px}.admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.admin-login-note{font-size:12px;color:var(--muted);margin:0 0 12px}.admin-panel .modal-box{max-width:980px}.admin-saved-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border:1px solid #0000000d;border-radius:14px;margin-top:7px;background:#fff}.admin-saved-row small{display:block;color:var(--muted);margin-top:3px}.task-name-list{display:grid;gap:7px;max-height:55vh;overflow:auto}.task-name-row{padding:10px 12px;border:1px solid #0000000d;border-radius:13px;background:#fff}.task-name-row small{display:block;color:var(--muted);margin-top:3px}@media(max-width:650px){.admin-saved-row{align-items:flex-start;flex-direction:column}}body.dark .admin-day-row,body.dark .admin-territory-list label,body.dark .admin-saved-row,body.dark .task-name-row{background:rgba(19,47,64,.7);border-color:rgba(101,206,255,.10)}</style>
 <style id="shadab-new-assignment-style">
 .territory-multiselect{min-height:44px;width:100%;border-radius:12px;padding:8px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.12)}
@@ -713,7 +712,7 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
 <div class="modal" id="sharedDocModal"><div class="modal-box"><div class="modal-head"><h3 id="sharedDocTitle">Order Form</h3><button class="close" type="button" onclick="closeSharedDocument()">×</button></div><div class="shared-doc-preview" id="sharedDocPreview"></div><div class="shared-doc-actions"><button class="primary" type="button" onclick="previewSharedDocument()">👁️ Preview</button><button type="button" onclick="shareSharedDocument()">📲 Share WhatsApp</button><button type="button" onclick="saveSharedDocumentAsImage()">🖼️ Save Local as Image</button><button type="button" onclick="downloadSharedDocumentPDF()">⬇️ Download as PDF</button><button type="button" onclick="closeSharedDocument()">Close</button></div></div></div>
 <!-- ===== END: SHARED ORDER FORM + SUPPLY SCHEDULE ===== -->
 </main>
-<div id="offlineModeHint" class="footer">SHADAB PHARMACY • Admin Muneeb Sarwar</div>
+<div id="offlineModeHint" class="footer">SHADAB PHARMACY • Amin Muneeb Sarwar</div>
 </div>
 
 <button class="whatsapp" onclick="shareAllToday()" title="Share today's visits" aria-label="Share today's visits">
@@ -1781,69 +1780,7 @@ function printHTML(title,data){
   const rows=data.map(v=>`<tr><td>${v.photo?`<img src="${v.photo}">`:"—"}</td><td>${esc(v.store)}</td><td>${esc(v.visitedBy||"—")}</td><td>${esc(v.person)}</td><td>${esc(v.type)}</td><td>${esc(v.area)}</td><td>${esc(v.territory)}</td><td>${formatDate(v.date)}<br>${esc(v.time)}</td></tr>`).join("");
   const w=window.open("","_blank","width=1000,height=800");
   if(!w){toast("Please allow the print popup");return;}
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>SHADAB PHARMACY — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style>
-<style>
-/* ===== START: V9 DASHBOARD DENSITY + SINGLE TASK SOURCE ===== */
-.premium-dashboard{padding:14px!important;margin:12px 0 14px!important}
-.dash-grid{gap:7px}.dash-stat{padding:10px 11px;border-radius:15px}.dash-stat b{font-size:23px;margin:2px 0}.dash-head{margin-bottom:9px}
-.follow-head{margin:12px 0 7px;padding-top:11px}.overview-columns{gap:8px;margin-top:8px}.overview-card{padding:10px;border-radius:16px}.overview-card h3{margin-bottom:7px}.overview-card .follow-grid,.follow-grid{gap:6px}.follow-stat{padding:8px 9px;border-radius:13px}.follow-stat b{font-size:20px;margin-top:2px}.follow-stat small{font-size:8px}.follow-stack{height:7px!important;margin:7px 0 0!important}
-.route-planner{margin-top:12px}.route-head h2{margin:3px 0}.route-head span:not(.eyebrow){font-size:11px}.task-progress-wrap{margin:10px 0}.task-list{max-height:300px}
-/* The dashboard is the single place for route/follow-up summary counts. The planner below is for assignment and the actual checklist only. */
-.route-planner .route-summary{display:none!important}
-@media(max-width:760px){
- .premium-dashboard{padding:12px!important}
- .dash-grid{gap:6px}
- .overview-columns{grid-template-columns:1fr;gap:7px}
- .overview-card{padding:9px}
- .overview-card .follow-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
- .follow-stat{padding:7px 6px;min-width:0}
- .follow-stat b{font-size:19px}
- .follow-stat small{font-size:7px;line-height:1.15}
- .follow-stat span{font-size:11px;white-space:nowrap}
- .follow-stat .f-dot{width:7px;height:7px;margin-right:3px}
- .dash-bars{height:54px;margin-top:9px;padding-top:4px}
-}
-@media(max-width:430px){
- .overview-card .follow-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
- .follow-stat{padding:8px}
- .follow-stat span{font-size:12px}
-}
-/* ===== END: V9 DASHBOARD DENSITY + SINGLE TASK SOURCE ===== */
-</style>
-
-<style>
-/* ===== START: V10 PREMIUM COLOR CORRECTION ===== */
-body.dark .premium-dashboard{background:linear-gradient(145deg,rgba(8,27,43,.94),rgba(9,18,30,.96))!important;border-color:rgba(67,190,255,.14)!important;box-shadow:0 22px 70px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.035)!important}
-body.dark .overview-card{background:linear-gradient(145deg,rgba(17,42,60,.92),rgba(10,28,43,.94))!important;border-color:rgba(93,205,255,.13)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 30px rgba(0,0,0,.18)}
-body.dark .follow-stat{background:linear-gradient(145deg,rgba(23,53,72,.88),rgba(13,35,52,.92))!important;border-color:rgba(111,215,255,.10)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
-body.dark .follow-stat small{color:#9fb2c3!important}
-body.dark .follow-stack{background:#071521!important;border:1px solid rgba(255,255,255,.06)}
-body.dark .route-planner{background:linear-gradient(145deg,rgba(10,25,39,.96),rgba(7,16,27,.98))!important;border-color:rgba(74,188,255,.12)!important}
-body.dark .route-planner .route-summary>div{background:linear-gradient(145deg,rgba(20,47,64,.85),rgba(12,31,46,.9))!important}
-body.dark .route-planner .today-task,body.dark .route-planner .assign-row,body.dark .route-planner .territory-check{background:rgba(19,47,64,.58)!important;border-color:rgba(101,206,255,.10)!important}
-body.dark .dash-stat{background:linear-gradient(145deg,rgba(18,44,61,.9),rgba(11,29,44,.92))!important;border-color:rgba(98,208,255,.11)!important}
-body.dark .follow-head{border-color:rgba(89,198,255,.10)!important}
-body.dark .follow-head b,body.dark .overview-card h3{color:#f6fbff!important}
-body.dark .route-head h2{color:#f6fbff!important}
-/* Keep light mode clean and premium rather than grey. */
-body:not(.dark) .overview-card{background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(238,247,253,.86))!important;border-color:rgba(72,146,190,.16)!important}
-body:not(.dark) .follow-stat{background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(239,247,252,.92))!important;border-color:rgba(72,146,190,.12)!important}
-/* ===== END: V10 PREMIUM COLOR CORRECTION ===== */
-</style>
-<style id="shadab-new-assignment-style">
-.territory-multiselect{min-height:44px;width:100%;border-radius:12px;padding:8px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.12)}
-.territory-multiselect option{padding:7px 8px}
-.field-hint{display:block;color:var(--muted);font-size:11px;margin-top:5px}
-.admin-week{display:grid;gap:8px;margin-top:14px}.admin-day-row{border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.78)}.admin-day-row.open .admin-day-content{display:block}.admin-day-content{display:none;padding:10px 12px 12px}.admin-saved-block{margin-top:18px}.admin-saved-block h4{margin:0 0 8px}.admin-day-toggle{width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;border:0;background:transparent;font-weight:800;cursor:pointer}.admin-day-toggle .day-meta{margin-left:auto;color:var(--muted);font-size:11px;font-weight:600}.admin-territory-list{display:flex;flex-wrap:wrap;gap:7px}.admin-territory-list label{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid rgba(0,0,0,.1);border-radius:11px;background:#fff;font-size:12px}.admin-territory-list input{accent-color:#0b63ce}
-body.dark .territory-multiselect,body.dark .admin-day-row,body.dark .admin-territory-list label{background:rgba(19,47,64,.72);color:#fff;border-color:rgba(255,255,255,.12)}
-</style></head><body><h1>SHADAB PHARMACY</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p>
-
-
-
-
-
-
-</body>`;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p></body></html>`;
   w.document.open();
   w.document.write(html);
   w.document.close();
@@ -4712,6 +4649,7 @@ try{document.addEventListener('input',e=>{if(e.target?.closest?.('#salesmanExpen
 .sd-modal-box{max-width:980px!important;background:linear-gradient(145deg,#101722,#172231)!important;color:#fff!important}
 .sd-hero{padding:16px;border:1px solid rgba(64,178,255,.18);border-radius:18px;background:linear-gradient(135deg,rgba(0,122,255,.12),rgba(15,172,232,.05));margin-bottom:14px}
 .sd-hero-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.sd-hero h3{margin:0 0 4px;font-size:22px}.sd-muted{color:#9eacbb;font-size:12px}.sd-total{margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08)}.sd-total b{font-size:26px;color:#42c8ff}.sd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.sd-card{border:1px solid rgba(120,170,210,.16);border-radius:18px;padding:15px;background:rgba(20,30,42,.82);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}.sd-card.full{grid-column:1/-1}.sd-card h4{margin:0 0 12px;font-size:17px}.sd-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.sd-field label,.sd-bank label{display:block;font-size:11px;color:#9eacbb;margin:0 0 5px}.sd-field input,.sd-bank select,.sd-bank input{width:100%;box-sizing:border-box;border:1px solid rgba(120,170,210,.2);background:#0e1722;color:#fff;border-radius:11px;padding:10px 11px;outline:none}.sd-calc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.sd-stat{padding:10px;border-radius:12px;background:rgba(0,122,255,.08);border:1px solid rgba(64,178,255,.12)}.sd-stat span{display:block;color:#9eacbb;font-size:11px}.sd-stat b{display:block;margin-top:3px;font-size:17px}.sd-bank-row{display:grid;grid-template-columns:1.4fr .8fr auto;gap:9px;align-items:end}.sd-btn{border:1px solid rgba(64,178,255,.25);border-radius:11px;padding:10px 13px;background:#12324a;color:#fff;font-weight:800;cursor:pointer}.sd-btn.primary{background:linear-gradient(135deg,#087fe8,#0ab6e8)}.sd-btn.success{background:linear-gradient(135deg,#087d4b,#0ab86d)}.sd-btn.danger{background:#4a2028}.sd-btn{transition:transform .16s ease,box-shadow .22s ease,filter .22s ease}.sd-btn:active{transform:scale(.96)}.sd-btn.sd-save-success{animation:sdSaveSuccess .62s ease}.sd-btn.sd-action-pulse{animation:sdActionPulse .42s ease}@keyframes sdSaveSuccess{0%{transform:scale(1);box-shadow:0 0 0 rgba(35,211,145,0)}45%{transform:scale(1.045);box-shadow:0 0 0 7px rgba(35,211,145,.12)}100%{transform:scale(1);box-shadow:0 0 0 rgba(35,211,145,0)}}@keyframes sdActionPulse{0%{transform:scale(1)}50%{transform:scale(1.035)}100%{transform:scale(1)}}.sd-list{display:grid;gap:7px;margin-top:10px}.sd-list-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:9px 11px;border-radius:11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}.sd-table-wrap{overflow:auto}.sd-table{width:100%;border-collapse:collapse}.sd-table th,.sd-table td{padding:9px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;font-size:12px}.sd-table th{color:#8fa0b2}.sd-bottom{margin-top:14px;padding:14px 16px;border-radius:17px;background:linear-gradient(135deg,#071c2b,#102e43);border:1px solid rgba(64,178,255,.2);display:flex;justify-content:space-between;align-items:center}.sd-bottom strong{font-size:24px;color:#54d0ff}.sd-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.sd-empty{color:#8393a4;text-align:center;padding:12px}.sd-negative{color:#ff9b9b}.sd-positive{color:#57df9c}@media(max-width:700px){.sd-grid{grid-template-columns:1fr}.sd-card.full{grid-column:auto}.sd-fields,.sd-calc{grid-template-columns:1fr 1fr}.sd-bank-row{grid-template-columns:1fr 1fr}.sd-bank-row .sd-btn{grid-column:1/-1}}@media(max-width:460px){.sd-fields,.sd-calc{grid-template-columns:1fr}.sd-hero-row,.sd-bottom{align-items:flex-start;flex-direction:column}.sd-total{align-items:flex-start;flex-direction:column}}
+</style>
 <style id="shadab-financial-salesman-selector-style">
 .sex-exp-salesman-card{background:linear-gradient(145deg,rgba(18,35,52,.98),rgba(13,26,40,.98))!important;border-color:rgba(90,190,255,.18)!important}.sex-salesman-line{display:grid;grid-template-columns:1.1fr auto 1fr auto;gap:8px;align-items:end}.sex-salesman-line select,.sex-salesman-line input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px 11px;background:var(--soft);color:inherit;font:inherit}.sex-salesman-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.sex-salesman-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(0,150,240,.12);border:1px solid rgba(70,190,255,.2);font-size:11px;font-weight:800}.sex-salesman-chip button{width:20px;height:20px;border:0;border-radius:50%;background:rgba(255,255,255,.10);color:inherit;cursor:pointer}@media(max-width:760px){.sex-salesman-line{grid-template-columns:1fr auto}.sex-salesman-line input{grid-column:1/-1}.sex-salesman-line input+button{grid-column:2}}
 </style>
@@ -7236,38 +7174,6 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-
-<style id="sp-v13-alert-visible-performance">
-/* START: V13 Alert visibility + lightweight performance only */
-#shadabAlertText{padding-left:12px !important;animation:none !important;transform:none !important;white-space:nowrap !important;}
-/* END: V13 Alert visibility + lightweight performance only */
-</style>
-<script id="sp-v13-alert-visible-performance-js">
-(function(){
-  'use strict';
-  const KEY='shadab_current_salesman_v1';
-  function clean(v){return String(v==null?'':v).trim()}
-  function restoreHeader(){
-    try{
-      const b=document.getElementById('sp35LoginButton');
-      if(!b)return;
-      const u=(typeof auth==='function' ? auth()?.currentUser : null);
-      let name=clean(u?.displayName||'');
-      if(!name){const rs=window.shadabRestCurrentSession?.();name=clean(rs?.displayName||'')}
-      if(!name)name=clean(localStorage.getItem(KEY)||'');
-      if(name && name.toLowerCase()!=='admin'){
-        if(typeof window.sp35UpdateHeaderLoginButton==='function')window.sp35UpdateHeaderLoginButton(name);else b.textContent=name;
-      }
-      const vs=document.getElementById('visitedBy');
-      if(vs && name){try{window.ensureSalesmanOptions?.()}catch(e){};vs.value=name;vs.disabled=true}
-    }catch(e){}
-  }
-  function restoreAlert(){try{const el=document.getElementById('shadabAlertText');if(!el)return;const m=clean(localStorage.getItem('shadab_alert_message_v1')||'');if(m)el.textContent=m}catch(e){}}
-  function init(){restoreHeader();restoreAlert();setTimeout(restoreHeader,300);setTimeout(restoreAlert,500)}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-  window.addEventListener('load',restoreHeader,{once:true});
-})();
-</script>
 </body>
 <style id="sp-camera-onsite-final-lock">
 /* On-site Photo alignment only — sync UI untouched */
@@ -8267,5 +8173,345 @@ window.addEventListener('online',function(){setTimeout(refreshLicenseStatusV13,8
   window.sp35V13SyncDiagnostic=async function(){const s=await restoreSession();return {ok:!!s?.uid,origin:location.origin,online:navigator.onLine,uid:s?.uid||null,email:s?.email||null}};
   /* END: V13 SYNC-ONLY SESSION REPAIR */
 })();
+</script>
+
+<script id="sp-master-final-three-repairs">
+(function(){
+'use strict';
+const ADMIN='admin@shadabpharmacy.com';
+const ADMIN_MASTER='app_settings/masterData';
+const DOC_BASE='app_settings/sharedDocuments';
+const DOCS=['orderForm','supplySchedule','license'];
+function toastF(m){try{window.toast35?.(m);window.toast?.(m)}catch(e){}}
+function restSession(){try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}}
+async function ensureRest(){
+  let s=restSession();
+  if(s?.uid)return s;
+  try{if(typeof window.sp35V13SyncDiagnostic==='function'){const d=await window.sp35V13SyncDiagnostic();if(d?.ok)return restSession()||d}}catch(e){}
+  return restSession();
+}
+async function readRest(path){if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestReadDoc(path)}
+async function writeRest(path,v){if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestWriteDoc(path,v)}
+
+/* 1) Territory Master card was pointing to an old function that no longer
+   existed. Reconnect that card to the already-built Point 23 control. */
+window.openTerritoryManager=function(area){
+  try{
+    if(typeof window.sp35OpenControl==='function')return window.sp35OpenControl(23);
+    if(typeof window.sp35Point23==='function'){
+      const w=document.getElementById('sp35WorkBodyNew')||document.getElementById('sp35WorkBody');
+      if(w){w.innerHTML='';window.sp35Point23();return}
+    }
+    toastF('Territory Master control is not loaded yet.');
+  }catch(e){toastF('Territory Master failed: '+(e?.message||e))}
+};
+
+/* 2) Alert: make masterData the authoritative source, while also refreshing
+   the visible banner immediately. This prevents an older cached alert from
+   winning after refresh/new login. */
+const oldAlertSave=window.sp35SaveAlert;
+window.sp35SaveAlert=async function(){
+  const ta=document.getElementById('sp35AlertText')||document.getElementById('sp35AlertNew');
+  const m=String(ta?.value||'').trim();
+  if(!m){toastF('Please write an alert message first.');return {ok:false}}
+  try{localStorage.setItem('shadab_alert_message_v1',m);localStorage.setItem('shadab_alert_authoritative_v1',JSON.stringify({message:m,updatedAt:new Date().toISOString()}))}catch(e){}
+  const main=document.getElementById('shadabAlertText');if(main)main.textContent=m;
+  let result=null;
+  try{if(typeof oldAlertSave==='function')result=await oldAlertSave.apply(this,arguments)}catch(e){result={ok:false,error:e}}
+  /* If the old SDK alert path is unavailable, the authoritative REST master
+     write still publishes the same message to every authenticated device. */
+  try{
+    const s=await ensureRest();
+    if(s?.uid&&String(s.email||'').toLowerCase()===ADMIN){
+      let master=await readRest(ADMIN_MASTER)||{};
+      master.alertMessage=m;master.alertUpdatedAt=new Date().toISOString();
+      await writeRest(ADMIN_MASTER,master);
+      result={ok:true};
+    }
+  }catch(e){
+    if(!result?.ok) result={ok:false,error:e};
+  }
+  const st=document.getElementById('sp35AlertStatus')||document.getElementById('sp35AlertNewStatus');
+  if(st)st.textContent=result?.ok?'✓ Alert saved and synced to all devices.':'Saved locally; Firebase sync will retry when available.';
+  if(result?.ok)toastF('✓ Alert saved and synced to all devices');
+  return result||{ok:false};
+};
+window.sp35SaveAlertNew=window.sp35SaveAlert;
+
+/* Authoritative alert hydration. Prefer the current masterData alert, then
+   local saved text. This runs only on startup/reconnect, not a continuous loop. */
+async function hydrateAlertAuthoritative(){
+  try{
+    const local=localStorage.getItem('shadab_alert_message_v1')||'';
+    const s=await ensureRest();
+    if(!s?.uid)return;
+    const master=await readRest(ADMIN_MASTER);
+    const remote=String(master?.alertMessage||'').trim();
+    const m=remote||local;
+    if(!m)return;
+    localStorage.setItem('shadab_alert_message_v1',m);
+    const t=document.getElementById('shadabAlertText');if(t)t.textContent=m;
+    const ta=document.getElementById('sp35AlertText');if(ta&&document.activeElement!==ta)ta.value=m;
+  }catch(e){/* local/offline mode remains intact */}
+}
+setTimeout(hydrateAlertAuthoritative,1800);
+window.addEventListener('online',()=>setTimeout(hydrateAlertAuthoritative,900));
+
+/* 3) Salesman Expenses: strict mileage calculation. Keep the existing UI and
+   formula, but normalize numeric inputs and explicitly flag reversed meters. */
+const oldRecalc=window.sexRecalc;
+window.sexRecalc=function(){
+  try{
+    const a=document.getElementById('sexStartMeter'),b=document.getElementById('sexEndMeter');
+    const start=Number(a?.value||0),end=Number(b?.value||0);
+    if(Number.isFinite(start)&&Number.isFinite(end)&&end>=start){
+      const avgEl=document.getElementById('sexAverage');
+      if(avgEl&&!Number(avgEl.value||0))avgEl.value='35';
+    }
+  }catch(e){}
+  try{return typeof oldRecalc==='function'?oldRecalc.apply(this,arguments):undefined}catch(e){return undefined}
+};
+
+/* 4) New phone: shared PDFs are stored in sharedDocuments, while older builds
+   stored them in masterData. Hydrate both paths after restoring the REST session. */
+async function hydrateDocumentsFinal(){
+  if(!navigator.onLine)return;
+  try{await ensureRest()}catch(e){}
+  const s=restSession();if(!s?.uid)return;
+  for(const t of DOCS){
+    try{
+      let m=await readRest(DOC_BASE+'/'+t);
+      if(!m||m.deleted||(!m.data&&!m.chunked)){
+        const master=await readRest(ADMIN_MASTER);
+        if(master?.[t]?.data)m=master[t];
+      }
+      if(!m||m.deleted)continue;
+      let asset=m;
+      if(m.chunked&&Number(m.total)>0){
+        let base='';
+        for(let i=0;i<Number(m.total);i++){
+          const c=await readRest(DOC_BASE+'/'+t+'__chunk_'+i);
+          if(!c?.data)throw new Error(t+' chunk '+(i+1)+' missing');
+          base+=c.data;
+        }
+        asset={name:m.name,type:m.type,size:m.size,data:'data:'+(m.type||'application/pdf')+';base64,'+base,updatedAt:m.updatedAt};
+      }
+      if(asset?.data&&typeof window.shadabApplySharedAsset==='function')window.shadabApplySharedAsset(t,asset);
+    }catch(e){console.warn('Shared document restore',t,e)}
+  }
+}
+setTimeout(hydrateDocumentsFinal,2200);
+window.addEventListener('online',()=>setTimeout(hydrateDocumentsFinal,1000));
+window.spFinalHydrateDocuments=hydrateDocumentsFinal;
+
+/* 5) Application Install: the PWA install engine already exists; expose it in
+   the hamburger without changing the existing menu actions. */
+function addInstallMenuItem(){
+  const p=document.getElementById('shadabMenuPanel');if(!p||document.getElementById('shadabInstallMenuItem'))return;
+  const b=document.createElement('button');b.id='shadabInstallMenuItem';b.className='shadab-menu-item';b.type='button';b.setAttribute('role','menuitem');
+  b.innerHTML='<span>📲</span><strong>Application Install</strong><small>Install SHADAB PHARMACY on this device</small>';
+  b.addEventListener('click',function(){closeShadabMenu();try{window.installApp?.()}catch(e){}});
+  p.appendChild(b);
+}
+addInstallMenuItem();setTimeout(addInstallMenuItem,800);setTimeout(addInstallMenuItem,1800);
+})();
+</script>
+
+<style id="sp-forensic-light-mode-finance-docs">
+/* FORENSIC LIGHT MODE: only the explicitly dark front-screen finance/document surfaces. */
+body:not(.dark) .financial-tools-bottom,body:not(.dark) .shared-docs-bottom{background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(238,247,253,.94))!important;border-color:rgba(72,146,190,.16)!important;box-shadow:0 18px 42px rgba(20,55,80,.10),inset 0 1px 0 rgba(255,255,255,.95)!important}
+body:not(.dark) .financial-tools-bottom:before,body:not(.dark) .shared-docs-bottom:before{background:rgba(32,150,230,.07)!important}
+body:not(.dark) .financial-tool-card,body:not(.dark) .shared-doc-card{background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(244,250,253,.96))!important;border-color:rgba(72,146,190,.15)!important;color:#17212b!important;box-shadow:0 12px 28px rgba(20,55,80,.09),inset 0 1px 0 rgba(255,255,255,.95)!important}
+body:not(.dark) .financial-tool-card:hover,body:not(.dark) .shared-doc-card:hover{border-color:rgba(72,146,190,.28)!important;box-shadow:0 16px 32px rgba(20,55,80,.12),0 0 0 1px rgba(72,146,190,.05)!important}
+body:not(.dark) .financial-tool-card span span,body:not(.dark) .shared-doc-copy small{color:#667788!important}
+body:not(.dark) .financial-tool-card .ft-arrow,body:not(.dark) .shared-doc-arrow{color:#1689d8!important}
+body:not(.dark) .shared-docs-head h3{color:#17212b!important}
+body:not(.dark) .shared-docs-head small{color:#68798a!important}
+body:not(.dark) .shared-doc-status{color:#159b70!important}
+body:not(.dark) #salesmanExpensesModal .sex-modal-box,body:not(.dark) #summaryDetailModal .sd-modal-box{background:linear-gradient(145deg,#ffffff,#f3f8fc)!important;color:#17212b!important;border-color:rgba(72,146,190,.16)!important}
+body:not(.dark) #summaryDetailModal .sd-total,body:not(.dark) #summaryDetailModal .sd-card,body:not(.dark) #summaryDetailModal .sd-bottom{color:#17212b!important}
+body:not(.dark) #summaryDetailModal .sd-total{background:rgba(230,241,248,.72)!important;border-color:rgba(72,146,190,.14)!important}
+</style>
+<script id="sp-final-admin-control-and-client-sync-repair">
+(function(){
+'use strict';
+/* FINAL ADMIN CONTROL ISOLATION + MASTER-TO-CLIENT HYDRATION
+   Surgical repair: keeps existing control handlers, sync engine and UI intact. */
+function normWorkBody(){
+  try{
+    const m=document.getElementById('sp35ControlModal');
+    if(!m)return null;
+    const bNew=document.getElementById('sp35WorkBodyNew');
+    const bOld=document.getElementById('sp35WorkBody');
+    /* A previous control temporarily renames the visible body to sp35WorkBody.
+       Always restore that compatibility id before opening the next control. */
+    if(!bNew && bOld){ bOld.id='sp35WorkBodyNew'; }
+    const b=document.getElementById('sp35WorkBodyNew')||document.getElementById('sp35WorkBody');
+    if(!b)return null;
+    b.id='sp35WorkBody';
+    return b;
+  }catch(e){return null}
+}
+function restoreWorkBody(){
+  try{
+    const b=document.getElementById('sp35WorkBody');
+    if(b)b.id='sp35WorkBodyNew';
+    const legacy=document.getElementById('sp35LegacyWorkBody');
+    if(legacy && !document.getElementById('sp35WorkBody'))legacy.id='sp35WorkBody';
+  }catch(e){}
+}
+const originalOpen=window.sp35OpenControl;
+if(typeof originalOpen==='function'){
+  const open=function(n){
+    const body=normWorkBody();
+    if(!body){
+      try{window.sp35CloseAll?.();}catch(e){}
+      return originalOpen.apply(this,arguments);
+    }
+    body.innerHTML='<div class="sp35-emptyx">Loading…</div>';
+    return Promise.resolve(originalOpen.apply(this,arguments)).catch(function(e){
+      body.innerHTML='<div class="sp35-emptyx">Control error: '+String(e?.message||e)+'</div>';
+    });
+  };
+  open.__finalControlIsolation=true;
+  window.sp35OpenControl=open;
+}
+/* Every route into Territory Master uses the same isolated control renderer. */
+window.openTerritoryManager=function(area){
+  try{
+    const b=normWorkBody();
+    if(typeof window.sp35OpenControl==='function'){
+      return window.sp35OpenControl(23);
+    }
+    if(typeof window.sp35Point23==='function' && b){
+      b.innerHTML='';
+      return window.sp35Point23();
+    }
+    if(typeof window.toast35==='function')window.toast35('Territory Master control is not loaded yet.');
+  }catch(e){try{window.toast35?.('Territory Master failed: '+(e?.message||e))}catch(_){} }
+};
+const oldBack=window.sp35BackToControls;
+if(typeof oldBack==='function' && !oldBack.__finalControlIsolation){
+  const back=function(){
+    restoreWorkBody();
+    const r=oldBack.apply(this,arguments);
+    setTimeout(restoreWorkBody,0);
+    return r;
+  };
+  back.__finalControlIsolation=true;
+  window.sp35BackToControls=back;
+}
+const oldClose=window.sp35CloseAll;
+if(typeof oldClose==='function' && !oldClose.__finalControlIsolation){
+  const close=function(){restoreWorkBody();const r=oldClose.apply(this,arguments);setTimeout(restoreWorkBody,0);return r};
+  close.__finalControlIsolation=true;
+  window.sp35CloseAll=close;
+}
+/* Territory Master: add an explicit Delete action without deleting stores/records.
+   Deleting a territory only removes the territory from the master list and clears
+   that territory from matching store records; it never deletes a store record. */
+const oldRenderTerr=window.sp35RenderTerritoriesNew;
+if(typeof oldRenderTerr==='function' && !oldRenderTerr.__finalDelete){
+  window.sp35RenderTerritoriesNew=function(){
+    const r=oldRenderTerr.apply(this,arguments);
+    try{
+      const host=document.getElementById('sp35TerrListNew');
+      if(!host)return r;
+      host.querySelectorAll('.pill').forEach(function(pill){
+        if(pill.querySelector('.sp35-ter-delete'))return;
+        const buttons=pill.querySelectorAll('button');
+        if(!buttons.length)return;
+        const label=(pill.textContent||'').replace(/Edit|Enable|Disable|\(disabled\)/g,'').trim();
+        /* Determine city/territory from the existing Edit button onclick. */
+        const edit=buttons[0];
+        const m=String(edit.getAttribute('onclick')||'').match(/sp35EditTerrNew\((.*?),(.*?)\)/);
+        if(!m)return;
+        let a='',t='';
+        try{a=JSON.parse(m[1]);t=JSON.parse(m[2])}catch(e){return}
+        const d=document.createElement('button');d.type='button';d.className='sp35-btnx danger sp35-ter-delete';d.textContent='Delete';
+        d.addEventListener('click',async function(ev){
+          ev.preventDefault();ev.stopPropagation();
+          if(typeof guardTerritoryMasterEdit==='function'&&!guardTerritoryMasterEdit('delete territory'))return;
+          if(!confirm('Delete territory "'+t+'" from '+a+'? Store records will be kept, but their territory will be cleared.'))return;
+          try{
+            territories[a]=(territories[a]||[]).filter(function(x){return String(x)!==String(t)});
+            if(Array.isArray(storeDatabase))storeDatabase.forEach(function(s){if(String(s.area||'')===String(a)&&String(s.territory||'')===String(t))s.territory=''});
+            if(typeof saveData==='function')saveData();
+            try{window.log35?.('Territory deleted',{area:a,territory:t})}catch(e){}
+            try{if(typeof window.saveMasterData==='function')await window.saveMasterData('territory-deleted')}catch(e){}
+            window.sp35RenderTerritoriesNew();
+            try{window.refreshTerritories?.()}catch(e){}
+            try{window.refreshAssignmentTerritories?.()}catch(e){}
+            try{window.renderTodayTasks?.()}catch(e){}
+            window.toast35?.('✓ Territory deleted');
+          }catch(e){window.toast35?.('✕ Territory delete failed — '+(e?.message||e))}
+        });
+        pill.appendChild(d);
+      });
+    }catch(e){}
+    return r;
+  };
+  window.sp35RenderTerritoriesNew.__finalDelete=true;
+}
+/* Master -> every authenticated salesman device: REST fallback in addition to
+   the existing Firebase realtime listener. This covers GitHub/PWA/new-device
+   sessions where SDK persistence is not ready at first render. */
+async function hydrateMasterForClient(){
+  try{
+    if(!navigator.onLine)return;
+    const s=window.shadabRestCurrentSession?.();
+    if(!s?.uid)return;
+    if(String(s.email||'').toLowerCase()==='admin@shadabpharmacy.com')return;
+    if(typeof window.shadabRestReadDoc!=='function')return;
+    const m=await window.shadabRestReadDoc('app_settings/masterData');
+    if(!m||typeof m!=='object')return;
+    if(Array.isArray(m.stores)){storeDatabase=m.stores;localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase));}
+    if(m.territories&&typeof m.territories==='object'){territories=m.territories;localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories));}
+    if(Array.isArray(m.customSalesmen)&&typeof saveCustomSalesmanNames==='function')saveCustomSalesmanNames(m.customSalesmen);
+    if(Array.isArray(m.disabledTerritories))localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(m.disabledTerritories));
+    if(typeof m.appName==='string')localStorage.setItem('shadab_app_name_v1',m.appName);
+    if(typeof m.theme==='string'&&m.theme) localStorage.setItem('shadab_theme',m.theme);
+    if(typeof m.alertMessage==='string'){
+      localStorage.setItem('shadab_alert_message_v1',m.alertMessage);
+      const el=document.getElementById('shadabAlertText');if(el)el.textContent=m.alertMessage;
+    }
+    try{window.ensureSalesmanOptions?.();window.scheduleUI?.();window.refreshTerritories?.();window.showStoreSuggestions?.();window.renderTodayTasks?.();window.updatePremiumDashboard?.()}catch(e){}
+  }catch(e){console.warn('Final master-to-client hydrate:',e)}
+}
+async function hydrateAllSharedDocs(){
+  try{
+    if(!navigator.onLine)return;
+    const s=window.shadabRestCurrentSession?.();
+    if(!s?.uid)return;
+    if(typeof window.shadabRestReadDoc!=='function')return;
+    const types=['orderForm','supplySchedule','license'];
+    for(const type of types){
+      try{
+        let a=await window.shadabRestReadDoc('app_settings/sharedDocuments/'+type);
+        if(!a || a.deleted || (!a.data && !a.chunked)){
+          const master=await window.shadabRestReadDoc('app_settings/masterData');
+          a=master?.[type]||null;
+        }
+        if(a?.chunked&&Number(a.total)>0){
+          let base='';
+          for(let i=0;i<Number(a.total);i++){
+            const c=await window.shadabRestReadDoc('app_settings/sharedDocuments/'+type+'__chunk_'+i);
+            if(!c?.data)throw new Error('missing chunk '+(i+1));
+            base+=c.data;
+          }
+          a={...a,data:'data:'+(a.type||'application/pdf')+';base64,'+base};
+        }
+        if(a?.data)window.shadabApplySharedAsset?.(type,a);
+      }catch(e){console.warn('Final shared document hydrate:',type,e)}
+    }
+  }catch(e){console.warn('Final shared docs hydrate:',e)}
+}
+function clientHydrate(){setTimeout(hydrateMasterForClient,700);setTimeout(hydrateAllSharedDocs,1000);setTimeout(hydrateMasterForClient,3000);setTimeout(hydrateAllSharedDocs,3800)}
+window.addEventListener('online',function(){setTimeout(hydrateMasterForClient,700);setTimeout(hydrateAllSharedDocs,1000)});
+window.addEventListener('load',clientHydrate);
+window.spFinalHydrateMasterForClients=hydrateMasterForClient;
+window.spFinalHydrateAllSharedDocs=hydrateAllSharedDocs;
+})();
+
 </script>
 </html>
