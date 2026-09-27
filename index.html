@@ -464,7 +464,7 @@ window.jsonClone = window.jsonClone || function(value){
       <button class="shadab-menu-btn" type="button" onclick="toggleShadabMenu()" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
       <div class="shadab-menu-panel" id="shadabMenuPanel" role="menu">
         <div class="shadab-menu-title">SHADAB PHARMACY</div>
-        <button class="shadab-menu-item" onclick="menuGo('admin')"><span>🔐</span><strong>Admin Login</strong><small>Salesman & territory schedule</small></button>
+        <button class="shadab-menu-item" onclick="menuGo('admin')"><span>🔐</span><strong>Master Login</strong><small>Salesman & territory schedule</small></button>
         <button class="shadab-menu-item" onclick="menuGo('customer')"><span>＋</span><strong>Add Customer</strong><small>Add a new store/customer</small></button>
         <button class="shadab-menu-item" onclick="menuGo('adminControl')"><span>⚙️</span><strong>Admin Control Center</strong><small>Management tools & system controls</small></button>
         <button class="shadab-menu-item" onclick="menuGo('records')"><span>☷</span><strong>Visit Records</strong><small>View and edit saved visits</small></button>
@@ -708,7 +708,7 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
 <style id="shadab-shared-docs-style">
 .shared-docs-bottom{margin:20px 0 8px;padding:18px;border-radius:26px;background:linear-gradient(145deg,rgba(7,20,33,.98),rgba(12,38,57,.96));border:1px solid rgba(100,205,255,.22);box-shadow:0 20px 48px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.07);position:relative;overflow:hidden}.shared-docs-bottom:before{content:"";position:absolute;width:180px;height:180px;right:-80px;top:-90px;border-radius:50%;background:rgba(32,190,255,.10);filter:blur(2px);pointer-events:none}.shared-docs-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:13px;position:relative;z-index:1}.shared-docs-head h3{margin:3px 0 0;color:#fff;font-size:18px;letter-spacing:.2px}.shared-docs-head small{color:#9eb0c2;font-size:10px}.shared-docs-dashboard{display:grid;width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;position:relative;z-index:1}.shared-doc-card{position:relative;overflow:hidden;display:flex;align-items:center;gap:13px;padding:15px;border-radius:22px;border:1px solid rgba(150,220,255,.16);background:linear-gradient(145deg,rgba(255,255,255,.105),rgba(255,255,255,.035));box-shadow:0 12px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.08);color:#fff;cursor:pointer;text-align:left;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}.shared-doc-card:hover{transform:translateY(-1px);border-color:rgba(120,215,255,.34);box-shadow:0 16px 32px rgba(0,0,0,.22),0 0 0 1px rgba(90,200,255,.06)}.shared-doc-card:active{transform:scale(.985)}.shared-doc-card:before{content:"";position:absolute;inset:auto -20px -55px auto;width:120px;height:120px;border-radius:50%;background:rgba(42,190,255,.08);filter:blur(1px)}.shared-doc-icon{position:relative;z-index:1;width:54px;height:54px;min-width:54px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(145deg,#0aa8f5,#375ff2 75%,#7a5cff);box-shadow:0 10px 25px rgba(0,132,255,.28),inset 0 1px 0 rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.18);font-size:27px}.shared-doc-copy{position:relative;z-index:1;min-width:0}.shared-doc-copy b{display:block;font-size:14px;letter-spacing:.1px}.shared-doc-copy small{display:block;margin-top:4px;color:#a9bac9;font-size:10px;line-height:1.35}.shared-doc-arrow{margin-left:auto;position:relative;z-index:1;font-size:27px;color:#75ddff;font-weight:300}.shared-doc-status{position:absolute;right:14px;bottom:8px;font-size:8px;color:#70e4c5;opacity:.9}#sharedDocModal .modal-box{width:min(980px,96vw)!important;max-height:92vh;overflow:auto}.shared-doc-preview{border:1px solid var(--line);border-radius:18px;background:var(--soft);min-height:300px;overflow:hidden}.shared-doc-preview iframe{width:100%;height:65vh;border:0;background:#fff}.shared-doc-preview img{display:block;max-width:100%;max-height:65vh;margin:auto;object-fit:contain}.shared-doc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.shared-doc-actions button{border:1px solid var(--line);border-radius:12px;padding:10px 13px;background:var(--soft);color:inherit;font-weight:850;cursor:pointer}.shared-doc-actions .primary{background:linear-gradient(135deg,#0a8ff0,#376cf6);color:#fff;border-color:transparent}.shared-doc-empty{display:grid;place-items:center;min-height:280px;color:var(--muted);padding:20px;text-align:center}.shared-admin-docs{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--soft)}.shared-admin-docs h4{margin:0 0 10px}.shared-admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.shared-admin-card{border:1px solid var(--line);border-radius:16px;padding:12px;background:var(--card)}.shared-admin-card b{display:block}.shared-admin-card small{display:block;color:var(--muted);margin:4px 0 10px}.shared-admin-card input{width:100%;box-sizing:border-box}.shared-admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.shared-admin-actions button{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--soft);color:inherit;font-weight:800;cursor:pointer}.shared-admin-actions .primary{background:#087fe8;color:#fff;border-color:#087fe8}.shared-admin-actions .danger{color:#c43b3b;background:rgba(220,60,60,.08)}@media(max-width:680px){.shared-docs-bottom{border-radius:22px;padding:14px}.shared-docs-dashboard,.shared-admin-grid{grid-template-columns:1fr}.shared-doc-card{padding:14px}.shared-doc-icon{width:50px;height:50px;min-width:50px}.shared-doc-preview iframe{height:58vh}}
 </style>
-<section class="shared-docs-bottom" id="sharedDocsBottom"><div class="shared-docs-head"><div><small>FIELD DOCUMENTS</small><h3>Order & Supply Tools</h3></div><small>Admin-uploaded • Synced • Offline access</small></div><div id="sharedDocsDashboard" class="shared-docs-dashboard"><button class="shared-doc-card" type="button" onclick="openSharedDocument('orderForm')"><span class="shared-doc-icon">📋</span><span class="shared-doc-copy"><b>Order Form</b><small>Latest Admin-uploaded order form</small></span><span class="shared-doc-arrow">›</span><span class="shared-doc-status" id="sharedOrderStatus">Not uploaded</span></button><button class="shared-doc-card" type="button" onclick="openSharedDocument('supplySchedule')"><span class="shared-doc-icon">🚚</span><span class="shared-doc-copy"><b>Supply Schedule</b><small>Latest Admin-uploaded supply schedule</small></span><span class="shared-doc-arrow">›</span><span class="shared-doc-status" id="sharedSupplyStatus">Not uploaded</span></button></div></section>
+<section class="shared-docs-bottom" id="sharedDocsBottom"><div class="shared-docs-head"><div><small>FIELD DOCUMENTS</small><h3>Order & Supply Tools</h3></div><small>Master-uploaded • Synced • Offline access</small></div><div id="sharedDocsDashboard" class="shared-docs-dashboard"><button class="shared-doc-card" type="button" onclick="openSharedDocument('orderForm')"><span class="shared-doc-icon">📋</span><span class="shared-doc-copy"><b>Order Form</b><small>Latest Master-uploaded order form</small></span><span class="shared-doc-arrow">›</span><span class="shared-doc-status" id="sharedOrderStatus">Not uploaded</span></button><button class="shared-doc-card" type="button" onclick="openSharedDocument('supplySchedule')"><span class="shared-doc-icon">🚚</span><span class="shared-doc-copy"><b>Supply Schedule</b><small>Latest Master-uploaded supply schedule</small></span><span class="shared-doc-arrow">›</span><span class="shared-doc-status" id="sharedSupplyStatus">Not uploaded</span></button></div></section>
 <div class="modal" id="sharedDocModal"><div class="modal-box"><div class="modal-head"><h3 id="sharedDocTitle">Order Form</h3><button class="close" type="button" onclick="closeSharedDocument()">×</button></div><div class="shared-doc-preview" id="sharedDocPreview"></div><div class="shared-doc-actions"><button class="primary" type="button" onclick="previewSharedDocument()">👁️ Preview</button><button type="button" onclick="shareSharedDocument()">📲 Share WhatsApp</button><button type="button" onclick="saveSharedDocumentAsImage()">🖼️ Save Local as Image</button><button type="button" onclick="downloadSharedDocumentPDF()">⬇️ Download as PDF</button><button type="button" onclick="closeSharedDocument()">Close</button></div></div></div>
 <!-- ===== END: SHARED ORDER FORM + SUPPLY SCHEDULE ===== -->
 </main>
@@ -778,15 +778,15 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
 <!-- ===== START: ADMIN LOGIN & UNIFIED CITY/TERRITORY/SCHEDULE ===== -->
 <div class="modal admin-panel" id="adminModal">
  <div class="modal-box modal-wide" id="adminLoginBox">
-  <div class="modal-head"><h3>Admin Login</h3><button class="close" onclick="closeAdmin()">×</button></div>
-  <p class="admin-login-note">Admin controls City → Territory → Salesman → Day assignments. All settings stay saved on this device until Admin edits them.</p>
+  <div class="modal-head"><h3>Master Login</h3><button class="close" onclick="closeAdmin()">×</button></div>
+  <p class="admin-login-note">Master controls City → Territory → Salesman → Day assignments. All settings stay saved on this device until Admin edits them.</p>
   <div class="field"><label>Username</label><input id="adminUsername" autocomplete="username" placeholder="Username"></div>
   <div class="field" style="margin-top:10px"><label>Password</label><input id="adminPassword" type="password" autocomplete="current-password" placeholder="Password"></div>
   <div class="actions"><button class="btn primary" onclick="adminLogin()">🔐 Login</button><button class="btn secondary" onclick="closeAdmin()">Cancel</button></div>
  </div>
  <div class="modal-box modal-wide" id="adminDashboardBox" style="display:none">
   <div class="admin-hero">
-   <div><div class="admin-kicker">ADMIN ROUTE PLANNER</div><h3>Admin • Smart Route Planner</h3><p>Build a weekly route once. A salesman can have multiple cities, each with its own territories and days.</p></div>
+   <div><div class="admin-kicker">ADMIN ROUTE PLANNER</div><h3>Master • Smart Route Planner</h3><p>Build a weekly route once. A salesman can have multiple cities, each with its own territories and days.</p></div>
    <div class="admin-hero-actions"><button class="admin-icon-btn" type="button" onclick="refreshAdminDashboard()" title="Refresh">↻</button><button class="admin-icon-btn danger" type="button" onclick="logoutAdmin()" title="Logout">↪</button></div>
   </div>
   <div class="admin-kpi-grid" id="adminKpiGrid"></div>
@@ -1780,7 +1780,125 @@ function printHTML(title,data){
   const rows=data.map(v=>`<tr><td>${v.photo?`<img src="${v.photo}">`:"—"}</td><td>${esc(v.store)}</td><td>${esc(v.visitedBy||"—")}</td><td>${esc(v.person)}</td><td>${esc(v.type)}</td><td>${esc(v.area)}</td><td>${esc(v.territory)}</td><td>${formatDate(v.date)}<br>${esc(v.time)}</td></tr>`).join("");
   const w=window.open("","_blank","width=1000,height=800");
   if(!w){toast("Please allow the print popup");return;}
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p></body></html>`;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p><script id="shadab-issues-8-9-final-patch-v1">
+(function(){
+'use strict';
+
+/* ============================================================
+   ISSUE #8 — SALESMAN ACCOUNT MANAGEMENT
+   Disable/Enable already exists. Add a real Admin-level Delete
+   state in the existing salesmen collection and block deleted
+   accounts at login. Firebase Auth deletion itself requires an
+   Admin SDK/backend credential, which this offline-first client
+   intentionally does not expose.
+   ============================================================ */
+function escA(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function adminDb(){try{return typeof db==='function'?db():null}catch(e){return null}}
+function nowA(){try{return typeof now==='function'?now():new Date().toISOString()}catch(e){return new Date().toISOString()}}
+function toastA(m){try{if(typeof toast35==='function')return toast35(m);if(typeof toast==='function')return toast(m)}catch(e){} alert(m)}
+
+window.sp35DeleteUser=async function(uid,name){
+  uid=String(uid||'').trim(); name=String(name||'Salesman').trim();
+  if(!uid)return toastA('Salesman ID is missing.');
+  if(!confirm('Delete '+name+'?\n\nThis will permanently disable this salesman in SHADAB PHARMACY and remove the active profile from the Admin list. The Firebase Auth credential itself is not deleted by the browser-only app.'))return;
+  const d=adminDb();
+  if(!d)return toastA('Firebase is unavailable.');
+  try{
+    const stamp=nowA();
+    await d.collection('salesmen').doc(uid).set({status:'Deleted',deletedAt:stamp,updatedAt:stamp,deletedBy:'master'},{merge:true});
+    try{
+      let rows=JSON.parse(localStorage.getItem('shadab_admin_profiles_v1')||'[]');
+      rows=rows.map(r=>String(r.id||r.uid)===uid?{...r,status:'Deleted',deletedAt:stamp,updatedAt:stamp}:r);
+      localStorage.setItem('shadab_admin_profiles_v1',JSON.stringify(rows));
+    }catch(e){}
+    try{window.shadabRestResumeSync?.()}catch(e){}
+    toastA('✓ Salesman deleted and access blocked.');
+    if(typeof window.sp35Point7==='function')await window.sp35Point7();
+  }catch(e){toastA('Could not delete salesman: '+(e.message||e))}
+};
+
+/* Replace the management renderer only; same existing table/card styling is used. */
+const originalPoint7=window.sp35Point7;
+if(typeof originalPoint7==='function'&&!originalPoint7.__issue8patched){
+  const wrapped=async function(){
+    await originalPoint7.apply(this,arguments);
+    try{
+      const body=document.getElementById('sp35WorkBody'); if(!body)return;
+      const table=body.querySelector('table.sp35-table'); if(!table)return;
+      const heads=table.querySelectorAll('thead th');
+      if(heads.length)heads[heads.length-1].textContent='Action';
+      body.querySelectorAll('tbody tr').forEach(tr=>{
+        const uid=tr.querySelector('td:first-child small')?.textContent?.trim();
+        const name=tr.querySelector('td:first-child b')?.textContent?.trim()||'Salesman';
+        if(!uid)return;
+        const status=(tr.querySelectorAll('td')[2]?.textContent||'').toLowerCase();
+        if(status.includes('deleted'))return;
+        const cell=tr.querySelector('td:last-child'); if(!cell)return;
+        if(!cell.querySelector('[data-delete-salesman]')){
+          const btn=document.createElement('button');
+          btn.type='button'; btn.className='sp35-btn danger'; btn.setAttribute('data-delete-salesman','1');
+          btn.textContent='🗑 Delete';
+          btn.style.marginLeft='6px';
+          btn.onclick=function(){window.sp35DeleteUser(uid,name)};
+          cell.appendChild(btn);
+        }
+      });
+    }catch(e){console.warn('Issue #8 management patch:',e)}
+  };
+  wrapped.__issue8patched=true; window.sp35Point7=wrapped;
+}
+
+/* ============================================================
+   ISSUE #9 — KEEP EXACT ADMIN CONTROL CENTER SCROLL POSITION
+   Save the actual scrollTop of the Admin modal container before
+   opening an icon; restore it on Back. Never use scrollIntoView
+   for this flow because that is what causes the jump.
+   ============================================================ */
+const SCROLLBOX='shadab_admin_control_scrollbox_v2';
+const SCROLLWIN='shadab_admin_control_window_v2';
+function getBox(){return document.querySelector('#sp35ControlModal .sp35-modal-box')||document.getElementById('sp35ControlModal')}
+function saveAdminScroll(){try{const b=getBox();localStorage.setItem(SCROLLBOX,String(b?.scrollTop||0));localStorage.setItem(SCROLLWIN,String(window.scrollY||0))}catch(e){}}
+function restoreAdminScroll(){
+  setTimeout(function(){
+    try{
+      const b=getBox(),v=Number(localStorage.getItem(SCROLLBOX)||0),w=Number(localStorage.getItem(SCROLLWIN)||0);
+      if(b){b.scrollTop=v;requestAnimationFrame(()=>{b.scrollTop=v})}
+      window.scrollTo(0,w);
+    }catch(e){}
+  },0);
+}
+function patchScroll(){
+  const oo=window.sp35OpenControl;
+  if(typeof oo==='function'&&!oo.__issue9patched){
+    const f=async function(n){saveAdminScroll();return await oo.apply(this,arguments)};
+    f.__issue9patched=true;window.sp35OpenControl=f;
+  }
+  const ob=window.sp35BackToControls;
+  if(typeof ob==='function'&&!ob.__issue9patched){
+    const f=async function(){
+      /* Capture the position before the original back handler can move it. */
+      const b=getBox(),v=Number(localStorage.getItem(SCROLLBOX)||b?.scrollTop||0),w=Number(localStorage.getItem(SCROLLWIN)||window.scrollY||0);
+      const r=await ob.apply(this,arguments);
+      setTimeout(()=>{try{if(b)b.scrollTop=v;window.scrollTo(0,w)}catch(e){}},0);
+      setTimeout(()=>{try{if(b)b.scrollTop=v;window.scrollTo(0,w)}catch(e){}},80);
+      return r;
+    };
+    f.__issue9patched=true;window.sp35BackToControls=f;
+  }
+}
+patchScroll();
+setTimeout(patchScroll,300);setTimeout(patchScroll,1000);setTimeout(patchScroll,2500);
+
+/* Prevent the old smooth scroll from moving the Admin grid when it opens. */
+try{
+  const style=document.createElement('style');
+  style.id='shadab-issue9-no-jump';
+  style.textContent='#sp35ControlModal .sp35-control-grid{scroll-margin:0!important}';
+  document.head.appendChild(style);
+}catch(e){}
+})();
+<\/script>
+</body></html>`;
   w.document.open();
   w.document.write(html);
   w.document.close();
@@ -2145,7 +2263,7 @@ async function playVoiceNote(id){const blob=await getVoiceBlob(id);if(!blob)retu
 /* ===== END: PREMIUM OFFLINE + ANALYTICS + BACKUP ===== */
 
 /* ===== START: SHADAB ADMIN / SALESman WEEKLY ASSIGNMENT ===== */
-const ADMIN_USER="admin",ADMIN_PASS="shadab@1303",ADMIN_FIREBASE_EMAIL="admin@shadabpharmacy.com",ADMIN_SCHEDULE_KEY="shadab_pharmacy_fixed_salesman_schedule_v2";
+const ADMIN_USER="master",ADMIN_PASS="shadab@1303",ADMIN_FIREBASE_EMAIL="master@shadabpharmacy.com",ADMIN_SCHEDULE_KEY="shadab_pharmacy_fixed_salesman_schedule_v2";
 const ADMIN_DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const SALESMAN_KEY="shadab_pharmacy_custom_salesmen_v1";
 let adminSchedules=JSON.parse(localStorage.getItem(ADMIN_SCHEDULE_KEY)||localStorage.getItem("shadab_pharmacy_fixed_salesman_schedule_v1")||"{}");
@@ -2171,7 +2289,7 @@ function closeAdmin(){document.getElementById("adminModal").classList.remove("sh
 function showAdminLogin(){document.getElementById("adminLoginBox").style.display="block";document.getElementById("adminDashboardBox").style.display="none";setTimeout(()=>document.getElementById("adminUsername")?.focus(),80)}
 async function adminLogin(){
  const u=document.getElementById("adminUsername").value.trim(),p=document.getElementById("adminPassword").value;
- if(u!==ADMIN_USER||p!==ADMIN_PASS)return toast("Invalid Admin username or password");
+ if(u!==ADMIN_USER||p!==ADMIN_PASS)return toast("Invalid Master username or password");
  const a=auth();
  if(!a)return toast("Firebase Auth is not available");
  try{
@@ -2184,11 +2302,11 @@ async function adminLogin(){
  }catch(e){
    adminLoggedIn=false;
    const code=String(e?.code||"");
-   if(code.includes("invalid-credential")||code.includes("user-not-found"))toast("Admin Firebase account not found or password is incorrect");
-   else toast("Admin Firebase login failed: "+(e?.message||code||"Unknown error"));
+   if(code.includes("invalid-credential")||code.includes("user-not-found"))toast("Master Firebase account not found or password is incorrect");
+   else toast("Master Firebase login failed: "+(e?.message||code||"Unknown error"));
  }
 }
-async function logoutAdmin(){try{const a=auth();if(a&&a.currentUser?.email===ADMIN_FIREBASE_EMAIL)await a.signOut()}catch(e){}adminLoggedIn=false;showAdminLogin();toast("Admin logged out")}
+async function logoutAdmin(){try{const a=auth();if(a&&a.currentUser?.email===ADMIN_FIREBASE_EMAIL)await a.signOut()}catch(e){}adminLoggedIn=false;showAdminLogin();toast("Master logged out")}
 function normalizeAdminSchedule(salesman){
  let d=adminSchedules[salesman];
  if(!d){d={assignments:[{area:"Sahiwal",town:"",days:{},dayEnabled:{Monday:true,Tuesday:true,Wednesday:true,Thursday:true,Friday:false,Saturday:true,Sunday:true}}]};adminSchedules[salesman]=d;}
@@ -2208,7 +2326,7 @@ function territoryStoreCount(area,tr){return storeDatabase.filter(s=>s.area===ar
 let adminActiveAssignment=0;
 function currentAdminData(){const s=document.getElementById("adminSalesman")?.value;if(!s)return null;const d=normalizeAdminSchedule(s);if(adminActiveAssignment>=d.assignments.length)adminActiveAssignment=d.assignments.length-1;return d.assignments[adminActiveAssignment]}
 function adminTotalStats(salesman){const d=normalizeAdminSchedule(salesman),areas=d.assignments;let territoriesCount=0,stores=0,days=0;areas.forEach(a=>{const set=new Set();ADMIN_DAYS.forEach(day=>(a.days?.[day]||[]).forEach(t=>set.add(a.area+"|"+t)));territoriesCount+=set.size;areas.forEach(()=>{});ADMIN_DAYS.forEach(day=>{if((a.days?.[day]||[]).length)days++});set.forEach(k=>{const [ar,tr]=k.split("|");stores+=territoryStoreCount(ar,tr)})});return {areas:areas.length,territories:territoriesCount,stores,days}}
-function refreshAdminDashboard(){showAdminDashboard();toast("Admin planner refreshed")}
+function refreshAdminDashboard(){showAdminDashboard();toast("Master planner refreshed")}
 function showAdminDashboard(){
  document.getElementById("adminLoginBox").style.display="none";document.getElementById("adminDashboardBox").style.display="block";
  ensureSalesmanOptions();const sel=document.getElementById("adminSalesman");if(!sel)return;const old=sel.value;sel.innerHTML=adminSalesmanNames().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(old&&adminSalesmanNames().includes(old))sel.value=old;
@@ -2788,8 +2906,8 @@ const KEY='shadab_shared_documents_v1';let activeType='orderForm';
 function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}function session(){try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}}function get(t){return read()[t]||null}function status(){const a=get('orderForm'),b=get('supplySchedule'),x=document.getElementById('sharedOrderStatus'),y=document.getElementById('sharedSupplyStatus'),m=document.getElementById('adminSharedOrderMeta'),n=document.getElementById('adminSharedSupplyMeta');if(x)x.textContent=a?'Available':'Not uploaded';if(y)y.textContent=b?'Available':'Not uploaded';if(m)m.textContent=a?`${a.name||'Order Form'} • ${a.type||''}`:'No file uploaded';if(n)n.textContent=b?`${b.name||'Supply Schedule'} • ${b.type||''}`:'No file uploaded'}
 window.shadabGetSharedAsset=t=>get(t);window.shadabApplySharedAsset=(t,x)=>{try{const all=read();if(x)all[t]=x;else delete all[t];localStorage.setItem(KEY,JSON.stringify(all));status();if(document.getElementById('sharedDocModal')?.classList.contains('show')&&activeType===t)render(t)}catch(e){}};
 async function toData(file){if(!file)return null;if(file.size>850000)throw new Error('File is too large for cloud sync. Please use an image or PDF under about 850 KB.');return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res({name:file.name,type:file.type,size:file.size,data:r.result,updatedAt:new Date().toISOString()});r.onerror=rej;r.readAsDataURL(file)})}
-window.adminUploadSharedDocument=async(t,input)=>{try{if(!input?.files?.[0])return;const s=session();if(!s?.uid||String(s.email).toLowerCase()!=='admin@shadabpharmacy.com')throw new Error('Admin login required.');if(!navigator.onLine)throw new Error('Internet is required to publish this document.');const a=await toData(input.files[0]);const master=await window.shadabRestReadDoc?.('app_settings/masterData')||{};master[t]=a;await window.shadabRestWriteDoc?.('app_settings/masterData',master);window.shadabApplySharedAsset(t,a);toast?.('✓ '+(t==='orderForm'?'Order Form':'Supply Schedule')+' uploaded and synced');}catch(e){toast?.('Upload failed: '+(e.message||e))}};
-window.adminDeleteSharedDocument=async t=>{try{const s=session();if(!s?.uid||String(s.email).toLowerCase()!=='admin@shadabpharmacy.com')return toast?.('Admin login required');if(!confirm('Delete the current '+(t==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return;const master=await window.shadabRestReadDoc?.('app_settings/masterData')||{};master[t]=null;await window.shadabRestWriteDoc?.('app_settings/masterData',master);window.shadabApplySharedAsset(t,null);toast?.('✓ Deleted and synced to all mobiles');}catch(e){toast?.('Delete failed: '+(e.message||e))}};
+window.adminUploadSharedDocument=async(t,input)=>{try{if(!input?.files?.[0])return;const s=session();if(!s?.uid||String(s.email).toLowerCase()!=='master@shadabpharmacy.com')throw new Error('Master login required.');if(!navigator.onLine)throw new Error('Internet is required to publish this document.');const a=await toData(input.files[0]);const master=await window.shadabRestReadDoc?.('app_settings/masterData')||{};master[t]=a;await window.shadabRestWriteDoc?.('app_settings/masterData',master);window.shadabApplySharedAsset(t,a);toast?.('✓ '+(t==='orderForm'?'Order Form':'Supply Schedule')+' uploaded and synced');}catch(e){toast?.('Upload failed: '+(e.message||e))}};
+window.adminDeleteSharedDocument=async t=>{try{const s=session();if(!s?.uid||String(s.email).toLowerCase()!=='master@shadabpharmacy.com')return toast?.('Master login required');if(!confirm('Delete the current '+(t==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return;const master=await window.shadabRestReadDoc?.('app_settings/masterData')||{};master[t]=null;await window.shadabRestWriteDoc?.('app_settings/masterData',master);window.shadabApplySharedAsset(t,null);toast?.('✓ Deleted and synced to all mobiles');}catch(e){toast?.('Delete failed: '+(e.message||e))}};
 function render(t){const b=document.getElementById('sharedDocPreview'),a=get(t);if(!b)return;if(!a){b.innerHTML='<div class="shared-doc-empty"><div><b>No document uploaded yet.</b><br><small>Admin can upload it from Admin Control Center.</small></div></div>';return}b.innerHTML=a.type==='application/pdf'?`<iframe src="${a.data}" title="${String(a.name||'Document').replace(/"/g,'&quot;')}"></iframe>`:`<img src="${a.data}" alt="${String(a.name||'Document').replace(/"/g,'&quot;')}">`}
 window.openSharedDocument=t=>{activeType=t;document.getElementById('sharedDocTitle').textContent=t==='orderForm'?'📋 Order Form':'🚚 Supply Schedule';const a=document.querySelector('#sharedDocModal .shared-doc-actions');if(a)a.innerHTML='<button class="primary" type="button" onclick="previewSharedDocument()">👁️ Preview</button><button type="button" onclick="shareSharedDocument()">📲 Share WhatsApp</button><button type="button" onclick="saveSharedDocumentAsImage()">🖼️ Save Local as Image</button><button type="button" onclick="downloadSharedDocumentPDF()">⬇️ Download as PDF</button><button type="button" onclick="closeSharedDocument()">Close</button>';document.getElementById('sharedDocModal')?.classList.add('show');render(t)};window.previewSharedDocument=()=>render(activeType);window.closeSharedDocument=()=>document.getElementById('sharedDocModal')?.classList.remove('show');window.adminPreviewSharedDocument=t=>openSharedDocument(t);
 window.shareSharedDocument=async()=>{const a=get(activeType);if(!a)return toast?.('No document available');try{const blob=await(await fetch(a.data)).blob(),f=new File([blob],a.name||'document',{type:a.type||'application/octet-stream'});if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[f]}))){await navigator.share({title:a.name,text:'SHADAB PHARMACY — '+(activeType==='orderForm'?'Order Form':'Supply Schedule'),files:[f]});return}window.open('https://wa.me/?text='+encodeURIComponent('SHADAB PHARMACY — '+(activeType==='orderForm'?'Order Form':'Supply Schedule')),'_blank');toast?.('WhatsApp opened — attach the document.')}catch(e){toast?.('Share failed: '+(e.message||e))}};
@@ -2820,7 +2938,7 @@ window.sp35OpenPoint=(n)=>{const p=P[n-1];if(!p||n>13)return;const w=document.ge
 function renderPanel(){
  const p=document.getElementById('sp35Panel');if(!p)return;
  const controls=P.slice(1,13);
- p.innerHTML=`<div class="sp35-first5-head"><div><div class="sp35-first5-kicker">ADMIN CONTROL CENTER</div><h3>Admin Controls</h3><p>Yeh section existing Admin Login ke andar hai. Har control apne actual app flow se connected hai.</p></div></div>
+ p.innerHTML=`<div class="sp35-first5-head"><div><div class="sp35-first5-kicker">ADMIN CONTROL CENTER</div><h3>Admin Controls</h3><p>Yeh section existing Master Login ke andar hai. Har control apne actual app flow se connected hai.</p></div></div>
  <div class="sp35-alert-admin"><label>🔔 MAIN SCREEN ALERT</label><div class="row"><div style="flex:1"><textarea id="sp35AlertText" placeholder="Write the alert message that users should see on the main screen..."></textarea></div><button class="sp35-btn primary" type="button" onclick="sp35SaveAlert()">✓ Save Alert</button></div><div class="status" id="sp35AlertStatus">Admin-only editing • Firebase + local fallback • Main-screen preview updates immediately.</div></div>
  <div class="shared-admin-docs"><h4>📁 Shared Documents — All Salesmen</h4><div class="shared-admin-grid"><div class="shared-admin-card"><b>📋 Order Form</b><small id="adminSharedOrderMeta">No file uploaded</small><input id="adminOrderFormFile" type="file" accept="image/*,.pdf" onchange="adminUploadSharedDocument('orderForm',this)"><div class="shared-admin-actions"><button class="primary" type="button" onclick="adminPreviewSharedDocument('orderForm')">Preview</button><button class="danger" type="button" onclick="adminDeleteSharedDocument('orderForm')">Delete</button></div></div><div class="shared-admin-card"><b>🚚 Supply Schedule</b><small id="adminSharedSupplyMeta">No file uploaded</small><input id="adminSupplyScheduleFile" type="file" accept="image/*,.pdf" onchange="adminUploadSharedDocument('supplySchedule',this)"><div class="shared-admin-actions"><button class="primary" type="button" onclick="adminPreviewSharedDocument('supplySchedule')">Preview</button><button class="danger" type="button" onclick="adminDeleteSharedDocument('supplySchedule')">Delete</button></div></div></div></div>
  <div class="sp35-first5-grid">${controls.map(x=>`<button type="button" class="sp35-first5-card" onclick="sp35OpenPoint(${Number(x[0])})"><span class="i">${x[1]}</span><b>${x[2]}</b><small>${x[3]}</small></button>`).join('')}</div>
@@ -2830,7 +2948,7 @@ function renderPanel(){
 window.sp35RenderKpis=()=>{const box=document.getElementById('sp35Kpis');if(!box)return;const users=JSON.parse(localStorage.getItem('shadab_admin_profiles_v1')||'[]');const orders=(typeof visits!=='undefined'?visits.filter(v=>['Order Received','Order Done'].includes(v.status)).length:0);const vs=typeof visits!=='undefined'?visits.length:0;box.innerHTML=[[''+users.length,'Salesmen'],[''+(typeof storeDatabase!=='undefined'?storeDatabase.length:0),'Stores'],[''+vs,'Visits'],[''+orders,'Orders']].map(x=>`<div class="sp35-kpi"><b>${x[0]}</b><small>${x[1]}</small></div>`).join('')}
 window.sp35LoadAlertAdmin=async()=>{const ta=document.getElementById('sp35AlertText'),st=document.getElementById('sp35AlertStatus');if(!ta)return;let local='';try{local=localStorage.getItem('shadab_alert_message_v1')||''}catch(e){};ta.value=local;if(st)st.textContent='Loading saved alert…';const d=db();if(!d){if(st)st.textContent='Firebase unavailable — local alert mode active.';return}try{const q=await d.collection('app_settings').doc('shadabAlert').get({source:'server'});if(q.exists&&typeof q.data().message==='string'){ta.value=q.data().message;try{localStorage.setItem('shadab_alert_message_v1',ta.value)}catch(e){}}if(st)st.textContent='Admin-only editing • Firebase connected • Main-screen preview updates immediately.'}catch(e){if(st)st.textContent='Firebase read unavailable — local saved alert is being used.'}};
 window.sp35Point1=()=>{const ta=document.getElementById('sp35AlertText');if(ta)ta.focus();sp35LoadAlertAdmin()};
-window.sp35SaveAlert=async()=>{if(typeof adminLoggedIn!=='undefined'&&!adminLoggedIn)return toast35('Admin login required');const ta=document.getElementById('sp35AlertText'),st=document.getElementById('sp35AlertStatus'),m=(ta?.value||'').trim();if(!m)return toast35('Please write an alert message first.');try{localStorage.setItem('shadab_alert_message_v1',m)}catch(e){};const main=document.getElementById('shadabAlertText');if(main)main.textContent=m;const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');h.unshift({message:m,at:now(),by:'admin'});localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)));const d=db();if(!d){if(st)st.textContent='Alert saved on this device. Firebase is unavailable.';log35('Alert updated locally');return toast35('Alert saved locally')};try{await d.collection('app_settings').doc('shadabAlert').set({message:m,updatedAt:now(),updatedBy:'admin'},{merge:true});if(st)st.textContent='✓ Alert saved to Firebase and visible on the main screen.';log35('Alert updated',{message:m});toast35('Alert saved successfully')}catch(e){if(st)st.textContent='Alert saved locally; Firebase write failed. Check Firestore rules/network.';log35('Alert updated locally',{message:m});toast35('Saved locally; Firebase save failed')}};
+window.sp35SaveAlert=async()=>{if(typeof adminLoggedIn!=='undefined'&&!adminLoggedIn)return toast35('Master login required');const ta=document.getElementById('sp35AlertText'),st=document.getElementById('sp35AlertStatus'),m=(ta?.value||'').trim();if(!m)return toast35('Please write an alert message first.');try{localStorage.setItem('shadab_alert_message_v1',m)}catch(e){};const main=document.getElementById('shadabAlertText');if(main)main.textContent=m;const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');h.unshift({message:m,at:now(),by:'master'});localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)));const d=db();if(!d){if(st)st.textContent='Alert saved on this device. Firebase is unavailable.';log35('Alert updated locally');return toast35('Alert saved locally')};try{await d.collection('app_settings').doc('shadabAlert').set({message:m,updatedAt:now(),updatedBy:'master'},{merge:true});if(st)st.textContent='✓ Alert saved to Firebase and visible on the main screen.';log35('Alert updated',{message:m});toast35('Alert saved successfully')}catch(e){if(st)st.textContent='Alert saved locally; Firebase write failed. Check Firestore rules/network.';log35('Alert updated locally',{message:m});toast35('Saved locally; Firebase save failed')}};
 window.sp35Point2=()=>{document.getElementById('sp35WorkBody').innerHTML='<div class="notice">Salesman registration is available from the Login/Register button. This panel shows the same Firebase account flow; passwords are never stored in Firestore.</div><button class="sp35-btn primary" onclick="sp35OpenAuth(\'register\')">Open Registration</button>'};
 window.sp35Point3=()=>{document.getElementById('sp35WorkBody').innerHTML='<div class="notice">Salesman Login uses Firebase Authentication and remains signed in according to the browser Firebase session.</div><button class="sp35-btn primary" onclick="sp35OpenAuth(\'login\')">Open Login</button>'};
 window.sp35Point4=()=>{document.getElementById('sp35WorkBody').innerHTML='<div class="notice">Password reset is handled by Firebase Authentication. No account data is deleted.</div><button class="sp35-btn primary" onclick="sp35OpenAuth(\'login\')">Open Forgot Password</button>'};
@@ -2874,7 +2992,7 @@ window.sp35Point28=()=>{document.getElementById('sp35WorkBody').innerHTML='<div 
 window.sp35GlobalSearch=()=>{const q=(document.getElementById('sp35GlobalQ')?.value||'').toLowerCase();if(!q)return;const stores=(storeDatabase||[]).filter(s=>JSON.stringify(s).toLowerCase().includes(q)).slice(0,30);const vs=(typeof visits!=='undefined'?visits:[]).filter(v=>JSON.stringify(v).toLowerCase().includes(q)).slice(0,30);document.getElementById('sp35GlobalResults').innerHTML=[...stores.map(s=>`<div class="notice">🏪 <b>${esc35(s.name)}</b> — ${esc35(s.area)} / ${esc35(s.territory||'')}</div>`),...vs.map(v=>`<div class="notice">📋 <b>${esc35(v.store)}</b> — ${esc35(v.visitedBy)} — ${esc35(v.date)}</div>`)].join('')||'<div class="sp35-empty">No matches.</div>'};
 window.sp35Point29=()=>{document.getElementById('sp35WorkBody').innerHTML='<div class="actions"><button class="sp35-btn primary" onclick="exportCSV()">Export Visits CSV</button><button class="sp35-btn" onclick="exportBackup()">Export Full JSON Backup</button><button class="sp35-btn" onclick="sp35Point24()">Store Master</button></div>'};
 window.sp35Point30=()=>{const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');document.getElementById('sp35WorkBody').innerHTML=h.length?h.map(x=>`<div class="notice"><b>${esc35(x.at||'')}</b><br>${esc35(x.message||'')}</div>`).join(''):'<div class="sp35-empty">No alert history yet. Save alerts from Point 01.</div>'};
-window.sp35Point31=()=>{document.getElementById('sp35WorkBody').innerHTML=`<div class="notice">Admin session: <b>${typeof adminLoggedIn!=='undefined'&&adminLoggedIn?'Active':'Not active'}</b><br>Admin panel remains behind the existing Admin Login. No second password is used inside this Control Center.</div>`};
+window.sp35Point31=()=>{document.getElementById('sp35WorkBody').innerHTML=`<div class="notice">Admin session: <b>${typeof adminLoggedIn!=='undefined'&&adminLoggedIn?'Active':'Not active'}</b><br>Admin panel remains behind the existing Master Login. No second password is used inside this Control Center.</div>`};
 window.sp35Point32=()=>{let h=JSON.parse(localStorage.getItem('shadab_admin_activity_v1')||'[]');document.getElementById('sp35WorkBody').innerHTML=h.length?h.slice(0,100).map(x=>`<div class="notice"><b>${esc35(x.at)}</b> • ${esc35(x.action)}<br><small>${esc35(JSON.stringify(x.meta||{}))}</small></div>`).join(''):'<div class="sp35-empty">No admin actions recorded yet.</div>'};
 window.sp35Point33=()=>{const b=getBody();b.innerHTML=`<div class="sp35-notice-final"><b>Current:</b> ${ex($('syncText')?.textContent||'Unknown')}</div><div id="sp35FirebaseResult" class="sp35-notice-final">Ready to sync.</div><div class="sp35-actions-final"><button class="sp35-btn-final primary" onclick="sp35FirebaseCheckREST()">Check Firebase</button><button class="sp35-btn-final" onclick="sp35SyncREST()">Sync Local Data</button></div>`;window.sp35FirebaseCheckREST?.()};
 window.sp35Point34=()=>{document.getElementById('sp35WorkBody').innerHTML='<div class="sp35-form"><div><label>App Name</label><input id="sp35AppName" value="SHADAB PHARMACY"></div><div><label>Default Theme</label><select id="sp35Theme"><option value="dark">Dark</option><option value="light">Light</option></select></div></div><div class="actions"><button class="sp35-btn primary" onclick="sp35SaveSettings()">Save Settings</button></div>'};
@@ -2952,7 +3070,7 @@ window.sp35Login=async()=>{
 window.sp35Register=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');const name=document.getElementById('sp35RegName').value.trim(),email=document.getElementById('sp35RegEmail').value.trim(),mobile=document.getElementById('sp35RegMobile').value.trim(),pass=document.getElementById('sp35RegPassword').value;if(!name||!email||pass.length<6)return toast35('Name, email and a 6+ character password are required');try{const c=await a.createUserWithEmailAndPassword(email,pass);await c.user.updateProfile({displayName:name});await sp35Profile(c.user,{fullName:name,mobile,email,status:'Active',createdAt:now()});await c.user.sendEmailVerification();toast35('Account created. Verification email sent.');sp35CloseAuth()}catch(e){toast35(e.message||'Registration failed')}};
 window.sp35Forgot=async()=>{const email=document.getElementById('sp35LoginEmail').value.trim();if(!email)return toast35('Enter the salesman email first');try{await auth().sendPasswordResetEmail(email);toast35('Password reset email sent')}catch(e){toast35(e.message||'Reset failed')}};
 async function sp35Profile(user,extra={}){const d=db();const data={uid:user.uid,fullName:user.displayName||extra.fullName||'',email:user.email||extra.email||'',mobile:extra.mobile||'',status:'Active',lastSeen:now(),updatedAt:now(),...extra};try{if(d)await d.collection('salesmen').doc(user.uid).set(data,{merge:true})}catch(e){console.warn(e)};localStorage.setItem('shadab_last_salesman_v1',data.fullName||data.email);localStorage.setItem('shadab_admin_profile_'+user.uid,JSON.stringify(data));log35('Salesman activity',{uid:user.uid})}
-function install(){if(!window.firebase)return;try{if(!firebase.apps.length)firebase.initializeApp(FC)}catch(e){};if(firebase.auth){firebase.auth().onAuthStateChanged(async u=>{const badge=document.getElementById('sp35UserBadge');if(badge){badge.classList.remove('show');badge.innerHTML=''}sp35UpdateHeaderLoginButton(u?(u.displayName||u.email||'Salesman'):'Salesman Login');if(u&&String(u.email||'').toLowerCase()===String(ADMIN_FIREBASE_EMAIL||'').toLowerCase()){sp35UpdateHeaderLoginButton('Salesman Login');sp35RenderHeaderState();return;}if(u){try{const d=db();const q=d?await d.collection('salesmen').doc(u.uid).get({source:'server'}):null;const profile=q&&q.exists?q.data():null;if(profile&&String(profile.status||'Active').toLowerCase()==='disabled'){await firebase.auth().signOut();sp35UpdateHeaderLoginButton('Salesman Login');toast35('This salesman account is disabled by Admin.');return}await sp35Profile(u,profile||{});sp35UpdateHeaderLoginButton(profile?.fullName||u.displayName||u.email||'Salesman');}catch(e){await sp35Profile(u);sp35UpdateHeaderLoginButton(u.displayName||u.email||'Salesman')}if(document.getElementById('visitedBy')){const nm=u.displayName||localStorage.getItem('shadab_current_salesman_v1')||'';if(nm){ensureSalesmanOptions();document.getElementById('visitedBy').value=nm;if(typeof onSalesmanChanged==='function')onSalesmanChanged()}}sp35RenderHeaderState()}})}}
+function install(){if(!window.firebase)return;try{if(!firebase.apps.length)firebase.initializeApp(FC)}catch(e){};if(firebase.auth){firebase.auth().onAuthStateChanged(async u=>{const badge=document.getElementById('sp35UserBadge');if(badge){badge.classList.remove('show');badge.innerHTML=''}sp35UpdateHeaderLoginButton(u?(u.displayName||u.email||'Salesman'):'Salesman Login');if(u&&String(u.email||'').toLowerCase()===String(ADMIN_FIREBASE_EMAIL||'').toLowerCase()){sp35UpdateHeaderLoginButton('Salesman Login');sp35RenderHeaderState();return;}if(u){try{const d=db();const q=d?await d.collection('salesmen').doc(u.uid).get({source:'server'}):null;const profile=q&&q.exists?q.data():null;if(profile&&['disabled','deleted'].includes(String(profile.status||'Active').toLowerCase())){await firebase.auth().signOut();sp35UpdateHeaderLoginButton('Salesman Login');toast35('This salesman account is disabled by Admin.');return}await sp35Profile(u,profile||{});sp35UpdateHeaderLoginButton(profile?.fullName||u.displayName||u.email||'Salesman');}catch(e){await sp35Profile(u);sp35UpdateHeaderLoginButton(u.displayName||u.email||'Salesman')}if(document.getElementById('visitedBy')){const nm=u.displayName||localStorage.getItem('shadab_current_salesman_v1')||'';if(nm){ensureSalesmanOptions();document.getElementById('visitedBy').value=nm;if(typeof onSalesmanChanged==='function')onSalesmanChanged()}}sp35RenderHeaderState()}})}}
 function ensure35Panel(){const d=document.getElementById('adminDashboardBox');if(!d)return;let panel=document.getElementById('sp35Panel');if(!panel){panel=document.createElement('section');panel.id='sp35Panel';panel.className='admin-card';const hero=d.querySelector('.admin-hero');if(hero&&hero.nextSibling)d.insertBefore(panel,hero.nextSibling);else d.insertBefore(panel,d.firstElementChild);renderPanel()}else if(!panel.innerHTML.trim())renderPanel();}
 window.addEventListener('load',()=>setTimeout(ensure35Panel,600));setInterval(ensure35Panel,1500);
 window.sp35LaunchFromAdmin=()=>sp35Open();
@@ -2989,7 +3107,7 @@ const N=[
 ['🔔','Main Screen Alert','Edit and save the front-page alert'],['👤','Salesman Registration','Create salesman accounts'],['🔐','Salesman Login','Sign in with Firebase Authentication'],['🔑','Forgot Password','Send password reset'],['🏠','Login Header','Review current login state'],['☰','Hamburger Menu','Account and app navigation'],['👨‍💼','Salesman Management','View salesman profiles and status'],['🟢','Active / Disable','Enable or disable a salesman'],['🕐','Last Seen','Server activity and last seen'],['🏙️','Assignment Structure','Salesman, city, territory and day'],['📍','Auto Assignment','Load today route automatically'],['🏪','Territory Store Filter','Show only assigned territory stores'],['☑️','Store Assignment','Assign and edit store checklist'],['📊','Today Task Cards','Planned, visited, orders, remaining'],['👆','Clickable Task Cards','Open matching store data'],['📄','PDF + WhatsApp','Download and share task lists'],['💾','Offline Mode','Continue field work without internet'],['📱','New Phone / Reinstall','Restore account data after sign-in'],['🔥','Firebase Architecture','Authentication and Firestore'],['🛑','Preserve Existing App','Keep the existing workflow intact'],['📊','Admin Dashboard','Salesmen, stores, visits and orders'],['🗓️','Assignment Calendar','View routes by date/day'],['🏙️','City & Territory Master','Add, edit and disable territories'],['🏪','Medical Store Master','Add, edit and disable stores'],['📍','Salesman Activity','Status, route and activity'],['📈','Salesman Performance','Assigned, visited, orders and remaining'],['📑','Reports Center','Daily, weekly, monthly reports'],['🔎','Global Search','Search salesman, store and route data'],['📥','Export Data','CSV, JSON backup and PDF'],['🔔','Alert History','Previous saved alerts'],['🔐','Admin Security','Current admin session protection'],['📝','Activity Log','Timestamped admin actions'],['☁️','Firebase Sync Status','Connection and sync tools'],['⚙️','App Settings','App defaults and alert settings'],['🗄️','Backup / Data Safety','Backup and restore data'],['📋','Order Form','Upload / replace the shared Order Form PDF for all salesmen'],['🚚','Supply Schedule','Upload / replace the shared Supply Schedule PDF for all salesmen']
 ];
 const $=id=>document.getElementById(id); const escx=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function modal(){let m=$('sp35ControlModal');if(m)return m;m=document.createElement('div');m.id='sp35ControlModal';m.innerHTML=`<div class="sp35-modal-box" role="dialog" aria-modal="true"><div class="sp35-modal-head"><div><h3>Admin Control Center</h3><small><span class="sp35-live-dot"></span>All controls are inside the existing Admin Login</small></div><button class="sp35-modal-close" onclick="sp35CloseAll()">×</button></div><div class="sp35-master-tools" id="sp35MasterTools"><button class="sp35-final-card sp35-master-tool" type="button" onclick="openTerritoryManager(document.getElementById('adminScheduleArea')?.value||'Sahiwal')"><i>📍</i><b>Territory Master</b><small>City & territory management</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openUploadTerritoryModal()"><i>📄</i><b>Territory PDF</b><small>Upload / manage territory PDF</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openStoreDatabase()"><i>🏪</i><b>Store Database</b><small>Medical store master</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="spLockedLicenseAdminOpen()"><i>📜</i><b>SHADAB PHARMACY License</b><small>Upload / preview / delete</small></button></div><div class="sp35-control-grid" id="sp35ControlGrid"></div><div class="sp35-work-modal" id="sp35WorkModal"><div class="sp35-work-head"><div><h4 id="sp35WorkTitleNew"></h4><small id="sp35WorkSubNew"></small></div><button class="sp35-work-back" onclick="sp35BackToControls()">Back</button></div><div class="sp35-work-body" id="sp35WorkBodyNew"></div></div></div>`;document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)sp35CloseAll()});return m}
+function modal(){let m=$('sp35ControlModal');if(m)return m;m=document.createElement('div');m.id='sp35ControlModal';m.innerHTML=`<div class="sp35-modal-box" role="dialog" aria-modal="true"><div class="sp35-modal-head"><div><h3>Admin Control Center</h3><small><span class="sp35-live-dot"></span>All controls are inside the existing Master Login</small></div><button class="sp35-modal-close" onclick="sp35CloseAll()">×</button></div><div class="sp35-master-tools" id="sp35MasterTools"><button class="sp35-final-card sp35-master-tool" type="button" onclick="openTerritoryManager(document.getElementById('adminScheduleArea')?.value||'Sahiwal')"><i>📍</i><b>Territory Master</b><small>City & territory management</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openUploadTerritoryModal()"><i>📄</i><b>Territory PDF</b><small>Upload / manage territory PDF</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openStoreDatabase()"><i>🏪</i><b>Store Database</b><small>Medical store master</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="spLockedLicenseAdminOpen()"><i>📜</i><b>SHADAB PHARMACY License</b><small>Upload / preview / delete</small></button></div><div class="sp35-control-grid" id="sp35ControlGrid"></div><div class="sp35-work-modal" id="sp35WorkModal"><div class="sp35-work-head"><div><h4 id="sp35WorkTitleNew"></h4><small id="sp35WorkSubNew"></small></div><button class="sp35-work-back" onclick="sp35BackToControls()">Back</button></div><div class="sp35-work-body" id="sp35WorkBodyNew"></div></div></div>`;document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)sp35CloseAll()});return m}
 function render(){const g=$('sp35ControlGrid');if(!g)return;g.innerHTML=N.map((x,i)=>`<button class="sp35-control-card" type="button" onclick="sp35OpenControl(${i+1})"><span class="icon">${x[0]}</span><b>${x[1]}</b><small>${x[2]}</small></button>`).join('')}
 function ensure(){const d=$('adminDashboardBox');if(!d)return;let launch=$('sp35Launcher');if(!launch){launch=document.createElement('button');launch.id='sp35Launcher';launch.className='sp35-launcher';launch.type='button';launch.innerHTML=`<span class="sp35-launcher-icon">📊</span><span class="sp35-launcher-copy"><b>Admin Control Center</b><small>Salesmen • assignments • stores • reports • activity • settings</small></span><span class="sp35-launcher-arrow">›</span>`;launch.onclick=()=>{modal();render();$('sp35ControlModal').classList.add('show')};const hero=d.querySelector('.admin-hero');if(hero)hero.insertAdjacentElement('beforebegin',launch);else d.insertBefore(launch,d.firstChild)}
 }
@@ -3029,7 +3147,7 @@ window.sp35Point28=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');b.innerH
 window.sp35GlobalSearchNew=()=>{const q=($('sp35GlobalQNew')?.value||'').trim().toLowerCase(),r=$('sp35GlobalResultsNew');if(!r)return;if(!q){r.innerHTML='';return}const stores=(storeDatabase||[]).filter(s=>JSON.stringify(s).toLowerCase().includes(q)).slice(0,40),vs=(visits||[]).filter(v=>JSON.stringify(v).toLowerCase().includes(q)).slice(0,40),users=(()=>{try{return JSON.parse(localStorage.getItem('shadab_admin_profiles_v1')||'[]')}catch(e){return[]}})().filter(u=>JSON.stringify(u).toLowerCase().includes(q)).slice(0,40);r.innerHTML=[...users.map(u=>`<div class="notice">👤 <b>${escx(u.fullName||u.email)}</b> — ${escx(u.status||'Active')}</div>`),...stores.map(s=>`<div class="notice">🏪 <b>${escx(s.name)}</b> — ${escx(s.area)} / ${escx(s.territory||'')}</div>`),...vs.map(v=>`<div class="notice">📋 <b>${escx(v.store)}</b> — ${escx(v.visitedBy||'')}</div>`)].join('')||'<div class="sp35-emptyx">No matches.</div>'};
 window.sp35Point29=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');b.innerHTML='<div class="notice">Export the current app data without deleting it.</div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="exportCSV()">Export Visits CSV</button><button class="sp35-btnx" onclick="exportBackup()">Full JSON Backup</button><button class="sp35-btnx" onclick="downloadPDFForDate(todayISO())">Today PDF</button></div>'};
 window.sp35Point30=async()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');let h=[];try{h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]')}catch(e){};const d=db();if(d){try{const q=await d.collection('alert_history').orderBy('at','desc').limit(100).get();h=q.docs.map(x=>x.data()).concat(h)}catch(e){}}const seen=new Set();h=h.filter(x=>{const k=(x.at||'')+'|'+(x.message||'');if(seen.has(k))return false;seen.add(k);return true});b.innerHTML=h.length?h.map(x=>`<div class="notice"><b>${escx(x.at||'')}</b><br>${escx(x.message||'')}</div>`).join(''):'<div class="sp35-emptyx">No alert history yet.</div>'};
-window.sp35Point31=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');b.innerHTML=`<div class="notice"><b>Admin session:</b> ${typeof adminLoggedIn!=='undefined'&&adminLoggedIn?'🟢 Active':'🔴 Not active'}<br>This Control Center does not ask for a second password. It is protected by the existing Admin Login.</div><div class="sp35-actionsx"><button class="sp35-btnx" onclick="logoutAdmin()">Admin Logout</button></div>`};
+window.sp35Point31=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');b.innerHTML=`<div class="notice"><b>Admin session:</b> ${typeof adminLoggedIn!=='undefined'&&adminLoggedIn?'🟢 Active':'🔴 Not active'}<br>This Control Center does not ask for a second password. It is protected by the existing Master Login.</div><div class="sp35-actionsx"><button class="sp35-btnx" onclick="logoutAdmin()">Admin Logout</button></div>`};
 window.sp35Point32=async()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');let h=[];try{h=JSON.parse(localStorage.getItem('shadab_admin_activity_v1')||'[]')}catch(e){};const d=db();if(d){try{const q=await d.collection('admin_activity').orderBy('at','desc').limit(100).get();h=q.docs.map(x=>x.data()).concat(h)}catch(e){}}b.innerHTML=h.length?h.slice(0,150).map(x=>`<div class="notice"><b>${escx(x.at||'')}</b> • ${escx(x.action||'Action')}<br><small>${escx(JSON.stringify(x.meta||{}))}</small></div>`).join(''):'<div class="sp35-emptyx">No admin actions recorded yet.</div>'};
 window.sp35Point33=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');const msg=$('syncText')?.textContent||'Unknown';b.innerHTML=`<div class="notice"><b>Current status:</b> ${escx(msg)}</div><div id="sp35SyncDetail" class="notice">Checking Firebase readiness…</div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="sp35CheckFirebase()">Check Firebase</button><button class="sp35-btnx" onclick="sp35SyncNow()">Sync Local Data Now</button></div>`;sp35CheckFirebase()};
 window.sp35CheckFirebase=async()=>{const r=$('sp35SyncDetail');if(!r)return;if(!navigator.onLine){r.textContent='Offline. Local mode is active.';return}const a=auth(),d=db();if(!a||!d){r.textContent='Firebase SDK is not available.';return}try{await d.enableNetwork();const u=a.currentUser;if(!u){r.textContent='Firebase is initialized and online. Sign in as a salesman to use authenticated Firestore sync.';return}await d.collection('salesmen').doc(u.uid).get({source:'server'});r.innerHTML='🟢 Firebase + Firestore server access is working for the signed-in account.'}catch(e){r.innerHTML='🟠 Firebase is reachable, but Firestore rejected this request: '+escx(e.code||e.message||e)+'. Check the existing Firestore Rules; do not create a second password inside this panel.'}};
@@ -3038,8 +3156,8 @@ window.sp35Point34=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');const na
 window.sp35SaveSettingsNew=async()=>{const n=$('sp35AppNameNew')?.value.trim()||'SHADAB PHARMACY',th=$('sp35ThemeNew')?.value||'dark';localStorage.setItem('shadab_app_name_v1',n);localStorage.setItem('shadab_theme',th);if(typeof loadTheme==='function')loadTheme();const d=db();if(d)try{await d.collection('app_settings').doc('general').set({appName:n,theme:th,updatedAt:new Date().toISOString()},{merge:true})}catch(e){}log35('Settings updated',{appName:n,theme:th});toast35('Settings saved')};
 window.sp35Point35=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');b.innerHTML='<div class="notice">Backup protects local app data. Restore replaces the selected local datasets after confirmation.</div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="exportBackup()">Download Backup</button><button class="sp35-btnx" onclick="document.getElementById(\'restoreInput\')?.click()">Restore Backup</button></div>'};
 // Make alert history durable in Firestore in addition to local history.
-const oldSave=window.sp35SaveAlert;window.sp35SaveAlert=async function(){if(oldSave)await oldSave.apply(this,arguments);const m=$('sp35AlertText')?.value?.trim();if(!m)return;const d=db();if(d){try{await d.collection('alert_history').add({message:m,at:new Date().toISOString(),by:'admin'})}catch(e){}}};
-// Open the launcher only after Admin Login; never show the full controls automatically.
+const oldSave=window.sp35SaveAlert;window.sp35SaveAlert=async function(){if(oldSave)await oldSave.apply(this,arguments);const m=$('sp35AlertText')?.value?.trim();if(!m)return;const d=db();if(d){try{await d.collection('alert_history').add({message:m,at:new Date().toISOString(),by:'master'})}catch(e){}}};
+// Open the launcher only after Master Login; never show the full controls automatically.
 function syncLauncher(){const d=$('adminDashboardBox'),l=$('sp35Launcher');if(!d||!l)return;l.style.display=d.style.display==='none'?'none':'flex'}
 const observer=new MutationObserver(syncLauncher);window.addEventListener('load',()=>{setTimeout(()=>{ensure();syncLauncher()},250)});setInterval(()=>{ensure();syncLauncher()},10000);observer.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['style','class']});
 window.addEventListener('keydown',e=>{if(e.key==='Escape')sp35CloseAll()});
@@ -3057,14 +3175,14 @@ window.addEventListener('keydown',e=>{if(e.key==='Escape')sp35CloseAll()});
 const ITEMS=[['🔔','Main Screen Alert','Edit and save the front-page alert'],['👤','Salesman Registration','Create salesman accounts'],['🔐','Salesman Login','Firebase account login'],['🔑','Forgot Password','Password reset'],['🏠','Login Header','Salesman name and login state'],['☰','Hamburger Menu','Account and app navigation'],['👨‍💼','Salesman Management','Profiles, contact and status'],['🟢','Active / Disable','Enable or disable salesman'],['🕐','Last Seen','Server activity timestamp'],['🏙️','Assignment Structure','Salesman → City → Territory → Day'],['📍','Auto Assignment','Load current-day route'],['🏪','Territory Store Filter','Only assigned stores'],['☑️','Store Assignment','Checklist and edit'],['📊','Today Task Cards','Planned / Visited / Orders / Remaining'],['👆','Clickable Task Cards','Open matching store data'],['📄','PDF + WhatsApp','Download and share lists'],['💾','Offline Mode','Local field work'],['📱','New Phone / Reinstall','Restore server data'],['🔥','Firebase Architecture','Auth + Firestore'],['🛑','Preserve Existing App','Keep current workflow'],['📊','Admin Dashboard','Salesmen / Stores / Visits / Orders'],['🗓️','Assignment Calendar','View routes by day'],['🏙️','City & Territory Master','Add / edit / disable'],['🏪','Medical Store Master','Add / edit / disable stores'],['📍','Salesman Activity','Status and current route'],['📈','Salesman Performance','Assigned / visited / orders / remaining'],['📑','Reports Center','Daily / weekly / monthly'],['🔎','Global Search','Search app data'],['📥','Export Data','CSV / JSON / PDF'],['🔔','Alert History','Previous alerts'],['🔐','Admin Security','Existing admin session'],['📝','Activity Log','Timestamped actions'],['☁️','Firebase Sync Status','Connection and sync'],['⚙️','App Settings','App defaults'],['🗄️','Backup / Data Safety','Backup and restore']];
 const $=id=>document.getElementById(id), ex=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function getBody(){return $('sp35FinalBody')||$('sp35WorkBody')}
-function build(){let m=$('sp35FinalModal');if(m)return m;m=document.createElement('div');m.id='sp35FinalModal';m.innerHTML='<div class="sp35-final-box"><div class="sp35-final-head"><div><h3>Admin Control Center</h3><small>All controls are inside the existing Admin Login — no second password.</small></div><button class="sp35-final-close" onclick="sp35FinalClose()">×</button></div><div class="sp35-final-grid" id="sp35FinalGrid"></div><div class="sp35-final-work" id="sp35FinalWork"><div class="sp35-final-work-head"><div><h4 id="sp35FinalTitle"></h4><small id="sp35FinalSub"></small></div><button class="sp35-back" onclick="sp35FinalBack()">Back</button></div><div class="sp35-final-body" id="sp35FinalBody"></div></div></div>';document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)sp35FinalClose()});$('sp35FinalGrid').innerHTML=ITEMS.map((x,i)=>`<button class="sp35-final-card" onclick="sp35FinalOpen(${i+1})"><i>${x[0]}</i><b>${x[1]}</b><small>${x[2]}</small></button>`).join('');return m}
+function build(){let m=$('sp35FinalModal');if(m)return m;m=document.createElement('div');m.id='sp35FinalModal';m.innerHTML='<div class="sp35-final-box"><div class="sp35-final-head"><div><h3>Admin Control Center</h3><small>All controls are inside the existing Master Login — no second password.</small></div><button class="sp35-final-close" onclick="sp35FinalClose()">×</button></div><div class="sp35-final-grid" id="sp35FinalGrid"></div><div class="sp35-final-work" id="sp35FinalWork"><div class="sp35-final-work-head"><div><h4 id="sp35FinalTitle"></h4><small id="sp35FinalSub"></small></div><button class="sp35-back" onclick="sp35FinalBack()">Back</button></div><div class="sp35-final-body" id="sp35FinalBody"></div></div></div>';document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)sp35FinalClose()});$('sp35FinalGrid').innerHTML=ITEMS.map((x,i)=>`<button class="sp35-final-card" onclick="sp35FinalOpen(${i+1})"><i>${x[0]}</i><b>${x[1]}</b><small>${x[2]}</small></button>`).join('');return m}
 function launcher(){const d=$('adminDashboardBox');if(!d)return;const old=$('sp35FinalLauncher');if(old)old.remove();return;}
 window.sp35FinalClose=()=>{$('sp35FinalModal')?.classList.remove('show');$('sp35FinalWork')?.classList.remove('show');$('sp35FinalGrid')&&( $('sp35FinalGrid').style.display='grid')};window.sp35FinalBack=()=>{$('sp35FinalWork')?.classList.remove('show');$('sp35FinalGrid')&&( $('sp35FinalGrid').style.display='grid')};
 window.sp35FinalOpen=async n=>{build();const item=ITEMS[n-1];if(!item)return;$('sp35FinalGrid').style.display='none';$('sp35FinalWork').classList.add('show');$('sp35FinalTitle').textContent=item[1];$('sp35FinalSub').textContent=item[2];const b=$('sp35FinalBody');b.innerHTML='<div class="sp35-empty-final">Loading…</div>';try{const fn=window['sp35Point'+n];if(fn){const old=$('sp35WorkBody');if(old)old.id='sp35LegacyBody';await Promise.resolve(fn());const legacy=$('sp35LegacyBody');if(legacy&&legacy.innerHTML){b.innerHTML=legacy.innerHTML;legacy.id='sp35WorkBody'}}else b.innerHTML='<div class="sp35-empty-final">This control is not available.</div>'}catch(e){b.innerHTML='<div class="sp35-empty-final">Error: '+ex(e.message||e)+'</div>'}};
 // Point 1: real editor in the new control window.
-window.sp35Point1=()=>{const b=getBody(),m=localStorage.getItem('shadab_alert_message_v1')||'Welcome to SHADAB PHARMACY';b.innerHTML=`<div class="sp35-field-final"><label>Alert Message</label><textarea id="sp35AlertNew" rows="4">${ex(m)}</textarea></div><div class="sp35-actions-final"><button class="sp35-btn-final primary" onclick="sp35SaveAlertNew()">Save Alert</button><button class="sp35-btn-final" onclick="sp35LoadAlertNew()">Reload</button></div><div id="sp35AlertNewStatus" class="sp35-notice-final">Admin only • Firebase + local fallback</div>`};
+window.sp35Point1=()=>{const b=getBody(),m=localStorage.getItem('shadab_alert_message_v1')||'Welcome to SHADAB PHARMACY';b.innerHTML=`<div class="sp35-field-final"><label>Alert Message</label><textarea id="sp35AlertNew" rows="4">${ex(m)}</textarea></div><div class="sp35-actions-final"><button class="sp35-btn-final primary" onclick="sp35SaveAlertNew()">Save Alert</button><button class="sp35-btn-final" onclick="sp35LoadAlertNew()">Reload</button></div><div id="sp35AlertNewStatus" class="sp35-notice-final">Master only • Firebase + local fallback</div>`};
 window.sp35LoadAlertNew=async()=>{const t=$('sp35AlertNew'),s=$('sp35AlertNewStatus');if(!t)return;let m=localStorage.getItem('shadab_alert_message_v1')||'';try{const d=db();if(d){const q=await d.collection('app_settings').doc('shadabAlert').get({source:'server'});if(q.exists)m=q.data().message||m}}catch(e){}t.value=m;if(s)s.textContent='Alert loaded. Edit and save.'};
-window.sp35SaveAlertNew=async()=>{const t=$('sp35AlertNew'),s=$('sp35AlertNewStatus'),m=(t?.value||'').trim();if(!m)return toast35('Write an alert message first.');localStorage.setItem('shadab_alert_message_v1',m);if($('shadabAlertText'))$('shadabAlertText').textContent=m;const rec={message:m,at:new Date().toISOString(),by:'admin'};let h=[];try{h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]')}catch(e){}h.unshift(rec);localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)));try{const d=db();if(d){await d.collection('app_settings').doc('shadabAlert').set({message:m,updatedAt:rec.at,updatedBy:'admin'},{merge:true});await d.collection('alert_history').add(rec);if(s)s.textContent='✓ Saved to Firebase and main screen.'}else if(s)s.textContent='Saved locally — Firebase SDK unavailable'}catch(e){if(s)s.textContent='Saved locally; Firebase rejected the write: '+(e.code||e.message||e)}toast35('Alert saved')};
+window.sp35SaveAlertNew=async()=>{const t=$('sp35AlertNew'),s=$('sp35AlertNewStatus'),m=(t?.value||'').trim();if(!m)return toast35('Write an alert message first.');localStorage.setItem('shadab_alert_message_v1',m);if($('shadabAlertText'))$('shadabAlertText').textContent=m;const rec={message:m,at:new Date().toISOString(),by:'master'};let h=[];try{h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]')}catch(e){}h.unshift(rec);localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)));try{const d=db();if(d){await d.collection('app_settings').doc('shadabAlert').set({message:m,updatedAt:rec.at,updatedBy:'master'},{merge:true});await d.collection('alert_history').add(rec);if(s)s.textContent='✓ Saved to Firebase and main screen.'}else if(s)s.textContent='Saved locally — Firebase SDK unavailable'}catch(e){if(s)s.textContent='Saved locally; Firebase rejected the write: '+(e.code||e.message||e)}toast35('Alert saved')};
 // Point 18: actual server restore for the signed-in salesman.
 window.sp35Point18=async()=>{const b=getBody(),u=auth()?.currentUser;if(!u){b.innerHTML='<div class="sp35-empty-final">Sign in with the same Firebase account on the new phone/reinstall first.</div>';return}const d=db();if(!d){b.innerHTML='<div class="sp35-empty-final">Firebase unavailable. Local data is still safe on this device.</div>';return}b.innerHTML='<div class="sp35-empty-final">Reading server backup…</div>';try{const q=await d.collection('user_data').doc(u.uid).get({source:'server'});if(!q.exists){b.innerHTML='<div class="sp35-notice-final">No server backup exists yet. Use Sync Local Data from Firebase Sync Status.</div>';return}const x=q.data()||{};if(Array.isArray(x.visits))visits=x.visits;if(Array.isArray(x.stores))storeDatabase=x.stores;if(x.territories&&typeof x.territories==='object')territories=x.territories;if(x.routeTasks&&typeof x.routeTasks==='object')routeTasks=x.routeTasks;saveData();if(typeof saveRouteTasks==='function')saveRouteTasks();renderRecords();updateStats();renderTodayTasks();updatePremiumDashboard();b.innerHTML='<div class="sp35-notice-final">🟢 Server data restored.<br>Visits: '+visits.length+' • Stores: '+storeDatabase.length+'</div>'}catch(e){b.innerHTML='<div class="sp35-empty-final">Restore failed: '+ex(e.code||e.message||e)+'</div>'}};
 // Admin dashboard overview.
@@ -3099,7 +3217,7 @@ function sp35DocumentControlBody(type){
   const meta=isOrder?'adminSharedOrderMeta':'adminSharedSupplyMeta';
   b.innerHTML=`<div class="sp35-doc-admin-hero">
     <div class="sp35-doc-admin-icon">${isOrder?'📋':'🚚'}</div>
-    <div><h3>${title}</h3><p>Admin-uploaded document • Shared with all salesman phones • Firebase synced</p></div>
+    <div><h3>${title}</h3><p>Master-uploaded document • Shared with all salesman phones • Firebase synced</p></div>
   </div>
   <div class="sp35-doc-upload-box">
     <label class="sp35-doc-upload-label" for="${id}">
@@ -3145,11 +3263,11 @@ function sp35BuildRouteStores(){
 window.sp35SaveAdminPlanToFirebase=async()=>{
   const d=db(),a=auth(),u=a?.currentUser;
   if(!d)return {ok:false,error:'firebase-unavailable'};
-  if(!u||String(u.email||'').toLowerCase()!==String(ADMIN_FIREBASE_EMAIL||'').toLowerCase())return {ok:false,error:{code:'admin-auth-required',message:'Admin Firebase account is not signed in'}};
+  if(!u||String(u.email||'').toLowerCase()!==String(ADMIN_FIREBASE_EMAIL||'').toLowerCase())return {ok:false,error:{code:'admin-auth-required',message:'Master Firebase account is not signed in'}};
   const schedules=typeof adminSchedules!=='undefined'?adminSchedules:{};
   const routeStores=sp35BuildRouteStores();
   const sharedTerritories=typeof territories!=='undefined'?territories:{};
-  const payload={schedules,routeStores,territories:sharedTerritories,routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},updatedAt:new Date().toISOString(),updatedBy:'admin'};
+  const payload={schedules,routeStores,territories:sharedTerritories,routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},updatedAt:new Date().toISOString(),updatedBy:'master'};
   try{
     await d.collection('app_settings').doc('adminSchedules').set(payload,{merge:true});
     localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
@@ -3204,7 +3322,7 @@ window.sp35ManualServerRefresh=async function(){
     if(typeof write!=='function')throw new Error('REST sync engine is not loaded.');
     const stamp=new Date().toISOString();
     const email=String(session.email||'').toLowerCase();
-    if(email==='admin@shadabpharmacy.com'){
+    if(email==='master@shadabpharmacy.com'){
       const stores=typeof storeDatabase!=='undefined'?JSON.parse(JSON.stringify(storeDatabase)):[];
       const terr=typeof territories!=='undefined'?JSON.parse(JSON.stringify(territories)):{};
       const sales=typeof customSalesmen!=='undefined'?JSON.parse(JSON.stringify(customSalesmen)):[];
@@ -3443,7 +3561,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
       appName:localStorage.getItem('shadab_app_name_v1')||'SHADAB PHARMACY',
       theme:localStorage.getItem('shadab_theme')||'',
       alertMessage:localStorage.getItem('shadab_alert_message_v1')||'',
-      updatedAt:stamp(), updatedBy:'admin'
+      updatedAt:stamp(), updatedBy:'master'
     };
   }
 
@@ -3488,7 +3606,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
       const payload={
         schedules:typeof adminSchedules!=='undefined'?adminSchedules:{},
         routeTasks:typeof routeTasks!=='undefined'?routeTasks:{},
-        updatedAt:stamp(),updatedBy:'admin'
+        updatedAt:stamp(),updatedBy:'master'
       };
       await d.collection('app_settings').doc(SCHEDULE_DOC).set(payload,{merge:true});
       localStorage.setItem('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
@@ -3550,7 +3668,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     const uel=document.getElementById('adminUsername'),pel=document.getElementById('adminPassword');
     const user=String(uel?.value||'').trim(),pass=String(pel?.value||'');
     const btn=document.querySelector('#adminLoginBox button[onclick*="adminLogin"]');
-    if(user!==ADMIN_USER||pass!==ADMIN_PASS){toastSafe('Invalid Admin username or password');return;}
+    if(user!==ADMIN_USER||pass!==ADMIN_PASS){toastSafe('Invalid Master username or password');return;}
     const a=getAuth();
     if(!a){toastSafe('Firebase Authentication is not loaded. Please reopen the HTML file.');return;}
     const old=btn?.textContent||'🔐 Login';if(btn){btn.disabled=true;btn.textContent='🔄 Signing in…';}
@@ -3569,8 +3687,8 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     }catch(e){
       adminLoggedIn=false;
       const code=String(e?.code||'');
-      let m='Admin Firebase login failed.';
-      if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found')m='Admin Firebase email/password is incorrect.';
+      let m='Master Firebase login failed.';
+      if(code==='auth/invalid-credential'||code==='auth/wrong-password'||code==='auth/user-not-found')m='Master Firebase email/password is incorrect.';
       else if(code==='auth/operation-not-allowed')m='Firebase Email/Password sign-in is disabled for this Firebase project.';
       else if(code==='auth/network-request-failed')m='Internet/Firebase connection failed. Please try again.';
       else if(code==='auth/too-many-requests')m='Too many attempts. Please wait and try again.';
@@ -3580,7 +3698,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     }finally{if(btn){btn.disabled=false;btn.textContent=old;}}
   };
 
-  window.logoutAdmin=async function(){try{const a=getAuth();if(a)await a.signOut()}catch(e){}stopListeners();adminLoggedIn=false;try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}showAdminLogin();toastSafe('Admin logged out')};
+  window.logoutAdmin=async function(){try{const a=getAuth();if(a)await a.signOut()}catch(e){}stopListeners();adminLoggedIn=false;try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}showAdminLogin();toastSafe('Master logged out')};
 
   // Clean salesman login. The login modal closes immediately after Firebase Auth succeeds.
   window.sp35Login=async function(){
@@ -3595,7 +3713,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
       await prepareAuthPersistence(a);
       if(a.currentUser){try{await a.signOut()}catch(e){}}
       const cred=await withAuthTimeout(a.signInWithEmailAndPassword(email,pass),15000),u=cred.user;
-      if(isAdminUser(u))throw new Error('Please use Admin Login for the Admin account.');
+      if(isAdminUser(u))throw new Error('Please use Master Login for the Master account.');
       sp35CloseAuth?.();
       sp35UpdateHeaderLoginButton?.(u.displayName||u.email||'Salesman');
       toastSafe('Salesman login successful');
@@ -3661,10 +3779,10 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     t.value=m;if(st)st.textContent='Alert loaded. Edit and save.';
   };
   window.sp35SaveAlert=async function(){
-    if(!adminLoggedIn)return toastSafe('Admin login required');
+    if(!adminLoggedIn)return toastSafe('Master login required');
     const m=String(document.getElementById('sp35AlertText')?.value||'').trim();if(!m)return toastSafe('Please write an alert message first.');
     localStorage.setItem('shadab_alert_message_v1',m);const t=document.getElementById('shadabAlertText');if(t)t.textContent=m;
-    try{const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');h.unshift({message:m,at:stamp(),by:'admin'});localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)))}catch(e){}
+    try{const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');h.unshift({message:m,at:stamp(),by:'master'});localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)))}catch(e){}
     const r=await saveMasterData('alert');const s=document.getElementById('sp35AlertStatus');if(s)s.textContent=r.ok?'✓ Alert synced to all devices.':'Saved locally; Firebase sync failed.';toastSafe(r.ok?'Alert saved to all devices':'Alert saved locally');
   };
   window.sp35SaveAlertNew=async function(){
@@ -3740,8 +3858,8 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     apiKey: 'AIzaSyAi5c8pdkxxfZyvZEG9hi4q5nugVGXfKUc',
     projectId: 'shadab-pharmacy'
   };
-  const ADMIN_EMAIL = 'admin@shadabpharmacy.com';
-  const ADMIN_USER = 'admin';
+  const ADMIN_EMAIL = 'master@shadabpharmacy.com';
+  const ADMIN_USER = 'master';
   const ADMIN_PASS = 'shadab@1303';
   const AUTH_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + encodeURIComponent(CFG.apiKey);
   const SIGNUP_URL = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + encodeURIComponent(CFG.apiKey);
@@ -3899,11 +4017,11 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
   }
 
   async function writeMaster(reason){
-    if(!session || session.email!==ADMIN_EMAIL)return {ok:false,reason:'not-admin'};
+    if(!session || session.email!==ADMIN_EMAIL)return {ok:false,reason:'not-master'};
     try{await writeDoc(MASTER_PATH,masterPayload(reason));return {ok:true}}catch(e){console.error('REST master write',e);return {ok:false,error:e}}
   }
   async function writeSchedules(reason){
-    if(!session || session.email!==ADMIN_EMAIL)return {ok:false,reason:'not-admin'};
+    if(!session || session.email!==ADMIN_EMAIL)return {ok:false,reason:'not-master'};
     try{await writeDoc(SCHEDULE_PATH,schedulePayload(reason));return {ok:true}}catch(e){console.error('REST schedule write',e);return {ok:false,error:e}}
   }
 
@@ -3964,7 +4082,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
   }
 
   async function syncSalesmanDataAuto(){
-    if(!session||session.email===ADMIN_EMAIL)return {ok:true,mode:'admin-skip'};
+    if(!session||session.email===ADMIN_EMAIL)return {ok:true,mode:'master-skip'};
     try{
       /* Use the same hardened uploader as manual sync. This is the function
          called by the real 10-minute poll, so auto and manual sync now share
@@ -4043,7 +4161,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
   window.adminLogin=async function(){
     const uel=get('adminUsername'),pel=get('adminPassword'),btn=document.querySelector('#adminLoginBox button[onclick*="adminLogin"]');
     const user=String(uel?.value||'').trim(),pass=String(pel?.value||'');
-    if(user!==ADMIN_USER||pass!==ADMIN_PASS){safeToast('Invalid Admin username or password');return}
+    if(user!==ADMIN_USER||pass!==ADMIN_PASS){safeToast('Invalid Master username or password');return}
     const old=btn?.textContent||'🔐 Login';if(btn){btn.disabled=true;btn.textContent='🔄 Connecting…'}
     try{
       if(session?.email===ADMIN_EMAIL && session.idToken){await ensureToken();await loginSuccess(session,true);return}
@@ -4057,7 +4175,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     const remember=!!get('sp35RememberMaster')?.checked;
     const btn=document.querySelector('#sp35LoginForm button.btn.primary');const old=btn?.textContent||'🔐 Login';
     if(!email||!pass){safeToast('Email and password are required');return}
-    if(email===ADMIN_EMAIL){safeToast('Please use Admin Login for the Admin account. Create one separate Master Salesman email once.');return}
+    if(email===ADMIN_EMAIL){safeToast('Please use Master Login for the Master account. Create one separate Master Salesman email once.');return}
     if(btn){btn.disabled=true;btn.textContent='🔄 Connecting…'}
     try{const s=await signInREST(email,pass);if(remember)saveMasterSalesmanSession(s);await loginSuccess(s,false)}catch(e){console.error('REST SALESMAN LOGIN',e);safeToast(authMessage(e))}
     finally{if(btn){btn.disabled=false;btn.textContent=old}}
@@ -4079,7 +4197,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
     }catch(e){console.error('REST SALESMAN REGISTER',e);safeToast(authMessage(e))}
   };
 
-  window.logoutAdmin=async function(){clearSession();stopPolling();try{adminLoggedIn=false}catch(e){}try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}try{showAdminLogin()}catch(e){}safeToast('Admin logged out')};
+  window.logoutAdmin=async function(){clearSession();stopPolling();try{adminLoggedIn=false}catch(e){}try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}try{showAdminLogin()}catch(e){}safeToast('Master logged out')};
   window.sp35Forgot=async function(){
     const email=String(get('sp35LoginEmail')?.value||'').trim().toLowerCase();
     if(!email)return safeToast('Enter the salesman email first');
@@ -4380,7 +4498,7 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
       if(!s?.uid)throw new Error('Please sign in first. Firebase session is not available.');
       if(!restWrite)throw new Error('REST sync engine is not loaded.');
       const stamp=new Date().toISOString();
-      if(s.email==='admin@shadabpharmacy.com'){
+      if(s.email==='master@shadabpharmacy.com'){
         const stores=typeof storeDatabase!=='undefined'?JSON.parse(JSON.stringify(storeDatabase)):[];
         const terr=typeof territories!=='undefined'?JSON.parse(JSON.stringify(territories)):{};
         const sales=typeof customSalesmen!=='undefined'?JSON.parse(JSON.stringify(customSalesmen)):[];
@@ -4436,9 +4554,9 @@ window.addEventListener('load',()=>{setTimeout(()=>{launcher();syncLauncher()},3
 (function(){
   'use strict';
   function escLocal(v){return typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-  // The Admin Control Center is protected by the existing Admin Login and is opened from menu item #3.
+  // The Admin Control Center is protected by the existing Master Login and is opened from menu item #3.
   window.openAdminControlCenter=function(){
-    if(typeof adminLoggedIn==='undefined'||!adminLoggedIn){openAdmin();try{toast('Admin login required')}catch(e){}return;}
+    if(typeof adminLoggedIn==='undefined'||!adminLoggedIn){openAdmin();try{toast('Master login required')}catch(e){}return;}
     const launcher=document.getElementById('sp35Launcher');
     if(launcher){launcher.click();return;}
     try{typeof showAdminDashboard==='function'&&showAdminDashboard();}catch(e){}
@@ -5674,7 +5792,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
   window.sp35ManualSyncFinal=async function(button){
     const s=getSession();
     if(!s?.uid){try{toast35?.('Please sign in first — Firebase session is not available.')}catch(e){};return false}
-    if(s.email==='admin@shadabpharmacy.com'){
+    if(s.email==='master@shadabpharmacy.com'){
       return oldSp35Manual?oldSp35Manual(button):false;
     }
     if(button){button.disabled=true;button.dataset.oldHtml=button.innerHTML;button.innerHTML='↻ Syncing…'}
@@ -5695,7 +5813,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
      salesman upload uses the corrected payload. */
   const oldRestResume=window.shadabRestResumeSync;
   window.shadabRestResumeSync=async function(){
-    try{const s=getSession();if(s&&s.email!=='admin@shadabpharmacy.com')return await safeSalesmanSync('data-change')}catch(e){console.warn('Firebase auto sync:',e)}
+    try{const s=getSession();if(s&&s.email!=='master@shadabpharmacy.com')return await safeSalesmanSync('data-change')}catch(e){console.warn('Firebase auto sync:',e)}
     try{return oldRestResume?.apply(this,arguments)}catch(e){}
   };
 
@@ -6184,7 +6302,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
       const s=window.shadabRestCurrentSession?.();if(!s?.uid)throw new Error('Please sign in first. Firebase session is not available.');
       const write=window.shadabRestWriteDoc;if(typeof write!=='function')throw new Error('REST sync engine is not loaded.');
       const stamp=new Date().toISOString(),email=String(s.email||'').toLowerCase();
-      if(email==='admin@shadabpharmacy.com'){
+      if(email==='master@shadabpharmacy.com'){
         const master={stores:typeof storeDatabase!=='undefined'?window.jsonClone(storeDatabase):[],territories:typeof territories!=='undefined'?window.jsonClone(territories):{},customSalesmen:typeof customSalesmen!=='undefined'?window.jsonClone(customSalesmen):[],disabledTerritories:JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]'),appName:localStorage.getItem('shadab_app_name_v1')||'SHADAB PHARMACY',theme:localStorage.getItem('shadab_theme')||'',alertMessage:localStorage.getItem('shadab_alert_message_v1')||'',updatedAt:stamp,reason:'manual-refresh'};
         const schedules={schedules:typeof adminSchedules!=='undefined'?window.jsonClone(adminSchedules):{},routeTasks:typeof routeTasks!=='undefined'?window.jsonClone(routeTasks):{},updatedAt:stamp,reason:'manual-refresh'};
         await write('app_settings/masterData',master);await write('app_settings/adminSchedules',schedules);
@@ -6414,7 +6532,7 @@ function vaultRead(){try{return JSON.parse(localStorage.getItem(VAULT_KEY)||'{}'
 function vaultWrite(v){try{localStorage.setItem(VAULT_KEY,JSON.stringify(v))}catch(e){}}
 function escL(v){return typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function sessionL(){try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}}
-function isAdminL(){const s=sessionL();return (typeof adminLoggedIn!=='undefined'&&adminLoggedIn===true) || (!!s?.uid && String(s.email||'').toLowerCase()==='admin@shadabpharmacy.com')}
+function isAdminL(){const s=sessionL();return (typeof adminLoggedIn!=='undefined'&&adminLoggedIn===true) || (!!s?.uid && String(s.email||'').toLowerCase()==='master@shadabpharmacy.com')}
 function toastL(m){try{if(typeof toast==='function')toast(m);else alert(m)}catch(e){}}
 function asset(t){const v=vaultRead();return v[t]||null}
 function setAsset(t,a){const v=vaultRead();if(a)v[t]=a;else delete v[t];vaultWrite(v)}
@@ -6468,7 +6586,7 @@ window.spLockedLicenseShare=async()=>{
 };
 window.spLockedLicenseDownload=()=>{const a=asset('license');if(!a)return toastL('No License uploaded yet.');const l=document.createElement('a');l.href=a.data;l.download=a.name||'Shadab-Pharmacy-License.pdf';l.click()};
 window.adminUploadLockedLicense=async input=>{
- if(!isAdminL())return toastL('Admin login required.');
+ if(!isAdminL())return toastL('Master login required.');
  const card=input?.closest?.('#spAdminLicenseCard')||document.getElementById('spAdminLicenseCard');
  const btn=card?.querySelector?.('.sp-license-admin-actions .primary');
  const old=btn?.innerHTML||'Upload / Replace';
@@ -6489,7 +6607,7 @@ window.adminUploadLockedLicense=async input=>{
  }
 };
 window.adminDeleteLockedLicense=async()=>{
- if(!isAdminL())return toastL('Admin login required.');
+ if(!isAdminL())return toastL('Master login required.');
  if(!confirm('Delete SHADAB PHARMACY License? This is the only action that removes the locked License.'))return;
  setAsset('license',null);const v=await cloudRead();delete v.license;v.updatedAt=new Date().toISOString();await cloudWrite(v);lockedStatus();toastL('✓ SHADAB PHARMACY License deleted.');
 };
@@ -6512,7 +6630,7 @@ function addLicenseFieldCard(){
  const dash=document.getElementById('sharedDocsDashboard');
  if(dash&&!document.getElementById('spLockedLicenseCard')){
   const card=document.createElement('button');card.id='spLockedLicenseCard';card.type='button';card.className='shared-doc-card';card.onclick=window.spLockedLicenseOpen;
-  card.innerHTML='<span class="shared-doc-icon">📜</span><span class="shared-doc-copy"><b>SHADAB PHARMACY License</b><small>Latest Admin-uploaded license</small><span class="sp-locked-badge">🔒 Permanently Saved</span></span><span class="shared-doc-arrow">›</span><span class="shared-doc-status" id="sharedLicenseStatus">Not uploaded</span>';
+  card.innerHTML='<span class="shared-doc-icon">📜</span><span class="shared-doc-copy"><b>SHADAB PHARMACY License</b><small>Latest Master-uploaded license</small><span class="sp-locked-badge">🔒 Permanently Saved</span></span><span class="shared-doc-arrow">›</span><span class="shared-doc-status" id="sharedLicenseStatus">Not uploaded</span>';
   dash.appendChild(card);
  }
 }
@@ -6557,7 +6675,7 @@ window.spSummaryDetailLockSnapshot=mirror;
 (function(){'use strict';
 window.spLockedLicenseAdminOpen=function(){
  const m=document.getElementById('spLicenseAdminModal'); if(!m)return;
- if(typeof adminLoggedIn!=='undefined'&&!adminLoggedIn){try{toast('Admin login required')}catch(e){};return;}
+ if(typeof adminLoggedIn!=='undefined'&&!adminLoggedIn){try{toast('Master login required')}catch(e){};return;}
  m.classList.add('show');
  try{if(typeof lockedStatus==='function')lockedStatus();}catch(e){}
  const meta=document.getElementById('spLicenseAdminMeta');
@@ -6682,7 +6800,7 @@ try{const oldInstall=window.spLockedLicenseInstall; if(typeof oldInstall==='func
 
 
 
-</body>
+
 
 
 
@@ -6755,7 +6873,7 @@ try{const oldInstall=window.spLockedLicenseInstall; if(typeof oldInstall==='func
 'use strict';
 const DOC_BASE='app_settings/sharedDocuments';
 const DOC_PATH={orderForm:DOC_BASE+'/orderForm',supplySchedule:DOC_BASE+'/supplySchedule',license:DOC_BASE+'/license'};
-const ADMIN='admin@shadabpharmacy.com';
+const ADMIN='master@shadabpharmacy.com';
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const toast=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
 const sess=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
@@ -6781,7 +6899,7 @@ async function ensureGitHubSession(){
  try{await window.shadabFirebaseRecheck?.()}catch(e){}
  s=sess();
  if(s?.uid&&s?.idToken)return s;
- throw new Error('GitHub Firebase session is missing. Open the Salesman/Admin Login on this GitHub app and sign in once, then press Sync again.');
+ throw new Error('GitHub Firebase session is missing. Open the Salesman/Master Login on this GitHub app and sign in once, then press Sync again.');
 }
 async function syncV25(){
  if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
@@ -6820,7 +6938,7 @@ async function readCloud(path){if(typeof window.shadabRestReadDoc!=='function')t
 async function writeCloud(path,obj){if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestWriteDoc(path,obj)}
 async function uploadDoc(type,input){
  try{
-  const s=sess();if(!s?.uid||String(s.email).toLowerCase()!==ADMIN)throw new Error('Admin login required.');
+  const s=sess();if(!s?.uid||String(s.email).toLowerCase()!==ADMIN)throw new Error('Master login required.');
   if(!navigator.onLine)throw new Error('Internet is required to publish this document.');
   const a=await fileDataV25(input?.files?.[0]);
   const path=DOC_PATH[type]; if(!path)throw new Error('Unknown document type.');
@@ -6834,7 +6952,7 @@ async function uploadDoc(type,input){
 window.adminUploadSharedDocument=async function(type,input){return uploadDoc(type,input)};
 window.adminUploadLockedLicense=async function(input){return uploadDoc('license',input)};
 async function deleteDoc(type){
- try{const s=sess();if(!s?.uid||String(s.email).toLowerCase()!==ADMIN)throw new Error('Admin login required.');await writeCloud(DOC_PATH[type],{deleted:true,updatedAt:new Date().toISOString(),name:'',type:'',size:0,data:''});localAsset(type,null);toast('✓ Document removed from Firebase');return true}catch(e){toast('✕ Delete failed — '+exactError(e));return false}}
+ try{const s=sess();if(!s?.uid||String(s.email).toLowerCase()!==ADMIN)throw new Error('Master login required.');await writeCloud(DOC_PATH[type],{deleted:true,updatedAt:new Date().toISOString(),name:'',type:'',size:0,data:''});localAsset(type,null);toast('✓ Document removed from Firebase');return true}catch(e){toast('✕ Delete failed — '+exactError(e));return false}}
 window.adminDeleteSharedDocument=deleteDoc;window.adminDeleteLockedLicense=async()=>deleteDoc('license');
 async function hydrate(){if(!navigator.onLine||!sess()?.uid)return;for(const t of ['orderForm','supplySchedule','license']){try{const a=await readCloud(DOC_PATH[t]);if(a?.deleted)localAsset(t,null);else if(a?.data)localAsset(t,a)}catch(e){console.warn('Shared document hydrate',t,e)}}}
 window.spV25HydrateSharedDocuments=hydrate;
@@ -6852,7 +6970,7 @@ setInterval(()=>{if(navigator.onLine&&sess()?.uid)hydrate()},600000);
      - keep shared PDFs outside masterData
      - keep the existing locked sync animation/controller untouched
   */
-  const ADMIN='admin@shadabpharmacy.com';
+  const ADMIN='master@shadabpharmacy.com';
   const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
   const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
   const stamp=()=>new Date().toISOString();
@@ -7063,14 +7181,14 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
   /* START: POINT 2+3 — offline-first master sync queue + immediate reconnect */
   const PENDING_MASTER='shadab_pending_master_sync_v2';
   const PENDING_SCHEDULE='shadab_pending_schedule_sync_v2';
-  const adminOnline=()=>navigator.onLine&&String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='admin@shadabpharmacy.com';
+  const adminOnline=()=>navigator.onLine&&String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='master@shadabpharmacy.com';
   function mark(key,reason){try{localStorage.setItem(key,JSON.stringify({pending:true,reason:reason||'change',at:new Date().toISOString()}))}catch(e){}}
   function clear(key){try{localStorage.removeItem(key)}catch(e){}}
   function has(key){try{return !!JSON.parse(localStorage.getItem(key)||'null')?.pending}catch(e){return false}}
 
   const oldMaster=window.saveMasterData;
   window.saveMasterData=async function(reason){
-    if(!adminOnline()){if(String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='admin@shadabpharmacy.com')mark(PENDING_MASTER,reason);return {ok:false,offline:true,pending:true}}
+    if(!adminOnline()){if(String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='master@shadabpharmacy.com')mark(PENDING_MASTER,reason);return {ok:false,offline:true,pending:true}}
     try{
       const r=await oldMaster.apply(this,arguments);
       if(r?.ok!==false)clear(PENDING_MASTER);else mark(PENDING_MASTER,reason);
@@ -7080,7 +7198,7 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
 
   const oldSchedule=window.saveScheduleNow;
   window.saveScheduleNow=async function(reason){
-    if(!adminOnline()){if(String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='admin@shadabpharmacy.com')mark(PENDING_SCHEDULE,reason);return {ok:false,offline:true,pending:true}}
+    if(!adminOnline()){if(String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='master@shadabpharmacy.com')mark(PENDING_SCHEDULE,reason);return {ok:false,offline:true,pending:true}}
     try{
       const r=await oldSchedule.apply(this,arguments);
       if(r?.ok!==false)clear(PENDING_SCHEDULE);else mark(PENDING_SCHEDULE,reason);
@@ -7091,7 +7209,7 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
   async function flushAdmin(){
     if(!navigator.onLine)return;
     const s=window.shadabRestCurrentSession?.();
-    if(!s?.uid||String(s.email||'').toLowerCase()!=='admin@shadabpharmacy.com')return;
+    if(!s?.uid||String(s.email||'').toLowerCase()!=='master@shadabpharmacy.com')return;
     try{
       if(has(PENDING_MASTER)&&typeof window.saveMasterData==='function'){
         const r=await window.saveMasterData('offline-reconnect-master');
@@ -7102,7 +7220,7 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
         if(r?.ok!==false)clear(PENDING_SCHEDULE);
       }
       /* One complete cloud write also covers master/schedule changes made by
-         Admin controls that use the direct sync helper. */
+         Master controls that use the direct sync helper. */
       if(typeof window.shadabSyncSalesmanNow==='function'){
         try{await window.shadabSyncSalesmanNow()}catch(e){console.warn('Admin reconnect sync:',e)}
       }
@@ -7174,7 +7292,7 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-</body>
+
 <style id="sp-camera-onsite-final-lock">
 /* On-site Photo alignment only — sync UI untouched */
 .camera-action i{transform:translateY(-11px)!important;}
@@ -7261,8 +7379,8 @@ window.adminUploadLockedLicense=async function(input){
       try{await window.shadabRestResumeSync?.()}catch(e){}
       try{s=window.shadabRestCurrentSession?.()||null}catch(e){}
     }
-    if(!s?.uid||String(s.email||'').toLowerCase()!=='admin@shadabpharmacy.com'){
-      throw new Error('Admin Firebase session is not ready. Open Admin Login once on this GitHub app and try again.');
+    if(!s?.uid||String(s.email||'').toLowerCase()!=='master@shadabpharmacy.com'){
+      throw new Error('Master Firebase session is not ready. Open Master Login once on this GitHub app and try again.');
     }
     /* Force the REST layer to refresh/validate its token before the document write. */
     if(typeof window.shadabRestReadDoc==='function')await window.shadabRestReadDoc('app_settings/masterData');
@@ -7454,7 +7572,7 @@ setTimeout(()=>{
 <script id="sp-v5-license-sync-final">
 (function(){
 'use strict';
-const ADMIN='admin@shadabpharmacy.com';
+const ADMIN='master@shadabpharmacy.com';
 const BASE='app_settings/sharedDocuments';
 const manifestPath=BASE+'/license';
 const CHUNK_PREFIX=BASE+'/license_chunk_';
@@ -7476,7 +7594,7 @@ async function uploadLicense(input){
  try{
   const s=session();
   if(!navigator.onLine)throw new Error('Offline — License upload needs internet. Local app remains safe.');
-  if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin Firebase session is not ready. Open Admin Login once on this GitHub app.');
+  if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master Firebase session is not ready. Open Master Login once on this GitHub app.');
   if(typeof window.shadabRestReadDoc==='function')await window.shadabRestReadDoc('app_settings/masterData');
   const a=await fileData(input?.files?.[0]);
   if(btn){btn.dataset.spV5Old=old;setButton(btn,'⏳ Uploading…','sp-v5-license-working')}
@@ -7583,7 +7701,7 @@ function showAdminError(msg){
 window.spV7ShowAdminError=showAdminError;
 
 /* ---------- 1) One authoritative Admin/Salesman sync engine ---------- */
-const ADMIN='admin@shadabpharmacy.com';
+const ADMIN='master@shadabpharmacy.com';
 const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
 const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
 const stamp=()=>new Date().toISOString();
@@ -7651,7 +7769,7 @@ window.sp35ManualServerRefresh=async function(){
 
 /* ---------- 2) Admin foreground error + reliable master save ---------- */
 async function adminCloudSync(reason){
-  const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)return {ok:false,reason:'not-admin'};
+  const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)return {ok:false,reason:'not-master'};
   if(!navigator.onLine){try{localStorage.setItem('shadab_pending_admin_sync_v7',JSON.stringify({reason,at:stamp()}))}catch(e){};return {ok:false,offline:true,pending:true}};
   try{await syncAdmin(reason);try{localStorage.removeItem('shadab_pending_admin_sync_v7')}catch(e){};return {ok:true}}
   catch(e){try{localStorage.setItem('shadab_pending_admin_sync_v7',JSON.stringify({reason,at:stamp()}))}catch(_e){};showAdminError(exact(e));return {ok:false,error:e,pending:true}}
@@ -7663,12 +7781,12 @@ window.saveMasterData=async function(reason){
 };
 window.saveScheduleNow=async function(reason){return await adminCloudSync(reason||'schedule-change')};
 window.sp35SaveAlert=async function(){
-  if(typeof adminLoggedIn!=='undefined'&&!adminLoggedIn){showAdminError('Admin login required.');return {ok:false}}
+  if(typeof adminLoggedIn!=='undefined'&&!adminLoggedIn){showAdminError('Master login required.');return {ok:false}}
   const ta=document.getElementById('sp35AlertText')||document.getElementById('sp35AlertNew');
   const st=document.getElementById('sp35AlertStatus')||document.getElementById('sp35AlertNewStatus');
   const m=String(ta?.value||'').trim();if(!m){showAdminError('Please write an alert message first.');return {ok:false}}
   localStorage.setItem('shadab_alert_message_v1',m);const main=document.getElementById('shadabAlertText');if(main)main.textContent=m;
-  try{const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');h.unshift({message:m,at:stamp(),by:'admin'});localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)))}catch(e){}
+  try{const h=JSON.parse(localStorage.getItem('shadab_alert_history_v1')||'[]');h.unshift({message:m,at:stamp(),by:'master'});localStorage.setItem('shadab_alert_history_v1',JSON.stringify(h.slice(0,100)))}catch(e){}
   const r=await adminCloudSync('alert');
   if(st)st.textContent=r.ok?'✓ Alert synced to all devices.':r.offline?'Saved locally — waiting for internet.':'Firebase sync failed — see error above.';
   if(r.ok)window.toast35('✓ Alert saved and synced to all devices');
@@ -7715,7 +7833,7 @@ function docButton(type,input){
   return document.querySelector(type==='license'?'#spLicenseAdminModal .sp-license-admin-actions .primary':type==='orderForm'?'#sp35WorkModal .sp35-actionsx .sp35-btnx.primary, #sp35WorkBodyNew .sp35-actionsx .sp35-btnx.primary':'#sp35WorkModal .sp35-actionsx .sp35-btnx.primary');
 }
 async function uploadShared(type,input){
-  const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin Firebase session is not ready. Open Admin Login once on this GitHub app.');
+  const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master Firebase session is not ready. Open Master Login once on this GitHub app.');
   if(!navigator.onLine)throw new Error('Offline — document upload needs internet. The last local copy remains safe.');
   await freshToken();
   const a=await makeAsset(input?.files?.[0]);
@@ -7751,7 +7869,7 @@ async function uploadWithUI(type,input){
 window.adminUploadSharedDocument=async function(type,input){return await uploadWithUI(type,input)};
 window.adminUploadLockedLicense=async function(input){return await uploadWithUI('license',input)};
 window.adminDeleteSharedDocument=async function(type){
-  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return false;await freshToken();await writeDoc(DOC_PATH[type],{deleted:true,name:'',type:'',size:0,data:'',updatedAt:stamp()});setLocalAsset(type,null);window.toast35('✓ Document deleted and synced to all devices');return true}catch(e){showAdminError('Document delete failed: '+exact(e));return false}
+  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master login required.');if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return false;await freshToken();await writeDoc(DOC_PATH[type],{deleted:true,name:'',type:'',size:0,data:'',updatedAt:stamp()});setLocalAsset(type,null);window.toast35('✓ Document deleted and synced to all devices');return true}catch(e){showAdminError('Document delete failed: '+exact(e));return false}
 };
 window.adminDeleteLockedLicense=async function(){try{await freshToken();await writeDoc(DOC_PATH.license,{deleted:true,name:'',type:'',size:0,data:'',updatedAt:stamp()});setLocalAsset('license',null);window.toast35('✓ License deleted and synced to all devices');return true}catch(e){showAdminError('License delete failed: '+exact(e));return false}};
 async function hydrateSharedAll(){
@@ -7841,7 +7959,7 @@ new MutationObserver(hookPdfPlacement).observe(document.documentElement,{childLi
 /* END: V8 — move the EXISTING Order/Supply controls to the top master-tools area. */
 
 /* START: V8 — use the same proven masterData upload mechanism for Order/Supply/License. */
-const ADMIN='admin@shadabpharmacy.com';
+const ADMIN='master@shadabpharmacy.com';
 const MASTER='app_settings/masterData';
 function session(){try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}}
 function exact(e){return String(e?.api?.error?.message||e?.message||e||'Unknown Firebase error')+(e?.httpStatus?' [HTTP '+e.httpStatus+']':'')}
@@ -7860,7 +7978,7 @@ function uploadButton(type){
 }
 async function provenUpload(type,input){
   const s=session();
-  if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin Firebase session is not ready. Open Admin Login once on this app.');
+  if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master Firebase session is not ready. Open Master Login once on this app.');
   if(!navigator.onLine)throw new Error('Offline — document saved locally only; internet is required to publish it.');
   const a=await readFile(input?.files?.[0]);
   const master=await readMaster();
@@ -7889,10 +8007,10 @@ async function uploadUI(type,input){
 window.adminUploadSharedDocument=async function(type,input){if(type!=='orderForm'&&type!=='supplySchedule')throw new Error('Unknown shared document.');return uploadUI(type,input)};
 window.adminUploadLockedLicense=async function(input){return uploadUI('license',input)};
 window.adminDeleteSharedDocument=async function(type){
-  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return false;const master=await readMaster();delete master[type];master.updatedAt=new Date().toISOString();await writeMaster(master);setLocal(type,null);window.toast35('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' deleted and synced to all devices');return true}catch(e){const msg='Document delete failed: '+exact(e);try{window.spV7ShowAdminError?.(msg)}catch(_e){}try{window.toast35('✕ '+msg)}catch(_e){}return false}
+  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master login required.');if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return false;const master=await readMaster();delete master[type];master.updatedAt=new Date().toISOString();await writeMaster(master);setLocal(type,null);window.toast35('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' deleted and synced to all devices');return true}catch(e){const msg='Document delete failed: '+exact(e);try{window.spV7ShowAdminError?.(msg)}catch(_e){}try{window.toast35('✕ '+msg)}catch(_e){}return false}
 };
 window.adminDeleteLockedLicense=async function(){
-  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Admin login required.');if(!confirm('Delete the current SHADAB PHARMACY License for all mobiles?'))return false;const master=await readMaster();delete master.license;master.updatedAt=new Date().toISOString();await writeMaster(master);setLocal('license',null);window.toast35('✓ SHADAB PHARMACY License deleted and synced to all devices');return true}catch(e){const msg='License delete failed: '+exact(e);try{window.spV7ShowAdminError?.(msg)}catch(_e){}try{window.toast35('✕ '+msg)}catch(_e){}return false}
+  try{const s=session();if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master login required.');if(!confirm('Delete the current SHADAB PHARMACY License for all mobiles?'))return false;const master=await readMaster();delete master.license;master.updatedAt=new Date().toISOString();await writeMaster(master);setLocal('license',null);window.toast35('✓ SHADAB PHARMACY License deleted and synced to all devices');return true}catch(e){const msg='License delete failed: '+exact(e);try{window.spV7ShowAdminError?.(msg)}catch(_e){}try{window.toast35('✕ '+msg)}catch(_e){}return false}
 };
 async function hydrateProvenDocuments(){
   if(!navigator.onLine||!session()?.uid)return;
@@ -8122,7 +8240,7 @@ window.addEventListener('online',function(){setTimeout(refreshLicenseStatusV13,8
 (function(){
   'use strict';
   /* START: V13 SYNC-ONLY SESSION REPAIR — animation and 10-minute timer untouched */
-  const ADMIN='admin@shadabpharmacy.com', ADMIN_PASS='shadab@1303';
+  const ADMIN='master@shadabpharmacy.com', ADMIN_PASS='shadab@1303';
   const REST_KEY='shadab_rest_auth_v3', ADMIN_FLAG='shadab_admin_logged_in_v2', MASTER_KEY='shadab_master_salesman_auth_v1';
   async function restoreSession(){
     let s=null;try{s=window.shadabRestCurrentSession?.()||null}catch(e){}
@@ -8178,7 +8296,7 @@ window.addEventListener('online',function(){setTimeout(refreshLicenseStatusV13,8
 <script id="sp-master-final-three-repairs">
 (function(){
 'use strict';
-const ADMIN='admin@shadabpharmacy.com';
+const ADMIN='master@shadabpharmacy.com';
 const ADMIN_MASTER='app_settings/masterData';
 const DOC_BASE='app_settings/sharedDocuments';
 const DOCS=['orderForm','supplySchedule','license'];
@@ -8461,7 +8579,7 @@ async function hydrateMasterForClient(){
     if(!navigator.onLine)return;
     const s=window.shadabRestCurrentSession?.();
     if(!s?.uid)return;
-    if(String(s.email||'').toLowerCase()==='admin@shadabpharmacy.com')return;
+    if(String(s.email||'').toLowerCase()==='master@shadabpharmacy.com')return;
     if(typeof window.shadabRestReadDoc!=='function')return;
     const m=await window.shadabRestReadDoc('app_settings/masterData');
     if(!m||typeof m!=='object')return;
@@ -8514,4 +8632,317 @@ window.spFinalHydrateAllSharedDocs=hydrateAllSharedDocs;
 })();
 
 </script>
+
+
+
+<!-- SHADAB PHARMACY — SURGICAL FINAL PATCH: requested fixes only -->
+<style id="sp-surgical-final-patch-style">
+/* Point 6 — premium master alert entrance + subtle readable shimmer. */
+#shadabAlertBar.sp-alert-enter{animation:spAlertSlideIn .58s cubic-bezier(.2,.8,.2,1) both}
+#shadabAlertBar .sp-alert-track{ text-shadow:0 0 10px rgba(245,158,11,.18); }
+#shadabAlertBar.sp-alert-shimmer .sp-alert-track{animation:spAlertMove 20s linear infinite,spAlertShimmer 2.8s ease-in-out 1}
+@keyframes spAlertSlideIn{from{opacity:0;transform:translateY(-14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes spAlertShimmer{0%,100%{filter:brightness(1)}45%{filter:brightness(1.35)}}
+</style>
+<script id="sp-surgical-final-patch">
+(function(){
+'use strict';
+
+/* ================================================================
+   1) SALESMAN EXPENSES — live Final Total while typing
+   ================================================================ */
+(function(){
+  function recalc(){try{window.sexRecalc?.()}catch(e){}}
+  function install(){
+    const modal=document.getElementById('salesmanExpensesModal');
+    if(!modal||modal.dataset.liveTotalPatch==='1')return;
+    modal.dataset.liveTotalPatch='1';
+    modal.addEventListener('input',function(e){
+      const id=e.target?.id||'';
+      if(/^sex(Lunch|Rickshaw|Tea|Mobile|Other)$/.test(id) || /^sex(OutLunch|OutRickshaw|OutTea|OutMobile|OutOther)$/.test(id)) recalc();
+    },true);
+    ['sexLunch','sexRickshaw','sexTea','sexMobile','sexOther','sexStartMeter','sexEndMeter','sexPetrolPrice','sexAverage'].forEach(id=>{
+      const el=document.getElementById(id); if(el&&!el.dataset.liveTotalInput){el.dataset.liveTotalInput='1';el.addEventListener('input',recalc)}
+    });
+    recalc();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+  window.addEventListener('load',install);
+  window.spInstallExpenseLiveTotal=install;
+})();
+
+/* ================================================================
+   2) TERRITORY MASTER — repair only the broken entry/render path
+   ================================================================ */
+(function(){
+  function getModal(){try{if(typeof window.modal==='function')return window.modal();}catch(e){}return document.getElementById('sp35ControlModal')}
+  window.openTerritoryManager=function(area){
+    try{
+      let m=getModal();
+      if(!m){try{document.getElementById('sp35Launcher')?.click()}catch(e){} m=document.getElementById('sp35ControlModal')}
+      if(!m)throw new Error('Admin Control Center is not available yet.');
+      m.classList.add('show');
+      const g=document.getElementById('sp35ControlGrid'); if(g)g.style.display='none';
+      const w=document.getElementById('sp35WorkModal'), b=document.getElementById('sp35WorkBodyNew')||document.getElementById('sp35WorkBody');
+      if(!w||!b)throw new Error('Territory Master workspace is not available.');
+      w.classList.add('show');
+      const title=document.getElementById('sp35WorkTitleNew'), sub=document.getElementById('sp35WorkSubNew');
+      if(title)title.textContent='City & Territory Master';
+      if(sub)sub.textContent='Add, edit and enable/disable territories';
+      /* Point 23 expects the compatibility id sp35WorkBody. */
+      b.id='sp35WorkBody';
+      if(typeof window.sp35Point23!=='function')throw new Error('Territory Master control is not loaded.');
+      window.sp35Point23();
+      w.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){try{window.toast35?.('Territory Master failed: '+(e?.message||e))}catch(_){} }
+  };
+  /* Keep the already-built Territory Master data handlers, but make the main
+     renderer resilient if the old compatibility ID is temporarily absent. */
+  const oldRender=window.sp35RenderTerrNew;
+  if(typeof oldRender==='function'&&!oldRender.__surgical){
+    const wrap=function(){
+      const b=document.getElementById('sp35TerrListNew');
+      if(b){try{return oldRender.apply(this,arguments)}catch(e){}}
+      return undefined;
+    };
+    wrap.__surgical=true; window.sp35RenderTerrNew=wrap;
+  }
+})();
+
+/* ================================================================
+   3+4) ORDER FORM + SUPPLY SCHEDULE — Firebase-safe chunked documents
+   ================================================================ */
+(function(){
+  const ADMIN='master@shadabpharmacy.com', BASE='app_settings/sharedDocuments';
+  const PATH={orderForm:BASE+'/orderForm',supplySchedule:BASE+'/supplySchedule'};
+  const CHUNK=480000; // safely below Firestore's ~1 MiB document limit after JSON overhead
+  const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+  const read=async p=>{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestReadDoc(p)};
+  const write=async(p,v)=>{if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestWriteDoc(p,v)};
+  const local=(t,a)=>{try{window.shadabApplySharedAsset?.(t,a)}catch(e){}};
+  const toast=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
+  function exact(e){return String(e?.api?.error?.message||e?.message||e||'Unknown Firebase error')}
+  async function fileData(file){
+    if(!file)throw new Error('Please select a PDF or image.');
+    if(file.size>5000000)throw new Error('File is too large. Please keep it under 5 MB.');
+    return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res({name:file.name,type:file.type||'application/pdf',size:file.size,data:String(r.result||''),updatedAt:new Date().toISOString()});r.onerror=()=>rej(new Error('Could not read the selected file.'));r.readAsDataURL(file)})
+  }
+  async function upload(type,input){
+    const s=session(); if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master login required.');
+    if(!navigator.onLine)throw new Error('Offline — the last local document is preserved; internet is required to publish a replacement.');
+    const a=await fileData(input?.files?.[0]);
+    const comma=a.data.indexOf(','); if(comma<0)throw new Error('Invalid file data.');
+    const prefix=a.data.slice(0,comma+1), raw=a.data.slice(comma+1), total=Math.ceil(raw.length/CHUNK);
+    const path=PATH[type];
+    const meta={name:a.name,type:a.type,size:a.size,updatedAt:a.updatedAt,chunked:true,total,encodingPrefix:prefix};
+    /* Write chunks first. The metadata is published last so a failed replacement
+       never makes clients point at an incomplete document. */
+    for(let i=0;i<total;i++) await write(path+'__chunk_'+i,{data:raw.slice(i*CHUNK,(i+1)*CHUNK),index:i,total,updatedAt:a.updatedAt});
+    await write(path,meta);
+    local(type,a);
+    toast('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' uploaded and synced to all devices');
+    return true;
+  }
+  async function del(type){
+    const s=session(); if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master login required.');
+    if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return false;
+    await write(PATH[type],{deleted:true,updatedAt:new Date().toISOString(),name:'',type:'',size:0,total:0});
+    local(type,null); toast('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' deleted and synced to all devices'); return true;
+  }
+  async function hydrate(type){
+    if(!navigator.onLine||!session()?.uid)return;
+    const m=await read(PATH[type]); if(!m||m.deleted){local(type,null);return}
+    if(!m.chunked&&m.data){local(type,m);return}
+    if(m.chunked&&Number(m.total)>0){let raw='';for(let i=0;i<Number(m.total);i++){const c=await read(PATH[type]+'__chunk_'+i);if(!c?.data)throw new Error('Missing '+type+' chunk '+(i+1));raw+=c.data}local(type,{name:m.name,type:m.type,size:m.size,data:(m.encodingPrefix||('data:'+(m.type||'application/pdf')+';base64,'))+raw,updatedAt:m.updatedAt})}
+  }
+  window.adminUploadSharedDocument=async function(type,input){if(type!=='orderForm'&&type!=='supplySchedule')return false;try{return await upload(type,input)}catch(e){toast('✕ Upload failed — '+exact(e));return false}};
+  window.adminDeleteSharedDocument=async function(type){try{return await del(type)}catch(e){toast('✕ Delete failed — '+exact(e));return false}};
+  window.spSurgicalHydrateSharedDocuments=async function(){for(const t of ['orderForm','supplySchedule'])try{await hydrate(t)}catch(e){console.warn('Surgical shared document hydrate',t,e)}};
+  setTimeout(()=>window.spSurgicalHydrateSharedDocuments(),1400);
+  window.addEventListener('online',()=>setTimeout(()=>window.spSurgicalHydrateSharedDocuments(),700));
+})();
+
+/* ================================================================
+   6) MASTER ALERT — existing Firebase path + premium entrance effect
+   ================================================================
+   The existing alert save/sync functions remain authoritative. This patch
+   only adds a visual event whenever the authoritative message changes and
+   keeps the existing 10-minute/offline sync model untouched. */
+(function(){
+  const KEY='shadab_alert_message_v1', ID='shadabAlertText';
+  function animate(message){
+    const bar=document.getElementById('shadabAlertBar'),el=document.getElementById(ID); if(!bar||!el)return;
+    const m=String(message||'').trim(); if(!m)return;
+    el.textContent=m;
+    bar.classList.remove('sp-alert-enter','sp-alert-shimmer');
+    void bar.offsetWidth;
+    bar.classList.add('sp-alert-enter','sp-alert-shimmer');
+  }
+  function current(){try{return localStorage.getItem(KEY)||''}catch(e){return ''}}
+  let last=current();
+  function poll(){const now=current();if(now&&now!==last){last=now;animate(now)}}
+  const oldSet=window.sp35SaveAlert;
+  if(typeof oldSet==='function'&&!oldSet.__surgicalAlert){
+    const wrap=async function(){const r=await oldSet.apply(this,arguments);const m=current();if(m){last=m;animate(m)}return r};
+    wrap.__surgicalAlert=true;window.sp35SaveAlert=wrap;window.sp35SaveAlertNew=wrap;
+  }
+  setInterval(poll,1200);
+  function hydrate(){const m=current();if(m){last=m;animate(m)}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hydrate,{once:true});else hydrate();
+})();
+
+/* Final safety: if any old code reuses the original modal after DOM creation,
+   the live-expense listener can be reinstalled without changing the UI. */
+window.addEventListener('load',()=>{try{window.spInstallExpenseLiveTotal?.()}catch(e){}});
+})();
+</script>
+
+
+<!-- ===== START: FINAL ADMIN FORENSIC UX / FEEDBACK / FOREGROUND PATCH ===== -->
+<style id="sp-admin-forensic-final-style">
+#spGlobalActionFeedback{
+  position:fixed!important;left:50%!important;top:calc(env(safe-area-inset-top,0px) + 14px)!important;
+  transform:translate(-50%,-14px) scale(.97)!important;z-index:2147483647!important;
+  width:min(92vw,560px)!important;display:flex!important;align-items:center!important;gap:11px!important;
+  padding:13px 16px!important;border-radius:17px!important;border:1px solid rgba(255,255,255,.18)!important;
+  background:rgba(18,24,32,.96)!important;color:#fff!important;box-shadow:0 18px 50px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.04)!important;
+  font:800 13px/1.35 system-ui,-apple-system,Segoe UI,sans-serif!important;opacity:0!important;pointer-events:none!important;
+  transition:opacity .2s ease,transform .25s cubic-bezier(.2,.8,.2,1)!important;backdrop-filter:blur(18px)!important;
+}
+#spGlobalActionFeedback.show{opacity:1!important;transform:translate(-50%,0) scale(1)!important}
+#spGlobalActionFeedback .sp-fb-icon{width:30px;height:30px;min-width:30px;border-radius:10px;display:grid;place-items:center;font-size:16px;background:rgba(255,255,255,.10)}
+#spGlobalActionFeedback.success .sp-fb-icon{background:rgba(40,210,130,.18)}
+#spGlobalActionFeedback.error .sp-fb-icon{background:rgba(255,70,80,.18)}
+#spGlobalActionFeedback.working .sp-fb-icon{background:rgba(80,160,255,.18);animation:spFbPulse 1s ease-in-out infinite}
+#spGlobalActionFeedback .sp-fb-text{flex:1;min-width:0}
+#spGlobalActionFeedback .sp-fb-close{border:0;background:transparent;color:rgba(255,255,255,.65);font-size:18px;cursor:pointer;padding:3px 5px}
+@keyframes spFbPulse{50%{transform:scale(.84);opacity:.65}}
+.sp-admin-action-pulse{animation:spAdminTap .34s ease both!important}
+@keyframes spAdminTap{50%{transform:scale(.965);filter:brightness(1.18)} }
+/* Every Admin work screen is a true foreground page, not a block below the tapped card. */
+#sp35ControlModal .sp35-work-modal{
+  position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-height:100dvh!important;
+  margin:0!important;border-radius:0!important;z-index:2147483000!important;overflow:hidden!important;
+  background:var(--card,#fff)!important;display:none!important;
+}
+#sp35ControlModal .sp35-work-modal.show{display:flex!important;flex-direction:column!important}
+#sp35ControlModal .sp35-work-modal .sp35-work-head{position:sticky!important;top:0!important;z-index:3!important;flex:0 0 auto!important}
+#sp35ControlModal .sp35-work-modal .sp35-work-body{flex:1 1 auto!important;min-height:0!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important}
+#sp35ControlModal .sp35-modal-box{overflow:visible!important}
+#sp35ControlModal .sp35-work-back{min-width:72px!important}
+</style>
+<script id="sp-admin-forensic-final-runtime">
+(function(){
+'use strict';
+const state={timer:null};
+function ensureFeedback(){
+  let el=document.getElementById('spGlobalActionFeedback');
+  if(el)return el;
+  el=document.createElement('div');el.id='spGlobalActionFeedback';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
+  el.innerHTML='<span class="sp-fb-icon">⏳</span><span class="sp-fb-text"></span><button class="sp-fb-close" type="button" aria-label="Close">×</button>';
+  el.querySelector('.sp-fb-close').onclick=()=>hideFeedback();
+  document.body.appendChild(el);return el;
+}
+function showFeedback(message,type='working',duration){
+  const el=ensureFeedback();clearTimeout(state.timer);el.className='';el.classList.add(type,'show');
+  const icon=el.querySelector('.sp-fb-icon'),txt=el.querySelector('.sp-fb-text');
+  icon.textContent=type==='success'?'✓':type==='error'?'!':'⏳';txt.textContent=String(message||'Working…');
+  if(duration!==0)state.timer=setTimeout(hideFeedback,duration||3000);
+}
+function hideFeedback(){const el=document.getElementById('spGlobalActionFeedback');if(el)el.classList.remove('show')}
+window.spAdminFeedback={show:showFeedback,success:m=>showFeedback(m,'success',3200),error:m=>showFeedback(m,'error',5200),working:m=>showFeedback(m,'working',0),hide:hideFeedback};
+function textOf(v){return String(v==null?'':v).replace(/\s+/g,' ').trim()}
+function looksError(m){return /(^|\b)(error|failed|fail|could not|cannot|unable|unavailable|missing|invalid|denied|blocked|not found|firebase.*failed|sync failed|save failed|delete failed|upload failed)(\b|$)/i.test(m)}
+function looksSuccess(m){return /(^|\b)(saved|save successful|success|successful|synced|sync successful|added|updated|deleted|enabled|disabled|uploaded|replaced|restored|exported|sent|removed)(\b|$)/i.test(m)}
+/* Existing app notifications now become one consistent, front-most feedback surface. */
+const originalToast=window.toast;
+if(typeof originalToast==='function'&&!originalToast.__forensic){
+  const wrappedToast=function(message){
+    const m=textOf(message);const r=originalToast.apply(this,arguments);
+    if(m) showFeedback(m,looksError(m)?'error':looksSuccess(m)?'success':'success',looksError(m)?5200:3200);
+    return r;
+  };wrappedToast.__forensic=true;window.toast=wrappedToast;
+}
+const originalToast35=window.toast35;
+if(typeof originalToast35==='function'&&!originalToast35.__forensic){
+  const wrapped=function(message){
+    const m=textOf(message);let r;
+    try{r=originalToast35.apply(this,arguments)}finally{if(m)showFeedback(m,looksError(m)?'error':looksSuccess(m)?'success':'success',looksError(m)?5200:3200)}
+    return r;
+  };wrapped.__forensic=true;window.toast35=wrapped;
+}
+window.addEventListener('error',e=>{const m=textOf(e?.message||'Unexpected application error');if(m)showFeedback('Error: '+m,'error',6000)});
+window.addEventListener('unhandledrejection',e=>{const m=textOf(e?.reason?.message||e?.reason||'Unexpected operation error');if(m)showFeedback('Error: '+m,'error',6000)});
+/* Native browser errors from an Admin action are also surfaced, but confirm() remains native. */
+function restoreForeground(){
+  const modal=document.getElementById('sp35ControlModal');if(!modal)return;
+  const work=document.getElementById('sp35WorkModal');if(work){work.style.zIndex='2147483000';}
+}
+function focusWorkTop(){
+  const w=document.getElementById('sp35WorkModal'),b=document.getElementById('sp35WorkBodyNew')||document.getElementById('sp35WorkBody');
+  restoreForeground();
+  try{if(w)w.scrollTop=0;if(b)b.scrollTop=0}catch(e){}
+}
+/* Wrap the final open/back entry points once. This wins over earlier compatibility wrappers. */
+const oldOpen=window.sp35OpenControl;
+if(typeof oldOpen==='function'&&!oldOpen.__forensicFinal){
+  const open=function(n){
+    showFeedback('Opening Admin control…','working',0);
+    let r;
+    try{r=oldOpen.apply(this,arguments)}catch(e){showFeedback('Error opening control: '+textOf(e.message||e),'error',6000);throw e}
+    Promise.resolve(r).then(()=>setTimeout(focusWorkTop,0),e=>showFeedback('Error opening control: '+textOf(e.message||e),'error',6000));
+    return r;
+  };open.__forensicFinal=true;window.sp35OpenControl=open;
+}
+const oldBack=window.sp35BackToControls;
+if(typeof oldBack==='function'&&!oldBack.__forensicFinal){
+  const back=function(){hideFeedback();let r;try{r=oldBack.apply(this,arguments)}catch(e){showFeedback('Error returning to Admin Control Center: '+textOf(e.message||e),'error',6000);throw e}setTimeout(()=>{try{const w=document.getElementById('sp35WorkModal');if(w)w.classList.remove('show')}catch(e){}},0);return r};back.__forensicFinal=true;window.sp35BackToControls=back;
+}
+/* Make every Admin icon/action visibly react immediately. Actual success/error is supplied by the app's real toast/error result. */
+document.addEventListener('click',function(e){
+  const root=e.target?.closest?.('#sp35ControlModal');if(!root)return;
+  const btn=e.target?.closest?.('button,[role="button"]');if(!btn)return;
+  if(btn.classList.contains('sp35-modal-close')||btn.classList.contains('sp35-work-back')||btn.classList.contains('sp-fb-close'))return;
+  btn.classList.remove('sp-admin-action-pulse');void btn.offsetWidth;btn.classList.add('sp-admin-action-pulse');
+  const label=textOf(btn.innerText||btn.getAttribute('aria-label')||btn.title);
+  if(label && !/refresh|back|close|preview|open|login|registration/i.test(label))showFeedback(label+' — processing…','working',0);
+},true);
+/* Re-apply foreground rules after dynamic modal creation. */
+new MutationObserver(()=>restoreForeground()).observe(document.documentElement,{subtree:true,childList:true});
+/* Alert save: use actual result, never claim success just because the button was tapped. */
+const oldAlert=window.sp35SaveAlert;
+if(typeof oldAlert==='function'&&!oldAlert.__forensicFinal){
+  const save=async function(){
+    showFeedback('Saving alert…','working',0);
+    try{
+      const r=await oldAlert.apply(this,arguments);
+      const status=textOf(document.getElementById('sp35AlertStatus')?.textContent); const ok=r?.ok===true || (r!==undefined && r?.ok!==false && !looksError(status)) || (r===undefined && !looksError(status) && /saved.*firebase|synced.*all devices|saved to firebase/i.test(status));
+      if(ok)showFeedback('✓ Alert saved successfully and sync was accepted.','success',3600);
+      else showFeedback('✕ Alert was not confirmed on Firebase. Local copy may exist.','error',6000);
+      return r;
+    }catch(e){showFeedback('✕ Alert save failed: '+textOf(e.message||e),'error',6000);throw e}
+  };save.__forensicFinal=true;window.sp35SaveAlert=save;window.sp35SaveAlertNew=save;
+}
+/* Territory Master: always open the actual Point 23 workspace in the foreground. */
+const oldTerr=window.openTerritoryManager;
+window.openTerritoryManager=function(area){
+  showFeedback('Opening Territory Master…','working',0);
+  try{
+    let r;
+    if(typeof window.sp35OpenControl==='function')r=window.sp35OpenControl(23);else if(typeof oldTerr==='function')r=oldTerr.apply(this,arguments);else throw new Error('Territory Master is not loaded');
+    Promise.resolve(r).then(()=>setTimeout(focusWorkTop,30),e=>showFeedback('Territory Master failed: '+textOf(e.message||e),'error',6000));
+    return r;
+  }catch(e){showFeedback('Territory Master failed: '+textOf(e.message||e),'error',6000);throw e}
+};
+/* Salesman delete: preserve the existing Firebase implementation but give it deterministic feedback. */
+const oldDelete=window.sp35DeleteUser;
+if(typeof oldDelete==='function'&&!oldDelete.__forensicFinal){
+  const del=async function(){showFeedback('Deleting salesman…','working',0);try{const r=await oldDelete.apply(this,arguments);if(r?.ok===false)showFeedback('✕ Salesman delete failed.','error',6000);return r}catch(e){showFeedback('✕ Salesman delete failed: '+textOf(e.message||e),'error',6000);throw e}};del.__forensicFinal=true;window.sp35DeleteUser=del;
+}
+window.addEventListener('load',()=>{ensureFeedback();restoreForeground()});
+})();
+</script>
+<!-- ===== END: FINAL ADMIN FORENSIC UX / FEEDBACK / FOREGROUND PATCH ===== -->
+
+</body>
 </html>
