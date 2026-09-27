@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script id="shadab-early-insure-compat">
+window.Insure=window.Insure||function(){try{if(typeof window.openAdminControlCenter==='function')return window.openAdminControlCenter();if(typeof window.openAdmin==='function')return window.openAdmin();}catch(e){console.warn('Insure compatibility:',e);}};
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f5f7">
@@ -1780,125 +1783,7 @@ function printHTML(title,data){
   const rows=data.map(v=>`<tr><td>${v.photo?`<img src="${v.photo}">`:"—"}</td><td>${esc(v.store)}</td><td>${esc(v.visitedBy||"—")}</td><td>${esc(v.person)}</td><td>${esc(v.type)}</td><td>${esc(v.area)}</td><td>${esc(v.territory)}</td><td>${formatDate(v.date)}<br>${esc(v.time)}</td></tr>`).join("");
   const w=window.open("","_blank","width=1000,height=800");
   if(!w){toast("Please allow the print popup");return;}
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p><script id="shadab-issues-8-9-final-patch-v1">
-(function(){
-'use strict';
-
-/* ============================================================
-   ISSUE #8 — SALESMAN ACCOUNT MANAGEMENT
-   Disable/Enable already exists. Add a real Admin-level Delete
-   state in the existing salesmen collection and block deleted
-   accounts at login. Firebase Auth deletion itself requires an
-   Admin SDK/backend credential, which this offline-first client
-   intentionally does not expose.
-   ============================================================ */
-function escA(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
-function adminDb(){try{return typeof db==='function'?db():null}catch(e){return null}}
-function nowA(){try{return typeof now==='function'?now():new Date().toISOString()}catch(e){return new Date().toISOString()}}
-function toastA(m){try{if(typeof toast35==='function')return toast35(m);if(typeof toast==='function')return toast(m)}catch(e){} alert(m)}
-
-window.sp35DeleteUser=async function(uid,name){
-  uid=String(uid||'').trim(); name=String(name||'Salesman').trim();
-  if(!uid)return toastA('Salesman ID is missing.');
-  if(!confirm('Delete '+name+'?\n\nThis will permanently disable this salesman in SHADAB PHARMACY and remove the active profile from the Admin list. The Firebase Auth credential itself is not deleted by the browser-only app.'))return;
-  const d=adminDb();
-  if(!d)return toastA('Firebase is unavailable.');
-  try{
-    const stamp=nowA();
-    await d.collection('salesmen').doc(uid).set({status:'Deleted',deletedAt:stamp,updatedAt:stamp,deletedBy:'master'},{merge:true});
-    try{
-      let rows=JSON.parse(localStorage.getItem('shadab_admin_profiles_v1')||'[]');
-      rows=rows.map(r=>String(r.id||r.uid)===uid?{...r,status:'Deleted',deletedAt:stamp,updatedAt:stamp}:r);
-      localStorage.setItem('shadab_admin_profiles_v1',JSON.stringify(rows));
-    }catch(e){}
-    try{window.shadabRestResumeSync?.()}catch(e){}
-    toastA('✓ Salesman deleted and access blocked.');
-    if(typeof window.sp35Point7==='function')await window.sp35Point7();
-  }catch(e){toastA('Could not delete salesman: '+(e.message||e))}
-};
-
-/* Replace the management renderer only; same existing table/card styling is used. */
-const originalPoint7=window.sp35Point7;
-if(typeof originalPoint7==='function'&&!originalPoint7.__issue8patched){
-  const wrapped=async function(){
-    await originalPoint7.apply(this,arguments);
-    try{
-      const body=document.getElementById('sp35WorkBody'); if(!body)return;
-      const table=body.querySelector('table.sp35-table'); if(!table)return;
-      const heads=table.querySelectorAll('thead th');
-      if(heads.length)heads[heads.length-1].textContent='Action';
-      body.querySelectorAll('tbody tr').forEach(tr=>{
-        const uid=tr.querySelector('td:first-child small')?.textContent?.trim();
-        const name=tr.querySelector('td:first-child b')?.textContent?.trim()||'Salesman';
-        if(!uid)return;
-        const status=(tr.querySelectorAll('td')[2]?.textContent||'').toLowerCase();
-        if(status.includes('deleted'))return;
-        const cell=tr.querySelector('td:last-child'); if(!cell)return;
-        if(!cell.querySelector('[data-delete-salesman]')){
-          const btn=document.createElement('button');
-          btn.type='button'; btn.className='sp35-btn danger'; btn.setAttribute('data-delete-salesman','1');
-          btn.textContent='🗑 Delete';
-          btn.style.marginLeft='6px';
-          btn.onclick=function(){window.sp35DeleteUser(uid,name)};
-          cell.appendChild(btn);
-        }
-      });
-    }catch(e){console.warn('Issue #8 management patch:',e)}
-  };
-  wrapped.__issue8patched=true; window.sp35Point7=wrapped;
-}
-
-/* ============================================================
-   ISSUE #9 — KEEP EXACT ADMIN CONTROL CENTER SCROLL POSITION
-   Save the actual scrollTop of the Admin modal container before
-   opening an icon; restore it on Back. Never use scrollIntoView
-   for this flow because that is what causes the jump.
-   ============================================================ */
-const SCROLLBOX='shadab_admin_control_scrollbox_v2';
-const SCROLLWIN='shadab_admin_control_window_v2';
-function getBox(){return document.querySelector('#sp35ControlModal .sp35-modal-box')||document.getElementById('sp35ControlModal')}
-function saveAdminScroll(){try{const b=getBox();localStorage.setItem(SCROLLBOX,String(b?.scrollTop||0));localStorage.setItem(SCROLLWIN,String(window.scrollY||0))}catch(e){}}
-function restoreAdminScroll(){
-  setTimeout(function(){
-    try{
-      const b=getBox(),v=Number(localStorage.getItem(SCROLLBOX)||0),w=Number(localStorage.getItem(SCROLLWIN)||0);
-      if(b){b.scrollTop=v;requestAnimationFrame(()=>{b.scrollTop=v})}
-      window.scrollTo(0,w);
-    }catch(e){}
-  },0);
-}
-function patchScroll(){
-  const oo=window.sp35OpenControl;
-  if(typeof oo==='function'&&!oo.__issue9patched){
-    const f=async function(n){saveAdminScroll();return await oo.apply(this,arguments)};
-    f.__issue9patched=true;window.sp35OpenControl=f;
-  }
-  const ob=window.sp35BackToControls;
-  if(typeof ob==='function'&&!ob.__issue9patched){
-    const f=async function(){
-      /* Capture the position before the original back handler can move it. */
-      const b=getBox(),v=Number(localStorage.getItem(SCROLLBOX)||b?.scrollTop||0),w=Number(localStorage.getItem(SCROLLWIN)||window.scrollY||0);
-      const r=await ob.apply(this,arguments);
-      setTimeout(()=>{try{if(b)b.scrollTop=v;window.scrollTo(0,w)}catch(e){}},0);
-      setTimeout(()=>{try{if(b)b.scrollTop=v;window.scrollTo(0,w)}catch(e){}},80);
-      return r;
-    };
-    f.__issue9patched=true;window.sp35BackToControls=f;
-  }
-}
-patchScroll();
-setTimeout(patchScroll,300);setTimeout(patchScroll,1000);setTimeout(patchScroll,2500);
-
-/* Prevent the old smooth scroll from moving the Admin grid when it opens. */
-try{
-  const style=document.createElement('style');
-  style.id='shadab-issue9-no-jump';
-  style.textContent='#sp35ControlModal .sp35-control-grid{scroll-margin:0!important}';
-  document.head.appendChild(style);
-}catch(e){}
-})();
-<\/script>
-</body></html>`;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p></body></html>`;
   w.document.open();
   w.document.write(html);
   w.document.close();
@@ -3070,7 +2955,7 @@ window.sp35Login=async()=>{
 window.sp35Register=async()=>{const a=auth();if(!a)return toast35('Firebase Auth SDK not available');const name=document.getElementById('sp35RegName').value.trim(),email=document.getElementById('sp35RegEmail').value.trim(),mobile=document.getElementById('sp35RegMobile').value.trim(),pass=document.getElementById('sp35RegPassword').value;if(!name||!email||pass.length<6)return toast35('Name, email and a 6+ character password are required');try{const c=await a.createUserWithEmailAndPassword(email,pass);await c.user.updateProfile({displayName:name});await sp35Profile(c.user,{fullName:name,mobile,email,status:'Active',createdAt:now()});await c.user.sendEmailVerification();toast35('Account created. Verification email sent.');sp35CloseAuth()}catch(e){toast35(e.message||'Registration failed')}};
 window.sp35Forgot=async()=>{const email=document.getElementById('sp35LoginEmail').value.trim();if(!email)return toast35('Enter the salesman email first');try{await auth().sendPasswordResetEmail(email);toast35('Password reset email sent')}catch(e){toast35(e.message||'Reset failed')}};
 async function sp35Profile(user,extra={}){const d=db();const data={uid:user.uid,fullName:user.displayName||extra.fullName||'',email:user.email||extra.email||'',mobile:extra.mobile||'',status:'Active',lastSeen:now(),updatedAt:now(),...extra};try{if(d)await d.collection('salesmen').doc(user.uid).set(data,{merge:true})}catch(e){console.warn(e)};localStorage.setItem('shadab_last_salesman_v1',data.fullName||data.email);localStorage.setItem('shadab_admin_profile_'+user.uid,JSON.stringify(data));log35('Salesman activity',{uid:user.uid})}
-function install(){if(!window.firebase)return;try{if(!firebase.apps.length)firebase.initializeApp(FC)}catch(e){};if(firebase.auth){firebase.auth().onAuthStateChanged(async u=>{const badge=document.getElementById('sp35UserBadge');if(badge){badge.classList.remove('show');badge.innerHTML=''}sp35UpdateHeaderLoginButton(u?(u.displayName||u.email||'Salesman'):'Salesman Login');if(u&&String(u.email||'').toLowerCase()===String(ADMIN_FIREBASE_EMAIL||'').toLowerCase()){sp35UpdateHeaderLoginButton('Salesman Login');sp35RenderHeaderState();return;}if(u){try{const d=db();const q=d?await d.collection('salesmen').doc(u.uid).get({source:'server'}):null;const profile=q&&q.exists?q.data():null;if(profile&&['disabled','deleted'].includes(String(profile.status||'Active').toLowerCase())){await firebase.auth().signOut();sp35UpdateHeaderLoginButton('Salesman Login');toast35('This salesman account is disabled by Admin.');return}await sp35Profile(u,profile||{});sp35UpdateHeaderLoginButton(profile?.fullName||u.displayName||u.email||'Salesman');}catch(e){await sp35Profile(u);sp35UpdateHeaderLoginButton(u.displayName||u.email||'Salesman')}if(document.getElementById('visitedBy')){const nm=u.displayName||localStorage.getItem('shadab_current_salesman_v1')||'';if(nm){ensureSalesmanOptions();document.getElementById('visitedBy').value=nm;if(typeof onSalesmanChanged==='function')onSalesmanChanged()}}sp35RenderHeaderState()}})}}
+function install(){if(!window.firebase)return;try{if(!firebase.apps.length)firebase.initializeApp(FC)}catch(e){};if(firebase.auth){firebase.auth().onAuthStateChanged(async u=>{const badge=document.getElementById('sp35UserBadge');if(badge){badge.classList.remove('show');badge.innerHTML=''}sp35UpdateHeaderLoginButton(u?(u.displayName||u.email||'Salesman'):'Salesman Login');if(u&&String(u.email||'').toLowerCase()===String(ADMIN_FIREBASE_EMAIL||'').toLowerCase()){sp35UpdateHeaderLoginButton('Salesman Login');sp35RenderHeaderState();return;}if(u){try{const d=db();const q=d?await d.collection('salesmen').doc(u.uid).get({source:'server'}):null;const profile=q&&q.exists?q.data():null;if(profile&&String(profile.status||'Active').toLowerCase()==='disabled'){await firebase.auth().signOut();sp35UpdateHeaderLoginButton('Salesman Login');toast35('This salesman account is disabled by Admin.');return}await sp35Profile(u,profile||{});sp35UpdateHeaderLoginButton(profile?.fullName||u.displayName||u.email||'Salesman');}catch(e){await sp35Profile(u);sp35UpdateHeaderLoginButton(u.displayName||u.email||'Salesman')}if(document.getElementById('visitedBy')){const nm=u.displayName||localStorage.getItem('shadab_current_salesman_v1')||'';if(nm){ensureSalesmanOptions();document.getElementById('visitedBy').value=nm;if(typeof onSalesmanChanged==='function')onSalesmanChanged()}}sp35RenderHeaderState()}})}}
 function ensure35Panel(){const d=document.getElementById('adminDashboardBox');if(!d)return;let panel=document.getElementById('sp35Panel');if(!panel){panel=document.createElement('section');panel.id='sp35Panel';panel.className='admin-card';const hero=d.querySelector('.admin-hero');if(hero&&hero.nextSibling)d.insertBefore(panel,hero.nextSibling);else d.insertBefore(panel,d.firstElementChild);renderPanel()}else if(!panel.innerHTML.trim())renderPanel();}
 window.addEventListener('load',()=>setTimeout(ensure35Panel,600));setInterval(ensure35Panel,1500);
 window.sp35LaunchFromAdmin=()=>sp35Open();
@@ -3107,7 +2992,7 @@ const N=[
 ['🔔','Main Screen Alert','Edit and save the front-page alert'],['👤','Salesman Registration','Create salesman accounts'],['🔐','Salesman Login','Sign in with Firebase Authentication'],['🔑','Forgot Password','Send password reset'],['🏠','Login Header','Review current login state'],['☰','Hamburger Menu','Account and app navigation'],['👨‍💼','Salesman Management','View salesman profiles and status'],['🟢','Active / Disable','Enable or disable a salesman'],['🕐','Last Seen','Server activity and last seen'],['🏙️','Assignment Structure','Salesman, city, territory and day'],['📍','Auto Assignment','Load today route automatically'],['🏪','Territory Store Filter','Show only assigned territory stores'],['☑️','Store Assignment','Assign and edit store checklist'],['📊','Today Task Cards','Planned, visited, orders, remaining'],['👆','Clickable Task Cards','Open matching store data'],['📄','PDF + WhatsApp','Download and share task lists'],['💾','Offline Mode','Continue field work without internet'],['📱','New Phone / Reinstall','Restore account data after sign-in'],['🔥','Firebase Architecture','Authentication and Firestore'],['🛑','Preserve Existing App','Keep the existing workflow intact'],['📊','Admin Dashboard','Salesmen, stores, visits and orders'],['🗓️','Assignment Calendar','View routes by date/day'],['🏙️','City & Territory Master','Add, edit and disable territories'],['🏪','Medical Store Master','Add, edit and disable stores'],['📍','Salesman Activity','Status, route and activity'],['📈','Salesman Performance','Assigned, visited, orders and remaining'],['📑','Reports Center','Daily, weekly, monthly reports'],['🔎','Global Search','Search salesman, store and route data'],['📥','Export Data','CSV, JSON backup and PDF'],['🔔','Alert History','Previous saved alerts'],['🔐','Admin Security','Current admin session protection'],['📝','Activity Log','Timestamped admin actions'],['☁️','Firebase Sync Status','Connection and sync tools'],['⚙️','App Settings','App defaults and alert settings'],['🗄️','Backup / Data Safety','Backup and restore data'],['📋','Order Form','Upload / replace the shared Order Form PDF for all salesmen'],['🚚','Supply Schedule','Upload / replace the shared Supply Schedule PDF for all salesmen']
 ];
 const $=id=>document.getElementById(id); const escx=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function modal(){let m=$('sp35ControlModal');if(m)return m;m=document.createElement('div');m.id='sp35ControlModal';m.innerHTML=`<div class="sp35-modal-box" role="dialog" aria-modal="true"><div class="sp35-modal-head"><div><h3>Admin Control Center</h3><small><span class="sp35-live-dot"></span>All controls are inside the existing Master Login</small></div><button class="sp35-modal-close" onclick="sp35CloseAll()">×</button></div><div class="sp35-master-tools" id="sp35MasterTools"><button class="sp35-final-card sp35-master-tool" type="button" onclick="openTerritoryManager(document.getElementById('adminScheduleArea')?.value||'Sahiwal')"><i>📍</i><b>Territory Master</b><small>City & territory management</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openUploadTerritoryModal()"><i>📄</i><b>Territory PDF</b><small>Upload / manage territory PDF</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openStoreDatabase()"><i>🏪</i><b>Store Database</b><small>Medical store master</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="spLockedLicenseAdminOpen()"><i>📜</i><b>SHADAB PHARMACY License</b><small>Upload / preview / delete</small></button></div><div class="sp35-control-grid" id="sp35ControlGrid"></div><div class="sp35-work-modal" id="sp35WorkModal"><div class="sp35-work-head"><div><h4 id="sp35WorkTitleNew"></h4><small id="sp35WorkSubNew"></small></div><button class="sp35-work-back" onclick="sp35BackToControls()">Back</button></div><div class="sp35-work-body" id="sp35WorkBodyNew"></div></div></div>`;document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)sp35CloseAll()});return m}
+function modal(){let m=$('sp35ControlModal');if(m)return m;m=document.createElement('div');m.id='sp35ControlModal';m.innerHTML=`<div class="sp35-modal-box" role="dialog" aria-modal="true"><div class="sp35-modal-head"><div class="sp35-head-title"><span class="sp35-head-icon" aria-hidden="true"><span class="sp35-head-icon-gear">⚙</span><span class="sp35-head-icon-shield">✓</span></span><div class="sp35-head-copy"><h3>Admin Control Center</h3><small><span class="sp35-live-dot"></span>All controls are inside the existing Master Login</small></div></div><button class="sp35-modal-close" onclick="sp35CloseAll()" aria-label="Close Admin Control Center">×</button></div><div class="sp35-master-tools" id="sp35MasterTools"><button class="sp35-final-card sp35-master-tool" type="button" onclick="openTerritoryManager(document.getElementById('adminScheduleArea')?.value||'Sahiwal')"><i>📍</i><b>Territory Master</b><small>City & territory management</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openUploadTerritoryModal()"><i>📄</i><b>Territory PDF</b><small>Upload / manage territory PDF</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="openStoreDatabase()"><i>🏪</i><b>Store Database</b><small>Medical store master</small></button><button class="sp35-final-card sp35-master-tool" type="button" onclick="spLockedLicenseAdminOpen()"><i>📜</i><b>SHADAB PHARMACY License</b><small>Upload / preview / delete</small></button></div><div class="sp35-control-grid" id="sp35ControlGrid"></div><div class="sp35-work-modal" id="sp35WorkModal"><div class="sp35-work-head"><div><h4 id="sp35WorkTitleNew"></h4><small id="sp35WorkSubNew"></small></div><button class="sp35-work-back" onclick="sp35BackToControls()">Back</button></div><div class="sp35-work-body" id="sp35WorkBodyNew"></div></div></div>`;document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)sp35CloseAll()});return m}
 function render(){const g=$('sp35ControlGrid');if(!g)return;g.innerHTML=N.map((x,i)=>`<button class="sp35-control-card" type="button" onclick="sp35OpenControl(${i+1})"><span class="icon">${x[0]}</span><b>${x[1]}</b><small>${x[2]}</small></button>`).join('')}
 function ensure(){const d=$('adminDashboardBox');if(!d)return;let launch=$('sp35Launcher');if(!launch){launch=document.createElement('button');launch.id='sp35Launcher';launch.className='sp35-launcher';launch.type='button';launch.innerHTML=`<span class="sp35-launcher-icon">📊</span><span class="sp35-launcher-copy"><b>Admin Control Center</b><small>Salesmen • assignments • stores • reports • activity • settings</small></span><span class="sp35-launcher-arrow">›</span>`;launch.onclick=()=>{modal();render();$('sp35ControlModal').classList.add('show')};const hero=d.querySelector('.admin-hero');if(hero)hero.insertAdjacentElement('beforebegin',launch);else d.insertBefore(launch,d.firstChild)}
 }
@@ -6800,7 +6685,7 @@ try{const oldInstall=window.spLockedLicenseInstall; if(typeof oldInstall==='func
 
 
 
-
+</body>
 
 
 
@@ -7293,6 +7178,122 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
 })();
 </script>
 
+<style id="sp-master-final-ui-alert-fix">
+/* Targeted Admin Control Center visual correction + Alert reliability. */
+#sp35ControlModal{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;padding:0!important;margin:0!important;overflow:hidden!important;background:rgba(0,0,0,.64)!important;backdrop-filter:blur(4px)!important}
+#sp35ControlModal.show{display:flex!important;align-items:stretch!important;justify-content:stretch!important}
+#sp35ControlModal .sp35-modal-box{width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;margin:0!important;border:0!important;border-radius:0!important;overflow:hidden!important;background:var(--card,#111821)!important;box-shadow:none!important;display:flex!important;flex-direction:column!important}
+#sp35ControlModal .sp35-modal-head{position:relative!important;flex:none!important;min-height:70px!important;padding:12px 14px!important;background:linear-gradient(135deg,rgba(9,34,52,.98),rgba(15,24,35,.98))!important}
+#sp35ControlModal .sp35-modal-head h3{font-size:20px!important;line-height:1.15!important;font-weight:900!important;letter-spacing:.1px!important}
+#sp35ControlModal .sp35-modal-head small{font-size:10px!important;margin-top:3px!important}
+#sp35ControlModal .sp35-modal-close{width:42px!important;height:42px!important;min-width:42px!important;border-radius:12px!important;font-size:26px!important;line-height:1!important;display:grid!important;place-items:center!important;cursor:pointer!important}
+#sp35ControlModal .sp35-control-grid{flex:1 1 auto!important;min-height:0!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:10px!important;align-content:start!important}
+#sp35ControlModal .sp35-control-card{min-height:78px!important;padding:10px!important;border-radius:15px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;gap:4px!important;text-align:left!important}
+#sp35ControlModal .sp35-control-card .icon{font-size:27px!important;line-height:1!important;margin:0!important}
+#sp35ControlModal .sp35-control-card b{font-size:12px!important;line-height:1.18!important}
+#sp35ControlModal .sp35-control-card small{font-size:9px!important;line-height:1.2!important;margin:0!important}
+#shadabAlertBar{display:flex!important;visibility:visible!important;opacity:1!important}
+#shadabAlertText{display:inline-block!important;min-width:max-content!important;visibility:visible!important;opacity:1!important}
+@media(max-width:430px){#sp35ControlModal .sp35-control-card{min-height:74px!important;padding:9px!important}#sp35ControlModal .sp35-control-card .icon{font-size:25px!important}#sp35ControlModal .sp35-control-card b{font-size:11px!important}}
+</style>
+<script id="sp-master-alert-authoritative-final">
+(function(){
+'use strict';
+const MASTER_PATH='app_settings/masterData';
+const LEGACY_PATH='app_settings/shadabAlert';
+const KEY='shadab_alert_message_v1';
+function clean(v){return String(v==null?'':v).trim()}
+function showAlert(m){
+  m=clean(m); if(!m)return false;
+  try{localStorage.setItem(KEY,m)}catch(e){}
+  const bar=document.getElementById('shadabAlertBar'), t=document.getElementById('shadabAlertText');
+  if(bar){bar.style.display='flex';bar.style.visibility='visible';bar.style.opacity='1'}
+  if(t){t.textContent=m;t.style.display='inline-block';t.style.visibility='visible';t.style.opacity='1';t.style.animation='none';void t.offsetWidth;t.style.animation='spAlertMove 20s linear infinite'}
+  return true;
+}
+async function readMaster(){
+  try{if(typeof window.shadabRestReadDoc==='function'){const x=await window.shadabRestReadDoc(MASTER_PATH);const m=clean(x?.alertMessage);if(m)return m}}catch(e){}
+  try{const d=typeof db==='function'?db():null;if(d){const q=await d.collection('app_settings').doc('masterData').get({source:'server'});if(q.exists){const m=clean(q.data()?.alertMessage);if(m)return m}}}catch(e){}
+  try{const d=typeof db==='function'?db():null;if(d){const q=await d.collection('app_settings').doc('shadabAlert').get({source:'server'});if(q.exists){const m=clean(q.data()?.message);if(m)return m}}}catch(e){}
+  return '';
+}
+async function saveAuthoritative(m){
+  const stamp=new Date().toISOString();
+  let ok=false, errors=[];
+  try{
+    if(typeof window.shadabRestWriteDoc==='function'){
+      let old={}; try{old=await window.shadabRestReadDoc(MASTER_PATH)||{}}catch(e){}
+      await window.shadabRestWriteDoc(MASTER_PATH,Object.assign({},old,{alertMessage:m,alertUpdatedAt:stamp,updatedAt:stamp,updatedBy:'master'}));
+      ok=true;
+    }
+  }catch(e){errors.push(e)}
+  try{
+    const d=typeof db==='function'?db():null;
+    if(d){
+      await d.collection('app_settings').doc('masterData').set({alertMessage:m,alertUpdatedAt:stamp,updatedAt:stamp,updatedBy:'master'},{merge:true});
+      await d.collection('app_settings').doc('shadabAlert').set({message:m,updatedAt:stamp,updatedBy:'master'},{merge:true});
+      ok=true;
+    }
+  }catch(e){errors.push(e)}
+  return {ok,errors};
+}
+window.shadabAuthoritativeAlertSave=async function(message){
+  const m=clean(message);if(!m)return {ok:false,error:'Empty alert'};
+  showAlert(m);
+  const r=await saveAuthoritative(m);
+  return r;
+};
+window.shadabAuthoritativeAlertHydrate=async function(){
+  const local=clean(localStorage.getItem(KEY));if(local)showAlert(local);
+  const remote=await readMaster();if(remote)showAlert(remote);
+  return remote||local||'';
+};
+/* Final save override: one action updates the visible banner and both supported Firebase paths. */
+window.sp35SaveAlertNew=async function(){
+  const t=document.getElementById('sp35AlertNew'), s=document.getElementById('sp35AlertNewStatus');
+  const m=clean(t?.value);if(!m){if(s)s.textContent='Write an alert message first.';return}
+  if(s)s.textContent='Saving to Firebase…';
+  const r=await window.shadabAuthoritativeAlertSave(m);
+  if(s)s.textContent=r.ok?'✓ Alert saved and synced to all devices.':'Saved locally; Firebase sync will retry when connection is available.';
+  try{window.toast35?.(r.ok?'Alert saved and synced':'Alert saved locally')}catch(e){}
+};
+window.sp35SaveAlert=async function(){
+  const t=document.getElementById('sp35AlertText'), s=document.getElementById('sp35AlertStatus');
+  const m=clean(t?.value);if(!m){if(s)s.textContent='Write an alert message first.';return}
+  if(s)s.textContent='Saving to Firebase…';
+  const r=await window.shadabAuthoritativeAlertSave(m);
+  if(s)s.textContent=r.ok?'✓ Alert saved and synced to all devices.':'Saved locally; Firebase sync will retry when connection is available.';
+  try{window.toast35?.(r.ok?'Alert saved and synced':'Alert saved locally')}catch(e){}
+};
+function bindRealtime(){
+  try{
+    const d=typeof db==='function'?db():null;
+    if(d){
+      d.collection('app_settings').doc('masterData').onSnapshot(q=>{if(q.exists)showAlert(q.data()?.alertMessage)},()=>{});
+      d.collection('app_settings').doc('shadabAlert').onSnapshot(q=>{if(q.exists)showAlert(q.data()?.message)},()=>{});
+    }
+  }catch(e){}
+}
+function boot(){window.shadabAuthoritativeAlertHydrate();bindRealtime();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,500),{once:true});else setTimeout(boot,500);
+window.addEventListener('online',()=>setTimeout(window.shadabAuthoritativeAlertHydrate,500));
+})();
+</script>
+
+<style id="sp-admin-control-center-icon-fix">
+/* Targeted Admin Control Center header icon fix — no dashboard/layout changes. */
+#sp35ControlModal .sp35-modal-head{gap:12px!important;align-items:center!important}
+#sp35ControlModal .sp35-head-title{display:flex!important;align-items:center!important;gap:11px!important;min-width:0!important}
+#sp35ControlModal .sp35-head-icon{position:relative!important;width:48px!important;height:48px!important;flex:0 0 48px!important;border-radius:15px!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,#168cff,#0757b5)!important;border:1px solid rgba(132,211,255,.34)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 8px 22px rgba(0,122,255,.24)!important;color:#fff!important}
+#sp35ControlModal .sp35-head-icon-gear{font-size:26px!important;line-height:1!important;font-weight:900!important;transform:translateY(-1px)!important;opacity:.96!important}
+#sp35ControlModal .sp35-head-icon-shield{position:absolute!important;right:5px!important;bottom:4px!important;width:16px!important;height:16px!important;border-radius:6px!important;display:grid!important;place-items:center!important;background:#19c77a!important;border:2px solid #0b2033!important;color:#fff!important;font-size:9px!important;font-weight:1000!important;line-height:1!important;box-shadow:0 2px 7px rgba(0,0,0,.28)!important}
+#sp35ControlModal .sp35-head-copy{min-width:0!important}
+#sp35ControlModal .sp35-modal-head h3{font-size:20px!important;line-height:1.12!important;font-weight:900!important;letter-spacing:-.25px!important}
+#sp35ControlModal .sp35-modal-head small{font-size:10.5px!important;line-height:1.25!important;margin-top:4px!important}
+#sp35ControlModal .sp35-modal-close{flex:0 0 42px!important}
+@media(max-width:430px){#sp35ControlModal .sp35-head-icon{width:44px!important;height:44px!important;flex-basis:44px!important;border-radius:14px!important}#sp35ControlModal .sp35-head-icon-gear{font-size:24px!important}#sp35ControlModal .sp35-modal-head h3{font-size:18px!important}#sp35ControlModal .sp35-modal-head small{font-size:9.5px!important}}
+</style>
+</body>
 <style id="sp-camera-onsite-final-lock">
 /* On-site Photo alignment only — sync UI untouched */
 .camera-action i{transform:translateY(-11px)!important;}
@@ -8633,316 +8634,522 @@ window.spFinalHydrateAllSharedDocs=hydrateAllSharedDocs;
 
 </script>
 
-
-
-<!-- SHADAB PHARMACY — SURGICAL FINAL PATCH: requested fixes only -->
-<style id="sp-surgical-final-patch-style">
-/* Point 6 — premium master alert entrance + subtle readable shimmer. */
-#shadabAlertBar.sp-alert-enter{animation:spAlertSlideIn .58s cubic-bezier(.2,.8,.2,1) both}
-#shadabAlertBar .sp-alert-track{ text-shadow:0 0 10px rgba(245,158,11,.18); }
-#shadabAlertBar.sp-alert-shimmer .sp-alert-track{animation:spAlertMove 20s linear infinite,spAlertShimmer 2.8s ease-in-out 1}
-@keyframes spAlertSlideIn{from{opacity:0;transform:translateY(-14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes spAlertShimmer{0%,100%{filter:brightness(1)}45%{filter:brightness(1.35)}}
+<!-- ===== SHADAB PHARMACY: MASTER-BASED EXACT 41 CONTROL CENTER ===== -->
+<style id="shadab-master41-fullscreen-style">
+/* Full-screen Master Login + Admin Board */
+#adminModal{padding:0!important;align-items:stretch!important;justify-content:stretch!important}
+#adminModal .modal-box{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;margin:0!important;border-radius:0!important;padding:0!important;overflow:auto!important}
+#adminLoginBox,#adminDashboardBox{width:100%!important;min-height:100dvh!important;max-width:none!important;border-radius:0!important}
+#adminLoginBox{padding:clamp(18px,4vw,42px)!important;box-sizing:border-box}
+#adminDashboardBox{padding:clamp(14px,2.5vw,30px)!important;box-sizing:border-box;overflow:auto!important}
+/* Only the new exact-41 Control Center is visible; legacy control-center shells stay out of the UI. */
+#sp35FinalModal,#sp35ControlModal,#sp35FinalOpen,#sp35WorkModal{display:none!important}
+#sp35Launcher,#sp35FinalLauncher,.sp35-launcher{display:none!important}
+/* Admin Board top actions */
+#adminDashboardBox>.admin-hero>.admin-hero-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important}
+#adminDashboardBox>.admin-hero>.admin-hero-actions .sp-admin-board-refresh{min-width:76px!important;height:38px!important;padding:0 13px!important;border-radius:11px!important;border:1px solid rgba(90,180,255,.22)!important;background:rgba(32,48,65,.9)!important;color:#fff!important;font-weight:800!important;font-size:12px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;cursor:pointer!important}
+#adminDashboardBox>.admin-hero>.admin-hero-actions .sp-admin-board-close{width:40px!important;height:40px!important;padding:0!important;border:0!important;border-radius:11px!important;background:#263340!important;color:#fff!important;font-size:25px!important;line-height:1!important;cursor:pointer!important}
+.sp-admin-board-ring{width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spAdminBoardSpin .7s linear infinite}
+@keyframes spAdminBoardSpin{to{transform:rotate(360deg)}}
+/* Exact 41 */
+#spAdminExact41{position:fixed;inset:0;z-index:2147483000;display:none;background:rgba(0,0,0,.76);color:var(--text,#fff)}
+#spAdminExact41.sp-open{display:block}
+#spAdminExact41 .sp-cc-shell{position:absolute;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--card,#111821);overflow:hidden;display:flex;flex-direction:column}
+#spAdminExact41 .sp-cc-head{height:68px;min-height:68px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(15,23,33,.98);border-bottom:1px solid rgba(255,255,255,.09);position:relative;z-index:5}
+#spAdminExact41 .sp-cc-title{min-width:0;flex:1}.sp-cc-title b{display:block;font-size:18px}.sp-cc-title small{display:block;color:#94a6b5;margin-top:2px;font-size:10px}
+#spAdminExact41 .sp-cc-refresh{height:32px;min-width:64px;width:64px;padding:0 7px;box-sizing:border-box;border:1px solid rgba(90,180,255,.22);border-radius:9px;background:rgba(32,48,65,.9);color:#fff;font-weight:800;font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;white-space:nowrap;overflow:hidden} #spAdminExact41 .sp-cc-refresh-text{font-size:10px!important;line-height:1!important;display:block;white-space:nowrap}
+#spAdminExact41 .sp-cc-refresh:disabled{opacity:.9;cursor:wait}.sp-cc-ring{width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spccspin .7s linear infinite}@keyframes spccspin{to{transform:rotate(360deg)}}
+#spAdminExact41 .sp-cc-close{width:40px;height:40px;border:0;border-radius:11px;background:#263340;color:#fff;font-size:25px;line-height:1;cursor:pointer}
+#spAdminExact41 .sp-cc-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 12px 28px}
+#spAdminExact41 .sp-cc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-width:980px;margin:0 auto}
+#spAdminExact41 .sp-cc-card{min-height:86px;border:1px solid rgba(130,150,170,.17);border-radius:15px;background:rgba(30,38,49,.9);padding:11px;cursor:pointer;text-align:left;color:inherit;display:flex;align-items:center;gap:10px;transition:.14s;box-shadow:0 5px 15px rgba(0,0,0,.08)}
+#spAdminExact41 .sp-cc-card:active{transform:scale(.985);border-color:rgba(35,159,255,.55)}
+#spAdminExact41 .sp-cc-card .ic{width:38px;height:38px;flex:0 0 38px;border-radius:11px;display:grid;place-items:center;font-size:20px;background:rgba(24,137,235,.13)}
+#spAdminExact41 .sp-cc-card b{font-size:12px;line-height:1.25;display:block}#spAdminExact41 .sp-cc-card small{display:block;color:#8f9eab;font-size:9px;line-height:1.25;margin-top:3px}
+#spAdminExact41 .sp-cc-work{position:absolute;inset:68px 0 0;background:var(--card,#111821);display:none;flex-direction:column;z-index:4}
+#spAdminExact41 .sp-cc-work.sp-show{display:flex}
+#spAdminExact41 .sp-cc-work-head{height:56px;min-height:56px;display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(15,23,33,.98)}
+#spAdminExact41 .sp-cc-work-head .txt{flex:1;min-width:0}#spAdminExact41 .sp-cc-work-head b{display:block;font-size:16px}#spAdminExact41 .sp-cc-work-head small{color:#94a6b5;font-size:9px}
+#spAdminExact41 .sp-cc-back{border:0;border-radius:10px;padding:9px 12px;background:#263747;color:#fff;font-weight:800;cursor:pointer}
+#spAdminExact41 .sp-cc-work-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:12px;-webkit-overflow-scrolling:touch}
+#spAdminExact41 .sp41-handler-bridge{min-height:100%;color:inherit}
+@media(max-width:430px){#spAdminExact41 .sp-cc-grid{gap:7px}#spAdminExact41 .sp-cc-card{min-height:78px;padding:9px;gap:8px}#spAdminExact41 .sp-cc-card .ic{width:34px;height:34px;flex-basis:34px;font-size:18px}#spAdminExact41 .sp-cc-card b{font-size:11px}}
+/* Full-screen foreground for the three document/data tools opened by points 39–41. */
+#uploadTerritoryModal,#storeDatabaseModal,#spLicenseAdminModal{z-index:2147483600!important}
+#uploadTerritoryModal .modal-box,#storeDatabaseModal .modal-box,#spLicenseAdminModal .modal-box{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;margin:0!important;border-radius:0!important;box-sizing:border-box;overflow:auto!important}
 </style>
-<script id="sp-surgical-final-patch">
+<script id="shadab-master41-exact-runtime">
 (function(){
 'use strict';
-
-/* ================================================================
-   1) SALESMAN EXPENSES — live Final Total while typing
-   ================================================================ */
-(function(){
-  function recalc(){try{window.sexRecalc?.()}catch(e){}}
-  function install(){
-    const modal=document.getElementById('salesmanExpensesModal');
-    if(!modal||modal.dataset.liveTotalPatch==='1')return;
-    modal.dataset.liveTotalPatch='1';
-    modal.addEventListener('input',function(e){
-      const id=e.target?.id||'';
-      if(/^sex(Lunch|Rickshaw|Tea|Mobile|Other)$/.test(id) || /^sex(OutLunch|OutRickshaw|OutTea|OutMobile|OutOther)$/.test(id)) recalc();
-    },true);
-    ['sexLunch','sexRickshaw','sexTea','sexMobile','sexOther','sexStartMeter','sexEndMeter','sexPetrolPrice','sexAverage'].forEach(id=>{
-      const el=document.getElementById(id); if(el&&!el.dataset.liveTotalInput){el.dataset.liveTotalInput='1';el.addEventListener('input',recalc)}
-    });
-    recalc();
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-  window.addEventListener('load',install);
-  window.spInstallExpenseLiveTotal=install;
-})();
-
-/* ================================================================
-   2) TERRITORY MASTER — repair only the broken entry/render path
-   ================================================================ */
-(function(){
-  function getModal(){try{if(typeof window.modal==='function')return window.modal();}catch(e){}return document.getElementById('sp35ControlModal')}
-  window.openTerritoryManager=function(area){
-    try{
-      let m=getModal();
-      if(!m){try{document.getElementById('sp35Launcher')?.click()}catch(e){} m=document.getElementById('sp35ControlModal')}
-      if(!m)throw new Error('Admin Control Center is not available yet.');
-      m.classList.add('show');
-      const g=document.getElementById('sp35ControlGrid'); if(g)g.style.display='none';
-      const w=document.getElementById('sp35WorkModal'), b=document.getElementById('sp35WorkBodyNew')||document.getElementById('sp35WorkBody');
-      if(!w||!b)throw new Error('Territory Master workspace is not available.');
-      w.classList.add('show');
-      const title=document.getElementById('sp35WorkTitleNew'), sub=document.getElementById('sp35WorkSubNew');
-      if(title)title.textContent='City & Territory Master';
-      if(sub)sub.textContent='Add, edit and enable/disable territories';
-      /* Point 23 expects the compatibility id sp35WorkBody. */
-      b.id='sp35WorkBody';
-      if(typeof window.sp35Point23!=='function')throw new Error('Territory Master control is not loaded.');
-      window.sp35Point23();
-      w.scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(e){try{window.toast35?.('Territory Master failed: '+(e?.message||e))}catch(_){} }
-  };
-  /* Keep the already-built Territory Master data handlers, but make the main
-     renderer resilient if the old compatibility ID is temporarily absent. */
-  const oldRender=window.sp35RenderTerrNew;
-  if(typeof oldRender==='function'&&!oldRender.__surgical){
-    const wrap=function(){
-      const b=document.getElementById('sp35TerrListNew');
-      if(b){try{return oldRender.apply(this,arguments)}catch(e){}}
-      return undefined;
-    };
-    wrap.__surgical=true; window.sp35RenderTerrNew=wrap;
-  }
-})();
-
-/* ================================================================
-   3+4) ORDER FORM + SUPPLY SCHEDULE — Firebase-safe chunked documents
-   ================================================================ */
-(function(){
-  const ADMIN='master@shadabpharmacy.com', BASE='app_settings/sharedDocuments';
-  const PATH={orderForm:BASE+'/orderForm',supplySchedule:BASE+'/supplySchedule'};
-  const CHUNK=480000; // safely below Firestore's ~1 MiB document limit after JSON overhead
-  const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-  const read=async p=>{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestReadDoc(p)};
-  const write=async(p,v)=>{if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST engine is not loaded.');return await window.shadabRestWriteDoc(p,v)};
-  const local=(t,a)=>{try{window.shadabApplySharedAsset?.(t,a)}catch(e){}};
-  const toast=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
-  function exact(e){return String(e?.api?.error?.message||e?.message||e||'Unknown Firebase error')}
-  async function fileData(file){
-    if(!file)throw new Error('Please select a PDF or image.');
-    if(file.size>5000000)throw new Error('File is too large. Please keep it under 5 MB.');
-    return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res({name:file.name,type:file.type||'application/pdf',size:file.size,data:String(r.result||''),updatedAt:new Date().toISOString()});r.onerror=()=>rej(new Error('Could not read the selected file.'));r.readAsDataURL(file)})
-  }
-  async function upload(type,input){
-    const s=session(); if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master login required.');
-    if(!navigator.onLine)throw new Error('Offline — the last local document is preserved; internet is required to publish a replacement.');
-    const a=await fileData(input?.files?.[0]);
-    const comma=a.data.indexOf(','); if(comma<0)throw new Error('Invalid file data.');
-    const prefix=a.data.slice(0,comma+1), raw=a.data.slice(comma+1), total=Math.ceil(raw.length/CHUNK);
-    const path=PATH[type];
-    const meta={name:a.name,type:a.type,size:a.size,updatedAt:a.updatedAt,chunked:true,total,encodingPrefix:prefix};
-    /* Write chunks first. The metadata is published last so a failed replacement
-       never makes clients point at an incomplete document. */
-    for(let i=0;i<total;i++) await write(path+'__chunk_'+i,{data:raw.slice(i*CHUNK,(i+1)*CHUNK),index:i,total,updatedAt:a.updatedAt});
-    await write(path,meta);
-    local(type,a);
-    toast('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' uploaded and synced to all devices');
-    return true;
-  }
-  async function del(type){
-    const s=session(); if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master login required.');
-    if(!confirm('Delete the current '+(type==='orderForm'?'Order Form':'Supply Schedule')+' for all mobiles?'))return false;
-    await write(PATH[type],{deleted:true,updatedAt:new Date().toISOString(),name:'',type:'',size:0,total:0});
-    local(type,null); toast('✓ '+(type==='orderForm'?'Order Form':'Supply Schedule')+' deleted and synced to all devices'); return true;
-  }
-  async function hydrate(type){
-    if(!navigator.onLine||!session()?.uid)return;
-    const m=await read(PATH[type]); if(!m||m.deleted){local(type,null);return}
-    if(!m.chunked&&m.data){local(type,m);return}
-    if(m.chunked&&Number(m.total)>0){let raw='';for(let i=0;i<Number(m.total);i++){const c=await read(PATH[type]+'__chunk_'+i);if(!c?.data)throw new Error('Missing '+type+' chunk '+(i+1));raw+=c.data}local(type,{name:m.name,type:m.type,size:m.size,data:(m.encodingPrefix||('data:'+(m.type||'application/pdf')+';base64,'))+raw,updatedAt:m.updatedAt})}
-  }
-  window.adminUploadSharedDocument=async function(type,input){if(type!=='orderForm'&&type!=='supplySchedule')return false;try{return await upload(type,input)}catch(e){toast('✕ Upload failed — '+exact(e));return false}};
-  window.adminDeleteSharedDocument=async function(type){try{return await del(type)}catch(e){toast('✕ Delete failed — '+exact(e));return false}};
-  window.spSurgicalHydrateSharedDocuments=async function(){for(const t of ['orderForm','supplySchedule'])try{await hydrate(t)}catch(e){console.warn('Surgical shared document hydrate',t,e)}};
-  setTimeout(()=>window.spSurgicalHydrateSharedDocuments(),1400);
-  window.addEventListener('online',()=>setTimeout(()=>window.spSurgicalHydrateSharedDocuments(),700));
-})();
-
-/* ================================================================
-   6) MASTER ALERT — existing Firebase path + premium entrance effect
-   ================================================================
-   The existing alert save/sync functions remain authoritative. This patch
-   only adds a visual event whenever the authoritative message changes and
-   keeps the existing 10-minute/offline sync model untouched. */
-(function(){
-  const KEY='shadab_alert_message_v1', ID='shadabAlertText';
-  function animate(message){
-    const bar=document.getElementById('shadabAlertBar'),el=document.getElementById(ID); if(!bar||!el)return;
-    const m=String(message||'').trim(); if(!m)return;
-    el.textContent=m;
-    bar.classList.remove('sp-alert-enter','sp-alert-shimmer');
-    void bar.offsetWidth;
-    bar.classList.add('sp-alert-enter','sp-alert-shimmer');
-  }
-  function current(){try{return localStorage.getItem(KEY)||''}catch(e){return ''}}
-  let last=current();
-  function poll(){const now=current();if(now&&now!==last){last=now;animate(now)}}
-  const oldSet=window.sp35SaveAlert;
-  if(typeof oldSet==='function'&&!oldSet.__surgicalAlert){
-    const wrap=async function(){const r=await oldSet.apply(this,arguments);const m=current();if(m){last=m;animate(m)}return r};
-    wrap.__surgicalAlert=true;window.sp35SaveAlert=wrap;window.sp35SaveAlertNew=wrap;
-  }
-  setInterval(poll,1200);
-  function hydrate(){const m=current();if(m){last=m;animate(m)}}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hydrate,{once:true});else hydrate();
-})();
-
-/* Final safety: if any old code reuses the original modal after DOM creation,
-   the live-expense listener can be reinstalled without changing the UI. */
-window.addEventListener('load',()=>{try{window.spInstallExpenseLiveTotal?.()}catch(e){}});
+const ITEMS=[
+['🔥','Firebase Architecture','Authentication + Firestore'],
+['☁️','Firebase Sync Status','Connection and sync status'],
+['🔔','Main Screen Alert','Front-page alert control'],
+['🟢','Active / Disable','Salesman account status'],
+['🕐','Last Seen','Server activity timestamp'],
+['📊','Admin Dashboard','Salesmen, stores, visits, orders'],
+['📍','Salesman Activity','Current route and activity'],
+['📈','Salesman Performance','Assigned, visited, orders, remaining'],
+['👤','Salesman Registration','Create salesman accounts'],
+['🔐','Salesman Login','Firebase authentication'],
+['🔑','Forgot Password','Password reset'],
+['🏠','Login Header','Name and login state'],
+['☰','Hamburger Menu','Main app navigation'],
+['👨‍💼','Salesman Management','Profiles, contact, status'],
+['🏙️','Assignment Structure','Salesman → City → Territory → Day'],
+['📍','Auto Assignment','Load current-day route'],
+['🏪','Territory Store Filter','Assigned territory stores'],
+['☑️','Store Assignment','Store checklist and edit'],
+['📋','Today Task Cards','Planned, visited, orders, remaining'],
+['👆','Clickable Task Cards','Open matching store data'],
+['📄','PDF + WhatsApp','Task list export/share'],
+['💾','Offline Mode','Local-first field work'],
+['📱','New Phone / Reinstall','Restore account data'],
+['🛡️','Preserve Existing App','Keep existing workflow'],
+['🗓️','Assignment Calendar','Date/day assignments'],
+['🏙️','City & Territory','City and territory structure'],
+['🏪','Medical Store','Store master'],
+['📑','Reports Center','Daily / weekly / monthly'],
+['🔎','Global Search','Search app data'],
+['📥','Export Data','CSV / JSON / PDF'],
+['🔔','Alert History','Previous alerts'],
+['🔐','Admin Security','Current admin session'],
+['📝','Activity Log','Admin actions'],
+['⚙️','App Settings','App defaults'],
+['🗄️','Backup / Data Safety','Backup and restore'],
+['📍','Territory Management','Manage city territories'],
+['📋','Order Form','Shared Order Form document'],
+['🚚','Supply Schedule','Shared Supply Schedule document'],
+['📜','Territory PDF','Upload/manage territory PDF'],
+['🏪','Store Database','Medical store database'],
+['📜','SHADAB PHARMACY License Directory','License upload / preview / delete']
+];
+const handlerMap={1:19,2:33,3:1,4:8,5:9,6:21,7:25,8:26,9:2,10:3,11:4,12:5,13:6,14:7,15:10,16:11,17:12,18:13,19:14,20:15,21:16,22:17,23:18,24:20,25:22,26:23,27:24,28:27,29:28,30:29,31:30,32:31,33:32,34:34,35:35,36:23,37:36,38:37};
+let locked=false,savedY=0,refreshing=false,adminSavedY=0,adminLocked=false;
+const $=id=>document.getElementById(id);
+function ensureBridge(){
+ let b=$('sp35WorkBody');
+ if(!b){b=document.createElement('div');b.id='sp35WorkBody';b.className='sp41-handler-bridge';}
+ return b;
+}
+function modal(){
+ let m=$('spAdminExact41');
+ if(m)return m;
+ m=document.createElement('div');m.id='spAdminExact41';
+ m.innerHTML='<div class="sp-cc-shell" role="dialog" aria-modal="true"><div class="sp-cc-head"><div class="sp-cc-title"><b>Admin Control Center</b><small>Master Login • 41 controls</small></div><button id="spAdminCCRefresh" class="sp-cc-refresh" type="button"><span class="sp-cc-refresh-text">Refresh</span></button><button id="spAdminCCClose" class="sp-cc-close" type="button" aria-label="Close">×</button></div><div id="spAdminCCScroll" class="sp-cc-scroll"><div id="spAdminCCGrid" class="sp-cc-grid"></div></div><div id="spAdminCCWork" class="sp-cc-work"><div class="sp-cc-work-head"><div class="txt"><b id="spAdminCCWorkTitle"></b><small id="spAdminCCWorkSub"></small></div><button id="spAdminCCBack" class="sp-cc-back" type="button">Back</button></div><div id="spAdminCCWorkBody" class="sp-cc-work-body"></div></div></div>';
+ document.body.appendChild(m);
+ $('spAdminCCClose').onclick=closeAll;$('spAdminCCBack').onclick=backToGrid;$('spAdminCCRefresh').onclick=refresh;
+ return m;
+}
+function render(){
+ const g=$('spAdminCCGrid');if(!g)return;
+ g.innerHTML=ITEMS.map((x,i)=>'<button class="sp-cc-card" type="button" data-n="'+(i+1)+'"><span class="ic">'+x[0]+'</span><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span></button>').join('');
+ g.querySelectorAll('.sp-cc-card').forEach(b=>b.onclick=function(){openControl(Number(b.dataset.n));});
+}
+function lockPage(){if(locked)return;locked=true;savedY=window.scrollY||window.pageYOffset||0;document.documentElement.dataset.spAdmin41Lock='1';document.body.dataset.spAdmin41Lock='1';document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';document.body.style.position='fixed';document.body.style.top='-'+savedY+'px';document.body.style.width='100%';}
+function unlockPage(){if(!locked)return;const y=savedY;locked=false;document.documentElement.style.overflow='';document.body.style.overflow='';document.body.style.position='';document.body.style.top='';document.body.style.width='';delete document.documentElement.dataset.spAdmin41Lock;delete document.body.dataset.spAdmin41Lock;window.scrollTo(0,y);}
+function show(){const m=modal();render();$('spAdminCCGrid').style.display='grid';$('spAdminCCWork').classList.remove('sp-show');m.classList.add('sp-open');lockPage();}
+function closeAll(){const m=$('spAdminExact41');if(m)m.classList.remove('sp-open');$('spAdminCCGrid')&&($('spAdminCCGrid').style.display='grid');$('spAdminCCWork')&&$('spAdminCCWork').classList.remove('sp-show');unlockPage();}
+function backToGrid(){const bridge=$('sp35WorkBody');if(bridge){bridge.innerHTML='';} $('spAdminCCWork').classList.remove('sp-show');$('spAdminCCGrid').style.display='grid';}
+async function openControl(n){
+ const item=ITEMS[n-1];if(!item)return;const m=modal();m.classList.add('sp-open');lockPage();$('spAdminCCGrid').style.display='none';$('spAdminCCWork').classList.add('sp-show');$('spAdminCCWorkTitle').textContent=item[1];$('spAdminCCWorkSub').textContent=item[2];
+ const out=$('spAdminCCWorkBody');out.innerHTML='';
+ if(n===39){out.innerHTML='<div class="notice">Territory PDF management is ready.</div><div class="actions"><button class="btn primary" type="button" onclick="openUploadTerritoryModal()">Open Territory PDF</button></div>';return;}
+ if(n===40){try{openStoreDatabase();out.innerHTML='<div class="notice">Store Database opened in full-screen mode.</div>';}catch(e){out.innerHTML='<div class="notice">Store Database error: '+String(e.message||e)+'</div>'}return;}
+ if(n===41){try{if(typeof spLockedLicenseAdminOpen==='function')spLockedLicenseAdminOpen();else throw new Error('License Directory function is not loaded');out.innerHTML='<div class="notice">SHADAB PHARMACY License Directory opened.</div>';}catch(e){out.innerHTML='<div class="notice">License Directory error: '+String(e.message||e)+'</div>'}return;}
+ const hn=handlerMap[n],fn=window['sp35Point'+hn];if(typeof fn!=='function'){out.innerHTML='<div class="notice">This control is not available in the Master build.</div>';return;}
+ const bridge=ensureBridge();bridge.innerHTML='';out.appendChild(bridge);
+ try{const r=fn();if(r&&typeof r.then==='function')await r;}catch(e){bridge.innerHTML='<div class="notice">Control error: '+String(e&&e.message||e)+'</div>';}
+}
+function refresh(){if(refreshing)return;refreshing=true;const b=$('spAdminCCRefresh');if(!b)return;b.disabled=true;b.innerHTML='<span class="sp-cc-ring"></span>';let p=null;try{if(typeof window.refreshAdminDashboard==='function')p=window.refreshAdminDashboard();else if(typeof window.sp35ManualServerRefresh==='function')p=window.sp35ManualServerRefresh();}catch(e){p=Promise.reject(e)}Promise.resolve(p).catch(function(e){console.warn('Admin Control Center refresh:',e)}).finally(function(){setTimeout(function(){b.disabled=false;b.innerHTML='<span class="sp-cc-refresh-text">Refresh</span>';refreshing=false;},650);});}
+function installLauncher(){
+ const d=$('adminDashboardBox');if(!d)return;let l=$('spAdminCCLauncher');if(!l){l=document.createElement('button');l.id='spAdminCCLauncher';l.type='button';l.innerHTML='<span class="sp-cc-launch-icon" aria-hidden="true"></span><span class="sp-cc-launch-copy"><b>Admin Control Center</b><small>Management tools, assignments, reports and system controls</small></span><span class="sp-cc-arrow">›</span>';l.onclick=show;const hero=d.querySelector('.admin-hero');if(hero)hero.insertAdjacentElement('beforebegin',l);else d.insertBefore(l,d.firstChild);}
+}
+function setupAdminBoardActions(){
+ const d=$('adminDashboardBox');if(!d)return;const a=d.querySelector('.admin-hero-actions');if(!a)return;const buttons=a.querySelectorAll('button');if(!buttons.length)return;const refreshBtn=buttons[0],closeBtn=buttons[1];
+ refreshBtn.classList.add('sp-admin-board-refresh');refreshBtn.classList.remove('admin-icon-btn');refreshBtn.textContent='Refresh';refreshBtn.title='Refresh';
+ closeBtn.classList.add('sp-admin-board-close');closeBtn.classList.remove('admin-icon-btn','danger');closeBtn.textContent='×';closeBtn.title='Close';closeBtn.onclick=function(){try{window.closeAdmin?.()}catch(e){}};
+ refreshBtn.onclick=function(){if(refreshBtn.disabled)return;refreshBtn.disabled=true;refreshBtn.innerHTML='<span class="sp-admin-board-ring"></span>';let p=null;try{if(typeof window.refreshAdminDashboard==='function') p=window.refreshAdminDashboard();}catch(e){p=Promise.reject(e)}Promise.resolve(p).catch(function(e){console.warn('Admin Board refresh:',e)}).finally(function(){setTimeout(function(){refreshBtn.disabled=false;refreshBtn.textContent='Refresh';},650);});};
+}
+function lockAdminPage(){if(adminLocked)return;adminLocked=true;adminSavedY=window.scrollY||window.pageYOffset||0;document.documentElement.dataset.spMasterLock='1';document.body.dataset.spMasterLock='1';document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';document.body.style.position='fixed';document.body.style.top='-'+adminSavedY+'px';document.body.style.width='100%';}
+function unlockAdminPage(){if(!adminLocked)return;const y=adminSavedY;adminLocked=false;document.documentElement.style.overflow='';document.body.style.overflow='';document.body.style.position='';document.body.style.top='';document.body.style.width='';delete document.documentElement.dataset.spMasterLock;delete document.body.dataset.spMasterLock;window.scrollTo(0,y);}
+const oldOpen=window.openAdmin,oldClose=window.closeAdmin,oldShow=window.showAdminDashboard;
+if(typeof oldOpen==='function'&&!oldOpen.__master41){window.openAdmin=function(){const r=oldOpen.apply(this,arguments);setTimeout(function(){lockAdminPage();},0);return r};window.openAdmin.__master41=true;}
+if(typeof oldClose==='function'&&!oldClose.__master41){window.closeAdmin=function(){const r=oldClose.apply(this,arguments);unlockAdminPage();return r};window.closeAdmin.__master41=true;}
+if(typeof oldShow==='function'&&!oldShow.__master41){window.showAdminDashboard=function(){const r=oldShow.apply(this,arguments);setTimeout(function(){lockAdminPage();setupAdminBoardActions();installLauncher();},0);return r};window.showAdminDashboard.__master41=true;}
+window.openAdminControlCenter=function(){const dash=document.getElementById('adminDashboardBox');const dashboardVisible=!!dash&&getComputedStyle(dash).display!=='none'&&dash.offsetParent!==null;if(typeof adminLoggedIn!=='undefined'&&!adminLoggedIn&&!dashboardVisible){try{window.openAdmin?.();}catch(e){}try{window.toast?.('Master login required')}catch(e){}return;}installLauncher();show();};
+window.spAdminExact41OpenControl=openControl;window.spAdminExact41Close=closeAll;window.backToGridExact41=backToGrid;window.__spExact41Show=show;
+/* Existing app functions that reference the old Control Center now route into the exact 41 workspace. */
+window.sp35OpenControl=function(n){return openControl(Number(n));};window.sp35BackToControls=backToGrid;window.sp35CloseAll=closeAll;
+function boot(){try{installLauncher();if(typeof adminLoggedIn!=='undefined'&&adminLoggedIn){setupAdminBoardActions();lockAdminPage();}}catch(e){console.warn('Master 41 boot:',e)}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
 
+<!-- ===== END MASTER-BASED EXACT 41 ===== -->
 
-<!-- ===== START: FINAL ADMIN FORENSIC UX / FEEDBACK / FOREGROUND PATCH ===== -->
-<style id="sp-admin-forensic-final-style">
-#spGlobalActionFeedback{
-  position:fixed!important;left:50%!important;top:calc(env(safe-area-inset-top,0px) + 14px)!important;
-  transform:translate(-50%,-14px) scale(.97)!important;z-index:2147483647!important;
-  width:min(92vw,560px)!important;display:flex!important;align-items:center!important;gap:11px!important;
-  padding:13px 16px!important;border-radius:17px!important;border:1px solid rgba(255,255,255,.18)!important;
-  background:rgba(18,24,32,.96)!important;color:#fff!important;box-shadow:0 18px 50px rgba(0,0,0,.32),0 0 0 1px rgba(255,255,255,.04)!important;
-  font:800 13px/1.35 system-ui,-apple-system,Segoe UI,sans-serif!important;opacity:0!important;pointer-events:none!important;
-  transition:opacity .2s ease,transform .25s cubic-bezier(.2,.8,.2,1)!important;backdrop-filter:blur(18px)!important;
+
+<!-- ===== START: STABLE TARGETED ADMIN/UI FIX — ICON + FOREGROUND + ALERT FEEDBACK ===== -->
+<style id="shadab-stable-targeted-admin-fix">
+/* Admin Control Center launcher: real vector-style icon, not an emoji/empty span. */
+#spAdminCCLauncher{
+  width:100%;display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;
+  padding:13px 15px;margin:0 0 14px;border-radius:18px;
+  border:1px solid rgba(70,180,255,.22);
+  background:linear-gradient(145deg,rgba(18,36,52,.98),rgba(12,25,38,.98));
+  color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.07);
 }
-#spGlobalActionFeedback.show{opacity:1!important;transform:translate(-50%,0) scale(1)!important}
-#spGlobalActionFeedback .sp-fb-icon{width:30px;height:30px;min-width:30px;border-radius:10px;display:grid;place-items:center;font-size:16px;background:rgba(255,255,255,.10)}
-#spGlobalActionFeedback.success .sp-fb-icon{background:rgba(40,210,130,.18)}
-#spGlobalActionFeedback.error .sp-fb-icon{background:rgba(255,70,80,.18)}
-#spGlobalActionFeedback.working .sp-fb-icon{background:rgba(80,160,255,.18);animation:spFbPulse 1s ease-in-out infinite}
-#spGlobalActionFeedback .sp-fb-text{flex:1;min-width:0}
-#spGlobalActionFeedback .sp-fb-close{border:0;background:transparent;color:rgba(255,255,255,.65);font-size:18px;cursor:pointer;padding:3px 5px}
-@keyframes spFbPulse{50%{transform:scale(.84);opacity:.65}}
-.sp-admin-action-pulse{animation:spAdminTap .34s ease both!important}
-@keyframes spAdminTap{50%{transform:scale(.965);filter:brightness(1.18)} }
-/* Every Admin work screen is a true foreground page, not a block below the tapped card. */
-#sp35ControlModal .sp35-work-modal{
-  position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-height:100dvh!important;
-  margin:0!important;border-radius:0!important;z-index:2147483000!important;overflow:hidden!important;
-  background:var(--card,#fff)!important;display:none!important;
+#spAdminCCLauncher:active{transform:scale(.992)}
+#spAdminCCLauncher .sp-cc-launch-icon{
+  width:48px;height:48px;min-width:48px;border-radius:15px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#1199f4,#2459d8);border:1px solid rgba(150,225,255,.34);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 9px 22px rgba(0,116,235,.25);position:relative;
 }
-#sp35ControlModal .sp35-work-modal.show{display:flex!important;flex-direction:column!important}
-#sp35ControlModal .sp35-work-modal .sp35-work-head{position:sticky!important;top:0!important;z-index:3!important;flex:0 0 auto!important}
-#sp35ControlModal .sp35-work-modal .sp35-work-body{flex:1 1 auto!important;min-height:0!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important}
-#sp35ControlModal .sp35-modal-box{overflow:visible!important}
-#sp35ControlModal .sp35-work-back{min-width:72px!important}
+#spAdminCCLauncher .sp-cc-launch-icon svg{width:29px;height:29px;display:block}
+#spAdminCCLauncher .sp-cc-launch-icon:after{content:'✓';position:absolute;right:2px;bottom:1px;width:16px;height:16px;border-radius:6px;display:grid;place-items:center;background:#18c77b;color:#fff;border:2px solid #102338;font-size:9px;font-weight:1000;line-height:1}
+#spAdminCCLauncher .sp-cc-launch-copy{min-width:0;flex:1}
+#spAdminCCLauncher .sp-cc-launch-copy b{display:block;font-size:15px;line-height:1.2;font-weight:900;letter-spacing:-.15px}
+#spAdminCCLauncher .sp-cc-launch-copy small{display:block;margin-top:4px;color:#9fb1c1;font-size:10px;line-height:1.3}
+#spAdminCCLauncher .sp-cc-arrow{font-size:30px;line-height:1;color:#72d8ff;font-weight:300}
+
+/* Control Center header gets the same clean vector icon. */
+#spAdminExact41 .sp-cc-title{display:flex!important;align-items:center;gap:10px}
+#spAdminExact41 .sp-cc-title:before{content:'';width:40px;height:40px;min-width:40px;border-radius:13px;background:#155fd1;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 7px 18px rgba(0,100,220,.22);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round' d='M24 6l15 6v10c0 9.8-6.2 16.5-15 20-8.8-3.5-15-10.2-15-20V12l15-6z'/%3E%3Cpath fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' d='M18 24l4 4 8-9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:25px 25px}
+
+/* Every ordinary modal opened from Admin must beat the fullscreen 41 shell. */
+.modal.show,#sharedDocModal.show,#uploadTerritoryModal.show,#storeDatabaseModal.show,#territoryModal.show,#territoryAssignmentModal.show,#customerModal.show,#spLicenseAdminModal.show,#sectionModalBackdrop.show,#sp35AuthModal.show{
+  z-index:2147483601!important;
+}
+.modal.show .modal-box,#sharedDocModal.show .modal-box,#uploadTerritoryModal.show .modal-box,#storeDatabaseModal.show .modal-box,#territoryModal.show .modal-box,#territoryAssignmentModal.show .modal-box,#customerModal.show .modal-box,#spLicenseAdminModal.show .modal-box,#sectionModalBackdrop.show .modal-box,#sp35AuthModal.show .modal-box{
+  position:relative;z-index:2147483602!important;
+}
+/* Shared-document and upload workspaces remain fully interactive above the Control Center. */
+#sharedDocModal.show .modal-box,#uploadTerritoryModal.show .modal-box,#storeDatabaseModal.show .modal-box,#spLicenseAdminModal.show .modal-box{isolation:isolate}
+
+/* Visible marquee: start on-screen instead of waiting behind a 100% padded offset. */
+#shadabAlertBar{display:flex!important;visibility:visible!important;opacity:1!important}
+#shadabAlertText{display:inline-block!important;min-width:max-content!important;visibility:visible!important;opacity:1!important;padding-left:0!important;animation:spAlertMoveStable 18s linear infinite!important;will-change:transform}
+@keyframes spAlertMoveStable{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
+
+/* Clear save/upload state feedback. */
+.sp-admin-action-working{position:relative;pointer-events:none;opacity:.88}
+.sp-admin-action-working:after{content:'';width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;display:inline-block;vertical-align:-2px;margin-left:6px;animation:spAdminActionSpin .65s linear infinite}
+.sp-admin-action-success{box-shadow:0 0 0 2px rgba(25,199,123,.22),0 8px 22px rgba(25,199,123,.16)!important}
+.sp-admin-action-failed{box-shadow:0 0 0 2px rgba(239,68,68,.22),0 8px 22px rgba(239,68,68,.14)!important}
+@keyframes spAdminActionSpin{to{transform:rotate(360deg)}}
+@media(max-width:430px){#spAdminCCLauncher .sp-cc-launch-icon{width:44px;height:44px;min-width:44px}#spAdminCCLauncher .sp-cc-launch-copy b{font-size:14px}#spAdminExact41 .sp-cc-title:before{width:36px;height:36px;min-width:36px;background-size:22px 22px}}
 </style>
-<script id="sp-admin-forensic-final-runtime">
+<script id="shadab-stable-targeted-admin-fix-js">
 (function(){
 'use strict';
-const state={timer:null};
-function ensureFeedback(){
-  let el=document.getElementById('spGlobalActionFeedback');
-  if(el)return el;
-  el=document.createElement('div');el.id='spGlobalActionFeedback';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
-  el.innerHTML='<span class="sp-fb-icon">⏳</span><span class="sp-fb-text"></span><button class="sp-fb-close" type="button" aria-label="Close">×</button>';
-  el.querySelector('.sp-fb-close').onclick=()=>hideFeedback();
-  document.body.appendChild(el);return el;
+const SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" d="M24 6l15 6v10c0 9.8-6.2 16.5-15 20-8.8-3.5-15-10.2-15-20V12l15-6z"/><path fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round" d="M18 24l4 4 8-9"/></svg>';
+function decorate(){
+  const l=document.getElementById('spAdminCCLauncher');
+  const i=l?.querySelector('.sp-cc-launch-icon'); if(i&&!i.innerHTML.trim())i.innerHTML=SVG;
 }
-function showFeedback(message,type='working',duration){
-  const el=ensureFeedback();clearTimeout(state.timer);el.className='';el.classList.add(type,'show');
-  const icon=el.querySelector('.sp-fb-icon'),txt=el.querySelector('.sp-fb-text');
-  icon.textContent=type==='success'?'✓':type==='error'?'!':'⏳';txt.textContent=String(message||'Working…');
-  if(duration!==0)state.timer=setTimeout(hideFeedback,duration||3000);
+function front(){
+  document.querySelectorAll('.modal.show').forEach(m=>{m.style.setProperty('z-index','2147483601','important');const b=m.querySelector('.modal-box');if(b)b.style.setProperty('z-index','2147483602','important')});
 }
-function hideFeedback(){const el=document.getElementById('spGlobalActionFeedback');if(el)el.classList.remove('show')}
-window.spAdminFeedback={show:showFeedback,success:m=>showFeedback(m,'success',3200),error:m=>showFeedback(m,'error',5200),working:m=>showFeedback(m,'working',0),hide:hideFeedback};
-function textOf(v){return String(v==null?'':v).replace(/\s+/g,' ').trim()}
-function looksError(m){return /(^|\b)(error|failed|fail|could not|cannot|unable|unavailable|missing|invalid|denied|blocked|not found|firebase.*failed|sync failed|save failed|delete failed|upload failed)(\b|$)/i.test(m)}
-function looksSuccess(m){return /(^|\b)(saved|save successful|success|successful|synced|sync successful|added|updated|deleted|enabled|disabled|uploaded|replaced|restored|exported|sent|removed)(\b|$)/i.test(m)}
-/* Existing app notifications now become one consistent, front-most feedback surface. */
-const originalToast=window.toast;
-if(typeof originalToast==='function'&&!originalToast.__forensic){
-  const wrappedToast=function(message){
-    const m=textOf(message);const r=originalToast.apply(this,arguments);
-    if(m) showFeedback(m,looksError(m)?'error':looksSuccess(m)?'success':'success',looksError(m)?5200:3200);
-    return r;
-  };wrappedToast.__forensic=true;window.toast=wrappedToast;
-}
-const originalToast35=window.toast35;
-if(typeof originalToast35==='function'&&!originalToast35.__forensic){
-  const wrapped=function(message){
-    const m=textOf(message);let r;
-    try{r=originalToast35.apply(this,arguments)}finally{if(m)showFeedback(m,looksError(m)?'error':looksSuccess(m)?'success':'success',looksError(m)?5200:3200)}
-    return r;
-  };wrapped.__forensic=true;window.toast35=wrapped;
-}
-window.addEventListener('error',e=>{const m=textOf(e?.message||'Unexpected application error');if(m)showFeedback('Error: '+m,'error',6000)});
-window.addEventListener('unhandledrejection',e=>{const m=textOf(e?.reason?.message||e?.reason||'Unexpected operation error');if(m)showFeedback('Error: '+m,'error',6000)});
-/* Native browser errors from an Admin action are also surfaced, but confirm() remains native. */
-function restoreForeground(){
-  const modal=document.getElementById('sp35ControlModal');if(!modal)return;
-  const work=document.getElementById('sp35WorkModal');if(work){work.style.zIndex='2147483000';}
-}
-function focusWorkTop(){
-  const w=document.getElementById('sp35WorkModal'),b=document.getElementById('sp35WorkBodyNew')||document.getElementById('sp35WorkBody');
-  restoreForeground();
-  try{if(w)w.scrollTop=0;if(b)b.scrollTop=0}catch(e){}
-}
-/* Wrap the final open/back entry points once. This wins over earlier compatibility wrappers. */
-const oldOpen=window.sp35OpenControl;
-if(typeof oldOpen==='function'&&!oldOpen.__forensicFinal){
-  const open=function(n){
-    showFeedback('Opening Admin control…','working',0);
-    let r;
-    try{r=oldOpen.apply(this,arguments)}catch(e){showFeedback('Error opening control: '+textOf(e.message||e),'error',6000);throw e}
-    Promise.resolve(r).then(()=>setTimeout(focusWorkTop,0),e=>showFeedback('Error opening control: '+textOf(e.message||e),'error',6000));
-    return r;
-  };open.__forensicFinal=true;window.sp35OpenControl=open;
-}
-const oldBack=window.sp35BackToControls;
-if(typeof oldBack==='function'&&!oldBack.__forensicFinal){
-  const back=function(){hideFeedback();let r;try{r=oldBack.apply(this,arguments)}catch(e){showFeedback('Error returning to Admin Control Center: '+textOf(e.message||e),'error',6000);throw e}setTimeout(()=>{try{const w=document.getElementById('sp35WorkModal');if(w)w.classList.remove('show')}catch(e){}},0);return r};back.__forensicFinal=true;window.sp35BackToControls=back;
-}
-/* Make every Admin icon/action visibly react immediately. Actual success/error is supplied by the app's real toast/error result. */
+/* Known openers: bring the child window forward immediately after its existing logic. */
+['openSharedDocument','openUploadTerritoryModal','openStoreDatabase','spLockedLicenseAdminOpen'].forEach(name=>{
+  const fn=window[name];
+  if(typeof fn==='function'&&!fn.__stableForeground){
+    const w=function(){const r=fn.apply(this,arguments);setTimeout(front,0);return r};w.__stableForeground=true;window[name]=w;
+  }
+});
+/* If a button inside an already-open child modal opens another modal, lift it after the click. */
 document.addEventListener('click',function(e){
-  const root=e.target?.closest?.('#sp35ControlModal');if(!root)return;
-  const btn=e.target?.closest?.('button,[role="button"]');if(!btn)return;
-  if(btn.classList.contains('sp35-modal-close')||btn.classList.contains('sp35-work-back')||btn.classList.contains('sp-fb-close'))return;
-  btn.classList.remove('sp-admin-action-pulse');void btn.offsetWidth;btn.classList.add('sp-admin-action-pulse');
-  const label=textOf(btn.innerText||btn.getAttribute('aria-label')||btn.title);
-  if(label && !/refresh|back|close|preview|open|login|registration/i.test(label))showFeedback(label+' — processing…','working',0);
-},true);
-/* Re-apply foreground rules after dynamic modal creation. */
-new MutationObserver(()=>restoreForeground()).observe(document.documentElement,{subtree:true,childList:true});
-/* Alert save: use actual result, never claim success just because the button was tapped. */
+  const b=e.target?.closest?.('button,label,input');
+  if(!b)return;
+  setTimeout(front,0);setTimeout(front,120);
+},{capture:true});
+
+/* Alert save animation wraps the final authoritative handler without replacing its logic. */
 const oldAlert=window.sp35SaveAlert;
-if(typeof oldAlert==='function'&&!oldAlert.__forensicFinal){
-  const save=async function(){
-    showFeedback('Saving alert…','working',0);
+if(typeof oldAlert==='function'&&!oldAlert.__stableFeedback){
+  const w=async function(){
+    const btn=document.querySelector('#sp35AlertText')?.closest('.sp35-alert-admin')?.querySelector('button')||document.querySelector('#sp35AlertNew')?.closest('.sp35-field-final')?.parentElement?.querySelector('button');
+    const old=btn?.innerHTML;
+    if(btn){btn.disabled=true;btn.classList.add('sp-admin-action-working');btn.innerHTML='⏳ Saving…'}
     try{
       const r=await oldAlert.apply(this,arguments);
-      const status=textOf(document.getElementById('sp35AlertStatus')?.textContent); const ok=r?.ok===true || (r!==undefined && r?.ok!==false && !looksError(status)) || (r===undefined && !looksError(status) && /saved.*firebase|synced.*all devices|saved to firebase/i.test(status));
-      if(ok)showFeedback('✓ Alert saved successfully and sync was accepted.','success',3600);
-      else showFeedback('✕ Alert was not confirmed on Firebase. Local copy may exist.','error',6000);
+      if(btn){btn.classList.remove('sp-admin-action-working');btn.classList.add(r?.ok?'sp-admin-action-success':'sp-admin-action-failed');btn.innerHTML=r?.ok?'✓ Saved • Synced':'✕ Sync Failed';setTimeout(()=>{btn.disabled=false;btn.classList.remove('sp-admin-action-success','sp-admin-action-failed');btn.innerHTML=old||'✓ Save Alert'},1800)}
       return r;
-    }catch(e){showFeedback('✕ Alert save failed: '+textOf(e.message||e),'error',6000);throw e}
-  };save.__forensicFinal=true;window.sp35SaveAlert=save;window.sp35SaveAlertNew=save;
+    }catch(e){
+      if(btn){btn.classList.remove('sp-admin-action-working');btn.classList.add('sp-admin-action-failed');btn.innerHTML='✕ Save Failed';setTimeout(()=>{btn.disabled=false;btn.classList.remove('sp-admin-action-failed');btn.innerHTML=old||'✓ Save Alert'},1800)}
+      throw e;
+    }
+  };
+  w.__stableFeedback=true;window.sp35SaveAlert=w;window.sp35SaveAlertNew=w;
 }
-/* Territory Master: always open the actual Point 23 workspace in the foreground. */
-const oldTerr=window.openTerritoryManager;
-window.openTerritoryManager=function(area){
-  showFeedback('Opening Territory Master…','working',0);
-  try{
-    let r;
-    if(typeof window.sp35OpenControl==='function')r=window.sp35OpenControl(23);else if(typeof oldTerr==='function')r=oldTerr.apply(this,arguments);else throw new Error('Territory Master is not loaded');
-    Promise.resolve(r).then(()=>setTimeout(focusWorkTop,30),e=>showFeedback('Territory Master failed: '+textOf(e.message||e),'error',6000));
-    return r;
-  }catch(e){showFeedback('Territory Master failed: '+textOf(e.message||e),'error',6000);throw e}
-};
-/* Salesman delete: preserve the existing Firebase implementation but give it deterministic feedback. */
-const oldDelete=window.sp35DeleteUser;
-if(typeof oldDelete==='function'&&!oldDelete.__forensicFinal){
-  const del=async function(){showFeedback('Deleting salesman…','working',0);try{const r=await oldDelete.apply(this,arguments);if(r?.ok===false)showFeedback('✕ Salesman delete failed.','error',6000);return r}catch(e){showFeedback('✕ Salesman delete failed: '+textOf(e.message||e),'error',6000);throw e}};del.__forensicFinal=true;window.sp35DeleteUser=del;
-}
-window.addEventListener('load',()=>{ensureFeedback();restoreForeground()});
+/* Initial visible state + authoritative remote refresh on startup/online. */
+try{front();decorate()}catch(e){}
+setTimeout(decorate,300);setTimeout(front,300);
+window.addEventListener('online',function(){setTimeout(front,300)});
 })();
 </script>
-<!-- ===== END: FINAL ADMIN FORENSIC UX / FEEDBACK / FOREGROUND PATCH ===== -->
+<!-- ===== END: STABLE TARGETED ADMIN/UI FIX ===== -->
+<!-- ===== START: CLEAN FINAL ADMIN CONTROL / FEEDBACK REPAIR V3 ===== -->
+<style id="sp-clean-admin-final-v3-css">
+/* Compact the existing Master Dashboard controls; keep them exactly in the header. */
+#adminDashboardBox>.admin-hero>.admin-hero-actions{gap:5px!important}
+#adminDashboardBox>.admin-hero>.admin-hero-actions .sp-admin-board-refresh,
+#adminDashboardBox>.admin-hero>.admin-hero-actions .sp-admin-board-close{
+  width:32px!important;min-width:32px!important;height:32px!important;padding:0!important;
+  border-radius:9px!important;font-size:18px!important;line-height:1!important;
+}
+#adminDashboardBox>.admin-hero>.admin-hero-actions .sp-admin-board-refresh{font-size:11px!important;min-width:32px!important}
+#adminDashboardBox>.admin-hero>.admin-hero-actions .sp-admin-board-refresh .sp-admin-board-ring{width:13px!important;height:13px!important}
 
-</body>
+/* One and only visible Admin Control Center launcher, placed below the hero/header actions. */
+#spAdminCCLauncher{
+  width:100%!important;display:flex!important;align-items:center!important;gap:12px!important;
+  text-align:left!important;cursor:pointer!important;box-sizing:border-box!important;
+  padding:11px 13px!important;margin:16px 0 14px!important;border-radius:16px!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  background:linear-gradient(145deg,rgba(27,43,56,.96),rgba(15,27,38,.96))!important;
+  color:#fff!important;box-shadow:0 10px 26px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.06)!important;
+  position:relative!important;z-index:2!important;pointer-events:auto!important;
+}
+#spAdminCCLauncher .sp-cc-launch-icon{width:42px!important;height:42px!important;min-width:42px!important;border-radius:12px!important;display:grid!important;place-items:center!important;background:rgba(20,137,231,.16)!important;border:1px solid rgba(76,184,255,.28)!important}
+#spAdminCCLauncher .sp-cc-launch-icon svg{width:24px!important;height:24px!important;display:block!important;color:#72d8ff!important}
+#spAdminCCLauncher .sp-cc-launch-icon:after{content:none!important;display:none!important}
+#spAdminCCLauncher .sp-cc-launch-copy{min-width:0!important;flex:1!important}
+#spAdminCCLauncher .sp-cc-launch-copy b{display:block!important;font-size:14px!important;line-height:1.2!important;font-weight:850!important}
+#spAdminCCLauncher .sp-cc-launch-copy small{display:block!important;margin-top:3px!important;color:#9fb1c1!important;font-size:10px!important;line-height:1.3!important}
+#spAdminCCLauncher .sp-cc-arrow{font-size:25px!important;line-height:1!important;color:#8fdcff!important;font-weight:300!important}
+
+#spAdminExact41{z-index:2147483000!important;position:fixed!important;inset:0!important}
+#spAdminExact41.sp-open{display:block!important;visibility:visible!important;opacity:1!important}
+#sharedDocModal.show,#uploadTerritoryModal.show,#storeDatabaseModal.show,#territoryModal.show,#territoryAssignmentModal.show,#customerModal.show,#spLicenseAdminModal.show,#sectionModalBackdrop.show,#sp35AuthModal.show,.modal.show{z-index:2147483640!important}
+#sharedDocModal.show .modal-box,#uploadTerritoryModal.show .modal-box,#storeDatabaseModal.show .modal-box,#territoryModal.show .modal-box,#territoryAssignmentModal.show .modal-box,#customerModal.show .modal-box,#spLicenseAdminModal.show .modal-box,#sectionModalBackdrop.show .modal-box,#sp35AuthModal.show .modal-box,.modal.show .modal-box{position:relative!important;z-index:2147483641!important}
+
+#spCleanAdminToast{position:fixed!important;left:50%!important;right:auto!important;bottom:16px!important;top:auto!important;transform:translate(-50%,18px) scale(.98)!important;opacity:0!important;visibility:hidden!important;z-index:2147483647!important;display:flex!important;align-items:center!important;gap:9px!important;width:max-content!important;max-width:min(92vw,560px)!important;min-width:250px!important;box-sizing:border-box!important;padding:10px 10px 10px 13px!important;border-radius:15px!important;background:rgba(15,25,35,.97)!important;color:#fff!important;border:1px solid rgba(255,255,255,.13)!important;box-shadow:0 16px 42px rgba(0,0,0,.38)!important;font:800 13px/1.3 system-ui,sans-serif!important;pointer-events:auto!important;transition:opacity .18s ease,transform .18s ease,visibility .18s ease!important}
+#spCleanAdminToast.sp-show{transform:translate(-50%,0) scale(1)!important;opacity:1!important;visibility:visible!important}
+#spCleanAdminToast .sp-cat-icon{width:27px;height:27px;min-width:27px;border-radius:50%;display:grid;place-items:center;font-size:14px;background:rgba(255,255,255,.10)}
+#spCleanAdminToast.sp-success{border-color:rgba(30,200,125,.42)!important}#spCleanAdminToast.sp-success .sp-cat-icon{background:#19c77b!important}
+#spCleanAdminToast.sp-error{border-color:rgba(239,75,75,.48)!important}#spCleanAdminToast.sp-error .sp-cat-icon{background:#d94848!important}
+#spCleanAdminToast.sp-saving{border-color:rgba(70,170,255,.40)!important}
+#spCleanAdminToast.sp-saving .sp-cat-icon{animation:spCleanToastPulseV3 .85s ease-in-out infinite}
+#spCleanAdminToast .sp-cat-close{width:28px!important;height:28px!important;min-width:28px!important;border:0!important;border-radius:9px!important;display:grid!important;place-items:center!important;background:rgba(255,255,255,.11)!important;color:#fff!important;font-size:19px!important;font-weight:900!important;line-height:1!important;cursor:pointer!important;padding:0!important;pointer-events:auto!important;touch-action:manipulation!important}
+#spCleanAdminToast .sp-cat-close:active{transform:scale(.92)}
+@keyframes spCleanToastPulseV3{50%{transform:scale(1.12);opacity:.68}}
+@media(max-width:430px){#spCleanAdminToast{min-width:0;width:auto}#adminDashboardBox>.admin-hero>.admin-hero-actions .sp-admin-board-refresh,#adminDashboardBox>.admin-hero>.admin-hero-actions .sp-admin-board-close{width:30px!important;min-width:30px!important;height:30px!important;font-size:17px!important}}
+</style>
+<script id="sp-clean-admin-final-v3-js">
+(function(){
+'use strict';
+const ADMIN_CC_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5.5 39 11v10.2c0 9.7-6.1 16.5-15 21.1-8.9-4.6-15-11.4-15-21.1V11z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M17.5 24.2 22 28.5 31 19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+
+/* Remove the old duplicate Control Center DOM if an earlier script already created it. */
+function removeLegacyAdminCenter(){
+  ['sp35Launcher','sp35FinalLauncher','sp35ControlModal','sp35FinalModal'].forEach(id=>{const el=document.getElementById(id);if(el)el.remove()});
+}
+
+function open41Direct(){
+  try{
+    /* Use the actual 41-point core function directly, not a chained/old opener. */
+    const fn=window.__spExact41Show||window.spAdminExact41ShowControl;
+    if(typeof fn!=='function')throw new Error('41-point Control Center core is not loaded');
+    fn();
+    const m=document.getElementById('spAdminExact41');
+    if(!m)throw new Error('41-point Control Center window was not created');
+    m.classList.add('sp-open');
+    m.style.setProperty('display','block','important');
+    m.style.setProperty('visibility','visible','important');
+    m.style.setProperty('opacity','1','important');
+    return true;
+  }catch(e){console.error('Admin Control Center:',e);showToast('✕ Admin Control Center could not open','error',3200);return false}
+}
+window.spAdminExact41ShowControl=window.__spExact41Show;
+window.openAdminControlCenter=open41Direct;
+window.spAdminExact41OpenDirect=open41Direct;
+
+function bindLauncher(){
+  removeLegacyAdminCenter();
+  const d=document.getElementById('adminDashboardBox');
+  if(!d)return;
+  let l=document.getElementById('spAdminCCLauncher');
+  if(!l){
+    l=document.createElement('button');l.id='spAdminCCLauncher';l.type='button';
+    l.innerHTML='<span class="sp-cc-launch-icon" aria-hidden="true"></span><span class="sp-cc-launch-copy"><b>Admin Control Center</b><small>Management tools, assignments, reports and system controls</small></span><span class="sp-cc-arrow">›</span>';
+    const hero=d.querySelector('.admin-hero');
+    if(hero)hero.insertAdjacentElement('afterend',l);else d.insertBefore(l,d.firstChild);
+  }
+  const icon=l.querySelector('.sp-cc-launch-icon');if(icon)icon.innerHTML=ADMIN_CC_SVG;
+  l.onclick=function(e){e.preventDefault();e.stopPropagation();open41Direct()};
+}
+bindLauncher();[100,400,900,1600,2800].forEach(ms=>setTimeout(bindLauncher,ms));
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindLauncher,{once:true});
+
+/* The menu item now bypasses every old Control Center implementation. */
+window.menuGo=function(target){
+  try{if(typeof closeShadabMenu==='function')closeShadabMenu()}catch(e){}
+  if(target==='adminControl')return open41Direct();
+  if(target==='admin')return typeof openAdmin==='function'?openAdmin():undefined;
+  if(target==='customer')return typeof openCustomerModal==='function'?openCustomerModal():undefined;
+  if(target==='expenses')return typeof openSalesmanExpenses==='function'?openSalesmanExpenses():undefined;
+  if(target==='summaryDetail')return typeof openSummaryDetail==='function'?openSummaryDetail():undefined;
+  if(target==='territory')return typeof openTerritoryManager==='function'?openTerritoryManager(document.getElementById('area')?.value||'Sahiwal'):undefined;
+  if(target==='uploadTerritory')return typeof openUploadTerritoryModal==='function'?openUploadTerritoryModal():undefined;
+  if(target==='database')return typeof openStoreDatabase==='function'?openStoreDatabase():undefined;
+  if(target==='records')return document.getElementById('records')?.scrollIntoView({behavior:'smooth',block:'start'});
+  if(target==='pdf')return typeof downloadPDFForDate==='function'?downloadPDFForDate(document.getElementById('filterDate')?.value||todayISO()):undefined;
+  if(target==='print')return typeof printDateReport==='function'?printDateReport(document.getElementById('filterDate')?.value||todayISO()):undefined;
+  if(target==='analytics')return typeof openAnalytics==='function'?openAnalytics():undefined;
+  if(target==='theme')return typeof toggleTheme==='function'?toggleTheme():undefined;
+};
+
+function showToast(message,type,duration){
+  let el=document.getElementById('spCleanAdminToast');
+  if(!el){
+    el=document.createElement('div');el.id='spCleanAdminToast';
+    el.innerHTML='<span class="sp-cat-icon"></span><span class="sp-cat-text"></span><button type="button" class="sp-cat-close" aria-label="Close notification">×</button>';
+    document.body.appendChild(el);
+  }
+  const close=el.querySelector('.sp-cat-close');
+  if(close&&!close.__v3){close.__v3=true;close.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();clearTimeout(el.__spTimer);el.__spTimer=null;el.classList.remove('sp-show');el.style.setProperty('display','none','important');setTimeout(()=>el.style.removeProperty('display'),220)},true)}
+  el.style.removeProperty('display');
+  el.className='sp-'+(type||'saving')+' sp-show';
+  el.querySelector('.sp-cat-icon').textContent=type==='success'?'✓':type==='error'?'✕':'⏳';
+  el.querySelector('.sp-cat-text').textContent=String(message||'');
+  clearTimeout(el.__spTimer);
+  if(duration!==0)el.__spTimer=setTimeout(function(){el.classList.remove('sp-show')},duration||3000);
+}
+window.spAdminFeedback=showToast;
+
+const originalToast=window.toast;
+if(typeof originalToast==='function'&&!originalToast.__spCleanAdminToastV3){
+ const wrappedToast=function(message){let active=false;try{active=!!document.getElementById('spAdminExact41')?.classList.contains('sp-open')||document.body.dataset.spMasterLock==='1'}catch(e){}if(active){showToast(message,'success',3000);return}return originalToast.apply(this,arguments)};
+ wrappedToast.__spCleanAdminToastV3=true;window.toast=wrappedToast;
+}
+const originalToast35=window.toast35;
+if(typeof originalToast35==='function'&&!originalToast35.__spCleanAdminToastV3){
+ const wrappedToast35=function(message){const s=String(message||'');showToast(message,s.includes('✕')||/failed|error/i.test(s)?'error':'success',3000)};
+ wrappedToast35.__spCleanAdminToastV3=true;window.toast35=wrappedToast35;
+}
+
+/* Reliable delegated close: works even if the toast node is recreated by another function. */
+if(!window.__spCleanToastCloseV3){
+ window.__spCleanToastCloseV3=true;
+ document.addEventListener('click',function(e){
+   const b=e.target&&e.target.closest?e.target.closest('#spCleanAdminToast .sp-cat-close'):null;
+   if(!b)return;
+   const el=document.getElementById('spCleanAdminToast');if(!el)return;
+   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();clearTimeout(el.__spTimer);el.__spTimer=null;el.classList.remove('sp-show');el.style.setProperty('display','none','important');setTimeout(()=>el.style.removeProperty('display'),220);
+ },true);
+}
+
+/* Keep Alert save logic untouched; feedback only. */
+const saveAlert=window.sp35SaveAlert;
+if(typeof saveAlert==='function'&&!saveAlert.__spCleanAlertFeedbackV3){
+ const wrappedAlert=async function(){showToast('⏳ Saving Alert…','saving',0);try{const r=await saveAlert.apply(this,arguments);if(r===false){showToast('✕ Alert save failed','error',3000);return r}showToast('✓ Alert saved successfully and synced','success',3000);return r}catch(e){showToast('✕ Alert save failed: '+(e?.message||e),'error',3200);throw e}};
+ wrappedAlert.__spCleanAlertFeedbackV3=true;window.sp35SaveAlert=wrappedAlert;window.sp35SaveAlertNew=wrappedAlert;
+}
+
+function lift(){document.querySelectorAll('.modal.show,#sharedDocModal.show,#uploadTerritoryModal.show,#storeDatabaseModal.show,#territoryModal.show,#territoryAssignmentModal.show,#customerModal.show,#spLicenseAdminModal.show,#sectionModalBackdrop.show,#sp35AuthModal.show').forEach(m=>{m.style.setProperty('z-index','2147483640','important');const b=m.querySelector('.modal-box');if(b)b.style.setProperty('z-index','2147483641','important')})}
+document.addEventListener('click',()=>setTimeout(lift,0),true);window.spAdminLiftChildren=lift;
+lift();
+})();
+</script>
+<!-- ===== END: CLEAN FINAL ADMIN CONTROL / FEEDBACK REPAIR V3 ===== -->
+<style id="sp-clean-admin-refresh-compact-final">
+#adminDashboardBox .admin-hero-actions .admin-icon-btn[title="Refresh"]{width:38px!important;height:32px!important;min-width:38px!important;padding:0 7px!important;font-size:0!important;line-height:1!important;}
+#adminDashboardBox .admin-hero-actions .admin-icon-btn[title="Refresh"]::after{content:"↻";font-size:17px!important;line-height:1!important;}
+#adminDashboardBox .admin-hero-actions .admin-icon-btn[title="Logout"]{width:32px!important;height:32px!important;min-width:32px!important;padding:0!important;font-size:18px!important;line-height:1!important;}
+</style>
+
+<!-- ===== START: AUTHORITATIVE FINAL ADMIN CONTROL CENTER REPAIR ===== -->
+<style id="sp-admin-authoritative-final-css">
+/* Compact the existing Refresh control without moving it. */
+#spAdminExact41 .sp-cc-refresh{width:58px!important;min-width:58px!important;height:30px!important;padding:0 4px!important;gap:2px!important;font-size:8px!important;overflow:hidden!important}
+#spAdminExact41 .sp-cc-refresh-text{font-size:8px!important;line-height:1!important;letter-spacing:-.15px!important;transform:scaleX(.92);transform-origin:center}
+#spAdminExact41 .sp-cc-close{width:34px!important;height:34px!important;font-size:21px!important;line-height:34px!important;padding:0!important}
+/* The 41-point workspace must be the topmost application layer and receive clicks. */
+#spAdminExact41{z-index:2147483647!important;pointer-events:auto!important}
+#spAdminExact41.sp-open{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+#spAdminExact41 .sp-cc-shell{z-index:2147483647!important;pointer-events:auto!important}
+#spAdminExact41 .sp-cc-head{z-index:2147483647!important;pointer-events:auto!important}
+#spAdminExact41 #spAdminCCClose,#spAdminExact41 #spAdminCCRefresh{position:relative!important;z-index:2147483647!important;pointer-events:auto!important}
+/* Never let an old hidden Admin modal intercept the 41-point workspace. */
+#sp35FinalModal,#sp35ControlModal,#sp35FinalLauncher,#sp35Launcher{pointer-events:none!important}
+</style>
+<script id="sp-admin-authoritative-final-js">
+(function(){
+'use strict';
+function exactCore(){
+  return (typeof window.__spExact41Show==='function'&&window.__spExact41Show)
+      || (typeof window.spAdminExact41ShowControl==='function'&&window.spAdminExact41ShowControl)
+      || null;
+}
+function exactClose(){
+  try{
+    if(typeof window.spAdminExact41Close==='function')window.spAdminExact41Close();
+  }catch(e){}
+  const m=document.getElementById('spAdminExact41');
+  if(m){m.classList.remove('sp-open');m.style.setProperty('display','none','important');m.style.setProperty('visibility','hidden','important');m.style.setProperty('opacity','0','important');m.style.setProperty('pointer-events','none','important');}
+  try{
+    document.documentElement.style.overflow='';
+    document.body.style.overflow='';
+    document.body.style.position='';
+    document.body.style.top='';
+    document.body.style.width='';
+    delete document.documentElement.dataset.spAdmin41Lock;
+    delete document.body.dataset.spAdmin41Lock;
+  }catch(e){}
+}
+function exactOpen(){
+  try{
+    const fn=exactCore();
+    if(!fn)throw new Error('41-point Control Center core is unavailable');
+    fn();
+    const m=document.getElementById('spAdminExact41');
+    if(!m)throw new Error('41-point Control Center modal was not created');
+    m.classList.add('sp-open');
+    m.style.setProperty('display','block','important');
+    m.style.setProperty('visibility','visible','important');
+    m.style.setProperty('opacity','1','important');
+    m.style.setProperty('pointer-events','auto','important');
+    m.style.setProperty('z-index','2147483647','important');
+    const shell=m.querySelector('.sp-cc-shell');
+    if(shell)shell.style.setProperty('z-index','2147483647','important');
+    const head=m.querySelector('.sp-cc-head');
+    if(head)head.style.setProperty('z-index','2147483647','important');
+    const close=m.querySelector('#spAdminCCClose');
+    if(close){close.onclick=function(ev){ev.preventDefault();ev.stopPropagation();exactClose();};}
+    return true;
+  }catch(e){
+    console.error('Admin Control Center open:',e);
+    try{if(typeof window.showToast==='function')window.showToast('✕ Admin Control Center could not open','error',3200)}catch(_){ }
+    return false;
+  }
+}
+window.openAdminControlCenter=exactOpen;
+window.spAdminExact41OpenDirect=exactOpen;
+window.spAdminExact41Close=exactClose;
+function bind(){
+  const d=document.getElementById('adminDashboardBox');
+  if(!d)return;
+  const l=document.getElementById('spAdminCCLauncher');
+  if(l){
+    l.onclick=function(ev){ev.preventDefault();ev.stopPropagation();exactOpen();};
+    l.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();},{capture:true});
+  }
+  /* Existing launcher routes converge here; dashboard internals remain untouched. */
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
+setTimeout(bind,250);setTimeout(bind,800);
+/* Delegated safety route for the launcher, including dynamically rebuilt dashboard DOM. */
+document.addEventListener('click',function(ev){
+  const l=ev.target?.closest?.('#spAdminCCLauncher');
+  if(l){ev.preventDefault();ev.stopPropagation();exactOpen();}
+},true);
+/* Any click on the actual 41-point × is always authoritative. */
+document.addEventListener('click',function(ev){
+  const c=ev.target?.closest?.('#spAdminExact41 #spAdminCCClose');
+  if(c){ev.preventDefault();ev.stopPropagation();exactClose();}
+},true);
+})();
+</script>
+<!-- ===== END: AUTHORITATIVE FINAL ADMIN CONTROL CENTER REPAIR ===== -->
 </html>
