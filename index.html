@@ -459,6 +459,50 @@ body.dark .sp-route-lock .sp-terr-check-item.selected .sp-terr-check-name{
 .sp-admin-cc-launcher:active{transform:scale(.992)}
 @media(max-width:600px){.sp-admin-cc-launcher{min-height:72px!important;padding:10px 12px!important;border-radius:18px!important}.sp-admin-cc-launcher .sp-cc-launch-icon{width:50px!important;height:50px!important;min-width:50px!important;font-size:24px!important}.sp-admin-cc-launcher .sp-cc-launch-copy b{font-size:16px!important}.sp-admin-cc-launcher .sp-cc-launch-copy small{font-size:9.5px!important}}
 </style>
+
+<style id="sp-v17-quick-report-single-line-glow">
+/* V17 visual-only update: Quick Report is full-width single-line cards, with the same premium neon family used by the Today PDF screen. */
+.sp-quick-report-actions{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;gap:12px!important;margin-top:16px!important;width:100%!important}
+.sp-quick-report-actions .sp-qr-btn{width:100%!important;min-height:72px!important;box-sizing:border-box!important;display:grid!important;grid-template-columns:58px 1fr 28px!important;align-items:center!important;text-align:left!important;padding:10px 14px!important;border-radius:20px!important;border:1.5px solid transparent!important;color:#fff!important;background:#07111d!important;position:relative!important;overflow:hidden!important;transition:transform .18s ease,box-shadow .22s ease,filter .22s ease!important}
+.sp-quick-report-actions .sp-qr-btn:active{transform:scale(.985)!important}
+.sp-quick-report-actions .sp-qr-btn:hover{filter:brightness(1.08)!important;transform:translateY(-1px)!important}
+.sp-quick-report-actions .sp-qr-icon{width:48px!important;height:48px!important;border-radius:15px!important;display:grid!important;place-items:center!important;font-size:25px!important;line-height:1!important;background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.22)!important}
+.sp-quick-report-actions .sp-qr-copy{display:flex!important;flex-direction:column!important;gap:3px!important;min-width:0!important}
+.sp-quick-report-actions .sp-qr-copy b{font-size:17px!important;line-height:1.15!important;font-weight:900!important;letter-spacing:.01em!important}
+.sp-quick-report-actions .sp-qr-copy small{font-size:11px!important;line-height:1.2!important;color:#b8c7d8!important;font-weight:600!important}
+.sp-quick-report-actions .sp-qr-arrow{font-size:34px!important;font-weight:300!important;line-height:1!important;text-align:right!important}
+.sp-quick-report-actions .sp-qr-pdf{border-color:#ff3f62!important;background:linear-gradient(135deg,rgba(117,8,36,.92),rgba(48,8,28,.96))!important;box-shadow:0 0 5px rgba(255,35,82,.10),0 6px 16px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.10)!important}
+.sp-quick-report-actions .sp-qr-pdf .sp-qr-icon{background:linear-gradient(145deg,#e51e49,#a5002e)!important;box-shadow:0 0 8px rgba(255,35,82,.20)!important}
+.sp-quick-report-actions .sp-qr-pdf .sp-qr-arrow{color:#ff6d86!important}
+.sp-quick-report-actions .sp-qr-print{border-color:#20a9ff!important;background:linear-gradient(135deg,rgba(4,50,100,.95),rgba(5,25,55,.98))!important;box-shadow:0 0 5px rgba(0,159,255,.09),0 6px 16px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.10)!important}
+.sp-quick-report-actions .sp-qr-print .sp-qr-icon{background:linear-gradient(145deg,#1976ed,#0a46b8)!important;box-shadow:0 0 8px rgba(24,140,255,.20)!important}
+.sp-quick-report-actions .sp-qr-print .sp-qr-arrow{color:#65caff!important}
+.sp-quick-report-actions .sp-qr-wa{border-color:#18f27c!important;background:linear-gradient(135deg,rgba(0,94,57,.96),rgba(0,49,34,.98))!important;box-shadow:0 0 5px rgba(0,239,116,.09),0 6px 16px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.10)!important}
+.sp-quick-report-actions .sp-qr-wa .sp-qr-icon{background:linear-gradient(145deg,#12d86a,#079c4a)!important;box-shadow:0 0 8px rgba(0,239,116,.20)!important}
+.sp-quick-report-actions .sp-qr-wa .sp-qr-arrow{color:#63ffad!important}
+.sp-quick-report-actions .sp-qr-backup{border-color:#a34cff!important;background:linear-gradient(135deg,rgba(67,13,124,.96),rgba(36,7,73,.98))!important;box-shadow:0 0 5px rgba(155,48,255,.10),0 6px 16px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.10)!important}
+.sp-quick-report-actions .sp-qr-backup .sp-qr-icon{background:linear-gradient(145deg,#7c2ff2,#5010bb)!important;box-shadow:0 0 8px rgba(166,63,255,.20)!important}
+.sp-quick-report-actions .sp-qr-backup .sp-qr-arrow{color:#d09cff!important}
+.sp-quick-report-actions .sp-qr-restore{border-color:#ffbe22!important;background:linear-gradient(135deg,rgba(105,67,5,.95),rgba(57,35,4,.98))!important;box-shadow:0 0 5px rgba(255,184,20,.09),0 6px 16px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.10)!important}
+.sp-quick-report-actions .sp-qr-restore .sp-qr-icon{background:linear-gradient(145deg,#f0a900,#b86e00)!important;box-shadow:0 0 8px rgba(255,194,40,.20)!important}
+.sp-quick-report-actions .sp-qr-restore .sp-qr-arrow{color:#ffd45d!important}
+.sp-quick-report-actions .sp-qr-csv{border-color:#23bfff!important;background:linear-gradient(135deg,rgba(5,70,111,.96),rgba(4,36,66,.98))!important;box-shadow:0 0 5px rgba(20,180,255,.09),0 6px 16px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.10)!important}
+.sp-quick-report-actions .sp-qr-csv .sp-qr-icon{background:linear-gradient(145deg,#197fea,#0a51b6)!important;box-shadow:0 0 8px rgba(20,180,255,.20)!important}
+.sp-quick-report-actions .sp-qr-csv .sp-qr-arrow{color:#6bd4ff!important}
+
+/* Same glowing treatment for Summary Detail + Salesman Expenses bottom action rows. */
+#summaryDetailModal .sd-actions-premium .sd-btn,#salesmanExpensesModal .sex-bottom-actions>.sex-btn,#salesmanExpensesModal .sex-bottom-actions>.sex-merged-save-whatsapp{border-width:1.5px!important;border-style:solid!important;background:#07111d!important;color:#fff!important;box-shadow:0 0 18px rgba(37,184,255,.18),0 10px 26px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.10)!important;transition:transform .18s ease,box-shadow .22s ease,filter .22s ease!important}
+#summaryDetailModal .sd-actions-premium .sd-btn:hover,#salesmanExpensesModal .sex-bottom-actions>.sex-btn:hover,#salesmanExpensesModal .sex-bottom-actions>.sex-merged-save-whatsapp:hover{filter:brightness(1.08)!important;transform:translateY(-1px)!important}
+#summaryDetailModal .sd-actions-premium .sd-btn:active,#salesmanExpensesModal .sex-bottom-actions>.sex-btn:active,#salesmanExpensesModal .sex-bottom-actions>.sex-merged-save-whatsapp:active{transform:scale(.985)!important}
+#summaryDetailModal .sd-actions-premium .sd-merged-save-download,#salesmanExpensesModal .sex-bottom-actions>.sex-merged-save-whatsapp{border-color:#18f27c!important;background:linear-gradient(135deg,rgba(0,110,61,.96),rgba(0,56,39,.98))!important;box-shadow:0 0 22px rgba(0,239,116,.40),0 10px 28px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.14)!important}
+#summaryDetailModal .sd-actions-premium #sdDailyDownloadBtn,#salesmanExpensesModal .sex-bottom-actions>.sex-btn[title="Download PDF"]{border-color:#20a9ff!important;background:linear-gradient(135deg,rgba(4,58,98,.96),rgba(4,31,55,.98))!important;box-shadow:0 0 12px rgba(0,159,255,.20),0 8px 20px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.12)!important}
+#summaryDetailModal .sd-actions-premium #sdMonthlyDownloadBtn,#salesmanExpensesModal .sex-bottom-actions>.sex-btn[title="Download monthly PDF"]{border-color:#20a9ff!important;background:linear-gradient(135deg,rgba(4,58,98,.96),rgba(4,31,55,.98))!important;box-shadow:0 0 12px rgba(0,159,255,.20),0 8px 20px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.12)!important}
+#summaryDetailModal .sd-actions-premium #sdMonthlyWhatsappBtn,#salesmanExpensesModal .sex-bottom-actions>.sex-btn.success:not(.sex-merged-save-whatsapp){border-color:#18f27c!important;background:linear-gradient(135deg,rgba(0,110,61,.96),rgba(0,56,39,.98))!important;box-shadow:0 0 22px rgba(0,239,116,.40),0 10px 28px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.14)!important}
+#summaryDetailModal .sd-actions-premium .clear-month-btn{border-color:#ff7a88!important;background:linear-gradient(135deg,rgba(87,20,34,.96),rgba(49,10,22,.98))!important;box-shadow:0 0 20px rgba(255,76,104,.30),0 10px 26px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.10)!important;color:#ff9cac!important}
+#summaryDetailModal .sd-actions-premium .clear-view-btn,#salesmanExpensesModal .sex-bottom-actions>.sex-btn.clear-view-btn{border-color:#ffb62e!important;background:linear-gradient(135deg,rgba(83,54,8,.96),rgba(48,30,5,.98))!important;box-shadow:0 0 20px rgba(255,180,40,.30),0 10px 26px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.10)!important;color:#ffc76a!important}
+#summaryDetailModal .sd-actions-premium>.sd-btn:last-child,#salesmanExpensesModal .sex-bottom-actions>.sex-btn:last-child{border-color:#20a9ff!important;background:linear-gradient(135deg,rgba(4,58,98,.96),rgba(4,31,55,.98))!important;box-shadow:0 0 22px rgba(0,159,255,.34),0 10px 26px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.10)!important}
+@media(max-width:700px){#summaryDetailModal .sd-actions-premium .sd-btn,#salesmanExpensesModal .sex-bottom-actions>.sex-btn,#salesmanExpensesModal .sex-bottom-actions>.sex-merged-save-whatsapp{min-height:48px!important;width:100%!important}}
+</style>
 </head>
 <body>
 <script id="shadab-global-jsonclone-fix">
@@ -667,16 +711,16 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
 </div>
 <div style="height:18px"></div>
 <h2>Quick Report</h2>
-<div class="actions">
-<button class="btn dark" onclick="downloadPDFForDate(todayISO())">Today's PDF</button>
-<button class="btn secondary" onclick="printDateReport(todayISO())">Print Today</button>
-<button class="btn success" onclick="shareAllToday()">WhatsApp Today</button>
-<button class="btn secondary" onclick="exportBackup()">Backup Data</button>
-<button class="btn secondary" onclick="document.getElementById('restoreInput').click()">Restore</button>
+<div class="actions sp-quick-report-actions">
+<button type="button" class="btn sp-qr-btn sp-qr-wa" onclick="return shareAllToday(event)"><span class="sp-qr-icon">💬</span><span class="sp-qr-copy"><b>WhatsApp Today</b><small>Send PDF via WhatsApp</small></span><span class="sp-qr-arrow">›</span></button>
+<button type="button" class="btn sp-qr-btn sp-qr-pdf" onclick="return downloadPDFForDate(todayISO(),event)"><span class="sp-qr-icon">📄</span><span class="sp-qr-copy"><b>Today's PDF</b><small>Generate &amp; Download Report</small></span><span class="sp-qr-arrow">›</span></button>
+<button type="button" class="btn sp-qr-btn sp-qr-print" onclick="return printDateReport(todayISO(),event)"><span class="sp-qr-icon">🖨️</span><span class="sp-qr-copy"><b>Print Today</b><small>Open Print View</small></span><span class="sp-qr-arrow">›</span></button>
+<button class="btn sp-qr-btn sp-qr-backup" onclick="exportBackup()"><span class="sp-qr-icon">🗄️</span><span class="sp-qr-copy"><b>Backup Data</b><small>Save App Data</small></span><span class="sp-qr-arrow">›</span></button>
+<button class="btn sp-qr-btn sp-qr-restore" onclick="document.getElementById('restoreInput').click()"><span class="sp-qr-icon">↩️</span><span class="sp-qr-copy"><b>Restore</b><small>Restore App Data</small></span><span class="sp-qr-arrow">›</span></button>
 <input id="restoreInput" type="file" accept=".json,application/json" hidden onchange="restoreBackup(event)">
-<button class="btn secondary" onclick="exportCSV()">CSV Export</button>
+<button class="btn sp-qr-btn sp-qr-csv" onclick="exportCSV()"><span class="sp-qr-icon">📑</span><span class="sp-qr-copy"><b>CSV Export</b><small>Export to Excel</small></span><span class="sp-qr-arrow">›</span></button>
 </div>
-<p class="notice">PDF works offline too: if the PDF engine is not available, the app automatically opens the compact A4 print view so you can choose “Save as PDF”. Core visits, tasks, assignments, voice notes and records stay local on this device.</p>
+<p class="notice">PDF works offline too: Today's PDF generates a local A4 PDF directly on this device. Core visits, tasks, assignments, voice notes and records stay local on this device.</p>
 </section>
 </div>
 
@@ -1825,15 +1869,20 @@ function shareAllToday(){
 /* ===== START: PRINT FUNCTIONS ===== */
 function printHTML(title,data){
   const rows=data.map(v=>`<tr><td>${v.photo?`<img src="${v.photo}">`:"—"}</td><td>${esc(v.store)}</td><td>${esc(v.visitedBy||"—")}</td><td>${esc(v.person)}</td><td>${esc(v.type)}</td><td>${esc(v.area)}</td><td>${esc(v.territory)}</td><td>${formatDate(v.date)}<br>${esc(v.time)}</td></tr>`).join("");
-  const w=window.open("","_blank","width=1000,height=800");
-  if(!w){toast("Please allow the print popup");return;}
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p></body>
-
-</html>`;
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  w.onload=()=>setTimeout(()=>w.print(),250);
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p></body></html>`;
+  let frame=null,done=false;
+  const cleanup=()=>{if(frame){try{frame.remove()}catch(e){}frame=null}};
+  try{
+    frame=document.createElement('iframe');frame.setAttribute('aria-hidden','true');frame.style.cssText='position:fixed;left:-10000px;top:0;width:1px;height:1px;border:0;opacity:0;';
+    document.body.appendChild(frame);
+    const fdoc=frame.contentDocument||frame.contentWindow?.document;if(!fdoc)throw new Error('Print frame unavailable');
+    frame.onload=()=>{if(done)return;done=true;try{frame.contentWindow.focus();frame.contentWindow.print();}catch(e){done=false;try{window.print()}catch(_){}}setTimeout(cleanup,1500)};
+    fdoc.open();fdoc.write(html);fdoc.close();
+    setTimeout(()=>{if(!done){try{frame.onload()}catch(e){}}},500);
+    return true;
+  }catch(e){cleanup();
+    try{const w=window.open('','_blank','width=1000,height=800');if(!w){toast('Please allow printing for this report');return false}w.document.open();w.document.write(html);w.document.close();w.onload=()=>setTimeout(()=>w.print(),250);return true}catch(_e){toast('Could not open the print view');return false}
+  }
 }
 
 function printDateReport(date){printHTML(`Visit Report — ${(typeof formatDate==='function'?formatDate(date):date)}`,visits.filter(v=>v.date===date))}
@@ -1877,11 +1926,15 @@ async function downloadPDFForDate(date){
    doc.save(`Shadab-Pharmacy-${date}.pdf`);
    toast(`PDF downloaded • ${data.length} records`);
  }catch(e){
-   console.warn(e);
-   if(e?.message==="OFFLINE_PDF_LIBRARY" || navigator.onLine===false){
+   console.warn("Today's PDF fallback:",e);
+   // If jsPDF cannot load (including downloaded/local HTML), always use the
+   // built-in print view instead of leaving the user with an error message.
+   try{
      printDateReport(date);
-     toast("Offline mode: print dialog opened — choose Save as PDF");
-   }else toast("PDF library unavailable. Use Print instead.");
+     toast("PDF print view opened — choose Save as PDF");
+   }catch(_e){
+     toast("Could not open the PDF print view");
+   }
  }
 }
 async function downloadSinglePDF(id){
@@ -2745,7 +2798,12 @@ function openFieldVisitManager(){
   document.getElementById("visitedBy")?.focus();
 }
 function openTodayReportPanel(){
-  closeSectionModal(); document.body.classList.add("section-modal-open","section-modal-today");
+  closeSectionModal();
+  /* Always refresh the Today counters when the panel opens so the view
+     cannot remain on a stale zero from an earlier render/sync. */
+  try{updateStats();}catch(e){}
+  try{updatePremiumDashboard();}catch(e){}
+  document.body.classList.add("section-modal-open","section-modal-today");
 }
 function openVisitRecordsSection(){
   closeSectionModal(); document.body.classList.add("section-modal-records");
@@ -3013,9 +3071,9 @@ const $=id=>document.getElementById(id); const escx=v=>typeof esc==='function'?e
 window.sp35Point21=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');const users=(()=>{try{return JSON.parse(localStorage.getItem('shadab_admin_profiles_v1')||'[]')}catch(e){return[]}})();const stores=typeof storeDatabase!=='undefined'?storeDatabase:[];const visitsA=typeof visits!=='undefined'?visits:[];const orders=visitsA.filter(v=>['Order Received','Order Done'].includes(v.status)).length;b.innerHTML=`<div class="sp35-mini-kpis"><div class="sp35-mini-kpi"><b>${users.length}</b><small>Salesmen</small></div><div class="sp35-mini-kpi"><b>${stores.filter(s=>!s.disabled).length}</b><small>Stores</small></div><div class="sp35-mini-kpi"><b>${visitsA.length}</b><small>Visits</small></div><div class="sp35-mini-kpi"><b>${orders}</b><small>Orders</small></div></div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="sp35OpenControl(7)">Salesmen</button><button class="sp35-btnx" onclick="sp35OpenControl(24)">Stores</button><button class="sp35-btnx" onclick="sp35OpenControl(27)">Reports</button></div>`};
 window.sp35Point22=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');const names=typeof adminSalesmanNames==='function'?adminSalesmanNames():[];const days=typeof ADMIN_DAYS!=='undefined'?ADMIN_DAYS:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];b.innerHTML=`<div class="sp35-form-grid"><div class="sp35-field"><label>Salesman</label><select id="sp35CalSalesmanNew">${names.map(n=>`<option>${escx(n)}</option>`).join('')}</select></div><div class="sp35-field"><label>Day</label><select id="sp35CalDayNew">${days.map(d=>`<option>${escx(d)}</option>`).join('')}</select></div></div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="sp35ShowCalendarNew()">View Assignment</button></div><div id="sp35CalResultNew" class="sp35-emptyx">Choose a salesman and day.</div>`};
 window.sp35ShowCalendarNew=()=>{const n=$('sp35CalSalesmanNew')?.value,d=$('sp35CalDayNew')?.value,result=$('sp35CalResultNew');if(!result)return;const cfg=n&&typeof normalizeAdminSchedule==='function'?normalizeAdminSchedule(n):null;const rows=cfg?cfg.assignments.flatMap(a=>(a.days?.[d]||[]).map(t=>({area:a.area,territory:t}))).filter(x=>x.territory):[];result.innerHTML=rows.length?rows.map(x=>`<div class="notice">📍 <b>${escx(x.area)}</b> → ${escx(x.territory)}</div>`).join(''):'No assignment saved for this day.'};
-window.sp35Point23=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');const areas=Object.keys(typeof territories!=='undefined'?territories:{});b.innerHTML=`<div class="sp35-form-grid"><div class="sp35-field"><label>City</label><select id="sp35CityNew">${areas.map(a=>`<option>${escx(a)}</option>`).join('')}</select></div><div class="sp35-field"><label>New Territory</label><input id="sp35NewTerrNew" placeholder="Territory name"></div></div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="sp35AddTerritoryNew()">Add Territory</button></div><div id="sp35TerrListNew"></div>`;sp35RenderTerritoriesNew()};
+window.sp35Point23=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');const areas=Object.keys(typeof territories!=='undefined'?territories:{});b.innerHTML=`<div class="sp35-form-grid"><div class="sp35-field"><label>City</label><select id="sp35CityNew">${areas.map(a=>`<option>${escx(a)}</option>`).join('')}</select></div><div class="sp35-field"><label>New Territory</label><input id="sp35NewTerrNew" placeholder="Territory name" autocomplete="off"></div></div><div class="sp35-actionsx"><button type="button" id="sp35AddTerritoryBtnNew" class="sp35-btnx primary" onclick="sp35AddTerritoryNew()">➕ Add Territory</button><span id="sp35TerritorySaveStatus" class="sp-v9-admin-doc-status"></span></div><div id="sp35TerrListNew"></div>`;sp35RenderTerritoriesNew();const inp=$('sp35NewTerrNew');inp?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();window.sp35AddTerritoryNew?.()}})};
 window.sp35RenderTerritoriesNew=()=>{const b=$('sp35TerrListNew');if(!b)return;const off=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]');b.innerHTML=Object.entries(territories||{}).map(([a,ts])=>`<div class="notice"><b>${escx(a)}</b><div>${(ts||[]).map(t=>{const dis=off.includes(a+'|'+t);return `<span class="pill" style="display:inline-flex;margin:3px;gap:5px;align-items:center">${escx(t)} ${dis?'(disabled)':''}<button class="sp35-btnx" onclick="sp35EditTerrNew('${escx(a)}','${escx(t)}')">Edit</button><button class="sp35-btnx ${dis?'primary':'danger'}" onclick="sp35ToggleTerrNew('${escx(a)}','${escx(t)}')">${dis?'Enable':'Disable'}</button></span>`}).join('')}</div></div>`).join('')};
-window.sp35AddTerritoryNew=()=>{if(!guardTerritoryMasterEdit("admin territory"))return;const a=$('sp35CityNew')?.value,t=$('sp35NewTerrNew')?.value.trim();if(!a||!t)return toast35('City and territory required');if((territories[a]||[]).some(x=>x.toLowerCase()===t.toLowerCase()))return toast35('Territory already exists');territories[a]=(territories[a]||[]).concat(t);saveData();log35('Territory added',{area:a,territory:t});sp35RenderTerritoriesNew();toast35('Territory added')};
+window.sp35AddTerritoryNew=()=>window.sp35AddTerrNew?.();
 window.sp35EditTerrNew=(a,t)=>{if(!guardTerritoryMasterEdit("admin territory"))return;const n=prompt('New territory name',t);if(!n||!n.trim())return;territories[a]=(territories[a]||[]).map(x=>x===t?n.trim():x);storeDatabase.forEach(s=>{if(s.area===a&&s.territory===t)s.territory=n.trim()});saveData();log35('Territory edited',{area:a,from:t,to:n.trim()});sp35RenderTerritoriesNew();toast35('Territory updated')};
 window.sp35ToggleTerrNew=(a,t)=>{let x=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]');const k=a+'|'+t;x=x.includes(k)?x.filter(v=>v!==k):x.concat(k);localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(x));log35('Territory status changed',{area:a,territory:t,disabled:x.includes(k)});sp35RenderTerritoriesNew();toast35(x.includes(k)?'Territory disabled':'Territory enabled')};
 window.sp35Point24=()=>{const b=$('sp35WorkBody')||$('sp35WorkBodyNew');b.innerHTML=`<div class="sp35-form-grid"><div class="sp35-field"><label>Search</label><input id="sp35StoreSearchNew" oninput="sp35RenderStoresNew()" placeholder="Store / code / city / territory"></div><div class="sp35-field"><label>Store Name</label><input id="sp35NewStoreNameNew"></div><div class="sp35-field"><label>City</label><input id="sp35NewStoreAreaNew"></div><div class="sp35-field"><label>Territory</label><input id="sp35NewStoreTerrNew"></div><div class="sp35-field"><label>Address</label><input id="sp35NewStoreAddressNew"></div></div><div class="sp35-actionsx"><button class="sp35-btnx primary" onclick="sp35AddStoreNew()">Add Store</button></div><div id="sp35StoreListNew"></div>`;sp35RenderStoresNew()};
@@ -3052,10 +3110,10 @@ const oldSave=window.sp35SaveAlert;window.sp35SaveAlert=async function(){if(oldS
 (function(){
 'use strict';
 const ITEMS=[
-['🔥','Firebase Architecture','Authentication + Firestore'],['☁️','Firebase Sync Status','Connection and sync status'],['🔔','Main Screen Alert','Front-page alert control'],['🟢','Active / Disable','Salesman account status'],['🕐','Last Seen','Server activity timestamp'],['📊','Admin Dashboard','Salesmen, stores, visits, orders'],['📍','Salesman Activity','Current route and activity'],['📈','Salesman Performance','Assigned, visited, orders, remaining'],['👤','Salesman Registration','Create salesman accounts'],['🔐','Salesman Login','Firebase authentication'],['🔑','Forgot Password','Password reset'],['🏠','Login Header','Name and login state'],['☰','Hamburger Menu','Main app navigation'],['👨‍💼','Salesman Management','Profiles, contact, status'],['🏙️','Assignment Structure','Salesman → City → Territory → Day'],['📍','Auto Assignment','Load current-day route'],['🏪','Territory Store Filter','Assigned territory stores'],['☑️','Store Assignment','Store checklist and edit'],['📋','Today Task Cards','Planned, visited, orders, remaining'],['👆','Clickable Task Cards','Open matching store data'],['📄','PDF + WhatsApp','Task list export/share'],['💾','Offline Mode','Local-first field work'],['📱','New Phone / Reinstall','Restore account data'],['🛡️','Preserve Existing App','Keep existing workflow'],['🗓️','Assignment Calendar','Date/day assignments'],['🏙️','City & Territory','City and territory structure'],['🏪','Medical Store','Store master'],['📑','Reports Center','Daily / weekly / monthly'],['🔎','Global Search','Search app data'],['📥','Export Data','CSV / JSON / PDF'],['🔔','Alert History','Previous alerts'],['🔐','Admin Security','Admin actions'],['📝','Activity Log','Admin actions'],['⚙️','App Settings','App defaults'],['🗄️','Backup / Data Safety','Backup and restore'],['📍','Territory Management','Manage city territories'],['📋','Order Form','Shared Order Form document'],['🚚','Supply Schedule','Shared Supply Schedule document'],['📜','Territory PDF','Upload/manage territory PDF'],['🏪','Store Database','Medical store database'],['📜','SHADAB PHARMACY License Directory','License upload / preview / delete']
+['🔥','Firebase Architecture','Authentication + Firestore'],['☁️','Firebase Sync Status','Connection and sync status'],['🔔','Main Screen Alert','Front-page alert control'],['🟢','Active / Disable','Salesman account status'],['🕐','Last Seen','Server activity timestamp'],['📊','Admin Dashboard','Salesmen, stores, visits, orders'],['📍','Salesman Activity','Current route and activity'],['📈','Salesman Performance','Assigned, visited, orders, remaining'],['👤','Salesman Registration','Create salesman accounts'],['🔐','Salesman Login','Firebase authentication'],['🔑','Forgot Password','Password reset'],['🏠','Login Header','Name and login state'],['☰','Hamburger Menu','Main app navigation'],['👨‍💼','Salesman Management','Profiles, contact, status'],['🏙️','Assignment Structure','Salesman → City → Territory → Day'],['📍','Auto Assignment','Load current-day route'],['🏪','Territory Store Filter','Assigned territory stores'],['☑️','Store Assignment','Store checklist and edit'],['📋','Today Task Cards','Planned, visited, orders, remaining'],['👆','Clickable Task Cards','Open matching store data'],['📄','PDF + WhatsApp','Task list export/share'],['💾','Offline Mode','Local-first field work'],['📱','New Phone / Reinstall','Restore account data'],['🛡️','Preserve Existing App','Keep existing workflow'],['🗓️','Assignment Calendar','Date/day assignments'],['🏙️','City & Territory','City and territory structure'],['🏪','Medical Store','Store master'],['📑','Reports Center','Daily / weekly / monthly'],['🔎','Global Search','Search app data'],['📥','Export Data','CSV / JSON / PDF'],['🔔','Alert History','Previous alerts'],['🔐','Admin Security','Admin actions'],['📝','Activity Log','Admin actions'],['⚙️','App Settings','App defaults'],['🗄️','Backup / Data Safety','Backup and restore'],['📍','Territory Management','Manage city territories'],['📋','Order Form','Shared Order Form document'],['🚚','Supply Schedule','Shared Supply Schedule document'],['📜','Territory PDF','Upload/manage territory PDF'],['🏪','Store Database','Medical store database'],['📜','SHADAB PHARMACY License Directory','License upload / preview / delete'],['🏙️','Add City','Add a new city to the master city list']
 ];
 /* IMPORTANT: these are the real legacy handlers. Never prefer sp35PointN directly because the card order is intentionally different. */
-const handlerMap={1:19,2:33,3:1,4:8,5:9,6:21,7:25,8:26,9:2,10:3,11:4,12:5,13:6,14:7,15:10,16:11,17:12,18:13,19:14,20:15,21:16,22:17,23:18,24:20,25:22,26:23,27:24,28:27,29:28,30:29,31:30,32:31,33:32,34:34,35:35,36:23};
+const handlerMap={1:19,2:33,3:1,4:8,5:9,6:21,7:25,8:26,9:2,10:3,11:4,12:5,13:6,14:7,15:10,16:11,17:12,18:13,19:14,20:15,21:16,22:17,23:18,24:20,25:22,26:23,27:24,28:27,29:28,30:29,31:30,32:31,33:32,34:34,35:35,36:23,41:41};
 const CHILD_IDS=['sharedDocModal','uploadTerritoryModal','storeDatabaseModal','spLicenseAdminModal'];
 let childReturn=false;
 const $=id=>document.getElementById(id);
@@ -3063,7 +3121,7 @@ function modal(){
  let m=$('spAdminExact41');
  if(m)return m;
  m=document.createElement('div');m.id='spAdminExact41';
- m.innerHTML='<div class="sp-cc-shell" role="dialog" aria-modal="true"><div class="sp-cc-head"><div class="sp-cc-title"><b>Admin Control Center</b><small>Master Login • 41 controls</small></div><div class="sp-cc-actions"><button id="spAdminCCRefresh" class="sp-cc-refresh" type="button"><span>Refresh</span><span class="arr">↻</span></button><button id="spAdminCCClose" class="sp-cc-close" type="button" aria-label="Close Admin Control Center">×</button></div></div><div id="spAdminCCScroll" class="sp-cc-scroll"><div id="spAdminCCGrid" class="sp-cc-grid"></div><div id="spAdminCCDetail" class="sp-cc-detail"><div class="sp-cc-detail-head"><div><h3 id="spAdminCCDetailTitle"></h3><small id="spAdminCCDetailSub"></small></div><button id="spAdminCCDetailClose" class="sp-cc-detail-close" type="button" aria-label="Close control">×</button></div><div id="sp35WorkBody" class="sp-cc-body"></div></div></div></div>';
+ m.innerHTML='<div class="sp-cc-shell" role="dialog" aria-modal="true"><div class="sp-cc-head"><div class="sp-cc-title"><b>Admin Control Center</b><small>Master Login • 42 controls</small></div><div class="sp-cc-actions"><button id="spAdminCCRefresh" class="sp-cc-refresh" type="button"><span>Refresh</span><span class="arr">↻</span></button><button id="spAdminCCClose" class="sp-cc-close" type="button" aria-label="Close Admin Control Center">×</button></div></div><div id="spAdminCCScroll" class="sp-cc-scroll"><div id="spAdminCCGrid" class="sp-cc-grid"></div><div id="spAdminCCDetail" class="sp-cc-detail"><div class="sp-cc-detail-head"><div><h3 id="spAdminCCDetailTitle"></h3><small id="spAdminCCDetailSub"></small></div><button id="spAdminCCDetailClose" class="sp-cc-detail-close" type="button" aria-label="Close control">×</button></div><div id="sp35WorkBody" class="sp-cc-body"></div></div></div></div>';
  document.body.appendChild(m);
  $('spAdminCCClose').onclick=closeAll;$('spAdminCCDetailClose').onclick=closeDetail;$('spAdminCCRefresh').onclick=refreshCenter;
  return m;
@@ -3071,7 +3129,10 @@ function modal(){
 function render(){
  const g=$('spAdminCCGrid');if(!g)return;
  g.innerHTML=ITEMS.map((x,i)=>'<button class="sp-cc-card" type="button" data-n="'+(i+1)+'"><span class="ic">'+x[0]+'</span><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span></button>').join('');
- g.querySelectorAll('.sp-cc-card').forEach(b=>b.onclick=()=>openControl(Number(b.dataset.n)));
+ g.querySelectorAll('.sp-cc-card').forEach(b=>{
+   const n=Number(b.dataset.n);
+   b.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();if(n===42&&typeof window.sp35OpenAddCity==='function')return window.sp35OpenAddCity();return openControl(n);};
+ });
 }
 function show(){
  const m=modal();render();backToGrid();m.classList.add('sp-open');m.classList.remove('sp-detail-open');m.style.setProperty('display','block','important');m.style.setProperty('visibility','visible','important');m.style.setProperty('opacity','1','important');m.style.setProperty('pointer-events','auto','important');m.style.setProperty('z-index','2147483647','important');return true;
@@ -3117,7 +3178,8 @@ function openRealChild(kind){
 }
 async function openControl(n){
  const item=ITEMS[n-1];if(!item)return;
- if(n>=37){openRealChild(n===37?'order':n===38?'supply':n===39?'territory':n===40?'stores':'license');return}
+ if(n===42){return window.sp35OpenAddCity?window.sp35OpenAddCity():window.sp35Point42?.();}
+ if(n>=37&&n<=41){openRealChild(n===37?'order':n===38?'supply':n===39?'territory':n===40?'stores':'license');return}
  const target=handlerMap[n]||n;
  const fn=window['sp35Point'+target];
  if(typeof fn!=='function'){console.warn('Missing Admin control handler',n,'mapped to',target);try{window.toast35?.('✕ Control '+n+' is not loaded');}catch(e){}return}
@@ -4958,9 +5020,11 @@ window.saveAndWhatsAppSummaryDetail=async function(){
   if(oldSummaryRender) window.renderSummaryDetail=function(){oldSummaryRender.apply(this,arguments);setTimeout(blankZeroFields,0)};
   window.__shadabWhatsAppNumbers=WA.slice();
   window.shadabDirectWhatsApp=function(text,phone){
-    const n=phone||WA[0]||'923084462160';
-    const url='https://wa.me/'+n+'?text='+encodeURIComponent(text);
-    try{window.location.href=url;return true}catch(e){try{window.open(url,'_blank','noopener');return true}catch(_e){return false}}
+    const n=String(phone||WA[0]||'923084462160').replace(/\D/g,'');
+    const msg=encodeURIComponent(String(text||''));
+    const appUrl='whatsapp://send?phone='+n+'&text='+msg;
+    const webUrl='https://wa.me/'+n+'?text='+msg;
+    try{window.location.href=appUrl;setTimeout(()=>{try{window.location.href=webUrl}catch(e){}},900);return true}catch(e){try{window.open(webUrl,'_blank','noopener');return true}catch(_e){return false}}
   };
   async function sharePdfToWhatsApp(buildFn,name,title,text){
     try{
@@ -4993,10 +5057,25 @@ window.saveAndWhatsAppSummaryDetail=async function(){
       doc.save(name);window.shadabDirectWhatsApp(`SHADAB PHARMACY — ${title}\nDate: ${formatDate(todayISO())}\nPDF: ${name} (downloaded — attach this PDF in WhatsApp)`);
     }catch(e){if(e?.name==='AbortError')return;try{toast('PDF share failed')}catch(_){} }
   };
-  // Floating WhatsApp button now shares today's planned-store PDF instead of plain text.
-  window.shareAllToday=function(){
-    window.activeTaskNameKind='planned';
-    return window.shareTaskPDFWhatsApp();
+  // Today Report / WhatsApp must share the saved visit records.
+  // Keep shareTaskPDFWhatsApp() for the separate Planned/Visited/Orders task controls.
+  window.shareAllToday=async function(){
+    const data=(typeof visits!=='undefined'&&Array.isArray(visits))?visits.filter(v=>v.date===todayISO()):[];
+    if(!data.length){try{updateStats();updatePremiumDashboard()}catch(e){}return toast("No visits for today")}
+    let text=`*SHADAB PHARMACY — Today's Visits*\nDate: ${formatDate(todayISO())}\nTotal: ${data.length}\n\n`;
+    data.forEach((v,i)=>{text+=`${i+1}. ${v.store||'—'} — ${v.person||'—'}\n${v.type||'—'} | ${v.area||'—'} | ${v.territory||'—'}\nTime: ${v.time||'—'}\n\n`});
+    try{
+      if(typeof navigator.share==='function'){
+        await navigator.share({title:"SHADAB PHARMACY — Today's Visits",text});
+        toast("Share sheet opened — select WhatsApp");
+        return;
+      }
+    }catch(e){if(e?.name==='AbortError')return;}
+    try{
+      const n=(window.__shadabWhatsAppNumbers&&window.__shadabWhatsAppNumbers[0])||'923006901869';
+      window.location.href='whatsapp://send?phone='+n+'&text='+encodeURIComponent(text);
+      setTimeout(()=>{try{window.location.href='https://wa.me/'+n+'?text='+encodeURIComponent(text)}catch(e){}},900);
+    }catch(e){toast("WhatsApp could not be opened")}
   };
   setTimeout(blankZeroFields,50);
 })();
@@ -6844,26 +6923,157 @@ setInterval(()=>{if(navigator.onLine&&sess()?.uid)hydrate()},600000);
 .sp-alert{border-color:rgba(25,185,107,.38)!important;background:rgba(25,185,107,.08)!important}.sp-alert-label{background:#19b96b!important}.sp-alert-track{color:#159c59!important}body.dark .sp-alert{background:rgba(25,185,107,.07)!important;border-color:rgba(25,185,107,.34)!important}.sp-alert-window{min-width:0;overflow:hidden}
 .sp35-master-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 14px 4px}.sp35-master-tool{min-height:94px!important;display:grid!important;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left}.sp35-master-tool i{grid-row:1 / span 2;margin:0!important;font-size:28px!important;font-style:normal}.sp35-master-tool b{font-size:13px!important;display:block}.sp35-master-tool small{font-size:10px!important;line-height:1.3}@media(max-width:900px){.sp35-master-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.sp35-master-tools{grid-template-columns:1fr}}
 </style>
+<style id="sp-v10-admin-city-territory-ui">.sp-v9-admin-saving{opacity:.75;transform:scale(.98);transition:.18s}.sp-v9-admin-doc-status{min-height:20px;display:inline-flex;align-items:center}.sp35-territory-row button{min-height:34px}.sp35-territory-row{flex-wrap:wrap}</style>
 <script id="sp-final-points-admin-repair">
 (function(){'use strict';
 function toastM(msg){try{window.toast35?.(msg);window.toast?.(msg)}catch(e){}}
-async function syncAdminChange(reason){try{if(!navigator.onLine)return false;const fn=window.shadabSyncSalesmanNow;if(typeof fn==='function'&&typeof window.shadabRestCurrentSession==='function'&&window.shadabRestCurrentSession()?.uid){await fn();return true}if(typeof window.saveMasterData==='function'){const r=await window.saveMasterData(reason||'admin-change');return !!(r?.ok!==false)}}catch(e){console.warn('Admin change sync:',e)}return false}
+async function syncAdminChange(reason){
+ try{
+  if(!navigator.onLine)return false;
+  const sess=typeof window.shadabRestCurrentSession==='function'?window.shadabRestCurrentSession():null;
+  const email=String(sess?.email||'').toLowerCase();
+  if(email==='master@shadabpharmacy.com' && typeof window.saveMasterData==='function'){
+   const r=await window.saveMasterData(reason||'admin-change');
+   return r===true||r?.ok===true;
+  }
+  if(typeof window.saveMasterData==='function' && typeof window.adminLoggedIn!=='undefined' && window.adminLoggedIn){
+   const r=await window.saveMasterData(reason||'admin-change');
+   return r===true||r?.ok===true;
+  }
+ }catch(e){console.warn('Admin master sync:',e)}
+ return false;
+}
 function persistMasterLocal(){try{localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories||{}));localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase||[]))}catch(e){}}
 window.sp35RenderTerrNew=function(){
- const b=document.getElementById('sp35TerrListNew');if(!b)return;let dis=[];try{dis=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}
+ const b=document.getElementById('sp35TerrListNew');
+ if(!b)return;
+ let dis=[];
+ try{dis=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){dis=[]}
  const groups=Object.entries(territories||{}).map(function(entry){
-  const a=entry[0],ts=entry[1]||[];
+  const a=entry[0],ts=Array.isArray(entry[1])?entry[1]:[];
   const rows=ts.map(function(t){
    const d=dis.includes(a+'|'+t),aa=JSON.stringify(a),tt=JSON.stringify(t);
-   return '<span class=\"pill sp35-territory-row\" style=\"display:inline-flex;gap:5px;margin:3px;align-items:center\">'+ex(t)+(d?' <small>(disabled)</small>':'')+'<button type=\"button\" class=\"sp35-btn-final\" onclick=\'sp35EditTerrNew('+aa+','+tt+')\'>Edit</button><button type=\"button\" class=\"sp35-btn-final '+(d?'primary':'danger')+'\" onclick=\'sp35ToggleTerrNew('+aa+','+tt+')\'>'+(d?'Enable':'Disable')+'</button></span>';
+   return '<span class="pill sp35-territory-row" style="display:inline-flex;gap:5px;margin:3px;align-items:center">'+esc(t)+(d?' <small>(disabled)</small>':'')+'<button type="button" class="sp35-btn-final" onclick=\'sp35EditTerrNew('+aa+','+tt+')\'>Edit</button><button type="button" class="sp35-btn-final '+(d?'primary':'danger')+'" onclick=\'sp35ToggleTerrNew('+aa+','+tt+')\'>'+(d?'Enable':'Disable')+'</button></span>';
   }).join('');
-  return '<div class=\"sp35-notice-final\"><b>'+ex(a)+'</b><br>'+rows+'</div>';
+  return '<div class="sp35-notice-final"><b>'+esc(a)+'</b><br>'+rows+'</div>';
  }).join('');
- b.innerHTML=groups||'<div class=\"sp35-empty-final\">No territories configured.</div>';
+ b.innerHTML=groups||'<div class="sp35-empty-final">No territories configured.</div>';
 };
-window.sp35AddTerrNew=async function(){const a=document.getElementById('sp35CityNew')?.value||'',t=document.getElementById('sp35TerrNew')?.value.trim()||'';if(!a||!t)return toastM('City and territory are required');territories[a]=Array.isArray(territories[a])?territories[a]:[];if(territories[a].some(x=>String(x).trim().toLowerCase()===t.toLowerCase()))return toastM('Territory already exists');territories[a].push(t);persistMasterLocal();try{window.log35?.('Territory added',{area:a,territory:t})}catch(e){}const ok=await syncAdminChange('territory-added');window.sp35RenderTerrNew();if(document.getElementById('sp35TerrNew'))document.getElementById('sp35TerrNew').value='';toastM(ok?'✓ Territory added and synced':'✓ Territory added locally')};
-window.sp35EditTerrNew=async function(a,t){const n=prompt('New territory name',t);if(n===null)return;const name=n.trim();if(!name||name===t)return;if((territories[a]||[]).some(x=>String(x).toLowerCase()===name.toLowerCase()&&x!==t))return toastM('Territory already exists');territories[a]=(territories[a]||[]).map(x=>x===t?name:x);storeDatabase.forEach(s=>{if(s.area===a&&s.territory===t)s.territory=name});let dis=[];try{dis=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}const oldKey=a+'|'+t,newKey=a+'|'+name;dis=dis.map(x=>x===oldKey?newKey:x);localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify([...new Set(dis)]));persistMasterLocal();try{window.log35?.('Territory edited',{area:a,from:t,to:name})}catch(e){}const ok=await syncAdminChange('territory-edited');window.sp35RenderTerrNew();toastM(ok?'✓ Territory updated and synced':'✓ Territory updated locally')};
-window.sp35ToggleTerrNew=async function(a,t){let x=[];try{x=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}const k=a+'|'+t,disabled=x.includes(k);x=disabled?x.filter(v=>v!==k):x.concat(k);localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(x));try{window.log35?.('Territory status changed',{area:a,territory:t,disabled:!disabled})}catch(e){}const ok=await syncAdminChange('territory-status-change');window.sp35RenderTerrNew();toastM(ok?(disabled?'✓ Territory enabled and synced':'✓ Territory disabled and synced'):(disabled?'✓ Territory enabled locally':'✓ Territory disabled locally'))};
+window.sp35OpenAddCity=async function(){
+ /* This function lives outside the launcher IIFE. Do not reference its private
+    ITEMS/modal/$ variables; that was the reason the Add City card did nothing. */
+ try{
+  if(typeof window.openAdminControlCenter==='function') window.openAdminControlCenter();
+  else if(typeof window.spAdminExact41Open==='function') window.spAdminExact41Open();
+  const g=document.getElementById('spAdminCCGrid');
+  const d=document.getElementById('spAdminCCDetail');
+  const t=document.getElementById('spAdminCCDetailTitle');
+  const sub=document.getElementById('spAdminCCDetailSub');
+  const b=document.getElementById('sp35WorkBody');
+  const m=document.getElementById('spAdminExact41');
+  if(!m||!b) throw new Error('Admin Control Center is not ready');
+  if(g)g.style.display='none';
+  if(d)d.classList.add('show');
+  m.classList.add('sp-open','sp-detail-open');
+  if(t)t.textContent='Add City';
+  if(sub)sub.textContent='Add a new city to the master city list';
+  b.innerHTML='<div class="sp35-notice-final">Loading…</div>';
+  await Promise.resolve(window.sp35Point42?.());
+ }catch(e){
+  console.error('Add City control:',e);
+  const b=document.getElementById('sp35WorkBody');
+  if(b)b.innerHTML='<div class="sp35-notice-final">Control error: '+String(e?.message||e)+'</div>';
+  try{window.toast35?.('✕ '+(e?.message||'Add City control failed'));}catch(_){}
+ }
+};
+
+window.sp35Point42=async function(){
+ const b=document.getElementById('sp35WorkBody');
+ if(!b)return;
+ const cities=Object.keys(territories&&typeof territories==='object'?territories:{});
+ b.innerHTML=`<div class="sp35-form-grid"><div class="sp35-field" style="grid-column:1/-1"><label>New City</label><input id="sp35NewCityNew" placeholder="Enter city name" autocomplete="off"></div></div><div class="sp35-actionsx"><button type="button" id="sp35AddCityBtnNew" class="sp35-btnx primary">🏙️ Add City</button><span id="sp35CitySaveStatus" class="sp-v9-admin-doc-status"></span></div><div id="sp35CityListNew" class="sp35-notice-final" style="margin-top:10px">${cities.length?cities.map(c=>'<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)">🏙️ '+esc(c)+'</div>').join(''):'No cities configured.'}</div>`;
+ const input=document.getElementById('sp35NewCityNew'),btn=document.getElementById('sp35AddCityBtnNew'),st=document.getElementById('sp35CitySaveStatus');
+ const add=async function(){
+  const name=String(input?.value||'').trim().replace(/\s+/g,' ');
+  if(!name){toastM('Please enter a city name');input?.focus();return}
+  const exists=Object.keys(territories||{}).some(c=>String(c).trim().toLowerCase()===name.toLowerCase());
+  if(exists){toastM('City already exists');input?.focus();return}
+  const old=btn?.innerHTML||'🏙️ Add City';
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ Saving…';btn.classList.add('sp-v9-admin-saving')}
+  if(st)st.textContent='Saving…';
+  try{
+   territories[name]=[];
+   persistMasterLocal();
+   let ok=false; try{ok=await syncAdminChange('city-added')}catch(e){console.warn('City cloud sync:',e)}
+   if(input)input.value='';
+   const list=document.getElementById('sp35CityListNew');
+   const all=Object.keys(territories||{});
+   if(list)list.innerHTML=all.map(c=>'<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)">🏙️ '+esc(c)+'</div>').join('');
+   if(st)st.textContent=ok?'✓ City added & synced':'✓ City added locally';
+   try{window.refreshTerritories?.()}catch(e){}
+   try{window.refreshAssignmentTerritories?.()}catch(e){}
+   toastM(ok?'✓ City added and synced':'✓ City added locally');
+   if(btn){btn.innerHTML=ok?'✓ Added':'✓ Saved locally';setTimeout(()=>{btn.disabled=false;btn.innerHTML=old;btn.classList.remove('sp-v9-admin-saving')},1800)}
+  }catch(e){
+   if(st)st.textContent='✕ City save failed';
+   if(btn){btn.disabled=false;btn.innerHTML=old;btn.classList.remove('sp-v9-admin-saving')}
+   toastM('✕ City save failed — '+(e?.message||e));
+  }
+ };
+ btn?.addEventListener('click',add);
+ input?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();add()}});
+};
+
+window.sp35Point41=window.sp35Point42;
+
+window.sp35AddTerrNew=async function(){
+ const a=String(document.getElementById('sp35CityNew')?.value||'').trim(),input=document.getElementById('sp35NewTerrNew'),t=String(input?.value||'').trim().replace(/\s+/g,' '),btn=document.getElementById('sp35AddTerritoryBtnNew'),st=document.getElementById('sp35TerritorySaveStatus');
+ if(!a)return toastM('Please select a city');
+ if(!t)return toastM('Please enter a territory name');
+ territories[a]=Array.isArray(territories[a])?territories[a]:[];
+ if(territories[a].some(x=>String(x).trim().toLowerCase()===t.toLowerCase()))return toastM('Territory already exists');
+ const old=btn?.innerHTML||'➕ Add Territory';
+ if(btn){btn.disabled=true;btn.innerHTML='⏳ Saving…';btn.classList.add('sp-v9-admin-saving')}
+ if(st)st.textContent='Saving…';
+ try{
+  territories[a].push(t);
+  persistMasterLocal();
+  try{window.log35?.('Territory added',{area:a,territory:t})}catch(e){}
+  // Render first: this must never depend on Firebase/network availability.
+  window.sp35RenderTerrNew();
+  if(input)input.value='';
+  let ok=false;
+  try{ok=await syncAdminChange('territory-added')}catch(e){console.warn('Territory cloud sync:',e)}
+  if(st)st.textContent=ok?'✓ Territory added & synced':'✓ Territory added locally — sync pending';
+  try{window.refreshTerritories?.()}catch(e){}
+  try{window.refreshAssignmentTerritories?.()}catch(e){}
+  toastM(ok?'✓ Territory added and synced':'✓ Territory added locally — sync pending');
+  if(btn){btn.innerHTML=ok?'✓ Added':'✓ Saved locally';btn.classList.remove('sp-v9-admin-saving');setTimeout(()=>{if(btn){btn.disabled=false;btn.innerHTML=old}},1800)}
+ }catch(e){
+  if(st)st.textContent='✕ Territory save failed';
+  if(btn){btn.disabled=false;btn.classList.remove('sp-v9-admin-saving');btn.innerHTML=old}
+  toastM('✕ Territory save failed — '+(e?.message||e));
+ }
+};
+window.sp35AddTerritoryNew=()=>window.sp35AddTerrNew?.();
+window.sp35EditTerrNew=async function(a,t){
+ const n=prompt('New territory name',t);if(n===null)return;
+ const name=n.trim();if(!name)return toastM('Territory name is required');if(name===t)return;
+ const list=Array.isArray(territories[a])?territories[a]:[];
+ if(list.some(x=>String(x).trim().toLowerCase()===name.toLowerCase()&&String(x)!==String(t)))return toastM('Territory already exists');
+ territories[a]=list.map(x=>x===t?name:x);
+ if(Array.isArray(storeDatabase))storeDatabase.forEach(s=>{if(String(s.area||'')===String(a)&&String(s.territory||'')===String(t))s.territory=name});
+ let dis=[];try{dis=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}
+ dis=dis.map(x=>x===a+'|'+t?a+'|'+name:x);localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify([...new Set(dis)]));
+ persistMasterLocal();try{window.log35?.('Territory edited',{area:a,from:t,to:name})}catch(e){}
+ const ok=await syncAdminChange('territory-edited');window.sp35RenderTerrNew();try{window.refreshTerritories?.()}catch(e){}try{window.refreshAssignmentTerritories?.()}catch(e){}toastM(ok?'✓ Territory updated and synced':'✓ Territory updated locally');
+};
+window.sp35ToggleTerrNew=async function(a,t){
+ let x=[];try{x=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}
+ const k=a+'|'+t,disabled=x.includes(k);x=disabled?x.filter(v=>v!==k):x.concat(k);localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify([...new Set(x)]));
+ try{window.log35?.('Territory status changed',{area:a,territory:t,disabled:!disabled})}catch(e){}
+ const ok=await syncAdminChange('territory-status-change');window.sp35RenderTerrNew();try{window.refreshTerritories?.()}catch(e){}try{window.refreshAssignmentTerritories?.()}catch(e){}toastM(ok?(disabled?'✓ Territory enabled and synced':'✓ Territory disabled and synced'):(disabled?'✓ Territory enabled locally':'✓ Territory disabled locally'));
+};
 window.sp35EditStoreNew=async function(code){const s=(storeDatabase||[]).find(x=>String(x.code)===String(code));if(!s)return;const n=prompt('Store name',s.name||'');if(n===null)return;const a=prompt('City / Area',s.area||'');if(a===null)return;const t=prompt('Territory',s.territory||'');if(t===null)return;const ad=prompt('Address',s.address||'');if(ad===null)return;Object.assign(s,{name:n.trim(),area:a.trim(),territory:t.trim(),address:ad.trim()});persistMasterLocal();try{window.log35?.('Store updated',{code})}catch(e){}const ok=await syncAdminChange('store-updated');window.sp35RenderStoreNew?.();toastM(ok?'✓ Store updated and synced':'✓ Store updated locally')};
 window.sp35DisableStoreNew=async function(code){const s=(storeDatabase||[]).find(x=>String(x.code)===String(code));if(!s)return;s.disabled=true;persistMasterLocal();try{window.log35?.('Store disabled',{code})}catch(e){}const ok=await syncAdminChange('store-disabled');window.sp35RenderStoreNew?.();toastM(ok?'✓ Store disabled and synced':'✓ Store disabled locally')};
 const oldSaveAlert=window.sp35SaveAlert;if(typeof oldSaveAlert==='function'&&!oldSaveAlert.__scrollRepair){const wrapped=async function(){const r=await oldSaveAlert.apply(this,arguments);try{document.documentElement.style.overflowY='auto';document.body.style.overflowY='auto'}catch(e){}return r};wrapped.__scrollRepair=true;window.sp35SaveAlert=wrapped}
@@ -6996,6 +7206,190 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
 <style id="sp-admin-control-center-icon-fix">
 /* Targeted Admin Control Center header icon fix — no dashboard/layout changes. */
 </style>
+<script id="shadab-final-quick-report-exact-pdf-fix">
+(function(){
+  'use strict';
+  const WA='923006901869';
+  const q=s=>document.querySelector(s);
+  const formatDate=v=>{const s=String(v??'');if(!s)return '—';const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return `${m[3]}-${m[2]}-${m[1]}`;const d=new Date(s);return Number.isNaN(d.getTime())?s:d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'});};
+  const reportDate=v=>{const s=String(v||'');const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m){const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];return `${m[3]}-${mo[+m[2]-1]}-${m[1]}`;}return formatDate(v);};
+  const toastSafe=m=>{try{if(typeof toast==='function')toast(m);else alert(m)}catch(_){try{alert(m)}catch(__){}}};
+  const fail=(name,e)=>{console.error(name,e);toastSafe(`✕ ${name} failed — ${e?.message||String(e||'Unknown error')}`);return false;};
+  const dataFor=d=>(typeof visits!=='undefined'&&Array.isArray(visits))?visits.filter(v=>v.date===d):[];
+  function reorder(){const box=q('.sp-quick-report-actions');if(!box)return;const wa=box.querySelector('.sp-qr-wa'),pdf=box.querySelector('.sp-qr-pdf'),pr=box.querySelector('.sp-qr-print');if(wa)box.insertBefore(wa,box.firstElementChild);if(pdf)box.insertBefore(pdf,pr||null);if(pr)box.insertBefore(pr,box.children[2]||null);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',reorder,{once:true});else reorder();
+
+  // Exact A4 design based on the user's supplied reference PDF:
+  // 10mm margins, 2 columns, 38mm rounded cards, bold store names,
+  // normal detail text, 24x19mm photos, and total records at the bottom.
+  function pdfEsc(v){return String(v??'').replace(/\\/g,'\\\\').replace(/—/g,'\\227').replace(/\(/g,'\\(').replace(/\)/g,'\\)').replace(/[\r\n]+/g,' ');}
+  function pdfAscii(v){return String(v??'').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/•/g,'-').replace(/[^\x20-\x7E—]/g,'?');}
+  function latin1(bytes){let out='',chunk=0x8000;for(let i=0;i<bytes.length;i+=chunk){out+=String.fromCharCode.apply(null,bytes.subarray(i,Math.min(i+chunk,bytes.length)));}return out;}
+  function dataBytes(src){const m=String(src||'').match(/^data:image\/(jpeg|jpg);base64,(.+)$/i);if(!m)return null;const bin=atob(m[2]);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a;}
+  function jpegSize(a){if(!a||a[0]!==255||a[1]!==216)return null;let i=2;while(i+9<a.length){if(a[i]!==255){i++;continue}let marker=a[i+1];i+=2;if(marker===0xd8||marker===0xd9||marker===0x01)continue;if(i+1>=a.length)break;const len=(a[i]<<8)|a[i+1];if(marker>=0xc0&&marker<=0xc3||marker>=0xc5&&marker<=0xc7||marker>=0xc9&&marker<=0xcb||marker>=0xcd&&marker<=0xcf){return {w:(a[i+5]<<8)|a[i+6],h:(a[i+3]<<8)|a[i+4]};}i+=len;}return null;}
+  function roundRect(x,y,w,h,r){
+    // Polyline approximation of a 2mm radius rounded rectangle.
+    // Uses only m/l operators for maximum compatibility with Android PDF viewers.
+    const pts=[],cx1=x+r,cy1=y+r,cx2=x+w-r,cy2=y+h-r,n=6;
+    for(let i=0;i<=n;i++){const a=Math.PI+Math.PI/2*i/n;pts.push([cx1+r*Math.cos(a),cy1+r*Math.sin(a)]);}
+    for(let i=0;i<=n;i++){const a=-Math.PI/2+Math.PI/2*i/n;pts.push([cx2+r*Math.cos(a),cy1+r*Math.sin(a)]);}
+    for(let i=0;i<=n;i++){const a=0+Math.PI/2*i/n;pts.push([cx2+r*Math.cos(a),cy2+r*Math.sin(a)]);}
+    for(let i=0;i<=n;i++){const a=Math.PI/2+Math.PI/2*i/n;pts.push([cx1+r*Math.cos(a),cy2+r*Math.sin(a)]);}
+    let s=`${pts[0][0]} ${pts[0][1]} m`;
+    for(let i=1;i<pts.length;i++)s+=` ${pts[i][0]} ${pts[i][1]} l`;
+    return s+' h';
+  }
+
+  function exactPDF(data,date){
+    const W=595.28,H=841.89,mm=n=>n*72/25.4;
+    const objects=[];const add=o=>{objects.push(o);return objects.length};const set=(id,o)=>{objects[id-1]=o};
+    const catalog=add(null),pages=add(null),
+      f1=add({text:'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'}),
+      f2=add({text:'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'});
+    const pageRefs=[];
+    for(let start=0;start<data.length;start+=4){
+      const chunk=data.slice(start,start+4),commands=[],imageRefs=[];
+      const text=(x,y,size,str,bold=false)=>commands.push(
+        `0 0 0 rg BT /${bold?'F2':'F1'} ${size} Tf ${x} ${y} Td (${pdfEsc(pdfAscii(str))}) Tj ET`
+      );
+
+      /* ===== REFERENCE PDF GEOMETRY — measured from supplied PDF =====
+         A4 portrait, 10mm left/right margin, header at 16/25/32mm,
+         divider at 36mm, cards begin at 42mm, 2 columns, 38mm cards,
+         15mm horizontal gap, 4mm vertical gap, 3mm card padding.
+         Reference typography: Helvetica / Helvetica-Bold.
+      */
+      text(mm(10),H-mm(17),16,'Shadab Pharmacy',true);
+      text(mm(10),H-mm(25),9,`Visit Report — ${reportDate(date)}`);
+      text(mm(10),H-mm(32),7.5,`Generated: ${typeof nowText==='function'?nowText():new Date().toLocaleString('en-PK')}`);
+      commands.push(`0 0 0 RG 0.567 w ${mm(10)} ${H-mm(33)} m ${mm(200)} ${H-mm(33)} l S`);
+
+      chunk.forEach((v,i)=>{
+        const col=i%2,row=Math.floor(i/2);
+        const x=mm(col?107:10),
+          yTop=H-mm(39+row*42),
+          cw=mm(92),ch=mm(38),
+          photoW=mm(23),photoH=mm(19),
+          px=x+cw-photoW-mm(3),
+          py=yTop-mm(3)-photoH;
+
+        commands.push(`1 1 1 rg 0.75 0.76 0.78 RG 0.567 w ${roundRect(x,yTop-ch,cw,ch,mm(2))} S`);
+
+        // Store / pharmacy name: Helvetica-Bold 8.5pt (reference)
+        text(x+mm(3),yTop-mm(6),8.5,String(v.store||'—'),true);
+
+        // Detail text: Helvetica 6.5pt, 3.7mm baseline step (reference)
+        const lines=[
+          `Person: ${v.person||'—'}`,
+          `Type: ${v.type||'—'}`,
+          `Area: ${v.area||'—'}`,
+          `Territory: ${v.territory||'—'}`,
+          `Phone: ${v.phone||'—'}`,
+          `Date/Time: ${reportDate(v.date)} ${v.time||''}`
+        ];
+        let yy=yTop-mm(11);
+        for(const line of lines){
+          text(x+mm(3),yy,6.5,line,false);
+          yy-=mm(3.7);
+        }
+
+        // Notes: Helvetica 6pt, positioned like the supplied reference.
+        text(x+mm(3),yTop-mm(35),6,String(v.notes||'—'),false);
+
+        // Reference photo frame: 23mm x 19mm, 3mm right/top inset.
+        commands.push(`0.92 0.92 0.92 rg 0.72 0.74 0.77 RG 0.25 w ${px} ${py} ${photoW} ${photoH} re B`);
+        const b=dataBytes(v.photo),sz=jpegSize(b);
+        if(b&&sz){
+          const im=add({image:b});
+          imageRefs.push({name:`Im${imageRefs.length+1}`,id:im});
+          commands.push(`q ${photoW} 0 0 ${photoH} ${px} ${py} cm /Im${imageRefs.length} Do Q`);
+        }
+      });
+
+      text(mm(10),mm(7.5),7.5,`Total records: ${data.length}`);
+      const stream=commands.join('\n');
+      const content=add({streamText:stream});
+      const xobj=imageRefs.length
+        ?` /XObject << ${imageRefs.map(r=>`/${r.name} ${r.id} 0 R`).join(' ')} >>`:'';
+      const resources=`<< /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >>${xobj} >>`;
+      const page=add({text:`<< /Type /Page /Parent ${pages} 0 R /MediaBox [0 0 ${W} ${H}] /Resources ${resources} /Contents ${content} 0 R >>`});
+      pageRefs.push(page);
+    }
+    set(catalog,{text:`<< /Type /Catalog /Pages ${pages} 0 R >>`});
+    set(pages,{text:`<< /Type /Pages /Kids [${pageRefs.map(x=>x+' 0 R').join(' ')}] /Count ${pageRefs.length} >>`});
+
+    const enc=new TextEncoder(),parts=[enc.encode('%PDF-1.4\n%\n')],offs=[0];let total=parts[0].length;
+    for(let i=0;i<objects.length;i++){
+      const id=i+1;offs[id]=total;let o=objects[i];
+      let head=enc.encode(`${id} 0 obj\n`);parts.push(head);total+=head.length;
+      if(o?.image){
+        const h=enc.encode(`<< /Type /XObject /Subtype /Image /Width ${jpegSize(o.image).w} /Height ${jpegSize(o.image).h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${o.image.length} >>\nstream\n`);
+        parts.push(h);total+=h.length;parts.push(o.image);total+=o.image.length;
+        const tail=enc.encode('\nendstream\nendobj\n');parts.push(tail);total+=tail.length;
+      }else if(o?.streamText!==undefined){
+        const bytes=enc.encode(o.streamText),h=enc.encode(`<< /Length ${bytes.length} >>\nstream\n`);
+        parts.push(h);total+=h.length;parts.push(bytes);total+=bytes.length;
+        const tail=enc.encode('\nendstream\nendobj\n');parts.push(tail);total+=tail.length;
+      }else{
+        const body=enc.encode((o?.text||'')+'\nendobj\n');parts.push(body);total+=body.length;
+      }
+    }
+    const xref=total;
+    let xr=`xref\n0 ${objects.length+1}\n0000000000 65535 f \n`;
+    for(let i=1;i<=objects.length;i++)xr+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+    xr+=`trailer\n<< /Size ${objects.length+1} /Root ${catalog} 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    parts.push(enc.encode(xr));
+    return new Blob(parts,{type:'application/pdf'});
+  }
+
+  function saveBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
+
+  window.downloadPDFForDate=function(date,event){try{event?.preventDefault?.();event?.stopPropagation?.();const data=dataFor(date);if(!data.length){toastSafe('No records for this date');return false;}const blob=exactPDF(data,date);saveBlob(blob,`Shadab-Pharmacy-${date}.pdf`);toastSafe(`✓ PDF downloaded • ${data.length} records`);return false;}catch(e){return fail("Today's PDF",e)}};
+
+  window.shareAllToday=function(event){
+    try{
+      event?.preventDefault?.();event?.stopPropagation?.();const date=todayISO(),data=dataFor(date);if(!data.length){toastSafe('No visits for today');return false;}
+      const text=`*SHADAB PHARMACY — Today's Visits*\nDate: ${formatDate(date)}\nTotal: ${data.length}\n\n`+data.map((v,i)=>`${i+1}. ${v.store||'—'} — ${v.person||'—'}\n${v.type||'—'} | ${v.area||'—'} | ${v.territory||'—'}\nTime: ${v.time||'—'}`).join('\n\n');
+      const blob=exactPDF(data,date),file=new File([blob],`Shadab-Pharmacy-${date}.pdf`,{type:'application/pdf'});
+      if(typeof navigator.share==='function'){
+        // Android Chrome: keep the Web Share call synchronous and send the
+        // actual PDF File. Text is deliberately omitted from the native share
+        // payload because some Android share targets reject mixed text+file
+        // payloads from content://downloads/ pages.
+        try{
+          const shareData={title:'SHADAB PHARMACY — Today',files:[file]};
+          if(typeof navigator.canShare==='function'){
+            try{ if(!navigator.canShare({files:[file]})) throw new Error('PDF file sharing is not supported by this browser'); }catch(_canShare){
+              // Continue to navigator.share: some Android builds return false
+              // from canShare even though the native share sheet accepts files.
+            }
+          }
+          navigator.share(shareData)
+            .then(()=>toastSafe('✓ PDF shared — select WhatsApp'))
+            .catch(e=>{if(e?.name!=='AbortError')fallbackWhatsApp(text,blob,date)});
+          return false;
+        }catch(e){/* immediate unsupported-file fallback below */}
+      }
+      fallbackWhatsApp(text,blob,date);return false;
+    }catch(e){return fail('WhatsApp',e)}
+  };
+  function fallbackWhatsApp(text,blob,date){try{saveBlob(blob,`Shadab-Pharmacy-${date}.pdf`);window.location.href=`whatsapp://send?phone=${WA}&text=${encodeURIComponent(text+'\n\nPDF downloaded — please attach the PDF in WhatsApp.')}`;toastSafe('✓ PDF downloaded — opening WhatsApp');}catch(e){fail('WhatsApp',e)}}
+
+  window.printDateReport=function(date,event){
+    try{
+      event?.preventDefault?.();event?.stopPropagation?.();const data=dataFor(date);if(!data.length){toastSafe('No records for this date');return false;}
+      const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      const cards=data.map(v=>`<div class="card"><div class="copy"><div class="store">${esc(v.store||'—')}</div><div>Person: ${esc(v.person||'—')}</div><div>Type: ${esc(v.type||'—')}</div><div>Area: ${esc(v.area||'—')}</div><div>Territory: ${esc(v.territory||'—')}</div><div>Phone: ${esc(v.phone||'—')}</div><div>Date/Time: ${esc(reportDate(v.date))} ${esc(v.time||'')}</div><div>Notes: ${esc(v.notes||'—')}</div></div><div class="photo">${v.photo?`<img src="${v.photo}" alt="">`:'<span></span>'}</div></div>`).join('');
+      const w=window.open('about:blank','_blank');if(!w){toastSafe('✕ Print failed — allow pop-ups for this file');return false;}
+      const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy</title><style>@page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 3px;font-weight:700}p{font-size:9px;margin:3px 0;color:#222}.rule{border-top:1px solid #999;margin:9px 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}.card{height:39mm;border:1px solid #b8bdc5;border-radius:7px;padding:7px 7px;display:flex;justify-content:space-between;gap:7px;overflow:hidden;break-inside:avoid}.copy{font-size:8.1px;line-height:1.42;min-width:0;overflow:hidden}.store{font-size:9.2px;font-weight:700;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.photo{width:24mm;height:19mm;flex:0 0 24mm;display:flex;align-items:center;justify-content:center;background:#eee;overflow:hidden;margin-top:1px}.photo img{width:100%;height:100%;object-fit:cover}.total{margin-top:180mm;font-size:9px;color:#333}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>Visit Report — ${esc(reportDate(date))}</p><p>Generated: ${esc(typeof nowText==='function'?nowText():new Date().toLocaleString('en-PK'))}</p><div class="rule"></div><div class="grid">${cards}</div><p class="total">Total records: ${data.length}</p><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\/script></body></html>`;
+      w.document.open();w.document.write(html);w.document.close();toastSafe('✓ Print view opened');return false;
+    }catch(e){return fail('Print Today',e)}
+  };
+
+  function bind(){const box=q('.sp-quick-report-actions');if(!box)return;reorder();if(box.dataset.exactBound==='1')return;box.dataset.exactBound='1';box.addEventListener('click',function(e){const b=e.target.closest?.('button.sp-qr-btn');if(!b)return;e.preventDefault();e.stopImmediatePropagation();if(b.classList.contains('sp-qr-wa'))return window.shareAllToday(e);if(b.classList.contains('sp-qr-pdf'))return window.downloadPDFForDate(todayISO(),e);if(b.classList.contains('sp-qr-print'))return window.printDateReport(todayISO(),e);},true);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();setTimeout(bind,300);setTimeout(bind,1000);
+})();
+</script>
 </body>
 <style id="sp-camera-onsite-final-lock">
 /* On-site Photo alignment only — sync UI untouched */
@@ -7956,8 +8350,8 @@ window.adminUploadLockedLicense=input=>{const m=modal();m.dataset.type='license'
 window.closeUploadTerritoryModal=()=>closeNative('uploadTerritoryModal');window.closeStoreDatabase=()=>closeNative('storeDatabaseModal');
 let lastOpen=0,lastN=0;
 function goFive(n){const now=Date.now();if(lastN===n&&now-lastOpen<450)return;lastN=n;lastOpen=now;openFive(n)}
-function bindCards(){document.querySelectorAll('#spAdminExact41 .sp-cc-card').forEach(c=>{const n=Number(c.dataset.n||0);if(n<37)return;c.dataset.v6Bound='1';c.removeAttribute('onclick');c.onclick=e=>{e.preventDefault();e.stopPropagation();goFive(n)};c.ontouchend=e=>{e.preventDefault();e.stopPropagation();goFive(n)}})}
-function capture(e){const c=e.target?.closest?.('#spAdminExact41 .sp-cc-card');if(!c)return;const n=Number(c.dataset.n||0);if(n<37)return;e.preventDefault();e.stopImmediatePropagation();goFive(n)}
+function bindCards(){document.querySelectorAll('#spAdminExact41 .sp-cc-card').forEach(c=>{const n=Number(c.dataset.n||0);if(n<37||n>41)return;c.dataset.v6Bound='1';c.removeAttribute('onclick');c.onclick=e=>{e.preventDefault();e.stopPropagation();goFive(n)};c.ontouchend=e=>{e.preventDefault();e.stopPropagation();goFive(n)}})}
+function capture(e){const c=e.target?.closest?.('#spAdminExact41 .sp-cc-card');if(!c)return;const n=Number(c.dataset.n||0);if(n<37||n>41)return;e.preventDefault();e.stopImmediatePropagation();goFive(n)}
 ['pointerup','touchend','click'].forEach(ev=>document.addEventListener(ev,capture,true));
 const obs=new MutationObserver(bindCards);obs.observe(document.documentElement,{childList:true,subtree:true});setTimeout(bindCards,150);setTimeout(bindCards,500);setTimeout(bindCards,1200);setTimeout(hydrate,1600);window.addEventListener('online',()=>setTimeout(hydrate,900));
 })();
@@ -8005,9 +8399,13 @@ document.addEventListener('click',closeV6,true);document.addEventListener('touch
 #spAdminExact41 .sp-cc-card:active{transform:scale(.985);border-color:rgba(35,159,255,.75);box-shadow:0 0 20px rgba(20,166,255,.18)}
 #spAdminExact41 .sp-cc-card .ic{width:36px;height:36px;flex:0 0 36px;border-radius:10px;display:grid;place-items:center;font-size:19px;background:linear-gradient(145deg,rgba(0,164,255,.20),rgba(92,82,255,.16));border:1px solid rgba(75,202,255,.24);box-shadow:0 0 15px rgba(23,175,255,.13)}
 #spAdminExact41 .sp-cc-card b{font-size:11px;line-height:1.25;display:block}#spAdminExact41 .sp-cc-card small{display:block;color:#8f9eab;font-size:9px;line-height:1.25;margin-top:3px}
-/* When a 41-point function is open, the Admin Control Center header must disappear. */
-#spAdminExact41.sp-detail-open .sp-cc-head{display:flex!important}
-#spAdminExact41.sp-detail-open .sp-cc-scroll{padding:0!important}
+/* When any Admin control is open, show ONLY that control. The Admin Control Center
+   title/Refresh/X belong to the parent screen and must be hidden behind the child. */
+#spAdminExact41.sp-detail-open .sp-cc-head{display:none!important;visibility:hidden!important;pointer-events:none!important}
+#spAdminExact41.sp-detail-open .sp-cc-scroll{padding:0!important;height:100%!important;min-height:0!important}
+#spAdminExact41.sp-detail-open .sp-cc-detail{height:100%!important;min-height:100%!important}
+#spAdminExact41.sp-detail-open .sp-cc-detail-head{display:flex!important}
+
 #spAdminExact41 .sp-cc-detail{display:none;max-width:none;width:100%;height:100%;margin:0;border:0;border-radius:0;background:linear-gradient(145deg,#08131e,#0a1d2a);overflow:hidden}
 #spAdminExact41 .sp-cc-detail.show{display:flex!important;flex-direction:column!important}
 #spAdminExact41 .sp-cc-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(80,200,255,.13);background:rgba(8,18,29,.98);position:sticky;top:0;z-index:5;min-height:62px;box-sizing:border-box}
