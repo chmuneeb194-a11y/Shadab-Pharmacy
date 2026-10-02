@@ -9543,7 +9543,7 @@ async function runDiag(){
 window.spOpenMasterDiagnostics=()=>{const o=$('spMasterDiagOverlay');if(o){o.classList.add('show');o.setAttribute('aria-hidden','false');runDiag()}};
 window.spCloseMasterDiagnostics=()=>{const o=$('spMasterDiagOverlay');if(o){o.classList.remove('show');o.setAttribute('aria-hidden','true')}};
 document.addEventListener('click',e=>{if(e.target.id==='spMasterDiagOverlay')spCloseMasterDiagnostics()});
-function patchStatus(){const t=$('spMasterDashboardSyncStatus');if(t&&!t.dataset.diagBound){t.dataset.diagBound='1';t.title='Tap to test Firebase sync';t.addEventListener('click',e=>{e.stopPropagation();spOpenMasterDiagnostics()})}}
+function patchStatus(){/* Diagnostic popup is QA-only; do not bind it to the normal dashboard sync status. */const t=$('spMasterDashboardSyncStatus');if(t){t.removeAttribute('title');t.removeAttribute('data-diag-bound');}}
 function patchHeroIcon(){const h=document.querySelector('#spAddedMasterDashboard .sp-added-master-hero-icon');if(h)h.innerHTML=icon('dashboard')}
 function apply(){setIcons();patchHeroIcon();patchStatus();}
 apply();setTimeout(apply,200);setTimeout(apply,1000);
@@ -12315,9 +12315,9 @@ function isValidBiometricOrigin(){return location.protocol==='https:'||location.
 function explainUnsupported(){if(!isValidBiometricOrigin())return 'Fingerprint needs the live HTTPS app address with a valid TLS certificate. This downloaded content:// page cannot use WebAuthn.';return 'Fingerprint/passkey is not available in this browser or device.'}
 function getModal(){let m=document.getElementById('spV12BioModal');if(m)return m;m=document.createElement('div');m.id='spV12BioModal';m.className='sp-v12-bio-modal';m.innerHTML='<div class="sp-v12-bio-panel" role="dialog" aria-modal="true"><button type="button" class="sp-v12-bio-close" aria-label="Close">×</button><div class="sp-v12-bio-orb"><span class="finger">☝</span></div><div class="sp-v12-bio-title">Device Fingerprint</div><div class="sp-v12-bio-sub">Use your phone\'s secure fingerprint or screen-lock biometric. Your fingerprint itself never enters this page.</div><button type="button" class="sp-v12-bio-action"></button><div class="sp-v12-bio-status"></div><div class="sp-v12-bio-note">Password login remains available as a fallback. Biometric setup requires the app to be opened on a secure HTTPS address.</div></div>';document.body.appendChild(m);const close=m.querySelector('.sp-v12-bio-close');close.onclick=()=>m.classList.remove('show');m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')});return m}
 function openBioModal(kind,mode){const m=getModal(),a=m.querySelector('.sp-v12-bio-action'),st=m.querySelector('.sp-v12-bio-status'),title=m.querySelector('.sp-v12-bio-title'),sub=m.querySelector('.sp-v12-bio-sub');const has=readBio().some(r=>r.role===kind&&(kind==='master'||r.email===String(document.getElementById('sp35LoginEmail')?.value||'').trim().toLowerCase()));title.textContent=mode==='setup'?'Set up Device Fingerprint':'Fingerprint Login';sub.textContent=mode==='setup'?"Register this phone's secure biometric for faster sign-in. Your fingerprint itself is never stored by this page.":"Verify your fingerprint on this phone to continue.";a.textContent=mode==='setup'?'🔐 Start Fingerprint Setup':'🔓 Verify Fingerprint';a.disabled=!supported()||!isValidBiometricOrigin();st.textContent=a.disabled?explainUnsupported():mode==='setup'?'Ready — tap the button to open the phone biometric prompt.':'Ready — tap the button to verify.';st.classList.toggle('error',a.disabled);a.onclick=async()=>{st.classList.remove('error');a.disabled=true;st.textContent=mode==='setup'?'Waiting for phone biometric…':'Waiting for fingerprint…';try{if(mode==='setup'){await registerBio(kind);st.textContent='✓ Fingerprint enabled on this device.';toast('✓ Fingerprint enabled on this device');setTimeout(()=>m.classList.remove('show'),650)}else{await loginBio(kind);m.classList.remove('show')}}catch(e){st.textContent=(e?.message||String(e));st.classList.add('error');a.disabled=!supported()||!isValidBiometricOrigin()}};m.classList.add('show')}
-function ensureEntry(kind){const isMaster=kind==='master';const modal=isMaster?document.getElementById('adminLoginBox'):document.getElementById('sp35AuthModal');if(!modal)return null;let entry=document.getElementById(isMaster?'spV12MasterBioEntry':'spV12SalesBioEntry');if(entry)return entry;entry=document.createElement('div');entry.id=isMaster?'spV12MasterBioEntry':'spV12SalesBioEntry';entry.className='sp-v12-bio-entry';entry.innerHTML='<button type="button" class="sp-v12-bio-trigger"><span class="bio-mark">☝</span><span class="bio-label">Fingerprint / Passkey</span></button><div class="sp-v12-bio-hint">Tap to open secure biometric setup or login</div>';const btn=entry.querySelector('button');btn.onclick=()=>{const has=readBio().some(r=>r.role===kind&&(kind==='master'||r.email===String(document.getElementById('sp35LoginEmail')?.value||'').trim().toLowerCase()));openBioModal(kind,has?'login':'setup')};modal.appendChild(entry);return entry}
+function ensureEntry(kind){const isMaster=kind==='master';const modal=isMaster?document.getElementById('adminLoginBox'):document.getElementById('sp35AuthModal');if(!modal)return null;let entry=document.getElementById(isMaster?'spV12MasterBioEntry':'spV12SalesBioEntry');if(entry)return entry;entry=document.createElement('div');entry.id=isMaster?'spV12MasterBioEntry':'spV12SalesBioEntry';entry.className='sp-v12-bio-entry';entry.innerHTML='<button type="button" class="sp-v12-bio-trigger"><span class="bio-mark">☝</span><span class="bio-label">Fingerprint / Passkey</span></button><div class="sp-v12-bio-hint">Tap to open secure biometric setup or login</div>';const btn=entry.querySelector('button');btn.onclick=async()=>{const has=readBio().some(r=>r.role===kind&&(kind==='master'||r.email===String(document.getElementById('sp35LoginEmail')?.value||'').trim().toLowerCase()));if(has){try{await loginBio(kind)}catch(e){openBioModal(kind,'login')}}else{openBioModal(kind,'setup')}};modal.appendChild(entry);return entry}
 async function registerBio(kind){if(!supported()||!isValidBiometricOrigin())throw new Error(explainUnsupported());const s=session();if(!s?.uid||!s?.refreshToken)throw new Error('Please complete a normal password login first.');const challenge=b64u(bytes(32)),userId=bytes(16),rpId=location.hostname;const cred=await navigator.credentials.create({publicKey:{challenge:ub64(challenge),rp:{id:rpId,name:'SHADAB PHARMACY'},user:{id:userId,name:String(s.email||''),displayName:String(s.displayName||s.email||kind)},pubKeyCredParams:[{type:'public-key',alg:-7}],authenticatorSelection:{authenticatorAttachment:'platform',residentKey:'required',requireResidentKey:true,userVerification:'required'},timeout:60000,attestation:'none'}});if(!cred)throw new Error('Fingerprint setup was cancelled.');const pub=cred.response.getPublicKey?.();if(!pub)throw new Error('This browser did not return a compatible public key.');const rec={id:cred.id,credId:b64u(cred.rawId),publicKey:b64u(pub),role:kind,email:String(s.email||''),uid:String(s.uid),displayName:String(s.displayName||''),refreshToken:String(s.refreshToken||''),challenge};const all=readBio().filter(r=>!(r.role===kind&&r.uid===rec.uid));all.push(rec);saveBio(all);return rec}
-async function loginBio(kind){if(!supported()||!isValidBiometricOrigin())throw new Error(explainUnsupported());const records=readBio().filter(r=>r.role===kind&&r.publicKey&&r.credId&&r.refreshToken);if(!records.length)throw new Error('No fingerprint is registered on this device. Login once with password and tap Fingerprint / Passkey.');const challenge=b64u(bytes(32));records.forEach(r=>r.challenge=challenge);saveBio(readBio().map(r=>{const x=records.find(y=>y.id===r.id);return x||r}));const cred=await navigator.credentials.get({publicKey:{challenge:ub64(challenge),rpId:location.hostname,userVerification:'required',timeout:60000}});if(!cred)throw new Error('Fingerprint login was cancelled.');const rec=records.find(r=>r.credId===b64u(cred.rawId));if(!rec)throw new Error('This fingerprint credential is not registered for this device.');await verifyAssertion(rec,cred);const refreshUrl='https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent((window.shadabFirebaseConfig?.apiKey||'AIzaSyAi5c8pdkxxfZyvZEG9hi4q5nugVGXfKUc'));const rr=await fetch(refreshUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(rec.refreshToken),cache:'no-store'});let x;try{x=await rr.json()}catch(e){x=null}if(!rr.ok)throw new Error(x?.error?.message||'Saved biometric session expired.');const fresh={email:rec.email,uid:x.user_id||rec.uid,idToken:x.id_token,refreshToken:x.refresh_token||rec.refreshToken,expiresAt:Date.now()+Math.max(300000,(Number(x.expires_in)||3600)*1000-120000),displayName:rec.displayName};localStorage.setItem('shadab_rest_auth_v3',JSON.stringify(fresh));if(kind==='master'){window.adminLoggedIn=true;localStorage.setItem('shadab_admin_logged_in_v2','1');document.getElementById('adminUsername')&&(document.getElementById('adminUsername').value='');document.getElementById('adminPassword')&&(document.getElementById('adminPassword').value='');window.showAdminDashboard?.()}else{const name=rec.displayName||rec.email||'Salesman';localStorage.setItem('shadab_current_salesman_email_v1',rec.email);localStorage.setItem('shadab_current_salesman_uid_v1',fresh.uid);localStorage.setItem('shadab_current_salesman_v1',name);document.getElementById('sp35AuthModal')?.classList.remove('show');window.sp35UpdateHeaderLoginButton?.(name);window.startPolling?.();window.shadabHydrateExactSalesman?.()}toast('✓ Fingerprint login successful')}
+async function loginBio(kind){if(!supported()||!isValidBiometricOrigin())throw new Error(explainUnsupported());const records=readBio().filter(r=>r.role===kind&&r.publicKey&&r.credId&&r.refreshToken);if(!records.length)throw new Error('No fingerprint is registered on this device. Login once with password and tap Fingerprint / Passkey.');const challenge=b64u(bytes(32));records.forEach(r=>r.challenge=challenge);saveBio(readBio().map(r=>{const x=records.find(y=>y.id===r.id);return x||r}));const allow=records.map(r=>({type:'public-key',id:ub64(r.credId)}));const cred=await navigator.credentials.get({publicKey:{challenge:ub64(challenge),rpId:location.hostname,userVerification:'required',timeout:60000,allowCredentials:allow}});if(!cred)throw new Error('Fingerprint login was cancelled.');const rec=records.find(r=>r.credId===b64u(cred.rawId));if(!rec)throw new Error('This fingerprint credential is not registered for this device.');await verifyAssertion(rec,cred);const refreshUrl='https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent((window.shadabFirebaseConfig?.apiKey||'AIzaSyAi5c8pdkxxfZyvZEG9hi4q5nugVGXfKUc'));const rr=await fetch(refreshUrl,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(rec.refreshToken),cache:'no-store'});let x;try{x=await rr.json()}catch(e){x=null}if(!rr.ok)throw new Error(x?.error?.message||'Saved biometric session expired.');const fresh={email:rec.email,uid:x.user_id||rec.uid,idToken:x.id_token,refreshToken:x.refresh_token||rec.refreshToken,expiresAt:Date.now()+Math.max(300000,(Number(x.expires_in)||3600)*1000-120000),displayName:rec.displayName};localStorage.setItem('shadab_rest_auth_v3',JSON.stringify(fresh));if(kind==='master'){window.adminLoggedIn=true;localStorage.setItem('shadab_admin_logged_in_v2','1');document.getElementById('adminUsername')&&(document.getElementById('adminUsername').value='');document.getElementById('adminPassword')&&(document.getElementById('adminPassword').value='');window.showAdminDashboard?.()}else{const name=rec.displayName||rec.email||'Salesman';localStorage.setItem('shadab_current_salesman_email_v1',rec.email);localStorage.setItem('shadab_current_salesman_uid_v1',fresh.uid);localStorage.setItem('shadab_current_salesman_v1',name);document.getElementById('sp35AuthModal')?.classList.remove('show');window.sp35UpdateHeaderLoginButton?.(name);window.startPolling?.();window.shadabHydrateExactSalesman?.()}toast('✓ Fingerprint login successful')}
 window.shadabV11SetupFingerprint=kind=>{openBioModal(kind,'setup')};window.shadabV11LoginFingerprint=kind=>{openBioModal(kind,'login')};
 /* Final OFF-direction fix — same authoritative Firebase read, no timer change. */
 async function applyAuthoritativeFlags(){const s=session();if(!s?.uid||String(s.email||'').toLowerCase()==='master@shadabpharmacy.com')return;let p=null;try{p=await window.shadabRestReadDoc?.('salesmen/'+encodeURIComponent(String(s.uid)))}catch(e){}if(!p)return;const src=p.featureFlags||p.features||{};const flags={...DEFAULTS};FEATURE_KEYS.forEach(k=>{if(Object.prototype.hasOwnProperty.call(src,k))flags[k]=!!src[k]});window.__shadabRuntimeFeatureState={uid:String(s.uid),name:String(p.fullName||p.displayName||p.salesmanName||p.name||s.displayName||s.email||'Salesman'),flags,controlled:true};try{localStorage.setItem('shadab_runtime_feature_flags_v3',JSON.stringify(window.__shadabRuntimeFeatureState))}catch(e){}window.shadabFeatureEnabled=key=>flags[String(key||'')]!==false;const guards={fieldVisit:['openFieldVisitManager'],todayReport:['openTodayReportPanel'],summaryDetail:['openSummaryDetail'],expenses:['openSalesmanExpenses','downloadSalesmanExpensePDF','shareSalesmanExpensePDF','downloadSalesmanExpenseMonthlyPDF','shareSalesmanExpenseMonthlyPDF'],monthlyReport:['downloadSummaryDetailMonthlyPDF','shareSummaryDetailMonthlyPDF','downloadMonthlyReportPDF'],orderForm:[],supplySchedule:[],licensePDF:['spLockedLicensePreview','spLockedLicenseShare','spLockedLicenseDownload'],whatsappPDF:['shareAllToday','shareTaskPDFWhatsApp','shareSummaryDetailMonthlyPDF','shareSalesmanExpensePDF','shareSalesmanExpenseMonthlyPDF','shareVisit'],downloadExport:['downloadPDFForDate','downloadTaskPDF','exportCSV','downloadSinglePDF','downloadSummaryDetailPDF'],backupRestore:['exportBackup','restoreBackup'],cameraOpen:['openDeviceCamera','startCamera'],cameraCapture:['capturePhoto'],cameraUpload:['uploadPhoto','handleCameraFile']};Object.entries(guards).forEach(([key,names])=>names.forEach(name=>{const fn=window[name];if(typeof fn==='function'&&!fn.__v11AuthGuard){const w=function(){if(!window.shadabFeatureEnabled(key)){toast('This feature is disabled by Master.');return false}return fn.apply(this,arguments)};w.__v11AuthGuard=true;w.__v11Original=fn;window[name]=w}}));const shared=window.openSharedDocument;if(typeof shared==='function'&&!shared.__v11AuthGuard){const w=function(type){const key=type==='orderForm'?'orderForm':type==='supplySchedule'?'supplySchedule':'';if(key&&!window.shadabFeatureEnabled(key)){toast('This feature is disabled by Master.');return false}return shared.apply(this,arguments)};w.__v11AuthGuard=true;w.__v11Original=shared;window.openSharedDocument=w}document.querySelectorAll('[onclick]').forEach(el=>{const c=String(el.getAttribute('onclick')||'');for(const [key,names] of Object.entries(guards)){if(names.some(n=>c.includes(n))){const on=flags[key]!==false;el.style.opacity=on?'':'0.42';el.style.pointerEvents=on?'':'none';el.setAttribute('aria-disabled',on?'false':'true');break}}});window.dispatchEvent(new Event('shadab-feature-refresh'))}
@@ -13478,7 +13478,7 @@ function renderSelected(){
  const remaining=planned.filter(v=>!visitedKeys.has(storeKey(v)));
  const nums=root.querySelectorAll('.sp-added-taskgrid .num');[planned.length,visited.length,orderRows.length,remaining.length].forEach((n,i)=>{if(nums[i])nums[i].textContent=String(n)});
  root.querySelectorAll('.sp-added-task').forEach(x=>x.classList.add('sp-v32-selected-task'));
- root.dataset.v32SelectedUid=state.selectedUid;root.dataset.v32SelectedSalesman=name||'';
+ root.dataset.v32SelectedUid=state.selectedUid;root.dataset.v32SelectedSalesman=name||'';root.dataset.v32Resolving='0';
 }
 window.__spV32TodayTaskForensics=()=>{
  const n=state.selectedName||'';
@@ -13513,7 +13513,10 @@ async function selectSalesman(name){
  state.planned=applyVisitState(assignmentStores(hit.name,today()),state.visits,hit.name);
  renderSelected();
 }
+let v32LoadPromise=null;
 async function load(){
+ if(v32LoadPromise)return v32LoadPromise;
+ v32LoadPromise=(async()=>{
  const s=session();if(!s?.uid||norm(s.email)!==norm(ADMIN))return;
  try{
    const [profiles,ud,schedDoc,master]=await Promise.all([
@@ -13544,9 +13547,13 @@ async function load(){
    if(current)await selectSalesman(current.name);else{state.selectedName='';state.planned=[];state.visits=[];renderSelected()}
    state.loadedAt=Date.now();ensureHeader();renderSelected();
  }catch(e){console.warn('V32 Master Today Task load:',e)}
+ finally{v32LoadPromise=null}
+ })();
+ return v32LoadPromise;
 }
+function prepareTaskCards(){const root=document.getElementById('spAddedMasterDashboard');if(!root)return;root.dataset.v32Resolving='1';const nums=root.querySelectorAll('.sp-added-taskgrid .num');nums.forEach(n=>{n.textContent='…'});if(!root.__v32ResolvingGuard){const obs=new MutationObserver(()=>{if(root.dataset.v32Resolving!=='1'){obs.disconnect();root.__v32ResolvingGuard=null;return}root.querySelectorAll('.sp-added-taskgrid .num').forEach(n=>{if(n.textContent!=='…')n.textContent='…'})});obs.observe(root,{subtree:true,childList:true,characterData:true});root.__v32ResolvingGuard=obs}}
 function hookOpen(){
- const old=window.openSpAddedDashboard;if(typeof old==='function'&&!old.__v32Open){const w=function(kind){const r=old.apply(this,arguments);if(kind==='master'||kind==null){setTimeout(()=>{ensureHeader();load()},90);setTimeout(()=>{ensureHeader()},500)}return r};w.__v32Open=true;w.__v32Original=old;window.openSpAddedDashboard=w}
+ const old=window.openSpAddedDashboard;if(typeof old==='function'&&!old.__v32Open){const w=function(kind){if(kind==='master'||kind==null)prepareTaskCards();const r=old.apply(this,arguments);if(kind==='master'||kind==null){prepareTaskCards();setTimeout(()=>{ensureHeader();load()},40)}return r};w.__v32Open=true;w.__v32Original=old;window.openSpAddedDashboard=w}
 }
 function robustClose(){
  closingFromPop=true;
@@ -13564,7 +13571,7 @@ function hookClose(){
 function hookHistory(){
  const oldOpen=window.openSpAddedDashboard;
  if(typeof oldOpen==='function'&&!oldOpen.__v32History){
-   const w=function(kind){const r=oldOpen.apply(this,arguments);if(kind==='master'||kind==null){try{if(!history.state?.spV32MasterDash){history.pushState({...(history.state||{}),spV32MasterDash:true},'',location.href.split('#')[0]+'#master-field-dashboard');historyPushed=true}}catch(e){}setTimeout(()=>{ensureHeader();load()},100)}return r};
+   const w=function(kind){const r=oldOpen.apply(this,arguments);if(kind==='master'||kind==null){try{if(!history.state?.spV32MasterDash){history.pushState({...(history.state||{}),spV32MasterDash:true},'',location.href.split('#')[0]+'#master-field-dashboard');historyPushed=true}}catch(e){}}return r};
    w.__v32History=true;w.__v32Original=oldOpen;window.openSpAddedDashboard=w;
  }
  window.addEventListener('popstate',()=>{if(document.getElementById('spAddedMasterDashboard')?.classList.contains('show')){historyPushed=false;robustClose()}});
@@ -14424,157 +14431,88 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
   let active=false;
   let baseline='';
   let finalParts=[];
-  let restart=false;
+  let timer=null;
 
   const SR=()=>window.SpeechRecognition||window.webkitSpeechRecognition;
+  const getLang=()=>String(document.getElementById('voiceLanguage')?.value||'ur-PK');
 
   function state(msg,live){
     const s=document.getElementById('voiceState');
-    if(s){
-      s.classList.toggle('live',!!live);
-      if(msg)s.textContent=msg;
-    }
+    if(s){s.classList.toggle('live',!!live);if(msg)s.textContent=msg;}
   }
   function setButton(recording){
-    const b=document.getElementById('voiceBtn');
-    if(!b)return;
-    if(recording){
-      b.classList.add('recording');
-      b.innerHTML='⏹️<span>Stop</span>';
-    }else{
-      b.classList.remove('recording');
-      b.innerHTML='🎙️<span>Mic</span>';
-    }
+    const b=document.getElementById('voiceBtn');if(!b)return;
+    b.classList.toggle('recording',!!recording);
+    b.innerHTML=recording?'⏹️<span>Stop</span>':'🎙️<span>Mic</span>';
   }
   function writeNotes(interim){
-    const ta=document.getElementById('notes');
-    if(!ta)return;
-    const parts=finalParts.filter(Boolean);
-    const spoken=(parts.join(' ')+(interim?' '+interim:'')).trim();
+    const ta=document.getElementById('notes');if(!ta)return;
+    const spoken=(finalParts.filter(Boolean).join(' ')+(interim?' '+interim:'')).trim();
     ta.value=(baseline+(baseline&&spoken?' ':'')+spoken).trim();
     ta.dispatchEvent(new Event('input',{bubbles:true}));
   }
   function makeRecognition(){
-    const C=SR();
-    if(!C)return null;
+    const C=SR();if(!C)return null;
     const r=new C();
-    r.continuous=true;
-    r.interimResults=true;
-    r.maxAlternatives=1;
-    r.lang=document.getElementById('voiceLanguage')?.value||'en-US';
+    r.continuous=true;r.interimResults=true;r.maxAlternatives=1;r.lang=getLang();
     r.onstart=()=>state('Recording + converting speech to Notes…',true);
     r.onresult=e=>{
       let interim='';
       for(let i=e.resultIndex;i<e.results.length;i++){
-        const t=String(e.results[i][0]?.transcript||'').trim();
-        if(!t)continue;
-        if(e.results[i].isFinal)finalParts.push(t);
-        else interim+=(interim?' ':'')+t;
+        const t=String(e.results[i][0]?.transcript||'').trim();if(!t)continue;
+        if(e.results[i].isFinal)finalParts.push(t);else interim+=(interim?' ':'')+t;
       }
       writeNotes(interim);
     };
     r.onerror=e=>{
       const err=String(e?.error||'');
-      if(err==='language-not-supported' && r.lang!=='en-US'){
-        try{r.lang='en-US';if(active)r.start();return}catch(_e){}
+      if(err==='language-not-supported'&&r.lang!=='en-US'){
+        try{r.lang='en-US';if(active)setTimeout(()=>{try{r.start()}catch(_e){}},80);return}catch(_e){}
       }
-      if(err==='not-allowed'||err==='service-not-allowed'){
-        state('Microphone allowed, but speech recognition was blocked by the browser.',true);
-      }else if(err!=='aborted'&&err!=='no-speech'){
-        state('Recording is active; speech-to-text is temporarily unavailable.',true);
-      }
+      if(err==='not-allowed'||err==='service-not-allowed')state('Microphone permission is allowed, but speech recognition was blocked by the browser.',true);
+      else if(err!=='aborted'&&err!=='no-speech')state('Recording is active; speech-to-text is temporarily unavailable.',true);
     };
     r.onend=()=>{
-      if(active){
-        try{
-          r.lang=document.getElementById('voiceLanguage')?.value||'en-US';
-          r.start();
-        }catch(_e){}
-      }
+      if(active)setTimeout(()=>{try{r.lang=getLang();r.start()}catch(_e){}},120);
     };
     return r;
   }
-
   async function start(){
-    if(active){return;}
-    if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
-      try{window.toast?.('Voice recording is not supported on this browser');}catch(e){}
-      return;
-    }
-
-    baseline=(document.getElementById('notes')?.value||'').trim();
-    finalParts=[];
-    chunks=[];
-    restart=true;
-
-    /* SpeechRecognition is started from the Mic click path, before the
-       permission await, so the browser keeps the user gesture context. */
-    recognition=makeRecognition();
-    if(recognition){
-      try{recognition.start();}catch(_e){}
-    }
-
+    if(active)return;
+    if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){try{window.toast?.('Voice recording is not supported on this browser')}catch(e){}return;}
+    baseline=(document.getElementById('notes')?.value||'').trim();finalParts=[];chunks=[];
     try{
       stream=await navigator.mediaDevices.getUserMedia({audio:true});
       recorder=new MediaRecorder(stream);
-      active=true;
-      voiceRecording=true;
-      voiceRecognition=recognition;
-      voiceRecorder=recorder;
-      setButton(true);
+      active=true;voiceRecording=true;setButton(true);
+      recognition=makeRecognition();voiceRecognition=recognition;voiceRecorder=recorder;
+      if(recognition){try{recognition.start()}catch(_e){}}
       state(recognition?'Recording + converting speech to Notes…':'Recording voice note… speech-to-text not available in this browser.',true);
-
       recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
       recorder.onstop=()=>{
-        active=false;
-        voiceRecording=false;
-        const type=recorder?.mimeType||'audio/webm';
-        pendingVoiceBlob=chunks.length?new Blob(chunks,{type}):null;
-        try{recognition?.stop()}catch(_e){}
-        recognition=null;
-        voiceRecognition=null;
-        try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){}
-        stream=null;
-        voiceRecorder=null;
-        writeNotes('');
-        setButton(false);
+        const type=recorder?.mimeType||'audio/webm';pendingVoiceBlob=chunks.length?new Blob(chunks,{type}):null;
+        try{recognition?.stop()}catch(_e){};recognition=null;voiceRecognition=null;
+        try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){};stream=null;voiceRecorder=null;
+        active=false;voiceRecording=false;clearTimeout(timer);timer=null;writeNotes('');setButton(false);
         state(finalParts.length?'Voice + text captured. Both will be saved with this visit.':'Voice note captured. It will be saved with this visit.',false);
       };
       recorder.start();
-      setTimeout(()=>{if(active)stop()},60000);
+      timer=setTimeout(()=>{if(active)stop()},60000);
     }catch(e){
-      active=false;
-      voiceRecording=false;
-      try{recognition?.abort()}catch(_e){}
-      recognition=null;
-      try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){}
-      stream=null;
-      setButton(false);
-      state('',false);
+      active=false;voiceRecording=false;try{recognition?.abort()}catch(_e){};recognition=null;voiceRecognition=null;
+      try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){};stream=null;setButton(false);state('',false);
       try{window.toast?.('Microphone permission denied or unavailable')}catch(_e){}
     }
   }
-
   function stop(){
-    if(!active)return;
-    active=false;
-    voiceRecording=false;
+    if(!active&&!window.voiceRecording)return;
+    active=false;voiceRecording=false;clearTimeout(timer);timer=null;
     try{recognition?.stop()}catch(_e){}
-    if(recorder&&recorder.state!=='inactive'){
-      try{recorder.stop()}catch(_e){}
-    }else{
-      try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){}
-      stream=null;
-      setButton(false);
-    }
+    if(recorder&&recorder.state!=='inactive'){try{recorder.stop()}catch(_e){}}
+    else{try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){};stream=null;setButton(false);writeNotes('')}
   }
-
-  window.startVoiceNote=start;
-  window.stopVoiceNote=stop;
-  window.toggleVoiceNote=function(){
-    if(active || window.voiceRecording){stop();return;}
-    start();
-  };
+  window.startVoiceNote=start;window.stopVoiceNote=stop;
+  window.toggleVoiceNote=function(){if(active||window.voiceRecording){stop();return;}start()};
   window.__shadabMicSpeechV1={start,stop,writeNotes};
 })();
 })();
