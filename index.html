@@ -12787,14 +12787,14 @@ function installPresence(){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>{ensurePresence();ensurePermissionWatch()},400)});
 }
 
-/* ===== PWA: first-visit install popup, one time per browser/device ===== */
+/* ===== PWA: DIRECT IN-APP INSTALL ===== */
 let deferredInstallPrompt=null;
-const installSeenKey='shadab_install_prompt_seen_v27';
-const installDoneKey='shadab_install_prompt_done_v27';
+const installSeenKey='shadab_install_prompt_seen_v40_direct';
+const installDoneKey='shadab_install_prompt_done_v40_direct';
 const isStandalone=()=>window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true;
 const isiOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const isAndroid=()=>/android/i.test(navigator.userAgent||'');
-const canUseWebInstall=()=>true;
+const canUseWebInstall=()=>location.protocol==='https:'&&!isStandalone();
 
 function setInstallUi(kind){
   const back=document.getElementById('spV21InstallBackdrop');
@@ -12802,64 +12802,85 @@ function setInstallUi(kind){
   const hint=document.getElementById('spV21InstallHint');
   const title=document.getElementById('spV21InstallTitle');
   if(!back||!action||!hint||!title)return;
+  title.textContent='Install SHADAB PHARMACY';
+  action.textContent='Install Application';
   if(kind==='ios'){
-    title.textContent='Install SHADAB PHARMACY';
-    action.textContent='Install Application';
     hint.innerHTML='Tap <b>Install Application</b> to add <b>SHADAB PHARMACY</b> to your home screen.';
   }else{
-    title.textContent='Install SHADAB PHARMACY';
-    action.textContent='Install Application';
-    hint.innerHTML='Tap <b>Install Application</b> to add <b>SHADAB PHARMACY</b> to your home screen.';
+    hint.innerHTML='Tap <b>Install Application</b> to install SHADAB PHARMACY on your device.';
   }
   back.classList.add('show');
 }
 
 function markInstallSeen(done){
-  try{localStorage.setItem(installSeenKey,'1');if(done)localStorage.setItem(installDoneKey,'1')}catch(e){}
+  try{
+    localStorage.setItem(installSeenKey,'1');
+    if(done)localStorage.setItem(installDoneKey,'1');
+  }catch(e){}
 }
 function hideInstall(){document.getElementById('spV21InstallBackdrop')?.classList.remove('show')}
 function installEligible(){
   if(isStandalone())return false;
   if(!canUseWebInstall())return false;
-  try{if(localStorage.getItem(installDoneKey)==='1'||localStorage.getItem(installSeenKey)==='1')return false}catch(e){}
+  try{if(localStorage.getItem(installDoneKey)==='1')return false}catch(e){}
   return true;
 }
+
+/* CRITICAL: Always capture Chrome's real install event on HTTPS.
+   Do not discard it because the popup was previously seen/dismissed. */
 window.addEventListener('beforeinstallprompt',e=>{
-  if(!installEligible())return;
+  if(isStandalone()||location.protocol!=='https:')return;
   e.preventDefault();
   deferredInstallPrompt=e;
   setInstallUi('android');
 });
+
 window.addEventListener('appinstalled',()=>{
   deferredInstallPrompt=null;
   markInstallSeen(true);
   hideInstall();
 });
+
 async function installApp(){
-  if(!deferredInstallPrompt){
-    if(isiOS() && installEligible()){
-      setInstallUi('ios');
-      markInstallSeen(false);
-      return;
-    }
-    if(isAndroid()){
+  if(isStandalone())return;
+
+  /* The ONLY Android install path: invoke Chrome's real prompt captured above. */
+  if(deferredInstallPrompt){
+    try{
+      const p=deferredInstallPrompt;
+      deferredInstallPrompt=null;
+      const result=await p.prompt();
+      let outcome='';
+      try{const choice=await p.userChoice;outcome=choice?.outcome||result?.outcome||''}catch(e){outcome=result?.outcome||''}
+      if(outcome==='accepted'){
+        markInstallSeen(true);
+        hideInstall();
+      }else{
+        markInstallSeen(false);
+        setInstallUi('android');
+      }
+    }catch(e){
+      console.warn('PWA install prompt failed',e);
       setInstallUi('android');
-      const hint=document.getElementById('spV21InstallHint');
-      if(hint)hint.innerHTML='Tap <b>Install Application</b> to add <b>SHADAB PHARMACY</b> to your home screen.';
-      markInstallSeen(false);
-      return;
     }
-    toast('Install is not currently available on this browser/device.');
     return;
   }
-  try{
-    const p=deferredInstallPrompt;
-    deferredInstallPrompt=null;
-    const result=await p.prompt();
-    try{await p.userChoice}catch(e){}
-    markInstallSeen(!!(result?.outcome==='accepted'));
-    hideInstall();
-  }catch(e){hideInstall()}
+
+  /* iOS does not expose beforeinstallprompt. Keep the existing in-app guide. */
+  if(isiOS()&&installEligible()){
+    setInstallUi('ios');
+    return;
+  }
+
+  /* No browser menu instructions here. The button stays in the app and
+     waits for Chrome to expose the native prompt. */
+  if(isAndroid()){
+    setInstallUi('android');
+    const hint=document.getElementById('spV21InstallHint');
+    if(hint)hint.innerHTML='Install is being prepared. Please tap <b>Install Application</b> again in a moment.';
+    return;
+  }
+  toast('Install is not currently available on this browser/device.');
 }
 window.installApp=installApp;
 
@@ -12871,17 +12892,17 @@ function initInstallUi(){
   }catch(e){}
   const back=document.getElementById('spV21InstallBackdrop');
   const close=document.getElementById('spV21InstallClose');
+  const action=document.getElementById('spV21InstallAction');
   if(!back)return;
-  close?.addEventListener('click',()=>{markInstallSeen(false);hideInstall()});
-  back.addEventListener('click',e=>{if(e.target===back){markInstallSeen(false);hideInstall()}});
+  close?.addEventListener('click',()=>{hideInstall()});
+  action?.addEventListener('click',()=>{try{window.installApp?.()}catch(e){console.warn('PWA install action failed',e)}});
+  back.addEventListener('click',e=>{if(e.target===back)hideInstall()});
+
+  /* Do not block the popup merely because it was seen before. Only an
+     already-installed app is excluded. */
   if(!installEligible())return;
   if(isiOS()){
-    // iOS has no beforeinstallprompt; show the animated in-app guide once.
     setTimeout(()=>{if(installEligible()&&!isStandalone())setInstallUi('ios')},900);
-  }else if(isAndroid()){
-    // Android: if Chrome has not exposed beforeinstallprompt yet (or this is a downloaded content:// copy),
-    // still show the same animated install card so the user gets a clear install path.
-    setTimeout(()=>{if(installEligible()&&!isStandalone()&&!deferredInstallPrompt)setInstallUi('android')},900);
   }else{
     setTimeout(()=>{if(installEligible()&&!isStandalone()&&!deferredInstallPrompt)setInstallUi('android')},900);
   }
