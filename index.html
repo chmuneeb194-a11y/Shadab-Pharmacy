@@ -14517,3 +14517,117 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
 })();
 })();
 </script>
+
+<!-- ===== V42 TARGETED: MASTER TODAY TASK PERMISSION-SAFE REFRESH ===== -->
+<script id="shadab-v42-today-task-sync-fix">
+(function(){
+'use strict';
+const ADMIN='master@shadabpharmacy.com';
+const norm=v=>String(v??'').trim().toLowerCase();
+const today=()=>typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA');
+const dayName=d=>new Date(String(d)+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
+const readCol=async name=>{try{return typeof window.shadabRestReadCollection==='function'?await window.shadabRestReadCollection(name):[]}catch(e){console.warn('[V42] read '+name+' failed:',e);return []}};
+const readDoc=async path=>{try{return typeof window.shadabRestReadDoc==='function'?await window.shadabRestReadDoc(path):null}catch(e){console.warn('[V42] read '+path+' failed:',e);return null}};
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+let busy=false;
+let last={salesmen:[],profiles:new Map(),data:new Map(),schedules:{},stores:[],selected:'',planned:[],visits:[],permissions:{salesmen:true,userData:true}};
+function assignmentList(cfg,date){
+ const a=Array.isArray(cfg?.assignments)?cfg.assignments:((cfg?.area||cfg?.days)?[cfg]:[]);
+ const dn=dayName(date);
+ return a.filter(x=>x&&x.area&&x.dayEnabled?.[dn]!==false&&Array.isArray(x.days?.[dn])&&x.days[dn].length)
+  .map(x=>({area:String(x.area),territories:[...new Set(x.days[dn].map(String))]}));
+}
+function storeKey(s){return String(s?.code||s?.id||s?.name||'').trim().toLowerCase()+'::'+String(s?.area||'').trim().toLowerCase()}
+function buildPlan(name,date){
+ const aa=assignmentList(last.schedules?.[name],date), wanted=new Set();
+ aa.forEach(a=>a.territories.forEach(t=>wanted.add(norm(a.area)+'::'+norm(t))));
+ const out=[],seen=new Set();
+ for(const st of last.stores){
+   if(!st||!wanted.has(norm(st.area)+'::'+norm(st.territory)))continue;
+   const k=storeKey(st)+'::'+norm(st.territory);if(seen.has(k))continue;seen.add(k);
+   out.push({key:k,code:st.code,name:st.name,store:st.name,area:st.area,territory:st.territory,town:st.town||'',status:'Planned',date,visitedBy:name});
+ }
+ return out;
+}
+function visitRows(uid,name){const d=last.data.get(String(uid))||{};return Array.isArray(d.visits)?d.visits.map(v=>({...v,uid:String(uid),visitedBy:String(v.visitedBy||v.salesman||v.salesmanName||name).trim(),status:String(v.status||'Completed').trim()||'Completed'})):[]}
+function applyVisits(planned,visits,name){
+ const map=new Map(planned.map(x=>[String(x.key),x]));
+ for(const v of visits){if(String(v.date||'').slice(0,10)!==today())continue;if(norm(v.visitedBy||v.salesman||v.salesmanName)!==norm(name))continue;const k=storeKey(v)+'::'+norm(v.territory);const p=map.get(k);if(!p)continue;Object.assign(p,{status:String(v.status||'Completed').trim()||'Completed',visitId:v.id||'',person:v.person||'',time:v.time||'',notes:v.notes||'',followup:v.followup||'',photo:v.photo||''})}
+ return [...map.values()];
+}
+function pickName(){
+ const el=document.getElementById('spV32MasterTaskSalesman');
+ const current=String(el?.value||localStorage.getItem('sp_v32_master_task_salesman')||'').trim();
+ if(current&&last.salesmen.some(x=>norm(x.name)===norm(current)))return last.salesmen.find(x=>norm(x.name)===norm(current)).name;
+ const active=last.salesmen.filter(x=>assignmentList(last.schedules?.[x.name],today()).length);
+ return (active[0]||last.salesmen[0])?.name||'';
+}
+function paint(){
+ const root=document.getElementById('spAddedMasterDashboard');if(!root)return;
+ const sel=document.getElementById('spV32MasterTaskSalesman');
+ if(sel){const old=last.selected;sel.innerHTML=last.salesmen.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');if(old&&last.salesmen.some(x=>norm(x.name)===norm(old)))sel.value=old;else if(last.selected)sel.value=last.selected;}
+ const name=last.selected;
+ const day=document.getElementById('spV32MasterTaskDay');if(day)day.textContent=name?`${name} • ${dayName(today())}`:'';
+ const planned=last.planned||[],vis=last.visits||[];
+ const done=v=>{const st=norm(v.status||v.result);return st!==''&&!['planned','assigned','pending'].includes(st)};
+ const order=v=>['order','order received','order done','order taken','with order','order_received','order_done'].includes(norm(v.status||v.orderStatus))||[v.order,v.orderReceived,v.orderTaken,v.hasOrder,v.isOrder,v.orderStatus].some(x=>x===true||['yes','true','received','done','order'].includes(norm(x)));
+ const vv=vis.filter(v=>String(v.date||'').slice(0,10)===today()&&norm(v.visitedBy||v.salesman||v.salesmanName)===norm(name)&&done(v));
+ const oo=vv.filter(order);const seen=new Set(vv.map(v=>storeKey(v)+'::'+norm(v.territory)));const rem=planned.filter(v=>!seen.has(String(v.key||storeKey(v)+'::'+norm(v.territory))));
+ const nums=root.querySelectorAll('.sp-added-taskgrid .num');[planned.length,vv.length,oo.length,rem.length].forEach((n,i)=>{if(nums[i])nums[i].textContent=String(n)});
+ root.dataset.v42SelectedSalesman=name;root.dataset.v42Resolving='0';
+ try{if(name)localStorage.setItem('sp_v32_master_task_salesman',name)}catch(e){}
+}
+async function load(){
+ if(busy)return last;busy=true;
+ try{
+  const s=window.shadabRestCurrentSession?.();if(!s?.uid||norm(s.email)!==norm(ADMIN))return last;
+  const [profiles,ud,sched,master]=await Promise.all([readCol('salesmen'),readCol('user_data'),readDoc('app_settings/adminSchedules'),readDoc('app_settings/masterData')]);
+  last.permissions.salesmen=Array.isArray(profiles)&&profiles.length>0;
+  last.permissions.userData=Array.isArray(ud)&&ud.length>0;
+  last.profiles=new Map();last.data=new Map();
+  (profiles||[]).forEach(r=>{const uid=String(r?.id||'');const d=r?.data?.()||{};const name=String(d.fullName||d.displayName||d.salesmanName||d.name||'').trim();if(uid&&name)last.profiles.set(uid,d)});
+  (ud||[]).forEach(r=>{const uid=String(r?.id||'');if(uid)last.data.set(uid,r?.data?.()||{})});
+  last.salesmen=[...last.profiles.entries()].map(([uid,d])=>({uid,name:String(d.fullName||d.displayName||d.salesmanName||d.name||'').trim()})).filter(x=>x.name);
+  last.salesmen.sort((a,b)=>a.name.localeCompare(b.name));
+  const cloudSched=sched?.schedules&&typeof sched.schedules==='object'?sched.schedules:{};
+  const localSched=(typeof adminSchedules!=='undefined'&&adminSchedules&&typeof adminSchedules==='object')?adminSchedules:{};
+  last.schedules={...cloudSched,...localSched};
+  const cloudDb=Array.isArray(master?.storeDatabase)?master.storeDatabase:(Array.isArray(master?.stores)?master.stores:(Array.isArray(master?.medicalStores)?master.medicalStores:[]));
+  const localDb=(typeof storeDatabase!=='undefined'&&Array.isArray(storeDatabase))?storeDatabase:[];
+  last.stores=localDb.length?localDb:cloudDb;
+  last.selected=pickName();
+  const person=last.salesmen.find(x=>norm(x.name)===norm(last.selected));
+  if(person){last.visits=visitRows(person.uid,person.name);last.planned=applyVisits(buildPlan(person.name,today()),last.visits,person.name)}
+  else{last.visits=[];last.planned=[]}
+  paint();
+  const st=document.getElementById('spMasterDashboardSyncStatus');
+  if(st){const partial=!(last.permissions.salesmen&&last.permissions.userData);st.textContent=partial?'Assignment data refreshed • cloud visit data limited':'Synced salesman data • '+last.visits.length+' visits'}
+  return last;
+ }finally{busy=false}
+}
+function select(name){
+ const hit=last.salesmen.find(x=>norm(x.name)===norm(name));if(!hit)return;
+ last.selected=hit.name;last.visits=visitRows(hit.uid,hit.name);last.planned=applyVisits(buildPlan(hit.name,today()),last.visits,hit.name);paint();
+}
+function install(){
+ const sel=document.getElementById('spV32MasterTaskSalesman');if(sel&&!sel.dataset.v42){sel.dataset.v42='1';sel.addEventListener('change',()=>select(sel.value),true)}
+}
+/* Do not let the previous V41 Master write path turn a read/dashboard refresh into a
+   permission error. Master Dashboard is a reader here; Master visits are not uploaded
+   by this button. Existing salesman sync remains untouched. */
+window.syncMasterFieldDashboard=async function(){
+ const b=document.getElementById('spMasterDashboardSyncBtn');if(b)b.disabled=true;
+ try{install();const r=await load();if(!r.salesmen.length){throw new Error('No salesman profiles could be read from Firebase.')}paint();return r}
+ catch(e){const st=document.getElementById('spMasterDashboardSyncStatus');if(st)st.textContent='Refresh limited — last assignment data retained';console.warn('[V42] Master dashboard refresh:',e);paint();return last}
+ finally{if(b)b.disabled=false}
+};
+window.refreshSpAddedMaster=window.syncMasterFieldDashboard;
+window.spV42RefreshTodayTasks=async()=>{install();return load()};
+window.spV42SelectTodaySalesman=select;
+const boot=()=>{install();setTimeout(()=>{if(document.getElementById('spAddedMasterDashboard')?.classList.contains('show'))load()},120)};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+window.addEventListener('load',()=>setTimeout(()=>{install();if(document.getElementById('spAddedMasterDashboard')?.classList.contains('show'))load()},500));
+window.addEventListener('online',()=>setTimeout(()=>{if(document.getElementById('spAddedMasterDashboard')?.classList.contains('show'))load()},700));
+})();
+</script>
+<!-- ===== END V42 TARGETED ===== -->
