@@ -14261,3 +14261,321 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
   console.info('SHADAB V38: Firebase Storage image-safe pipeline installed; Firestore photo Base64 blocked.');
 })();
 </script>
+
+
+<script id="shadab-final-territory-and-mic-fix-v1">
+(function(){
+'use strict';
+
+/* =========================================================
+   1) FIELD VISIT TERRITORY PERSISTENCE
+   Keep the salesman + city + manually selected territories
+   stable across Save Visit / reset / reopen. Admin assignments
+   remain authoritative when they actually exist.
+   ========================================================= */
+(function(){
+  const KEY='shadab_current_territories_v1';
+  const SALESMAN='shadab_current_salesman_v1';
+
+  function norm(v){return String(v||'').trim().toLowerCase();}
+  function currentSalesman(){
+    return String(document.getElementById('visitedBy')?.value||localStorage.getItem(SALESMAN)||'').trim();
+  }
+  function currentTerritories(){
+    try{
+      if(typeof window.selectedTerritories==='function'){
+        const a=window.selectedTerritories();
+        if(Array.isArray(a))return [...new Set(a.map(String).map(x=>x.trim()).filter(Boolean))];
+      }
+    }catch(e){}
+    const sel=document.getElementById('territory');
+    return sel?[...sel.options].filter(o=>o.selected&&o.value).map(o=>o.value):[];
+  }
+  function persist(area,vals,salesman){
+    const a=String(area||document.getElementById('area')?.value||'').trim();
+    const s=String(salesman||currentSalesman()).trim();
+    const t=[...new Set((Array.isArray(vals)?vals:[]).map(String).map(x=>x.trim()).filter(Boolean))];
+    if(!s)return;
+    try{
+      localStorage.setItem(KEY,JSON.stringify({salesman:s,area:a,territories:t,updatedAt:Date.now()}));
+      localStorage.setItem('shadab_current_area_v1',a);
+      localStorage.setItem(SALESMAN,s);
+    }catch(e){}
+  }
+  function snapshot(){
+    return {
+      salesman:currentSalesman(),
+      area:String(document.getElementById('area')?.value||'').trim(),
+      territories:currentTerritories()
+    };
+  }
+  function restore(snap){
+    if(!snap?.salesman)return;
+    try{
+      const v=document.getElementById('visitedBy');
+      if(v && !v.value)v.value=snap.salesman;
+      const a=document.getElementById('area');
+      if(a && snap.area)a.value=snap.area;
+      if(typeof window.refreshTerritories==='function')window.refreshTerritories(snap.territories||[]);
+      if(typeof window.setSelectedTerritories==='function')window.setSelectedTerritories(snap.territories||[]);
+      persist(snap.area,snap.territories,snap.salesman);
+      try{window.showStoreSuggestions?.()}catch(e){}
+    }catch(e){}
+  }
+
+  /* Save the exact visible selection before the existing save chain runs. */
+  const oldSave=window.saveVisit;
+  if(typeof oldSave==='function'&&!oldSave.__spTerritoryMicPersistenceV1){
+    const wrapped=async function(){
+      const snap=snapshot();
+      persist(snap.area,snap.territories,snap.salesman);
+      const result=await oldSave.apply(this,arguments);
+      if(result!==false){
+        /* Existing reset/sync wrappers may have changed the controls.
+           Restore the user's last manual selection immediately. */
+        restore(snap);
+      }
+      return result;
+    };
+    wrapped.__spTerritoryMicPersistenceV1=true;
+    wrapped.__spTerritoryMicOriginal=oldSave;
+    window.saveVisit=wrapped;
+  }
+
+  /* Make reset/reopen use the same saved context for unassigned salesmen. */
+  const oldReset=window.resetForm;
+  if(typeof oldReset==='function'&&!oldReset.__spTerritoryContextV1){
+    const wrapped=function(){
+      const snap=snapshot();
+      const result=oldReset.apply(this,arguments);
+      const saved=(()=>{
+        try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}
+      })();
+      /* If this salesman has a real Admin assignment, existing logic keeps it.
+         Otherwise restore the manually selected context. */
+      const name=currentSalesman();
+      const hasAssignment=!!(window.adminSchedules && window.adminSchedules[name]);
+      if(!hasAssignment && saved?.salesman===name && saved.area){
+        restore(saved);
+      }else if(!hasAssignment && snap.salesman===name && snap.area){
+        restore(snap);
+      }
+      return result;
+    };
+    wrapped.__spTerritoryContextV1=true;
+    wrapped.__spTerritoryResetOriginal=oldReset;
+    window.resetForm=wrapped;
+  }
+
+  /* When salesman changes, keep his saved manual context if no Admin assignment exists. */
+  const oldSales=window.onSalesmanChanged;
+  if(typeof oldSales==='function'&&!oldSales.__spTerritoryContextV1){
+    const wrapped=function(){
+      const result=oldSales.apply(this,arguments);
+      setTimeout(()=>{
+        const name=currentSalesman();
+        const hasAssignment=!!(window.adminSchedules && window.adminSchedules[name]);
+        if(hasAssignment)return;
+        try{
+          const saved=JSON.parse(localStorage.getItem(KEY)||'null');
+          if(saved?.salesman===name&&saved.area)restore(saved);
+        }catch(e){}
+      },20);
+      return result;
+    };
+    wrapped.__spTerritoryContextV1=true;
+    wrapped.__spTerritorySalesOriginal=oldSales;
+    window.onSalesmanChanged=wrapped;
+  }
+
+  /* Manual territory/city changes update the persistent context immediately. */
+  document.addEventListener('change',function(e){
+    if(e.target?.id==='territory'){
+      setTimeout(()=>persist(
+        document.getElementById('area')?.value||'',
+        currentTerritories(),
+        currentSalesman()
+      ),0);
+    }
+    if(e.target?.id==='area'){
+      /* City is a deliberate user change, so its territory selection starts empty. */
+      setTimeout(()=>persist(
+        document.getElementById('area')?.value||'',
+        currentTerritories(),
+        currentSalesman()
+      ),0);
+    }
+  },true);
+
+  window.shadabPersistVisitTerritoryContext=()=>{const s=snapshot();persist(s.area,s.territories,s.salesman);return s};
+})();
+
+/* =========================================================
+   2) MIC -> ORDER / BUSINESS NOTES
+   Keep the existing audio-note behavior, but run a single,
+   authoritative SpeechRecognition instance that writes live
+   final/interim speech into #notes.
+   ========================================================= */
+(function(){
+  let recognition=null;
+  let stream=null;
+  let recorder=null;
+  let chunks=[];
+  let active=false;
+  let baseline='';
+  let finalParts=[];
+  let restart=false;
+
+  const SR=()=>window.SpeechRecognition||window.webkitSpeechRecognition;
+
+  function state(msg,live){
+    const s=document.getElementById('voiceState');
+    if(s){
+      s.classList.toggle('live',!!live);
+      if(msg)s.textContent=msg;
+    }
+  }
+  function setButton(recording){
+    const b=document.getElementById('voiceBtn');
+    if(!b)return;
+    if(recording){
+      b.classList.add('recording');
+      b.innerHTML='⏹️<span>Stop</span>';
+    }else{
+      b.classList.remove('recording');
+      b.innerHTML='🎙️<span>Mic</span>';
+    }
+  }
+  function writeNotes(interim){
+    const ta=document.getElementById('notes');
+    if(!ta)return;
+    const parts=finalParts.filter(Boolean);
+    const spoken=(parts.join(' ')+(interim?' '+interim:'')).trim();
+    ta.value=(baseline+(baseline&&spoken?' ':'')+spoken).trim();
+    ta.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  function makeRecognition(){
+    const C=SR();
+    if(!C)return null;
+    const r=new C();
+    r.continuous=true;
+    r.interimResults=true;
+    r.maxAlternatives=1;
+    r.lang=document.getElementById('voiceLanguage')?.value||'en-US';
+    r.onstart=()=>state('Recording + converting speech to Notes…',true);
+    r.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=String(e.results[i][0]?.transcript||'').trim();
+        if(!t)continue;
+        if(e.results[i].isFinal)finalParts.push(t);
+        else interim+=(interim?' ':'')+t;
+      }
+      writeNotes(interim);
+    };
+    r.onerror=e=>{
+      const err=String(e?.error||'');
+      if(err==='language-not-supported' && r.lang!=='en-US'){
+        try{r.lang='en-US';if(active)r.start();return}catch(_e){}
+      }
+      if(err==='not-allowed'||err==='service-not-allowed'){
+        state('Microphone allowed, but speech recognition was blocked by the browser.',true);
+      }else if(err!=='aborted'&&err!=='no-speech'){
+        state('Recording is active; speech-to-text is temporarily unavailable.',true);
+      }
+    };
+    r.onend=()=>{
+      if(active){
+        try{
+          r.lang=document.getElementById('voiceLanguage')?.value||'en-US';
+          r.start();
+        }catch(_e){}
+      }
+    };
+    return r;
+  }
+
+  async function start(){
+    if(active){return;}
+    if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
+      try{window.toast?.('Voice recording is not supported on this browser');}catch(e){}
+      return;
+    }
+
+    baseline=(document.getElementById('notes')?.value||'').trim();
+    finalParts=[];
+    chunks=[];
+    restart=true;
+
+    /* SpeechRecognition is started from the Mic click path, before the
+       permission await, so the browser keeps the user gesture context. */
+    recognition=makeRecognition();
+    if(recognition){
+      try{recognition.start();}catch(_e){}
+    }
+
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      recorder=new MediaRecorder(stream);
+      active=true;
+      voiceRecording=true;
+      voiceRecognition=recognition;
+      voiceRecorder=recorder;
+      setButton(true);
+      state(recognition?'Recording + converting speech to Notes…':'Recording voice note… speech-to-text not available in this browser.',true);
+
+      recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
+      recorder.onstop=()=>{
+        active=false;
+        voiceRecording=false;
+        const type=recorder?.mimeType||'audio/webm';
+        pendingVoiceBlob=chunks.length?new Blob(chunks,{type}):null;
+        try{recognition?.stop()}catch(_e){}
+        recognition=null;
+        voiceRecognition=null;
+        try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){}
+        stream=null;
+        voiceRecorder=null;
+        writeNotes('');
+        setButton(false);
+        state(finalParts.length?'Voice + text captured. Both will be saved with this visit.':'Voice note captured. It will be saved with this visit.',false);
+      };
+      recorder.start();
+      setTimeout(()=>{if(active)stop()},60000);
+    }catch(e){
+      active=false;
+      voiceRecording=false;
+      try{recognition?.abort()}catch(_e){}
+      recognition=null;
+      try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){}
+      stream=null;
+      setButton(false);
+      state('',false);
+      try{window.toast?.('Microphone permission denied or unavailable')}catch(_e){}
+    }
+  }
+
+  function stop(){
+    if(!active)return;
+    active=false;
+    voiceRecording=false;
+    try{recognition?.stop()}catch(_e){}
+    if(recorder&&recorder.state!=='inactive'){
+      try{recorder.stop()}catch(_e){}
+    }else{
+      try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){}
+      stream=null;
+      setButton(false);
+    }
+  }
+
+  window.startVoiceNote=start;
+  window.stopVoiceNote=stop;
+  window.toggleVoiceNote=function(){
+    if(active || window.voiceRecording){stop();return;}
+    start();
+  };
+  window.__shadabMicSpeechV1={start,stop,writeNotes};
+})();
+})();
+</script>
