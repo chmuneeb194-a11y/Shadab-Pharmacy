@@ -1847,7 +1847,7 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
 const APP_KEY="shadab_pharmacy_visits_v1";
 const TERRITORY_KEY="shadab_pharmacy_territories_v1";
 const WHATSAPP_NUMBER="923006901869";
-let AREAS=["Sahiwal","Chichawatni","Pakpattan","Arifwala"];
+const AREAS=["Sahiwal","Chichawatni","Pakpattan","Arifwala"];
 const STORE_KEY="shadab_pharmacy_store_database_v1";
 /* ===== START: TODAY TASK DATA STORE ===== */
 const TASK_KEY="shadab_pharmacy_route_tasks_v1";
@@ -2721,6 +2721,9 @@ function shareAllToday(){
 function printHTML(title,data){
   const rows=data.map(v=>`<tr><td>${v.photo?`<img src="${v.photo}">`:"—"}</td><td>${esc(v.store)}</td><td>${esc(v.visitedBy||"—")}</td><td>${esc(v.person)}</td><td>${esc(v.type)}</td><td>${esc(v.area)}</td><td>${esc(v.territory)}</td><td>${formatDate(v.date)}<br>${esc(v.time)}</td></tr>`).join("");
   const html=`<!doctype html><html><head><meta charset="utf-8"><title>Shadab Pharmacy — ${esc(title)}</title><style>@page{size:A4 portrait;margin:7mm}body{font-family:Arial,sans-serif;color:#111;margin:0}h1{font-size:18px;margin:0 0 2px}p{color:#555;font-size:9px;margin:3px 0}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:7.4px;table-layout:fixed}th,td{border:1px solid #bbb;padding:3px 4px;vertical-align:middle;word-break:break-word;line-height:1.2}th{background:#eee;font-size:7.2px}td img{width:42px;height:34px;object-fit:cover;border-radius:2px}th:nth-child(1){width:10%}th:nth-child(2){width:19%}th:nth-child(3){width:15%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:13%}th:nth-child(7){width:18%}@media print{button{display:none}}</style></head><body><h1>Shadab Pharmacy</h1><p>${esc(title)} • Generated ${nowText()}</p><table><thead><tr><th>Photo</th><th>Store / Pharmacy</th><th>Visited By</th><th>Person</th><th>Type</th><th>Area</th><th>Territory</th><th>Date / Time</th></tr></thead><tbody>${rows}</tbody></table><p>Total Records: ${data.length}</p>
+
+
+
 
 
 
@@ -4528,11 +4531,29 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return (await refreshREST()).idToken;
   }
 
+  const CLOUD_PAUSE_KEY='shadab_cloud_pause_until_v14';
+  const CLOUD_PAUSE_DEFAULT_MS=30*60*1000;
+  function cloudPauseUntilV14(){try{return Number(localStorage.getItem(CLOUD_PAUSE_KEY)||0)||0}catch(e){return 0}}
+  function setCloudPauseV14(ms,reason){try{localStorage.setItem(CLOUD_PAUSE_KEY,String(Date.now()+Math.max(60000,Number(ms)||CLOUD_PAUSE_DEFAULT_MS)))}catch(e){};try{setStatus('firebase-error',reason||'Cloud quota temporarily paused • local data is safe')}catch(e){}}
+  function clearCloudPauseV14(){try{localStorage.removeItem(CLOUD_PAUSE_KEY)}catch(e){}}
+  function buildQuotaErrorV14(r){const e=new Error('Quota exceeded. [HTTP 429]');e.httpStatus=429;return e}
   async function fsFetch(path,options={},retry=true){
+    const pausedUntil=cloudPauseUntilV14();
+    if(pausedUntil>Date.now()){
+      const e=new Error('Cloud sync temporarily paused after Firebase quota response. Local data is safe.');
+      e.code='CLOUD_QUOTA_PAUSED';e.httpStatus=429;e.retryAt=pausedUntil;throw e;
+    }
     const token=await ensureToken();
     const headers=Object.assign({'Authorization':'Bearer '+token,'Content-Type':'application/json'},options.headers||{});
     const r=await fetch(FS_BASE+path,Object.assign({},options,{headers,cache:'no-store'}));
     if(r.status===401 && retry){await refreshREST();return fsFetch(path,options,false)}
+    if(r.status===429){
+      let ms=CLOUD_PAUSE_DEFAULT_MS;
+      try{const ra=r.headers.get('Retry-After');if(ra){const n=Number(ra);ms=Number.isFinite(n)?Math.max(60000,n*1000):CLOUD_PAUSE_DEFAULT_MS}}catch(e){}
+      setCloudPauseV14(ms,'Firebase quota exhausted • cloud requests paused • local data is safe');
+      return Promise.reject(buildQuotaErrorV14(r));
+    }
+    if(r.ok)clearCloudPauseV14();
     return r;
   }
 
@@ -4571,8 +4592,22 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(r.status===404)return null;
     const x=await parseResponse(r);return objectFromDoc(x);
   }
-  async function writeDoc(path,obj){
-    const r=await fsFetch(path,{method:'PATCH',body:JSON.stringify(docFromObject(obj))});
+  async function readDocMeta(path){
+    const r=await fsFetch(path,{method:'GET'});
+    if(r.status===404)return null;
+    const x=await parseResponse(r);
+    return {data:objectFromDoc(x),updateTime:x?.updateTime||'',name:x?.name||''};
+  }
+  async function writeDoc(path,obj,opts={}){
+    let url=path;
+    const qs=[];
+    const mask=Array.isArray(opts?.updateMask)?opts.updateMask.filter(Boolean):[];
+    mask.forEach(p=>qs.push('updateMask.fieldPaths='+encodeURIComponent(p)));
+    if(opts?.currentDocument?.exists===true)qs.push('currentDocument.exists=true');
+    else if(opts?.currentDocument?.exists===false)qs.push('currentDocument.exists=false');
+    else if(opts?.currentDocument?.updateTime)qs.push('currentDocument.updateTime='+encodeURIComponent(String(opts.currentDocument.updateTime)));
+    if(qs.length)url+='?'+qs.join('&');
+    const r=await fsFetch(url,{method:'PATCH',body:JSON.stringify(docFromObject(obj))});
     return parseResponse(r);
   }
 
@@ -4890,15 +4925,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.shadabGetAdminFinancialRecords=()=>{try{return JSON.parse(localStorage.getItem('shadab_admin_financial_records_v1')||'{}')}catch(e){return {}}};
   // Expose the REST layer to the Admin Sync buttons. This downloaded HTML uses REST only for Firestore.
   window.shadabRestReadDoc=readDoc;
+  window.shadabRestReadDocMeta=readDocMeta;
   window.shadabRestWriteDoc=writeDoc;
+  window.shadabRestWriteDocMasked=writeDoc;
    window.shadabRestDeleteDoc=async function(path){ const r=await fsFetch(path,{method:'DELETE'}); if(r.status===404)return true; return parseResponse(r); };
   window.shadabRestReadCollection=async function(path){
     const out=[]; let pageToken='';
     for(let page=0;page<20;page++){
-      const token=await ensureToken();
       const qs=new URLSearchParams({pageSize:'1000'});
       if(pageToken)qs.set('pageToken',pageToken);
-      const r=await fetch(FS_BASE+path+'?'+qs.toString(),{headers:{'Authorization':'Bearer '+token},cache:'no-store'});
+      const r=await fsFetch(path+'?'+qs.toString(),{method:'GET'});
       const x=await parseResponse(r);
       (x.documents||[]).forEach(d=>out.push({id:String(d.name||'').split('/').pop(),data:()=>objectFromDoc(d)}));
       pageToken=String(x.nextPageToken||'');
@@ -4907,8 +4943,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return out;
   };
   window.shadabRestAddDoc=async function(path,obj){
-    const token=await ensureToken();
-    const r=await fetch(FS_BASE+path,{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(docFromObject(obj)),cache:'no-store'});
+    const r=await fsFetch(path,{method:'POST',body:JSON.stringify(docFromObject(obj))});
     return parseResponse(r);
   };
   window.shadabRestCurrentSession=()=>session?jsonClone(session):null;
@@ -8844,9 +8879,11 @@ window.spV7FlushPending=flushPending;window.addEventListener('online',()=>setTim
   const repaired=async function(reason){
     const s=await restoreSession();
     if(!s?.uid)throw new Error('Firebase session is not available. Please sign in on this GitHub app first.');
+    /* V14 removes the old 3x post-sync verification loop. V12 already performs one
+       authoritative day-document verification, so the wrapper adds no extra reads. */
     return await base(reason);
   };
-  repaired.__v13SyncSessionRepair=true;
+  repaired.__v14SyncSessionRepair=true;
   window.shadabSyncSalesmanNow=repaired;
   window.sp35SyncNow=repaired;
   window.sp35SyncNew=repaired;
@@ -10786,6 +10823,94 @@ window.refreshSpAddedSalesmanLive=masterRefresh;window.refreshSpAddedSalesman=ma
 function init(){bindTabs();const tabs=document.querySelectorAll('#spAddedSalesmanDashboard .sp-added-tabs .sp-added-tab');if(tabs.length)tabs.forEach((t,i)=>t.textContent=['⚙ Feature Control','▥ Reports','◷ Activity & Sync','👤 Account Settings','▤ Notes'][i]||t.textContent);if(isMaster()){setTimeout(masterRefresh,200);clearInterval(timer);timer=setInterval(masterRefresh,900000)}else startRuntimePoll()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.__spLiveSalesmanControlV15={refresh:masterRefresh,load:()=>selectedUid?loadSelected(selectedUid):null,getSelected:()=>({uid:selectedUid,profile:selectedProfile,data:selectedData}),flags:()=>normalizeFlags(selectedProfile)};
+/* ===== V14.1 SALESMAN REPORT AUTHORITY FIX =====
+   Reports must read the same authoritative visit_days transport used by the
+   Master Field Dashboard. The parent user_data.visits array is legacy/cache
+   only and must not be the primary report source.
+*/
+const __v141ReportVisitCache=new Map();
+async function __v141ReadReportVisits(uid,date){
+  const u=String(uid||''); if(!u) return [];
+  const key=u+'|'+String(date||'ALL');
+  const hit=__v141ReportVisitCache.get(key);
+  if(hit && Date.now()-hit.at<12000) return hit.rows.slice();
+  const base='user_data/'+encodeURIComponent(u)+'/visit_days';
+  let rows=[];
+  try{
+    if(date && date!=='ALL'){
+      const d=await readDoc(base+'/'+encodeURIComponent(date));
+      rows=Array.isArray(d?.visits)?d.visits:[];
+    }else if(typeof window.shadabRestReadCollection==='function'){
+      const rs=await window.shadabRestReadCollection(base);
+      (rs||[]).forEach(r=>{
+        const d=r?.data?.()||{};
+        if(Array.isArray(d.visits)) d.visits.forEach(v=>rows.push(v));
+      });
+    }
+  }catch(e){
+    // Do not silently replace authoritative data with stale parent data.
+    // Keep the existing local cache only when a previous authoritative read exists.
+    console.warn('[V14.1] visit_days report read failed:',e);
+    const old=__v141ReportVisitCache.get(key);
+    if(old) return old.rows.slice();
+    throw e;
+  }
+  const unique=new Map();
+  rows.forEach(v=>{if(v&&typeof v==='object'){const id=String(v.id||((v.date||'')+'|'+(v.time||'')+'|'+(v.store||'')));unique.set(id,v)}});
+  rows=[...unique.values()];
+  __v141ReportVisitCache.set(key,{at:Date.now(),rows});
+  return rows.slice();
+}
+async function __v141HydrateSelectedReport(){
+  if(!selectedUid) return [];
+  const rows=await __v141ReadReportVisits(selectedUid,selectedDate);
+  selectedData={...(selectedData||{}),visits:rows,visitTransport:'visit_days'};
+  cachePut(userDataCache,selectedUid,selectedData);
+  return rows;
+}
+const __v141OriginalLoadSelected=loadSelected;
+loadSelected=async function(uid){
+  const result=await __v141OriginalLoadSelected(uid);
+  if(activeTab===1){
+    try{await __v141HydrateSelectedReport();renderTab();}
+    catch(e){
+      const st=$('spLiveReportStatus');
+      if(st){st.textContent='✕ Firebase visit report read failed: '+(e.message||e);st.className='sp-live-status err'}
+    }
+  }
+  return result;
+};
+const __v141OriginalRenderTab=renderTab;
+renderTab=function(){
+  __v141OriginalRenderTab();
+  if(activeTab===1 && selectedUid && !window.__v141ReportHydrationPending){
+    window.__v141ReportHydrationPending=true;
+    __v141HydrateSelectedReport().then(()=>{
+      if(activeTab===1){
+        __v141OriginalRenderTab();
+      }
+    }).catch(e=>{
+      const st=$('spLiveReportStatus');
+      if(st){st.textContent='✕ Firebase visit report read failed: '+(e.message||e);st.className='sp-live-status err'}
+    }).finally(()=>{window.__v141ReportHydrationPending=false});
+  }
+};
+const __v141OriginalBindTabEvents=bindTabEvents;
+bindTabEvents=function(){
+  __v141OriginalBindTabEvents();
+  $('spLiveDateFilter')?.addEventListener('change',async()=>{
+    selectedDate=$('spLiveDateFilter')?.value||'ALL';
+    try{await __v141HydrateSelectedReport();}catch(e){}
+    renderTab();
+  });
+  $('spLiveDateAll')?.addEventListener('click',async()=>{
+    selectedDate='ALL';
+    try{await __v141HydrateSelectedReport();}catch(e){}
+    renderTab();
+  });
+};
+window.__shadabV141ReportAuthority={version:'V14.1',source:'user_data/{uid}/visit_days/{YYYY-MM-DD}',allDatesSource:'user_data/{uid}/visit_days',parentVisitsFallback:false};
+
 })();
 </script>
 <!-- ===== END V18 SALESMAN CONTROL AUTHORITY ===== -->
@@ -14414,10 +14539,6 @@ window.printTaskList=function(kind){
 
 
 
-
-
-
-
 </body>
 
 
@@ -14783,165 +14904,6 @@ window.printTaskList=function(kind){
 })();
 </script>
 
-
-<!-- ===== FORENSIC FINAL PATCH: HISTORICAL VISITS + CATALOG NON-DESTRUCTIVE PERSISTENCE ===== -->
-<script id="shadab-forensic-final-historical-catalog-v3">
-(function(){
-  'use strict';
-  const ADMIN='master@shadabpharmacy.com';
-  const isMaster=()=>String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()===ADMIN;
-  const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return v}};
-  const norm=v=>String(v??'').trim().toLowerCase();
-  const isoToday=()=>new Date().toISOString().slice(0,10);
-  const restRead=async p=>window.shadabRestReadDoc(p);
-  const restWrite=async(p,v)=>window.shadabRestWriteDoc(p,v);
-  const restCol=async p=>window.shadabRestReadCollection(p);
-  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-  /* ---------------------------------------------------------
-     A) NON-DESTRUCTIVE MASTER CATALOG SAVE
-     Existing Firebase records are never replaced by a smaller
-     local snapshot. Local edits are merged into the cloud snapshot.
-     --------------------------------------------------------- */
-  function storeKey(x){
-    const c=String(x?.code||'').trim().toLowerCase();
-    return c?'code:'+c:'row:'+norm(x?.area)+'|'+norm(x?.name||x?.store)+'|'+norm(x?.address);
-  }
-  function mergeStores(remote,local){
-    const map=new Map();
-    for(const x of (Array.isArray(remote)?remote:[])) if(x&&typeof x==='object') map.set(storeKey(x),clone(x));
-    for(const x of (Array.isArray(local)?local:[])) if(x&&typeof x==='object'){
-      const k=storeKey(x),old=map.get(k);
-      /* Local is allowed to change an existing store, but cannot erase a
-         cloud-only store merely because this HTML build does not have it. */
-      map.set(k, old ? {...old,...clone(x)} : clone(x));
-    }
-    return [...map.values()];
-  }
-  function mergeTerritories(remote,local){
-    const out={};
-    const cities=[...new Set([...Object.keys(remote||{}),...Object.keys(local||{})])];
-    for(const city of cities){
-      const vals=[...(Array.isArray(remote?.[city])?remote[city]:[]),...(Array.isArray(local?.[city])?local[city]:[])];
-      const seen=new Set(); out[city]=[];
-      for(const t of vals){const v=String(t??'').trim(),k=v.toLowerCase();if(!v||seen.has(k))continue;seen.add(k);out[city].push(v)}
-    }
-    return out;
-  }
-  function union(a,b){return [...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])].map(x=>String(x??'').trim()).filter(Boolean))]}
-  function localCatalog(){
-    let disabledT=[],disabledC=[],custom=[];
-    try{disabledT=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}
-    try{disabledC=JSON.parse(localStorage.getItem('shadab_disabled_cities_v1')||'[]')}catch(e){}
-    try{custom=typeof window.customSalesmanNames==='function'?window.customSalesmanNames():JSON.parse(localStorage.getItem('shadab_salesman_names_v1')||'[]')}catch(e){}
-    return {stores:Array.isArray(window.storeDatabase)?clone(window.storeDatabase):[],territories:clone(window.territories||{}),disabledTerritories:disabledT,disabledCities:disabledC,customSalesmen:custom};
-  }
-  const originalSaveMaster=window.saveMasterData;
-  let catalogSaveBusy=false;
-  window.saveMasterData=async function(reason){
-    if(!isMaster()) return typeof originalSaveMaster==='function'?originalSaveMaster.apply(this,arguments):{ok:false,skipped:true};
-    if(catalogSaveBusy)return {ok:true,queued:true};
-    catalogSaveBusy=true;
-    try{
-      const remote=await restRead('app_settings/masterData')||{};
-      const local=localCatalog();
-      const payload={...remote,
-        stores:mergeStores(remote.stores,local.stores),
-        territories:mergeTerritories(remote.territories,local.territories),
-        cities:union(remote.cities,local.cities),
-        disabledTerritories:union(remote.disabledTerritories,local.disabledTerritories),
-        disabledCities:union(remote.disabledCities,local.disabledCities),
-        customSalesmen:union(remote.customSalesmen,local.customSalesmen),
-        masterAuthorityVersion:Math.max(Number(remote.masterAuthorityVersion||0),11),
-        updatedAt:new Date().toISOString(),updatedBy:'master',reason:reason||'master-change-v3'
-      };
-      /* Ensure every territory-keyed city remains represented in cities. */
-      payload.cities=union(payload.cities,Object.keys(payload.territories||{}));
-      await restWrite('app_settings/masterData',payload);
-      try{window.__shadabMasterCatalogLastSave={ok:true,reason:reason||'',at:Date.now(),cities:payload.cities.length,territories:Object.values(payload.territories||{}).reduce((n,a)=>n+(Array.isArray(a)?a.length:0),0)}}catch(e){}
-      return {ok:true,data:payload};
-    }catch(e){
-      console.warn('Forensic V3 catalog save:',e);
-      try{window.__shadabMasterCatalogLastSave={ok:false,error:String(e?.message||e),at:Date.now()}}catch(x){}
-      return {ok:false,error:e,pending:true};
-    }finally{catalogSaveBusy=false}
-  };
-
-  /* ---------------------------------------------------------
-     B) AUTHORITATIVE HISTORICAL DASHBOARD
-     Read visit_days directly for each salesman. This bypasses
-     stale/missing parent visitStats for Week/Month totals.
-     --------------------------------------------------------- */
-  let aggBusy=null;
-  async function buildHistorical(){
-    if(!isMaster()) return window.__spMasterAggregateCache||{salesmen:[],visits:[],plannedToday:[],rawByUid:{}};
-    if(aggBusy)return aggBusy;
-    aggBusy=(async()=>{
-      const [profiles,userRows,sched,master]=await Promise.all([
-        restCol('salesmen').catch(()=>[]),restCol('user_data').catch(()=>[]),
-        restRead('app_settings/adminSchedules').catch(()=>({})),restRead('app_settings/masterData').catch(()=>({}))
-      ]);
-      const userMap=new Map((userRows||[]).map(r=>[String(r?.id||''),r?.data?.()||{}]));
-      const salesmen=(profiles||[]).map(r=>{const uid=String(r?.id||''),d=r?.data?.()||{},u=userMap.get(uid)||{};return {uid,name:String(d.fullName||d.displayName||d.salesmanName||d.name||u.fullName||u.displayName||u.salesmanName||('Salesman '+uid.slice(0,6))).trim(),email:String(d.email||u.email||''),status:String(d.status||u.status||'Active')}}).filter(x=>x.uid);
-      salesmen.sort((a,b)=>a.name.localeCompare(b.name));
-      const today=isoToday(), td=new Date(today+'T00:00:00');
-      td.setDate(td.getDate()-((td.getDay()+6)%7));
-      const ws=td.toISOString().slice(0,10); const mon=today.slice(0,7);
-      const monthStart=mon+'-01';
-      const dEnd=new Date(td); dEnd.setDate(dEnd.getDate()+7); const we=dEnd.toISOString().slice(0,10);
-      let week=0,month=0; const unique=new Set(), allToday=[]; const rawByUid={}; const diagnostics=[];
-      for(const p of salesmen){
-        const uid=encodeURIComponent(p.uid); let dayDocs=[]; let parent={};
-        try{dayDocs=await restCol('user_data/'+uid+'/visit_days');}catch(e){diagnostics.push({uid:p.uid,name:p.name,error:String(e?.message||e)});dayDocs=[]}
-        try{parent=await restRead('user_data/'+uid)||{};}catch(e){parent=userMap.get(p.uid)||{}}
-        rawByUid[p.uid]=parent||{};
-        const visits=[];
-        for(const row of (Array.isArray(dayDocs)?dayDocs:[])){
-          const doc=row?.data?.()||{}; const date=String(row?.id||doc?.date||'').slice(0,10);
-          for(const v of (Array.isArray(doc.visits)?doc.visits:[])){
-            const vv={...v,uid:p.uid,visitedBy:String(v.visitedBy||v.salesman||v.salesmanName||p.name),status:String(v.status||'Completed')||'Completed',date:String(v.date||date||'').slice(0,10)};
-            visits.push(vv);
-          }
-        }
-        /* Legacy fallback: only use parent visits for dates not already represented. */
-        const seen=new Set(visits.map(v=>String(v.id||[v.date,v.time,v.store,v.person,v.visitedBy].join('|'))));
-        for(const v of (Array.isArray(parent?.visits)?parent.visits:[])){
-          const vv={...v,uid:p.uid,visitedBy:String(v.visitedBy||v.salesman||v.salesmanName||p.name),date:String(v.date||'').slice(0,10)};
-          const k=String(vv.id||[vv.date,vv.time,vv.store,vv.person,vv.visitedBy].join('|'));
-          if(!seen.has(k)){seen.add(k);visits.push(vv)}
-        }
-        for(const v of visits){
-          const d=String(v.date||'').slice(0,10); if(!d)continue;
-          if(d>=ws&&d<we)week++;
-          if(d>=monthStart&&d<=today){month++; unique.add(norm(v.area)+'::'+norm(v.store||v.name||v.code));}
-          if(d===today)allToday.push(v);
-        }
-      }
-      const cache=window.__spMasterAggregateCache||{};
-      const oldVisits=Array.isArray(cache.visits)?cache.visits:[];
-      const byId=new Map(); [...oldVisits,...allToday].forEach(v=>{const k=String(v.uid||'')+'::'+String(v.id||[v.date,v.time,v.store,v.person].join('|'));byId.set(k,v)});
-      const visits=[...byId.values()].filter(v=>String(v.date||'').slice(0,10)===today);
-      const todayCount=allToday.length;
-      const stats={today:todayCount,week:week||todayCount,month:month||todayCount,uniqueStores:unique.size||new Set(visits.map(v=>norm(v.area)+'::'+norm(v.store||v.name||v.code))).size};
-      window.__shadabHistoricalDashboardDiagnostics={at:new Date().toISOString(),salesmen:salesmen.length,weekStart:ws,weekEnd:we,month:mon,stats,readErrors:diagnostics};
-      const out={salesmen,visits,plannedToday:[],rawByUid,sourceCounts:{salesmen:salesmen.length,userData:(userRows||[]).length,visitDays:salesmen.length},at:new Date().toISOString(),visitTransport:'visit_days historical direct',stats};
-      window.__spMasterAggregateCache=out;
-      const root=document.getElementById('spAddedMasterDashboard');
-      if(root){const nums=root.querySelectorAll('.sp-added-overview .num');[stats.today,stats.week,stats.month,stats.uniqueStores].forEach((n,i)=>{if(nums[i])nums[i].textContent=String(n)});const st=document.getElementById('spMasterDashboardSyncStatus');if(st)st.textContent='Historical Firebase verified • '+stats.week+' week / '+stats.month+' month visits';}
-      return out;
-    })();
-    try{return await aggBusy}finally{aggBusy=null}
-  }
-  window.rebuildMasterAggregate=buildHistorical;
-  window.syncMasterFieldDashboard=async function(){
-    const b=document.getElementById('spMasterDashboardSyncBtn');if(b){b.disabled=true;b.classList.add('is-syncing')}
-    try{return await buildHistorical()}finally{if(b){b.disabled=false;b.classList.remove('is-syncing')}}
-  };
-  window.refreshSpAddedMaster=window.syncMasterFieldDashboard;
-  window.__shadabForensicFinalV3={historicalDashboard:true,nonDestructiveCatalog:true,autoSyncMs:900000,scope:'visits-history-and-city-territory-only'};
-})();
-</script>
-<!-- ===== END FORENSIC FINAL PATCH ===== -->
 
 <!-- ===== V17 EMERGENCY SUPPLY SCANNER AUTO-OPEN QUARANTINE =====
      Goal: the Summary Scanner must NEVER appear by itself.
@@ -16932,264 +16894,7 @@ window.shadabMasterCatalogReady=()=>!!cloudReady;
 
 
 
-<script id="shadab-v3-master-authority-final">
-(function(){
-  'use strict';
-  /* =============================================================
-     SHADAB PHARMACY — MASTER AUTHORITY V3
-     Purpose:
-       • Make City / Territory / Medical Store master data persist in Firebase
-         through the authenticated REST session (not the Firebase SDK session).
-       • Preserve local master edits from an older HTML build on the first
-         migration, then make Firebase authoritative for every later build.
-       • Keep existing realtime onSnapshot listeners for immediate cross-device
-         propagation; this patch does not change the 15-minute sync cadence.
-       • Also route Admin schedule writes through the REST session so Master
-         assignments are not silently saved only to localStorage.
-     ============================================================= */
-  const ADMIN='master@shadabpharmacy.com';
-  const MASTER_PATH='app_settings/masterData';
-  const SCHEDULE_PATH='app_settings/adminSchedules';
-  const MIGRATED_KEY='shadab_master_authority_v3_migrated';
-  let bootPromise=null;
-  let authorityReady=false;
-  let saveChain=Promise.resolve();
-
-  const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
-  const restSession=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-  const isMaster=()=>String(restSession()?.email||'').toLowerCase()===ADMIN;
-  const restRead=async path=>{
-    if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader is not available.');
-    return await window.shadabRestReadDoc(path);
-  };
-  const restWrite=async(path,payload)=>{
-    if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST writer is not available.');
-    return await window.shadabRestWriteDoc(path,payload);
-  };
-  const safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-  const safeGet=(k,def='')=>{try{return localStorage.getItem(k)??def}catch(e){return def}};
-  const safeJSON=(k,def)=>{try{const x=JSON.parse(localStorage.getItem(k)||'');return x??def}catch(e){return def}};
-  const stamp=()=>new Date().toISOString();
-  const notify=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
-
-  function keyStore(row){
-    const code=String(row?.code||'').trim().toLowerCase();
-    if(code)return 'code:'+code;
-    return 'row:'+String(row?.area||'').trim().toLowerCase()+'|'+String(row?.name||row?.store||'').trim().toLowerCase()+'|'+String(row?.address||'').trim().toLowerCase();
-  }
-  function meaningfulStoreChangedFromSeed(localRow,seedRow){
-    if(!localRow)return false;
-    if(!seedRow)return true;
-    const fields=['name','area','territory','address','type','phone','disabled'];
-    return fields.some(k=>String(localRow?.[k]??'')!==String(seedRow?.[k]??''));
-  }
-  function mergeStoresForMigration(remoteStores,localStores){
-    const remote=Array.isArray(remoteStores)?remoteStores:[];
-    const local=Array.isArray(localStores)?localStores:[];
-    const seed=Array.isArray(window.BUILTIN_STORE_DATABASE)?window.BUILTIN_STORE_DATABASE:[];
-    const seedMap=new Map(seed.map(x=>[keyStore(x),x]));
-    const map=new Map();
-    for(const row of remote){if(row&&typeof row==='object')map.set(keyStore(row),clone(row));}
-    for(const row of local){
-      if(!row||typeof row!=='object')continue;
-      const k=keyStore(row), existing=map.get(k), seedRow=seedMap.get(k);
-      /* First migration rule: preserve genuine local master edits that are not
-         merely the shipped HTML seed. New records are always preserved. */
-      if(!existing || meaningfulStoreChangedFromSeed(row,seedRow))map.set(k,clone(row));
-    }
-    return [...map.values()];
-  }
-  function mergeTerritoriesForMigration(remoteTerritories,localTerritories){
-    const out={};
-    const r=remoteTerritories&&typeof remoteTerritories==='object'?remoteTerritories:{};
-    const l=localTerritories&&typeof localTerritories==='object'?localTerritories:{};
-    const cities=[...new Set([...Object.keys(r),...Object.keys(l)])];
-    for(const city of cities){
-      const rs=Array.isArray(r[city])?r[city]:[], ls=Array.isArray(l[city])?l[city]:[];
-      const seen=new Set(), merged=[];
-      for(const t of [...rs,...ls]){
-        const v=String(t??'').trim(); if(!v)continue;
-        const k=v.toLowerCase(); if(seen.has(k))continue;
-        seen.add(k); merged.push(v);
-      }
-      out[city]=merged;
-    }
-    return out;
-  }
-  function mergeDisabled(a,b){
-    return [...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])].map(x=>String(x||'').trim()).filter(Boolean))];
-  }
-  function localCatalogSnapshot(){
-    return {
-      stores:Array.isArray(window.storeDatabase)?clone(window.storeDatabase):[],
-      territories:window.territories&&typeof window.territories==='object'?clone(window.territories):{},
-      disabledTerritories:safeJSON('shadab_disabled_territories_v1',[]),
-      disabledCities:safeJSON('shadab_disabled_cities_v1',[]),
-      customSalesmen:typeof window.customSalesmanNames==='function'?clone(window.customSalesmanNames()):safeJSON('shadab_salesman_names_v1',[]),
-      appName:safeGet('shadab_app_name_v1','SHADAB PHARMACY'),
-      theme:safeGet('shadab_theme',''),
-      alertMessage:safeGet('shadab_alert_message_v1','')
-    };
-  }
-  function applyCatalogLocal(m){
-    try{
-      if(Array.isArray(m?.stores)){
-        window.storeDatabase=clone(m.stores)||[];
-        try{localStorage.setItem('shadab_pharmacy_store_database_v1',JSON.stringify(window.storeDatabase))}catch(e){}
-      }
-      if(m?.territories&&typeof m.territories==='object'){
-        window.territories=clone(m.territories)||{};
-        try{localStorage.setItem('shadab_pharmacy_territories_v1',JSON.stringify(window.territories))}catch(e){}
-      }
-      if(Array.isArray(m?.disabledTerritories))safeSet('shadab_disabled_territories_v1',JSON.stringify(m.disabledTerritories));
-      if(Array.isArray(m?.disabledCities))safeSet('shadab_disabled_cities_v1',JSON.stringify(m.disabledCities));
-      if(Array.isArray(m?.customSalesmen)&&typeof window.saveCustomSalesmanNames==='function')try{window.saveCustomSalesmanNames(m.customSalesmen)}catch(e){}
-      if(typeof m?.appName==='string')safeSet('shadab_app_name_v1',m.appName);
-      if(typeof m?.theme==='string'&&m.theme)safeSet('shadab_theme',m.theme);
-      if(typeof m?.alertMessage==='string'){
-        safeSet('shadab_alert_message_v1',m.alertMessage);
-        const el=document.getElementById('shadabAlertText');if(el)el.textContent=m.alertMessage;
-      }
-      try{window.shadabRepairTerritoryStores?.()}catch(e){}
-      try{window.refreshTerritories?.()}catch(e){}
-      try{window.sp35RenderTerrNew?.();window.sp35RenderStoreNew?.();window.sp35RenderCityListNew?.()}catch(e){}
-      try{window.renderTodayTasks?.();window.updatePremiumDashboard?.();window.showStoreSuggestions?.()}catch(e){}
-    }catch(e){console.warn('V3 apply catalog:',e)}
-  }
-  function currentMasterPayload(extra={}){
-    const local=localCatalogSnapshot();
-    return Object.assign({},local,extra,{updatedAt:stamp(),updatedBy:'master'});
-  }
-  async function writeMasterPayload(payload,reason){
-    const remote=(await restRead(MASTER_PATH))||{};
-    const merged=Object.assign({},remote,payload,{updatedAt:stamp(),updatedBy:'master',reason:reason||'admin-change'});
-    await restWrite(MASTER_PATH,merged);
-    return merged;
-  }
-  async function firstMigration(remote){
-    const local=localCatalogSnapshot();
-    if(!remote||typeof remote!=='object'){
-      const seed=currentMasterPayload({reason:'v3-initial-master-seed'});
-      await restWrite(MASTER_PATH,seed);
-      safeSet(MIGRATED_KEY,'1');
-      return seed;
-    }
-    if(safeGet(MIGRATED_KEY,'')==='1')return remote;
-    const merged=Object.assign({},remote,{
-      stores:mergeStoresForMigration(remote.stores,local.stores),
-      territories:mergeTerritoriesForMigration(remote.territories,local.territories),
-      disabledTerritories:mergeDisabled(remote.disabledTerritories,local.disabledTerritories),
-      disabledCities:mergeDisabled(remote.disabledCities,local.disabledCities),
-      customSalesmen:Array.from(new Set([...(Array.isArray(remote.customSalesmen)?remote.customSalesmen:[]),...(Array.isArray(local.customSalesmen)?local.customSalesmen:[])].map(x=>String(x||'').trim()).filter(Boolean))),
-      appName:remote.appName||local.appName||'SHADAB PHARMACY',
-      theme:remote.theme||local.theme||'',
-      alertMessage:remote.alertMessage||local.alertMessage||'',
-      v3MigrationAt:stamp(),
-      v3MigrationReason:'preserve-pre-v3-local-master-edits'
-    });
-    await restWrite(MASTER_PATH,merged);
-    safeSet(MIGRATED_KEY,'1');
-    return merged;
-  }
-  async function bootstrap(){
-    if(!isMaster())return {ok:false,skipped:true};
-    if(bootPromise)return bootPromise;
-    bootPromise=(async()=>{
-      try{
-        if(!navigator.onLine)throw new Error('Offline — Firebase master data cannot be hydrated yet.');
-        let remote=null;
-        try{
-          remote=await restRead(MASTER_PATH);
-        }catch(e){
-          const msg=String(e?.message||e).toLowerCase();
-          const status=Number(e?.httpStatus||e?.status||0);
-          if(status!==404&&!msg.includes('not found')&&!msg.includes('does not exist'))throw e;
-        }
-        const final=await firstMigration(remote);
-        applyCatalogLocal(final||{});
-        authorityReady=true;
-        safeSet('shadab_master_authority_v3_ready','1');
-        window.__shadabMasterAuthorityV3={ready:true,source:'firebase',migrated:safeGet(MIGRATED_KEY,'')==='1',at:Date.now()};
-        return {ok:true,data:final};
-      }catch(e){
-        authorityReady=false;
-        window.__shadabMasterAuthorityV3={ready:false,error:String(e?.message||e),at:Date.now()};
-        console.warn('V3 master bootstrap:',e);
-        return {ok:false,error:e};
-      }
-    })();
-    const r=await bootPromise;bootPromise=null;return r;
-  }
-  window.shadabMasterAuthorityV3Bootstrap=bootstrap;
-  window.shadabMasterAuthorityV3Ready=()=>authorityReady;
-
-  /* Canonical Master write: REST-authenticated, immediately confirmed.
-     This replaces the older Firebase-SDK-only master writer. */
-  const previousMasterSave=window.saveMasterData;
-  window.saveMasterData=async function(reason){
-    if(!isMaster())return {ok:false,skipped:true};
-    const boot=await bootstrap();
-    if(!boot.ok) return {ok:false,pending:true,error:boot.error};
-    try{
-      const payload=currentMasterPayload();
-      await writeMasterPayload(payload,reason||'master-change');
-      return {ok:true};
-    }catch(e){
-      console.warn('V3 Master REST save failed:',e);
-      return {ok:false,error:e};
-    }
-  };
-
-  /* Canonical Admin schedule write: same REST-authenticated Master session. */
-  const previousScheduleSave=window.saveScheduleNow;
-  window.saveScheduleNow=async function(){
-    if(!isMaster())return typeof previousScheduleSave==='function'?await previousScheduleSave.apply(this,arguments):{ok:false,skipped:true};
-    const boot=await bootstrap();
-    if(!boot.ok)return {ok:false,pending:true,error:boot.error};
-    try{
-      const payload={
-        schedules:typeof window.adminSchedules!=='undefined'?clone(window.adminSchedules)||{}:{},
-        routeTasks:typeof window.routeTasks!=='undefined'?clone(window.routeTasks)||{}:{},
-        updatedAt:stamp(),updatedBy:'master',reason:'v3-rest-schedule-sync'
-      };
-      await restWrite(SCHEDULE_PATH,payload);
-      safeSet('shadab_firebase_last_assignment_sync_v1',JSON.stringify({ok:true,at:Date.now()}));
-      return {ok:true};
-    }catch(e){console.warn('V3 schedule REST save failed:',e);return {ok:false,error:e};}
-  };
-
-  /* Make generic Master saveData safe: it still updates localStorage immediately,
-     then queues one authoritative REST write. */
-  const previousSaveData=window.saveData;
-  window.saveData=function(){
-    const r=typeof previousSaveData==='function'?previousSaveData.apply(this,arguments):undefined;
-    if(isMaster()){
-      clearTimeout(window.__shadabV3MasterSaveTimer);
-      window.__shadabV3MasterSaveTimer=setTimeout(()=>{window.saveMasterData('saveData-v3').catch(()=>{})},180);
-    }
-    return r;
-  };
-
-  /* Preserve a previous user file's locally-added City/Territory/Store records
-     on the first run. After migration Firebase is authoritative and new builds
-     no longer seed-overwrite the saved catalog. */
-  const previousStartPolling=window.startPolling;
-  window.startPolling=async function(){
-    if(isMaster()){
-      const r=await bootstrap();
-      if(!r.ok)console.warn('V3 start bootstrap pending:',r.error);
-    }
-    if(typeof previousStartPolling==='function')return previousStartPolling.apply(this,arguments);
-  };
-
-  function scheduleBoot(){
-    setTimeout(()=>{if(isMaster())bootstrap().catch(()=>{})},0);
-    setTimeout(()=>{if(isMaster())bootstrap().catch(()=>{})},1200);
-    setTimeout(()=>{if(isMaster())bootstrap().catch(()=>{})},3000);
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scheduleBoot,{once:true});else scheduleBoot();
-})();
-</script>
+<!-- V3 master authority layer neutralized: disabled by V14 canonical sync owner; original behavior retained in source backup. -->
 
 
 <!-- ===== START: TARGETED FIREBASE HEADER + REFRESH FIX V2 ===== -->
@@ -17686,194 +17391,7 @@ setTimeout(observe,1600);
 
 
 <!-- ===== START: FORENSIC MASTER CATALOG PERSISTENCE V11 ===== -->
-<script id="shadab-final-master-catalog-persistence-v11">
-(function(){
-'use strict';
-/*
-  V11 FORENSIC PERSISTENCE AUTHORITY
-  Proven causes fixed here:
-  1) Legacy territory-store repair re-applied the shipped PDF/seed territory map
-     after Firebase hydration. That repair is now non-destructive above.
-  2) Multiple save/hydration layers existed. This final layer becomes the last
-     authoritative REST path for Master catalog data.
-  3) Cities were represented only as territory-object keys. V11 also persists an
-     explicit cities[] list so a newly-added city survives future HTML builds.
-  4) Territory-PDF imports are committed through the same authoritative master write.
-
-  Scope is intentionally limited to City, Territory, Medical Store and Territory-PDF
-  master persistence. No PDF document authority, Auth, Rules, reports or UI systems
-  are redesigned here.
-*/
-const ADMIN='master@shadabpharmacy.com';
-const PATH='app_settings/masterData';
-const VERSION=11;
-let ready=false;
-let bootPromise=null;
-
-const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-const isMaster=()=>String(session()?.email||'').toLowerCase()===ADMIN;
-const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
-const read=async()=>{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader unavailable.');return await window.shadabRestReadDoc(PATH)};
-const write=async v=>{if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST writer unavailable.');return await window.shadabRestWriteDoc(PATH,v)};
-const keyStore=r=>{const c=String(r?.code||'').trim().toLowerCase();return c?'code:'+c:'row:'+String(r?.area||'').trim().toLowerCase()+'|'+String(r?.name||r?.store||'').trim().toLowerCase()+'|'+String(r?.address||'').trim().toLowerCase()};
-
-function localSnapshot(){
-  const territoriesLocal=(typeof territories!=='undefined'&&territories&&typeof territories==='object')?clone(territories)||{}:{};
-  return {
-    stores:Array.isArray(storeDatabase)?clone(storeDatabase)||[]:[],
-    territories:territoriesLocal,
-    cities:[...new Set(Object.keys(territoriesLocal).map(x=>String(x||'').trim()).filter(Boolean))],
-    disabledTerritories:(()=>{try{const x=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]');return Array.isArray(x)?x:[]}catch(e){return []}})(),
-    disabledCities:(()=>{try{const x=JSON.parse(localStorage.getItem('shadab_disabled_cities_v1')||'[]');return Array.isArray(x)?x:[]}catch(e){return []}})(),
-    customSalesmen:typeof window.customSalesmanNames==='function'?clone(window.customSalesmanNames()):[],
-    updatedAt:new Date().toISOString(),
-    updatedBy:'master',
-    masterAuthorityVersion:VERSION
-  };
-}
-
-function mergeStores(remote,local){
-  const map=new Map();
-  for(const r of (Array.isArray(remote)?remote:[])){if(r&&typeof r==='object')map.set(keyStore(r),clone(r));}
-  for(const r of (Array.isArray(local)?local:[])){if(r&&typeof r==='object')map.set(keyStore(r),clone(r));}
-  return [...map.values()];
-}
-function mergeTerritories(remote,local){
-  const out={};
-  const cities=new Set([...Object.keys(remote&&typeof remote==='object'?remote:{}),...Object.keys(local&&typeof local==='object'?local:{})]);
-  for(const city of cities){
-    const rt=Array.isArray(remote?.[city])?remote[city]:[];
-    const lt=Array.isArray(local?.[city])?local[city]:[];
-    const seen=new Set(), arr=[];
-    for(const t of [...rt,...lt]){const v=String(t||'').trim();if(!v)continue;const k=v.toLowerCase();if(seen.has(k))continue;seen.add(k);arr.push(v)}
-    out[city]=arr;
-  }
-  return out;
-}
-function union(a,b){return [...new Set([...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])].map(x=>String(x||'').trim()).filter(Boolean))]}
-
-function applyExact(m){
-  if(!m||typeof m!=='object')return;
-  if(Array.isArray(m.stores)){window.storeDatabase=clone(m.stores)||[];try{localStorage.setItem(STORE_KEY,JSON.stringify(window.storeDatabase))}catch(e){}}
-  if(m.territories&&typeof m.territories==='object'){
-    window.territories=clone(m.territories)||{};
-    try{localStorage.setItem(TERRITORY_KEY,JSON.stringify(window.territories))}catch(e){}
-  }
-  const cities=Array.isArray(m.cities)?m.cities:[];
-  if(cities.length&&window.territories&&typeof window.territories==='object'){
-    cities.forEach(c=>{const city=String(c||'').trim();if(city&&!Object.prototype.hasOwnProperty.call(window.territories,city))window.territories[city]=[]});
-    try{localStorage.setItem(TERRITORY_KEY,JSON.stringify(window.territories))}catch(e){}
-  }
-  if(Array.isArray(m.disabledTerritories))try{localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(m.disabledTerritories))}catch(e){}
-  if(Array.isArray(m.disabledCities))try{localStorage.setItem('shadab_disabled_cities_v1',JSON.stringify(m.disabledCities))}catch(e){}
-  if(Array.isArray(m.customSalesmen)&&typeof window.saveCustomSalesmanNames==='function')try{window.saveCustomSalesmanNames(m.customSalesmen)}catch(e){}
-  try{window.refreshTerritories?.();window.refreshAssignmentTerritories?.();window.sp35RenderTerrNew?.();window.sp35RenderStoreNew?.();window.sp35RenderStoresNew?.();window.sp35RenderCityListNew?.();window.renderTodayTasks?.();window.updatePremiumDashboard?.();window.showStoreSuggestions?.()}catch(e){}
-}
-
-async function bootstrap(){
-  if(!isMaster())return false;
-  if(ready)return true;
-  if(bootPromise)return bootPromise;
-  bootPromise=(async()=>{
-    const remote=await read();
-    const local=localSnapshot();
-    let final;
-    if(remote&&typeof remote==='object'&&Number(remote.masterAuthorityVersion||0)>=VERSION && Array.isArray(remote.stores) && remote.territories){
-      /* V11+ documents are already canonical Firebase snapshots. */
-      final=remote;
-    }else if(remote&&typeof remote==='object'){
-      /* One-time hardening for older/partial masterData. Preserve remote + current
-         local records, then permanently write the normalized canonical snapshot. */
-      final={...remote,
-        stores:mergeStores(remote.stores,local.stores),
-        territories:mergeTerritories(remote.territories,local.territories),
-        cities:union(remote.cities,local.cities),
-        disabledTerritories:union(remote.disabledTerritories,local.disabledTerritories),
-        disabledCities:union(remote.disabledCities,local.disabledCities),
-        customSalesmen:union(remote.customSalesmen,local.customSalesmen),
-        masterAuthorityVersion:VERSION,
-        updatedAt:new Date().toISOString(),updatedBy:'master',
-        authorityMigration:'v11-master-catalog-hardening'
-      };
-      await write(final);
-    }else{
-      /* Firebase has no masterData yet: create it once from the current Master state. */
-      final=local;
-      await write(final);
-    }
-    applyExact(final);
-    ready=true;
-    window.__shadabMasterCatalogV11={ready:true,at:Date.now(),version:VERSION};
-    return true;
-  })().catch(e=>{ready=false;window.__shadabMasterCatalogV11={ready:false,error:String(e?.message||e)};throw e}).finally(()=>{bootPromise=null});
-  return bootPromise;
-}
-
-async function save(reason){
-  if(!isMaster())return {ok:false,skipped:true};
-  try{
-    await bootstrap();
-    const current=await read()||{};
-    const local=localSnapshot();
-    const territoriesNow=local.territories||{};
-    const payload={...current,
-      stores:local.stores,
-      territories:territoriesNow,
-      cities:[...new Set([...local.cities,...(Array.isArray(current.cities)?current.cities:[])].filter(c=>Object.prototype.hasOwnProperty.call(territoriesNow,c)||local.cities.includes(c)))],
-      disabledTerritories:local.disabledTerritories,
-      disabledCities:local.disabledCities,
-      customSalesmen:local.customSalesmen,
-      masterAuthorityVersion:VERSION,
-      updatedAt:new Date().toISOString(),updatedBy:'master',reason:reason||'master-change'
-    };
-    await write(payload);
-    applyExact(payload);
-    ready=true;
-    return {ok:true};
-  }catch(e){
-    console.warn('V11 master catalog save failed:',e);
-    return {ok:false,error:e,pending:true};
-  }
-}
-
-/* Last runtime owner for Master catalog writes. It deliberately does not call
-   older saveMasterData wrappers, preventing legacy Firebase/local-only layers
-   from becoming the final authority again. */
-window.shadabMasterCatalogSaveV11=save;
-window.shadabMasterCatalogBootV11=bootstrap;
-window.shadabMasterCatalogReady=()=>ready;
-const oldMasterSave=window.saveMasterData;
-window.saveMasterData=async function(reason){return save(reason)};
-
-/* Territory PDF import: after the existing parser/assignment function completes
-   successfully, immediately commit the resulting store territory assignments and
-   city/territory catalog to the same Firebase master snapshot. */
-const oldTerritoryUpload=window.uploadAndAssignTerritoryPDF;
-if(typeof oldTerritoryUpload==='function'&&!oldTerritoryUpload.__v11MasterPersist){
-  const wrapped=async function(){
-    const result=await oldTerritoryUpload.apply(this,arguments);
-    try{
-      const st=document.getElementById('uploadTerritoryStatus');
-      if(String(st?.textContent||'').toLowerCase().startsWith('done.'))await save('territory-pdf-import-v11');
-    }catch(e){console.warn('V11 territory PDF master persist:',e)}
-    return result;
-  };
-  wrapped.__v11MasterPersist=true;
-  window.uploadAndAssignTerritoryPDF=wrapped;
-}
-
-/* Existing City/Territory/Store edit handlers already route through saveMasterData;
-   V11 therefore leaves their original event flow intact and only makes the final
-   saveMasterData implementation authoritative. */
-
-/* Boot as early as possible, but never write seed data until Firebase has been
-   read/hardened. Re-run after session restoration without changing cadence. */
-function boot(){if(isMaster())bootstrap().catch(()=>{})}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.addEventListener('online',()=>setTimeout(()=>boot(),700));
-setTimeout(boot,1200);
-})();
-</script>
+<!-- V11 master catalog layer neutralized: disabled by V14 canonical sync owner; original behavior retained in source backup. -->
 <!-- ===== END: FORENSIC MASTER CATALOG PERSISTENCE V11 ===== -->
 
 
@@ -18530,948 +18048,292 @@ if(typeof __v13SyncBase==='function'&&!__v13SyncBase.__v13ForensicHardening){
 })();
 </script>
 <!-- ===== END V12 FINAL ===== -->
-
-
-<!-- ===== V4 FINAL FORENSIC AUTHORITY: HISTORICAL VISITS + GLOBAL CITY/TERRITORY PROPAGATION ===== -->
-<script id="shadab-v4-historical-and-catalog-authority">
+<script id="shadab-cloud-canonical-v14">
 (function(){
-  'use strict';
+'use strict';
+/*
+ SHADAB PHARMACY — CLOUD CANONICAL ARCHITECTURE V14
 
-  const ADMIN='master@shadabpharmacy.com';
-  const MASTER_PATH='app_settings/masterData';
-  const SCHEDULE_PATH='app_settings/adminSchedules';
-  const POLL_MS=900000;
-  const BASE_CITIES=['Sahiwal','Chichawatni','Pakpattan','Arifwala'];
-
-  const norm=v=>String(v??'').trim().toLowerCase();
-  const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return v}};
-  const iso=()=>new Date().toISOString();
-  const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-  const isMaster=()=>norm(session()?.email)===norm(ADMIN);
-  const readDoc=async p=>{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader unavailable');return window.shadabRestReadDoc(p)};
-  const readCol=async p=>{if(typeof window.shadabRestReadCollection!=='function')throw new Error('Firebase REST collection reader unavailable');return window.shadabRestReadCollection(p)};
-  const writeDoc=async(p,v)=>{if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST writer unavailable');return window.shadabRestWriteDoc(p,v)};
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-  /* ---------------------------------------------------------
-     A) ONE MASTER CITY INDEX FOR EVERY CITY/AREA SELECTOR
-     --------------------------------------------------------- */
-  function readDisabledCities(){
-    try{const x=JSON.parse(localStorage.getItem('shadab_disabled_cities_v1')||'[]');return new Set(Array.isArray(x)?x.map(x=>norm(x)):[])}catch(e){return new Set()}
-  }
-  function masterCities(){
-    const out=[]; const seen=new Set();
-    const add=v=>{const raw=String(v??'').trim();if(!raw)return;const k=raw.toLowerCase();if(seen.has(k))return;seen.add(k);out.push(raw)};
-    BASE_CITIES.forEach(add);
-    try{Object.keys(window.territories||{}).forEach(add)}catch(e){}
-    try{(Array.isArray(window.storeDatabase)?window.storeDatabase:[]).forEach(r=>add(r?.area))}catch(e){}
-    /* Do not expose disabled cities as selectable work areas, but never delete them. */
-    const disabled=readDisabledCities();
-    return out.filter(c=>!disabled.has(norm(c)));
-  }
-  function syncAreasArray(){
-    try{
-      const all=masterCities();
-      if(Array.isArray(AREAS)){
-        /* Keep the original base order, then append cloud-added cities. */
-        const ordered=[];const seen=new Set();
-        [...BASE_CITIES,...all].forEach(c=>{const k=norm(c);if(!seen.has(k)){seen.add(k);ordered.push(c)}});
-        AREAS=ordered;
-      }
-      window.SHADAB_MASTER_CITY_LIST=masterCities().slice();
-      return window.SHADAB_MASTER_CITY_LIST;
-    }catch(e){return Array.isArray(AREAS)?AREAS.slice():BASE_CITIES.slice()}
-  }
-  function fillCitySelect(id,mode){
-    const el=document.getElementById(id); if(!el)return;
-    const current=String(el.value||'');
-    const cities=syncAreasArray();
-    const prefix=mode==='all'?'<option value="">All Areas</option>':mode==='blank'?'<option value="">Select city…</option>':'';
-    el.innerHTML=prefix+cities.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
-    if(current && cities.some(c=>norm(c)===norm(current))) el.value=current;
-    else if(mode==='all'||mode==='blank') el.value='';
-    else if(cities.length) el.value=cities[0];
-  }
-  function syncAllCitySelectors(){
-    syncAreasArray();
-    fillCitySelect('area','normal');
-    fillCitySelect('filterArea','all');
-    fillCitySelect('customerArea','normal');
-    fillCitySelect('adminScheduleArea','normal');
-    fillCitySelect('assignArea','normal');
-    fillCitySelect('territoryArea','normal');
-    fillCitySelect('sexCity','blank');
-    fillCitySelect('sdCity','blank');
-    fillCitySelect('uploadTerritoryArea','normal');
-    try{window.refreshUploadTerritories?.()}catch(e){}
-    try{window.refreshTerritories?.(window.selectedTerritories?.()||[])}catch(e){}
-    try{window.refreshAssignmentTerritories?.()}catch(e){}
-    try{window.renderTerritoryList?.()}catch(e){}
-    try{window.sp35RenderCityListNew?.()}catch(e){}
-    try{window.sp35RenderTerrNew?.()}catch(e){}
+ Rules:
+  1) GitHub/GitBase contains application code only.
+  2) Firebase contains canonical live business data.
+  3) App boot is READ/HYDRATE only; no boot-time catalog seed/write.
+  4) Admin mutations are the only trigger for Master catalog writes.
+  5) A single serialized, debounced Master write queue is used.
+  6) A 429 pauses cloud requests; no retry storm.
+  7) Offline mutations are kept locally as pending state.
+  8) Firestore update masks preserve unrelated document fields.
+  9) Visit transport remains the existing visit_days + visit_media system.
+ 10) Shared PDFs remain on the existing sharedDocuments chunk transport in V14;
+     Firebase Storage is kept as a future migration target so Spark/free-tier users
+     are not unexpectedly broken by a billing-plan dependency.
+*/
+const ADMIN='master@shadabpharmacy.com';
+const MASTER='app_settings/masterData';
+const SCHEDULE='app_settings/adminSchedules';
+const PENDING_MASTER='shadab_v14_pending_master';
+const PENDING_SCHEDULE='shadab_v14_pending_schedule';
+const REMOTE_VERSION='shadab_v14_master_remote_updatedAt';
+const STATE='shadab_v14_state';
+const MASK=['stores','territories','territoryMasterLocked','territoryMaster','customSalesmen','disabledTerritories','disabledCities','appName','theme','alertMessage','masterAuthorityVersion','schemaVersion','updatedBy','reason','updatedAt'];
+const SMASK=['schedules','routeTasks','updatedAt','updatedBy','reason','schemaVersion'];
+const now=()=>new Date().toISOString();
+const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
+const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+const isMaster=()=>String(session()?.email||'').toLowerCase()===ADMIN;
+const online=()=>navigator.onLine!==false;
+const toast=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
+const getJSON=(k,d)=>{try{const x=JSON.parse(localStorage.getItem(k)||'');return x??d}catch(e){return d}};
+const putJSON=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const getStr=(k,d='')=>{try{return localStorage.getItem(k)??d}catch(e){return d}};
+const putStr=(k,v)=>{try{localStorage.setItem(k,String(v))}catch(e){}};
+const restRead=async p=>window.shadabRestReadDoc(p);
+const restMeta=async p=>typeof window.shadabRestReadDocMeta==='function'?window.shadabRestReadDocMeta(p):({data:await restRead(p),updateTime:''});
+const restWrite=async(p,v,o)=>typeof window.shadabRestWriteDocMasked==='function'?window.shadabRestWriteDocMasked(p,v,o):window.shadabRestWriteDoc(p,v);
+const localMasterSnapshot=()=>({
+  stores:typeof storeDatabase!=='undefined'&&Array.isArray(storeDatabase)?clone(storeDatabase)||[]:[],
+  territories:typeof territories!=='undefined'&&territories&&typeof territories==='object'?clone(territories)||{}:{},
+  territoryMasterLocked:typeof window.isTerritoryMasterLocked==='function'?!!window.isTerritoryMasterLocked():false,
+  territoryMaster:typeof window.loadTerritoryMasterData==='function'?(window.loadTerritoryMasterData()||null):null,
+  customSalesmen:typeof customSalesmanNames==='function'?clone(customSalesmanNames())||[]:getJSON('shadab_pharmacy_custom_salesmen_v1',[]),
+  disabledTerritories:getJSON('shadab_disabled_territories_v1',[]),
+  disabledCities:getJSON('shadab_disabled_cities_v1',[]),
+  appName:getStr('shadab_app_name_v1','SHADAB PHARMACY'),
+  theme:getStr('shadab_theme',''),
+  alertMessage:getStr('shadab_alert_message_v1',''),
+  masterAuthorityVersion:14,
+  schemaVersion:'v14-canonical',
+  updatedBy:'master',
+  updatedAt:now()
+});
+function saveLocalCatalog(){
+  try{if(typeof territories!=='undefined')localStorage.setItem(typeof TERRITORY_KEY!=='undefined'?TERRITORY_KEY:'shadab_pharmacy_territories_v1',JSON.stringify(territories||{}))}catch(e){}
+  try{if(typeof storeDatabase!=='undefined')localStorage.setItem(typeof STORE_KEY!=='undefined'?STORE_KEY:'shadab_pharmacy_stores_v1',JSON.stringify(storeDatabase||[]))}catch(e){}
+  putStr(STATE,JSON.stringify({at:Date.now(),ready:true}));
+}
+function applyMasterRemote(m){
+  if(!m||typeof m!=='object')return false;
+  /* Empty/missing documents do not erase an existing local catalog. */
+  const meaningful=Object.prototype.hasOwnProperty.call(m,'stores')||Object.prototype.hasOwnProperty.call(m,'territories')||Object.prototype.hasOwnProperty.call(m,'customSalesmen')||Object.prototype.hasOwnProperty.call(m,'appName');
+  if(!meaningful)return false;
+  try{
+    if(Array.isArray(m.stores)&&typeof storeDatabase!=='undefined')storeDatabase=clone(m.stores)||[];
+    if(m.territories&&typeof m.territories==='object'&&typeof territories!=='undefined')territories=clone(m.territories)||{};
+    if(Array.isArray(m.disabledTerritories))putJSON('shadab_disabled_territories_v1',m.disabledTerritories);
+    if(Array.isArray(m.disabledCities))putJSON('shadab_disabled_cities_v1',m.disabledCities);
+    if(Array.isArray(m.customSalesmen)&&typeof saveCustomSalesmanNames==='function')saveCustomSalesmanNames(m.customSalesmen);
+    if(typeof m.appName==='string')putStr('shadab_app_name_v1',m.appName);
+    if(typeof m.theme==='string'&&m.theme)putStr('shadab_theme',m.theme);
+    if(typeof m.alertMessage==='string'){putStr('shadab_alert_message_v1',m.alertMessage);const el=document.getElementById('shadabAlertText');if(el)el.textContent=m.alertMessage;}
+    if(typeof m.updatedAt==='string')putStr(REMOTE_VERSION,m.updatedAt);
+    saveLocalCatalog();
+    try{window.shadabRepairTerritoryStores?.()}catch(e){}
+    try{window.ensureSalesmanOptions?.();window.ensureAdminSalesmanOptions?.();window.refreshTerritories?.();window.refreshAssignmentTerritories?.()}catch(e){}
+    try{window.sp35RenderTerrNew?.();window.sp35RenderStoreNew?.();window.sp35RenderStoresNew?.();window.sp35RenderCityListNew?.()}catch(e){}
     try{window.renderTodayTasks?.();window.updatePremiumDashboard?.();window.showStoreSuggestions?.()}catch(e){}
-    return window.SHADAB_MASTER_CITY_LIST||[];
+    return true;
+  }catch(e){console.warn('V14 apply master:',e);return false}
+}
+async function hydrateMasterReadOnly(reason){
+  if(!online())return {ok:false,offline:true};
+  if(typeof window.shadabRestReadDoc!=='function')return {ok:false,error:new Error('Firebase REST reader unavailable')};
+  try{
+    const m=await restRead(MASTER);
+    if(m)applyMasterRemote(m);
+    try{const s=await restRead(SCHEDULE);if(s&&typeof adminSchedules!=='undefined'&&isMaster()===false){adminSchedules=clone(s.schedules||s)||adminSchedules;localStorage.setItem('shadab_pharmacy_fixed_salesman_schedule_v2',JSON.stringify(adminSchedules));}}catch(e){}
+    return {ok:true,data:m||null,reason};
+  }catch(e){
+    if(Number(e?.httpStatus)===429||e?.code==='CLOUD_QUOTA_PAUSED')return {ok:false,paused:true,error:e};
+    return {ok:false,error:e};
   }
-  window.shadabSyncMasterCitySelectors=syncAllCitySelectors;
-
-  /* Update the dynamic AREAS list used by parser/territory helpers. */
-  syncAreasArray();
-
-  /* Hook every known master hydration route so a cloud-added City/Territory becomes
-     available everywhere on Master AND salesman devices without an HTML rebuild. */
-  const wrapAfter=(name,cb)=>{
-    const old=window[name];
-    if(typeof old!=='function'||old.__v4Wrapped)return;
-    const wrapped=async function(){
-      const r=await old.apply(this,arguments);
-      try{cb(r)}catch(e){}
-      return r;
-    };
-    wrapped.__v4Wrapped=true;
-    window[name]=wrapped;
-  };
-  ['applyMasterData','hydrateMasterCatalog','shadabMasterCatalogBootV11','shadabMasterAuthorityV3Bootstrap'].forEach(n=>wrapAfter(n,()=>setTimeout(syncAllCitySelectors,0)));
-
-  /* Final Admin save hook: only refresh the catalog selectors after a successful Master save.
-     It does not alter payloads or save timing. */
-  const prevSaveMaster=window.saveMasterData;
-  if(typeof prevSaveMaster==='function'&&!prevSaveMaster.__v4CatalogSave){
-    const wrappedSave=async function(){
-      const r=await prevSaveMaster.apply(this,arguments);
-      if(isMaster() && r?.ok!==false)setTimeout(syncAllCitySelectors,0);
-      return r;
-    };
-    wrappedSave.__v4CatalogSave=true;
-    window.saveMasterData=wrappedSave;
-  }
-
-  /* Add City opens from several UI layers; refresh all city selectors shortly after the
-     existing handler completes so the new city is visible without page reload. */
-  const prevPoint42=window.sp35Point42;
-  if(typeof prevPoint42==='function'&&!prevPoint42.__v4CityPoint){
-    const wrappedPoint42=async function(){
-      const r=await prevPoint42.apply(this,arguments);
-      setTimeout(syncAllCitySelectors,120);
-      const btn=document.getElementById('sp35AddCityBtnNew');
-      if(btn&&!btn.__v4CityClick){
-        btn.__v4CityClick=true;
-        btn.addEventListener('click',()=>setTimeout(syncAllCitySelectors,350));
-      }
-      return r;
-    };
-    wrappedPoint42.__v4CityPoint=true;
-    window.sp35Point42=wrappedPoint42;
-  }
-
-  /* Initial + post-login hydration passes. */
-  const bootCity=()=>setTimeout(syncAllCitySelectors,0);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootCity,{once:true});
-  else bootCity();
-  window.addEventListener('load',()=>setTimeout(syncAllCitySelectors,250));
-  window.addEventListener('online',()=>setTimeout(syncAllCitySelectors,800));
-
-  /* ---------------------------------------------------------
-     B) AUTHORITATIVE HISTORICAL VISIT MIGRATION
-     The previous V3 historical reader existed, but a later V8 runtime
-     overwrote window.syncMasterFieldDashboard and reverted Week/Month to
-     visitStats-only. This final owner scans old visit_days ONLY ONCE per
-     salesman, repairs the lean visitStats, then all future dashboard cycles
-     use the repaired stats. Today remains authoritative from today's day doc.
-     --------------------------------------------------------- */
-  let aggBusy=null;
-  function dayBounds(){
-    const today=typeof window.todayISO==='function'?window.todayISO():new Date().toISOString().slice(0,10);
-    const x=new Date(today+'T00:00:00');
-    x.setDate(x.getDate()-((x.getDay()+6)%7));
-    const ws=x.toISOString().slice(0,10);
-    const y=new Date(x);y.setDate(y.getDate()+7);
-    const we=y.toISOString().slice(0,10);
-    return {today,ws,we,month:today.slice(0,7),monthStart:today.slice(0,7)+'-01'};
-  }
-  function visitKey(v,uid,fallbackDate){
-    const id=String(v?.id||'').trim();
-    if(id)return uid+'::id::'+id;
-    return uid+'::fallback::'+[v?.date||fallbackDate,v?.time||'',v?.store||v?.name||'',v?.person||'',v?.visitedBy||v?.salesman||''].map(norm).join('|');
-  }
-  function normalizeVisit(v,uid,name,date){
-    return {...(v&&typeof v==='object'?v:{}),uid,visitedBy:String(v?.visitedBy||v?.salesman||v?.salesmanName||name).trim(),date:String(v?.date||date||'').slice(0,10),status:String(v?.status||'Completed').trim()||'Completed'};
-  }
-  function addVisit(map,v,uid,name,date){
-    const vv=normalizeVisit(v,uid,name,date); const k=visitKey(vv,uid,date); if(!map.has(k))map.set(k,vv); return vv;
-  }
-  function buildStatsFromVisits(items){
-    const byDate={},storesByMonth={};
-    for(const v of items){
-      const d=String(v?.date||'').slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(d))continue;
-      byDate[d]=(byDate[d]||0)+1;
-      const mon=d.slice(0,7);if(!storesByMonth[mon])storesByMonth[mon]=[];
-      const key=String(v?.code||'')+'::'+String(v?.area||'')+'::'+norm(v?.store||v?.name||'');
-      if(!storesByMonth[mon].includes(key))storesByMonth[mon].push(key);
+}
+function pendingMaster(){return getJSON(PENDING_MASTER,null)}
+function pendingSchedule(){return getJSON(PENDING_SCHEDULE,null)}
+function markPendingMaster(reason,payload){putJSON(PENDING_MASTER,{version:14,reason:String(reason||'admin-change'),payload:clone(payload),at:now()});}
+function markPendingSchedule(reason,payload){putJSON(PENDING_SCHEDULE,{version:14,reason:String(reason||'schedule-change'),payload:clone(payload),at:now()});}
+function clearPending(k){try{localStorage.removeItem(k)}catch(e){}}
+let masterTimer=0, scheduleTimer=0;
+let masterChain=Promise.resolve(), scheduleChain=Promise.resolve();
+let masterRevision=0, scheduleRevision=0;
+function status(msg){try{const el=document.getElementById('syncText');if(el)el.textContent=msg}catch(e){}}
+function quotaMessage(){status('Cloud quota paused • local data safe');}
+function isQuota(e){return Number(e?.httpStatus)===429||String(e?.message||'').toUpperCase().includes('HTTP 429')||String(e?.message||'').toUpperCase().includes('RESOURCE_EXHAUSTED')}
+async function writeMasterOnce(reason){
+  if(!isMaster())return {ok:false,skipped:true};
+  if(!online()){markPendingMaster(reason,localMasterSnapshot());status('Offline • Admin changes saved locally');return {ok:false,pending:true,offline:true};}
+  const payload={...localMasterSnapshot(),reason:String(reason||'admin-change')};
+  markPendingMaster(reason,payload);
+  try{
+    const meta=await restMeta(MASTER);
+    const current=meta?.data&&typeof meta.data==='object'?meta.data:{};
+    const merged=Object.assign({},current,payload,{updatedAt:now(),updatedBy:'master',schemaVersion:'v14-canonical',masterAuthorityVersion:14,reason:String(reason||'admin-change')});
+    const opts=meta?.updateTime?{updateMask:MASK,currentDocument:{updateTime:meta.updateTime}}:{updateMask:MASK,currentDocument:{exists:false}};
+    await restWrite(MASTER,merged,opts);
+    clearPending(PENDING_MASTER);putStr(REMOTE_VERSION,merged.updatedAt||now());
+    try{window.__shadabLastFirebaseSync={at:now(),ok:true,admin:true,mode:'v14-canonical',reason:String(reason||'admin-change')}}catch(e){}
+    status('✓ Firebase: Sync Successful');
+    return {ok:true,data:merged};
+  }catch(e){
+    if(isQuota(e)){quotaMessage();return {ok:false,pending:true,quota:true,error:e};}
+    const msg=String(e?.message||e);
+    if(Number(e?.httpStatus)===409||msg.includes('ABORTED')||msg.includes('FAILED_PRECONDITION')){
+      /* Another writer changed the document. Do not overwrite it silently. */
+      status('Master changed on another device • sync held');
+      return {ok:false,pending:true,conflict:true,error:e};
     }
-    const dates=Object.keys(byDate).sort();
-    if(dates.length>730){const keep=new Set(dates.slice(-730));for(const d of Object.keys(byDate))if(!keep.has(d))delete byDate[d]}
-    const mons=Object.keys(storesByMonth).sort();
-    if(mons.length>18){const keep=new Set(mons.slice(-18));for(const m of Object.keys(storesByMonth))if(!keep.has(m))delete storesByMonth[m]}
-    return {version:'v4-historical',byDate,storesByMonth,updatedAt:iso()};
+    status('Cloud sync unavailable • local data safe');
+    return {ok:false,pending:true,error:e};
   }
-  async function repairHistoricalForSalesman(p){
-    const uid=String(p.uid||''); if(!uid)return {uid,scanned:false};
-    const path='user_data/'+encodeURIComponent(uid);
-    let parent={};
-    try{parent=await readDoc(path)||{}}catch(e){parent={};}
-    const already=parent?.historicalStatsV4===true && parent?.visitStats?.byDate && typeof parent.visitStats.byDate==='object';
-    const all=new Map();
-    if(Array.isArray(parent?.visits))for(const v of parent.visits)addVisit(all,v,uid,p.name,v?.date);
-    let scanned=false,dayDocs=0;
-    if(!already){
-      const rows=await readCol(path+'/visit_days');
-      scanned=true;
-      for(const row of (Array.isArray(rows)?rows:[])){
-        const doc=row?.data?.()||{}; const date=String(row?.id||doc?.date||'').slice(0,10); if(!date)continue;
-        dayDocs++;
-        for(const v of (Array.isArray(doc?.visits)?doc.visits:[]))addVisit(all,v,uid,p.name,date);
-      }
-      const repaired=buildStatsFromVisits([...all.values()]);
-      const next={...(parent||{}),uid,historicalStatsV4:true,historicalStatsV4At:iso(),visitStats:repaired};
-      await writeDoc(path,next);
-      return {uid,scanned:true,dayDocs,stats:repaired,rows:[...all.values()],parent:next};
-    }
-    return {uid,scanned:false,dayDocs:0,stats:parent.visitStats,rows:[...all.values()],parent};
-  }
+}
+async function queueMaster(reason){
+  masterRevision++;
+  const rev=masterRevision;
+  clearTimeout(masterTimer);
+  return await new Promise(resolve=>{
+    masterTimer=setTimeout(()=>{
+      masterChain=masterChain.then(async()=>{
+        const r=await writeMasterOnce(reason);
+        resolve(r);
+        if(rev!==masterRevision){queueMaster('latest-admin-change-v14');}
+        return r;
+      });
+    },450);
+  });
+}
+function localScheduleSnapshot(){return {schedules:typeof adminSchedules!=='undefined'?clone(adminSchedules)||{}:{},routeTasks:typeof routeTasks!=='undefined'?clone(routeTasks)||{}:{},schemaVersion:'v14-canonical',updatedAt:now(),updatedBy:'master'}}
+async function writeScheduleOnce(reason){
+  if(!isMaster())return {ok:false,skipped:true};
+  if(!online()){markPendingSchedule(reason,localScheduleSnapshot());status('Offline • schedule saved locally');return {ok:false,pending:true,offline:true};}
+  const payload={...localScheduleSnapshot(),reason:String(reason||'schedule-change')};markPendingSchedule(reason,payload);
+  try{
+    const meta=await restMeta(SCHEDULE);const current=meta?.data&&typeof meta.data==='object'?meta.data:{};const merged=Object.assign({},current,payload,{updatedAt:now(),updatedBy:'master',reason:String(reason||'schedule-change')});
+    const opts=meta?.updateTime?{updateMask:SMASK,currentDocument:{updateTime:meta.updateTime}}:{updateMask:SMASK,currentDocument:{exists:false}};
+    await restWrite(SCHEDULE,merged,opts);clearPending(PENDING_SCHEDULE);return {ok:true,data:merged};
+  }catch(e){if(isQuota(e)){quotaMessage();return {ok:false,pending:true,quota:true,error:e};}return {ok:false,pending:true,error:e};}
+}
+async function queueSchedule(reason){scheduleRevision++;const rev=scheduleRevision;clearTimeout(scheduleTimer);return await new Promise(resolve=>{scheduleTimer=setTimeout(()=>{scheduleChain=scheduleChain.then(async()=>{const r=await writeScheduleOnce(reason);resolve(r);if(rev!==scheduleRevision)queueSchedule('latest-schedule-change-v14');return r;});},450)})}
 
-  async function buildHistoricalDashboardV4(){
-    if(!isMaster())return window.__spMasterAggregateCache||{salesmen:[],visits:[],plannedToday:[],rawByUid:{}};
-    if(aggBusy)return aggBusy;
-    aggBusy=(async()=>{
-      const [profiles,userRows,sched,master]=await Promise.all([
-        readCol('salesmen').catch(()=>[]),
-        readCol('user_data').catch(()=>[]),
-        readDoc(SCHEDULE_PATH).catch(()=>({})),
-        readDoc(MASTER_PATH).catch(()=>({}))
-      ]);
-      const userMap=new Map((userRows||[]).map(r=>[String(r?.id||''),r?.data?.()||{}]));
-      const salesmen=(profiles||[]).map(r=>{
-        const uid=String(r?.id||''),d=r?.data?.()||{},u=userMap.get(uid)||{};
-        return {uid,name:String(d.fullName||d.displayName||d.salesmanName||d.name||u.fullName||u.displayName||u.salesmanName||('Salesman '+uid.slice(0,6))).trim(),email:String(d.email||u.email||''),status:String(d.status||u.status||'Active')};
-      }).filter(x=>x.uid).sort((a,b)=>a.name.localeCompare(b.name));
-      const {today,ws,we,month,monthStart}=dayBounds();
-      let week=0,monCount=0;const unique=new Set();const rawByUid={};const diagnostics=[];const reportRows=[];let todayRows=[];
-      for(const p of salesmen){
-        try{
-          const result=await repairHistoricalForSalesman(p);
-          rawByUid[p.uid]=result.parent||{};
-          const stats=result.stats||{}; const byDate=stats.byDate||{};
-          for(const [d,n] of Object.entries(byDate)){const ds=String(d).slice(0,10);if(ds>=ws&&ds<we)week+=Number(n)||0;if(ds>=monthStart&&ds<=today)monCount+=Number(n)||0;}
-          for(const k of (Array.isArray(stats.storesByMonth?.[month])?stats.storesByMonth[month]:[]))unique.add(String(k));
-          /* Only materialize rows that are already available from the one-time migration,
-             plus today's authoritative day doc for already-migrated accounts. */
-          if(result.scanned){
-            for(const v of result.rows){const d=String(v.date||'').slice(0,10);if(d>=ws&&d<we)reportRows.push(v)}
-          }else{
-            try{
-              const td=await readDoc('user_data/'+encodeURIComponent(p.uid)+'/visit_days/'+today);
-              const rows=Array.isArray(td?.visits)?td.visits:[];
-              for(const v of rows)todayRows.push(normalizeVisit(v,p.uid,p.name,today));
-            }catch(e){diagnostics.push({uid:p.uid,name:p.name,error:String(e?.message||e)});}
-          }
-        }catch(e){diagnostics.push({uid:p.uid,name:p.name,error:String(e?.message||e)});}
-      }
-      /* Today rows must always come from the authoritative current-day documents. */
-      if(!todayRows.length || todayRows.some(v=>String(v.date||'').slice(0,10)!==today)){
-        for(const p of salesmen){
-          try{
-            const td=await readDoc('user_data/'+encodeURIComponent(p.uid)+'/visit_days/'+today);
-            const rows=Array.isArray(td?.visits)?td.visits:[];
-            for(const v of rows)todayRows.push(normalizeVisit(v,p.uid,p.name,today));
-          }catch(e){diagnostics.push({uid:p.uid,name:p.name,error:String(e?.message||e)});}
-        }
-      }
-      const todayMap=new Map();for(const v of todayRows)todayMap.set(visitKey(v,v.uid,today),v);todayRows=[...todayMap.values()];
-      /* New V12 writes update visitStats after every successful sync. If a salesman has
-         no repaired historical stats yet and only today's data exists, dashboard still
-         remains honest instead of inflating Week/Month from an empty cache. */
-      const todayCount=todayRows.length;
-      const stats={today:todayCount,week:week||todayCount,month:monCount||todayCount,uniqueStores:unique.size||new Set(todayRows.map(v=>norm(v.area)+'::'+norm(v.store||v.name||v.code))).size};
-      const cacheRows=new Map();
-      for(const v of reportRows)cacheRows.set(visitKey(v,v.uid,v.date),v);
-      for(const v of todayRows)cacheRows.set(visitKey(v,v.uid,v.date),v);
-      const visits=[...cacheRows.values()];
-      const cache={salesmen,visits,plannedToday:[],rawByUid,sourceCounts:{salesmen:salesmen.length,userData:(userRows||[]).length,visitDays:salesmen.length},at:iso(),visitTransport:'visit_days + one-time historical migration',stats};
-      window.__spMasterAggregateCache=cache;
-      window.__shadabHistoricalDashboardDiagnosticsV4={at:iso(),today,weekStart:ws,weekEnd:we,month,stats,readErrors:diagnostics,accountsScanned:salesmen.length};
-      const root=document.getElementById('spAddedMasterDashboard');
-      if(root){const nums=root.querySelectorAll('.sp-added-overview .num');[stats.today,stats.week,stats.month,stats.uniqueStores].forEach((n,i)=>{if(nums[i])nums[i].textContent=String(n)});const st=document.getElementById('spMasterDashboardSyncStatus');if(st)st.textContent='Historical Firebase verified • '+stats.week+' week / '+stats.month+' month visits';}
-      return cache;
-    })();
-    try{return await aggBusy}finally{aggBusy=null}
+/* FINAL PUBLIC OWNERS */
+window.saveMasterData=async function(reason){return queueMaster(reason||'master-change')};
+window.shadabV14SaveMaster=window.saveMasterData;
+window.saveScheduleNow=async function(reason){return queueSchedule(reason||'schedule-change')};
+window.shadabV14SaveSchedule=window.saveScheduleNow;
+window.saveData=function(){
+  /* Local persistence only. IMPORTANT: a generic saveData() call must never write
+     the entire master catalog to Firebase. Explicit Admin mutations call saveMasterData. */
+  try{if(typeof visits!=='undefined'&&typeof APP_KEY!=='undefined')localStorage.setItem(APP_KEY,JSON.stringify(visits||[]))}catch(e){}
+  try{if(typeof territories!=='undefined'&&typeof TERRITORY_KEY!=='undefined')localStorage.setItem(TERRITORY_KEY,JSON.stringify(territories||{}))}catch(e){}
+  try{if(typeof storeDatabase!=='undefined'&&typeof STORE_KEY!=='undefined')localStorage.setItem(STORE_KEY,JSON.stringify(storeDatabase||[]))}catch(e){}
+};
+window.saveAdminSchedules=function(){try{if(typeof adminSchedules!=='undefined')localStorage.setItem('shadab_pharmacy_fixed_salesman_schedule_v2',JSON.stringify(adminSchedules||{}))}catch(e){};return queueSchedule('admin-schedule-change')};
+window.saveRouteTasks=function(){try{if(typeof routeTasks!=='undefined')localStorage.setItem('shadab_pharmacy_admin_route_tasks_v1',JSON.stringify(routeTasks||{}))}catch(e){};if(isMaster())return queueSchedule('route-task-change');return {ok:true,localOnly:true}};
+window.syncAdminChangeV14=async function(reason){return await queueMaster(reason||'admin-change')};
+window.adminCloudSync=window.syncAdminChangeV14;
+window.spV7AdminCloudSync=window.syncAdminChangeV14;
+window.spV7FinalSync=async function(reason){
+  const s=session();if(!s?.uid)throw new Error('Firebase session is not available.');
+  if(isMaster()){
+    const pm=pendingMaster(),ps=pendingSchedule();
+    if(pm){const r=await queueMaster(pm.reason||reason||'manual-pending-master');if(!r.ok)return r;}
+    if(ps){const r=await queueSchedule(ps.reason||reason||'manual-pending-schedule');if(!r.ok)return r;}
+    return {ok:true,mode:'master',pendingMaster:!!pm,pendingSchedule:!!ps};
   }
-
-  window.rebuildMasterAggregateV4=buildHistoricalDashboardV4;
-  window.syncMasterFieldDashboard=async function(){
-    const b=document.getElementById('spMasterDashboardSyncBtn');if(b){b.disabled=true;b.classList.add('is-syncing')}
+  return await (window.shadabSyncSalesmanNow?window.shadabSyncSalesmanNow(reason||'manual-sync'):({ok:false,error:new Error('Salesman sync engine unavailable')}));
+};
+/* Final public salesman sync owner: retain existing V12 transport but never retry 429.
+   The V12 transport already uses the existing visit_days + visit_media model. */
+const baseSalesmanSync=window.shadabSyncSalesmanNow;
+if(typeof baseSalesmanSync==='function'){
+  const v14SalesmanSync=async function(reason){
     try{
-      const c=await buildHistoricalDashboardV4();
-      try{window.renderTodayTasks?.();window.updatePremiumDashboard?.()}catch(e){}
-      return c;
-    }finally{if(b){b.disabled=false;b.classList.remove('is-syncing')}}
-  };
-  window.refreshSpAddedMaster=window.syncMasterFieldDashboard;
-  try{window.__shadabForensicFinalV4={scope:'historical-salesman-visits-and-global-city-territory-propagation-only',autoSyncMs:POLL_MS,catalogAuthority:'app_settings/masterData',historicalAuthority:'visit_days one-time migration -> visitStats'};}catch(e){}
-
-  /* Keep the documented 15-minute cadence visible to QA. */
-  try{window.__SHADAB_INTENDED_POLL_MS=POLL_MS}catch(e){}
-})();
-</script>
-<!-- ===== END V4 FINAL FORENSIC AUTHORITY ===== -->
-
-<!-- ===== V5 DEEP FORENSIC AUTHORITY START ===== -->
-<script id="shadab-v5-deep-forensic-authority">
-(function(){
-  'use strict';
-
-  /*
-   * V5 scope is deliberately narrow:
-   * 1) canonical Master catalog propagation (cities / territories / salesman names)
-   * 2) historical salesman visit aggregation on Master Dashboard
-   * 3) final UI write-back so legacy local dashboard renderers cannot overwrite cloud totals
-   * No Firebase Rules, PDFs, photos, reports, navigation, camera, sync cadence, or UI design changes.
-   */
-  const ADMIN='master@shadabpharmacy.com';
-  const MASTER_PATH='app_settings/masterData';
-  const POLL_MS=900000;
-  const BASE_CITIES=['Sahiwal','Chichawatni','Pakpattan','Arifwala'];
-
-  const norm=v=>String(v??'').trim().toLowerCase();
-  const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return v}};
-  const iso=()=>new Date().toISOString();
-  const sess=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-  const isMaster=()=>norm(sess()?.email)===norm(ADMIN);
-  const readDoc=async p=>{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader unavailable');return window.shadabRestReadDoc(p)};
-  const readCol=async p=>{if(typeof window.shadabRestReadCollection!=='function')throw new Error('Firebase REST collection reader unavailable');return window.shadabRestReadCollection(p)};
-  const writeDoc=async(p,v)=>{if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST writer unavailable');return window.shadabRestWriteDoc(p,v)};
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-  function localTerritories(){
-    try{return (typeof territories!=='undefined' && territories && typeof territories==='object') ? territories : {}}catch(e){return {}}
-  }
-  function localAreas(){
-    try{return (typeof AREAS!=='undefined' && Array.isArray(AREAS)) ? AREAS : BASE_CITIES.slice()}catch(e){return BASE_CITIES.slice()}
-  }
-  function setLocalTerritories(obj){
-    try{
-      if(typeof territories!=='undefined' && territories && typeof territories==='object'){
-        for(const k of Object.keys(territories))delete territories[k];
-        Object.assign(territories, clone(obj)||{});
-      }
-    }catch(e){}
-    try{window.territories=clone(obj)||{}}catch(e){}
-    try{localStorage.setItem('shadab_pharmacy_territories_v1',JSON.stringify(obj||{}))}catch(e){}
-  }
-  function setLocalAreas(list){
-    const arr=[...new Map((Array.isArray(list)?list:[]).map(v=>[norm(v),String(v).trim()]).filter(([k,v])=>k&&v)).values()];
-    try{if(typeof AREAS!=='undefined'&&Array.isArray(AREAS)){AREAS.length=0;arr.forEach(x=>AREAS.push(x))}}catch(e){}
-    try{window.SHADAB_MASTER_CITY_LIST=arr.slice()}catch(e){}
-    return arr;
-  }
-  function localSalesmen(){
-    try{return typeof window.customSalesmanNames==='function' ? (clone(window.customSalesmanNames())||[]) : []}catch(e){return []}
-  }
-  function readDisabled(key){try{const v=JSON.parse(localStorage.getItem(key)||'[]');return new Set(Array.isArray(v)?v.map(norm):[])}catch(e){return new Set()}}
-
-  function masterCitiesFrom(localRemote){
-    const seen=new Map();
-    const add=v=>{const x=String(v??'').trim();const k=norm(x);if(k&&!seen.has(k))seen.set(k,x)};
-    BASE_CITIES.forEach(add);
-    localAreas().forEach(add);
-    Object.keys(localTerritories()).forEach(add);
-    try{(Array.isArray(window.storeDatabase)?window.storeDatabase:[]).forEach(r=>add(r?.area))}catch(e){}
-    try{(Array.isArray(localRemote?.cities)?localRemote.cities:[]).forEach(add)}catch(e){}
-    try{Object.keys(localRemote?.territories||{}).forEach(add)}catch(e){}
-    return [...seen.values()].filter(x=>!readDisabled('shadab_disabled_cities_v1').has(norm(x)));
-  }
-
-  function applyRemoteCatalogV5(m){
-    if(!m||typeof m!=='object')return;
-    if(m.territories && typeof m.territories==='object')setLocalTerritories(m.territories);
-    const cities=masterCitiesFrom(m);
-    setLocalAreas(cities);
-    if(Array.isArray(m.disabledTerritories))try{localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(m.disabledTerritories))}catch(e){}
-    if(Array.isArray(m.disabledCities))try{localStorage.setItem('shadab_disabled_cities_v1',JSON.stringify(m.disabledCities))}catch(e){}
-    if(Array.isArray(m.customSalesmen)&&typeof window.saveCustomSalesmanNames==='function')try{window.saveCustomSalesmanNames(m.customSalesmen)}catch(e){}
-  }
-
-  function mergeTerritories(a,b){
-    const out={};
-    for(const src of [a||{},b||{}]){
-      if(!src||typeof src!=='object')continue;
-      for(const [city,vals] of Object.entries(src)){
-        if(!city)continue;
-        if(!Array.isArray(out[city]))out[city]=[];
-        for(const t of (Array.isArray(vals)?vals:[])){
-          const x=String(t??'').trim();
-          if(x&&!out[city].some(y=>norm(y)===norm(x)))out[city].push(x);
-        }
-      }
-    }
-    return out;
-  }
-  function mergeList(a,b){
-    const out=[];const seen=new Set();
-    for(const src of [a,b])for(const x of (Array.isArray(src)?src:[])){
-      const v=String(x??'').trim(),k=norm(v);if(v&&!seen.has(k)){seen.add(k);out.push(v)}
-    }
-    return out;
-  }
-
-  async function syncCatalogV5(reason){
-    let remote=null;
-    try{remote=await readDoc(MASTER_PATH)||{}}catch(e){
-      window.__shadabCatalogDiagnosticsV5={at:iso(),ok:false,error:String(e?.message||e),reason:reason||''};
-      return null;
-    }
-    try{
-      /* Master is allowed to reconcile unsaved local admin additions into the canonical
-         Firebase snapshot. Non-Master devices are read-only consumers of the snapshot. */
-      if(isMaster()){
-        let localT=mergeTerritories({},localTerritories());
-        const mergedT=mergeTerritories(remote.territories,localT);
-        const mergedCities=mergeList(remote.cities, Object.keys(mergedT));
-        const mergedSales=mergeList(remote.customSalesmen,localSalesmen());
-        const r={...remote,territories:mergedT,cities:mergedCities,customSalesmen:mergedSales,
-          disabledTerritories:mergeList(remote.disabledTerritories,JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')),
-          disabledCities:mergeList(remote.disabledCities,JSON.parse(localStorage.getItem('shadab_disabled_cities_v1')||'[]')),
-          catalogAuthorityV5:true,catalogAuthorityV5At:iso(),updatedAt:remote.updatedAt||iso()};
-        /* Only write when canonical fields actually differ; preserves all unrelated masterData fields. */
-        const changed=JSON.stringify(r.territories)!==JSON.stringify(remote.territories||{}) ||
-          JSON.stringify(r.cities)!==JSON.stringify(remote.cities||[]) ||
-          JSON.stringify(r.customSalesmen)!==JSON.stringify(remote.customSalesmen||[]) ||
-          JSON.stringify(r.disabledTerritories)!==JSON.stringify(remote.disabledTerritories||[]) ||
-          JSON.stringify(r.disabledCities)!==JSON.stringify(remote.disabledCities||[]);
-        if(changed){
-          try{remote=await writeDoc(MASTER_PATH,r)||r}catch(e){window.__shadabCatalogDiagnosticsV5={at:iso(),ok:false,error:String(e?.message||e),reason:'master-reconcile'};}
-        }
-      }
-      applyRemoteCatalogV5(remote);
-      window.__shadabCatalogDiagnosticsV5={at:iso(),ok:true,isMaster:isMaster(),cities:masterCitiesFrom(remote),territories:Object.keys(localTerritories()).length,reason:reason||''};
-      return remote;
+      const r=await baseSalesmanSync.apply(this,arguments);
+      return r;
     }catch(e){
-      window.__shadabCatalogDiagnosticsV5={at:iso(),ok:false,error:String(e?.message||e),reason:reason||''};
-      return remote;
+      if(isQuota(e)){quotaMessage();return {ok:false,pending:true,quota:true,error:e};}
+      throw e;
     }
-  }
-
-  function cityOptions(mode,current){
-    const cities=masterCitiesFrom(null);const cur=String(current||'');
-    const p=mode==='all'?'<option value="">All Areas</option>':mode==='blank'?'<option value="">Select city…</option>':'';
-    const html=p+cities.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
-    return {html,cities,current:cur};
-  }
-  function fillCity(id,mode){
-    const el=document.getElementById(id);if(!el)return;
-    const cur=String(el.value||'');const x=cityOptions(mode,cur);el.innerHTML=x.html;
-    if(cur && x.cities.some(c=>norm(c)===norm(cur)))el.value=cur;
-    else if(mode==='all'||mode==='blank')el.value='';
-    else if(x.cities.length)el.value=x.cities[0];
-  }
-  function salesmanList(){
-    const out=[];const seen=new Set();
-    const add=v=>{const x=String(v??'').trim(),k=norm(x);if(x&&!seen.has(k)){seen.add(k);out.push(x)}};
-    ['visitedBy','filterVisitedBy'].forEach(id=>{const el=document.getElementById(id);el&&[...el.options].forEach(o=>{if(o.value) add(o.textContent||o.value)})});
-    localSalesmen().forEach(add);
-    return out;
-  }
-  function fillSalesman(id,mode){
-    const el=document.getElementById(id);if(!el)return;const cur=String(el.value||'');try{window.ensureSalesmanOptions?.();window.ensureAdminSalesmanOptions?.()}catch(e){}const names=salesmanList();
-    const prefix=mode==='all'?'<option value="">All Visitors</option>':'<option value="">Select Visited By</option>';
-    el.innerHTML=prefix+names.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');
-    if(cur&&names.some(n=>norm(n)===norm(cur)))el.value=cur;
-  }
-  function refreshCityAndSalesmanSelectors(){
-    ['area','filterArea','customerArea','adminScheduleArea','assignArea','territoryArea','sexCity','sdCity','uploadTerritoryArea'].forEach(id=>fillCity(id,(id==='filterArea')?'all':(['sexCity','sdCity'].includes(id)?'blank':'normal')));
-    fillSalesman('visitedBy','normal');fillSalesman('filterVisitedBy','all');
-    try{window.refreshTerritories?.(window.selectedTerritories?.()||[])}catch(e){}
-    try{window.refreshAssignmentTerritories?.()}catch(e){}
-    try{window.refreshUploadTerritories?.()}catch(e){}
-    try{window.renderTerritoryList?.()}catch(e){}
-    try{window.sp35RenderCityListNew?.();window.sp35RenderTerrNew?.()}catch(e){}
-    try{window.renderTodayTasks?.()}catch(e){}
-  }
-  window.shadabSyncMasterCatalogV5=refreshCityAndSalesmanSelectors;
-
-  /* Because territories/AREAS are top-level lexical globals rather than window properties,
-     this bridge is essential. V4 was reading window.territories and therefore missed admin-added cities. */
-  window.__shadabV5FixGlobalCatalogScope=function(){
-    try{window.territories=localTerritories()}catch(e){}
-    try{window.AREAS=localAreas()}catch(e){}
   };
+  v14SalesmanSync.__v14Canonical=true;
+  window.shadabSyncSalesmanNow=v14SalesmanSync;window.sp35SyncNow=v14SalesmanSync;window.sp35SyncNew=v14SalesmanSync;window.sp35ManualServerRefresh=v14SalesmanSync;
+}
 
-  /* ---------------- Historical visit engine ---------------- */
-  function dateBounds(){
-    const today=(typeof window.todayISO==='function'?window.todayISO():new Date().toISOString().slice(0,10));
-    const x=new Date(today+'T00:00:00');x.setDate(x.getDate()-((x.getDay()+6)%7));
-    const ws=x.toISOString().slice(0,10);const y=new Date(x);y.setDate(y.getDate()+7);const we=y.toISOString().slice(0,10);
-    return {today,ws,we,month:today.slice(0,7),monthStart:today.slice(0,7)+'-01'};
-  }
-  const vkey=(v,uid,fd)=>{const id=String(v?.id||'').trim();return uid+'::'+(id?'id::'+id:'fallback::'+[v?.date||fd,v?.time||'',v?.store||v?.name||'',v?.person||'',v?.visitedBy||v?.salesman||''].map(norm).join('|'))};
-  const normVisit=(v,uid,name,date)=>({...((v&&typeof v==='object')?v:{}),uid,visitedBy:String(v?.visitedBy||v?.salesman||v?.salesmanName||name).trim(),date:String(v?.date||date||'').slice(0,10),status:String(v?.status||'Completed').trim()||'Completed'});
-  function statsFrom(list){
-    const byDate={},storesByMonth={};
-    for(const v of list){const d=String(v?.date||'').slice(0,10);if(!/^\d{4}-\d{2}-\d{2}$/.test(d))continue;byDate[d]=(byDate[d]||0)+1;const m=d.slice(0,7);if(!storesByMonth[m])storesByMonth[m]=[];const k=String(v?.code||'')+'::'+String(v?.area||'')+'::'+norm(v?.store||v?.name||'');if(!storesByMonth[m].includes(k))storesByMonth[m].push(k)}
-    return {version:'v5-historical',byDate,storesByMonth,updatedAt:iso()};
-  }
-  async function scanUser(uid,name){
-    const path='user_data/'+encodeURIComponent(uid);let parent={};try{parent=await readDoc(path)||{}}catch(e){parent={}}
-    const existingStats=parent?.visitStats;
-    if(parent?.historicalStatsV5===true && existingStats && typeof existingStats==='object'){
-      return {uid,name,rows:Array.isArray(parent?.visits)?parent.visits.map(v=>normVisit(v,uid,name,v?.date)):[],stats:existingStats,parent,days:0,error:'',scanned:false};
-    }
-    const map=new Map();
-    for(const v of (Array.isArray(parent?.visits)?parent.visits:[])){const n=normVisit(v,uid,name,v?.date);map.set(vkey(n,uid,n.date),n)}
-    let days=0,err='';
-    try{
-      const rows=await readCol(path+'/visit_days');
-      for(const row of (Array.isArray(rows)?rows:[])){
-        const d=row?.data?.()||{},date=String(row?.id||d?.date||'').slice(0,10);if(!date)continue;days++;
-        for(const v of (Array.isArray(d?.visits)?d.visits:[])){const n=normVisit(v,uid,name,date);map.set(vkey(n,uid,date),n)}
-      }
-    }catch(e){err=String(e?.message||e)}
-    const rows=[...map.values()];const stats=statsFrom(rows);const next={...(parent||{}),uid,visitStats:stats,historicalStatsV5:true,historicalStatsV5At:iso()};
-    try{await writeDoc(path,next)}catch(e){if(!err)err=String(e?.message||e)}
-    return {uid,name,rows,stats,parent:next,days,error:err,scanned:true};
-  }
+/* Avoid duplicate/legacy reconnect writes from old V7 code. */
+try{localStorage.removeItem('shadab_pending_admin_sync_v7')}catch(e){}
+window.spV7FlushPending=async()=>{const pm=pendingMaster(),ps=pendingSchedule();if(pm)await queueMaster(pm.reason||'reconnect-master');if(ps)await queueSchedule(ps.reason||'reconnect-schedule')};
 
-  let histBusy=null;
-  async function deepHistoricalDashboardV5(){
-    if(!isMaster())return window.__shadabMasterAggregateCache||{salesmen:[],visits:[],plannedToday:[],rawByUid:{},stats:{today:0,week:0,month:0,uniqueStores:0}};
-    if(histBusy)return histBusy;
-    histBusy=(async()=>{
-      const [profiles,userRows]=await Promise.all([readCol('salesmen').catch(()=>[]),readCol('user_data').catch(()=>[])]);
-      const byUid=new Map((userRows||[]).map(r=>[String(r?.id||''),r?.data?.()||{}]));
-      const profileMap=new Map((profiles||[]).map(r=>{const d=r?.data?.()||{};return [String(r?.id||''),d]}));
-      const uids=new Set();(userRows||[]).forEach(r=>{const uid=String(r?.id||'');if(uid)uids.add(uid)});(profiles||[]).forEach(r=>{const uid=String(r?.id||'');if(uid)uids.add(uid)});
-      const candidates=[...uids].map(uid=>{const p=profileMap.get(uid)||{},u=byUid.get(uid)||{};return {uid,name:String(p.fullName||p.displayName||p.salesmanName||p.name||u.fullName||u.displayName||u.salesmanName||u.name||u.email||('Account '+uid.slice(0,6))).trim()}});
-      const {today,ws,we,month,monthStart}=dateBounds();
-      const diagnostics=[];const rawByUid={};const allRows=new Map();let week=0,monthCount=0;const unique=new Set();const salesmanNames=[];
-      for(const p of candidates){
-        let r;
-        try{r=await scanUser(p.uid,p.name)}catch(e){diagnostics.push({uid:p.uid,name:p.name,error:String(e?.message||e)});continue}
-        rawByUid[p.uid]=r.parent||{};
-        if(profileMap.has(p.uid))salesmanNames.push({uid:p.uid,name:p.name,status:String((profileMap.get(p.uid)||{}).status||'Active')});
-        const byDate=r.stats?.byDate||{};for(const [d,n] of Object.entries(byDate)){const ds=String(d).slice(0,10);if(ds>=ws&&ds<we)week+=Number(n)||0;if(ds>=monthStart&&ds<=today)monthCount+=Number(n)||0}
-        for(const k of (Array.isArray(r.stats?.storesByMonth?.[month])?r.stats.storesByMonth[month]:[]))unique.add(String(k));
-        for(const v of r.rows)allRows.set(vkey(v,p.uid,v.date),v);
-      }
-      const todayRows=[];
-      for(const p of candidates){
-        try{
-          const td=await readDoc('user_data/'+encodeURIComponent(p.uid)+'/visit_days/'+today);
-          const rows=Array.isArray(td?.visits)?td.visits:[];
-          for(const v of rows){const n=normVisit(v,p.uid,p.name,today);todayRows.push(n);allRows.set(vkey(n,p.uid,today),n)}
-        }catch(e){diagnostics.push({uid:p.uid,name:p.name,error:'today:'+String(e?.message||e)})}
-      }
-      const stats={today:todayRows.length,week:week||todayRows.length,month:monthCount||todayRows.length,uniqueStores:unique.size||new Set(todayRows.map(v=>norm(v.area)+'::'+norm(v.store||v.name||v.code))).size};
-      window.__shadabHistoricalDashboardDiagnosticsV5={at:iso(),today,weekStart:ws,weekEnd:we,month,stats,accountsScanned:candidates.length,errors:diagnostics,rows:allRows.size};
-      window.__shadabMasterAggregateCache={salesmen:salesmanNames,visits:[...allRows.values()],plannedToday:[],rawByUid,at:iso(),stats,visitTransport:'V5 all user_data + visit_days forensic migration'};
-      return window.__shadabMasterAggregateCache;
-    })();
-    try{return await histBusy}finally{histBusy=null}
-  }
-
-  function paintDashboard(stats){
-    if(!stats)return;
-    const set=(id,n)=>{const e=document.getElementById(id);if(e)e.textContent=String(n)};
-    set('dashToday',stats.today);set('dashWeek',stats.week);set('dashMonth',stats.month);set('dashStores',stats.uniqueStores);
-    try{
-      const root=document.getElementById('spAddedMasterDashboard');const nums=root?.querySelectorAll('.sp-added-overview .num');
-      if(nums){[stats.today,stats.week,stats.month,stats.uniqueStores].forEach((n,i)=>{if(nums[i])nums[i].textContent=String(n)})}
-    }catch(e){}
-  }
-
-  window.rebuildMasterAggregateV5=deepHistoricalDashboardV5;
-  const prevSync=window.syncMasterFieldDashboard;
-  window.syncMasterFieldDashboard=async function(){const r=await deepHistoricalDashboardV5();paintDashboard(r?.stats);return r};
-  window.refreshSpAddedMaster=window.syncMasterFieldDashboard;
-
-  /* The legacy renderer recalculates dashWeek/dashMonth from the local today-only array.
-     Preserve that function everywhere else, but immediately restore authoritative Master totals. */
-  const prevPremium=window.updatePremiumDashboard;
-  if(typeof prevPremium==='function'&&!prevPremium.__v5CloudAuthoritative){
-    const wrap=async function(){const r=await prevPremium.apply(this,arguments);if(isMaster()&&window.__shadabMasterAggregateCache?.stats){paintDashboard(window.__shadabMasterAggregateCache.stats);setTimeout(()=>paintDashboard(window.__shadabMasterAggregateCache.stats),0);setTimeout(()=>paintDashboard(window.__shadabMasterAggregateCache.stats),250)}return r};
-    wrap.__v5CloudAuthoritative=true;window.updatePremiumDashboard=wrap;
-  }
-
-  /* Catalog must be ready before each surface that consumes city/territory choices. */
-  const wrapAfter= (name,cb)=>{const old=window[name];if(typeof old!=='function'||old.__v5Wrapped)return;const w=async function(){const r=await old.apply(this,arguments);try{await cb()}catch(e){}return r};w.__v5Wrapped=true;window[name]=w};
-  ['applyMasterData','hydrateMasterCatalog','shadabMasterCatalogBootV11','shadabMasterAuthorityV3Bootstrap'].forEach(n=>wrapAfter(n,async()=>{await syncCatalogV5('post-'+n);refreshCityAndSalesmanSelectors()}));
-  ['startPolling'].forEach(n=>wrapAfter(n,async()=>{await syncCatalogV5('post-startPolling');refreshCityAndSalesmanSelectors()}));
-  ['openFieldVisitManager','openUploadTerritoryModal','sp35OpenAddCity','openAdminControlCenter','openMasterFieldDashboard','refreshMasterFieldDashboard'].forEach(n=>wrapAfter(n,async()=>{await syncCatalogV5('open-'+n);refreshCityAndSalesmanSelectors()}));
-
-  const oldSave=window.saveMasterData;
-  window.saveMasterData=async function(reason){
-    if(!isMaster()&&typeof oldSave==='function')return oldSave.apply(this,arguments);
-    let baseResult={ok:false};
-    try{if(typeof oldSave==='function')baseResult=await oldSave.apply(this,arguments)}catch(e){baseResult={ok:false,error:e}}
-    try{
-      const remote=await readDoc(MASTER_PATH).catch(()=>({}));
-      const currentT=mergeTerritories({},localTerritories());
-      const payload={...remote,territories:mergeTerritories(remote?.territories,currentT),cities:mergeList(remote?.cities,Object.keys(currentT)),customSalesmen:mergeList(remote?.customSalesmen,localSalesmen()),catalogAuthorityV5:true,catalogAuthorityV5At:iso(),reason:reason||'master-change',updatedAt:remote?.updatedAt||iso(),updatedBy:remote?.updatedBy||'master'};
-      const changed=JSON.stringify(payload.territories)!==JSON.stringify(remote?.territories||{})||JSON.stringify(payload.cities)!==JSON.stringify(remote?.cities||[])||JSON.stringify(payload.customSalesmen)!==JSON.stringify(remote?.customSalesmen||[]);
-      if(changed)await writeDoc(MASTER_PATH,payload);
-      applyRemoteCatalogV5(payload);refreshCityAndSalesmanSelectors();
-      return baseResult?.ok===false && !changed ? baseResult : {ok:true,previous:baseResult};
-    }catch(e){return baseResult?.ok!==false?baseResult:{ok:false,error:e,previous:baseResult}}
+/* Master mutations: one final wrapper after all legacy layers are loaded. */
+const MASTER_MUTATORS=['sp35AddTerrNew','sp35AddTerritoryNew','sp35EditTerrNew','sp35ToggleTerrNew','sp35ToggleTerr','sp35AddStoreNew','sp35EditStoreNew','sp35EditStoreSaveNew','sp35DisableStoreNew','sp35EnableStoreNew','sp35ToggleCityNew','promptAddSalesmanAdmin','addSalesmanFromComingNext','addSalesman','deleteSalesman','deleteSalesmanAssignment'];
+function wrapMutator(name){
+  const fn=window[name];if(typeof fn!=='function'||fn.__v14MasterMutation)return false;
+  const wrapped=function(){
+    const r=fn.apply(this,arguments);
+    const after=()=>{if(isMaster())window.saveMasterData('mutation:'+name).catch(()=>{})};
+    if(r&&typeof r.then==='function')r.then(after).catch(()=>after());else setTimeout(after,40);
+    return r;
   };
+  wrapped.__v14MasterMutation=true;wrapped.__v14Original=fn;window[name]=wrapped;return true;
+}
+function installMutationWrappers(){MASTER_MUTATORS.forEach(wrapMutator);
+  /* Add City uses a dynamically-created button; let its original handler finish first. */
+  document.addEventListener('click',e=>{const id=e.target?.id||e.target?.closest?.('#sp35AddCityBtnNew')?.id;if(id==='sp35AddCityBtnNew')setTimeout(()=>{if(isMaster())window.saveMasterData('mutation:add-city').catch(()=>{})},120);},{passive:true});
+}
 
-  /* Add City / Add Territory mutate the lexical `territories` object directly. Persist canonically
-     immediately after each operation and refresh all city/territory selectors. */
-  const point42=window.sp35Point42;
-  if(typeof point42==='function'&&!point42.__v5Point42){
-    const w=async function(){const r=await point42.apply(this,arguments);setTimeout(()=>{syncCatalogV5('point42');refreshCityAndSalesmanSelectors()},120);return r};w.__v5Point42=true;window.sp35Point42=w;
-  }
-  const addTerr=window.sp35AddTerrNew;
-  if(typeof addTerr==='function'&&!addTerr.__v5AddTerr){
-    const w=async function(){const r=await addTerr.apply(this,arguments);setTimeout(()=>{syncCatalogV5('territory-added');refreshCityAndSalesmanSelectors()},120);return r};w.__v5AddTerr=true;window.sp35AddTerrNew=w;
-  }
+/* Generic Admin settings / alert handlers that are not guaranteed to use a mutator wrapper. */
+function wrapSetting(name,reason){
+  const fn=window[name];if(typeof fn!=='function'||fn.__v14Setting)return false;
+  const wrapped=function(){const r=fn.apply(this,arguments);const after=()=>{if(isMaster())window.saveMasterData(reason).catch(()=>{})};if(r&&typeof r.then==='function')r.then(after).catch(()=>after());else setTimeout(after,40);return r};wrapped.__v14Setting=true;wrapped.__v14Original=fn;window[name]=wrapped;return true;
+}
+['sp35SaveSettings'].forEach(n=>wrapSetting(n,'settings-change'));
 
-  /* Initial and post-login catalog passes. No extra Firebase polling is introduced. */
-  async function boot(reason){
-    await syncCatalogV5(reason||'boot');refreshCityAndSalesmanSelectors();
-    if(isMaster()){try{const c=await deepHistoricalDashboardV5();paintDashboard(c?.stats)}catch(e){window.__shadabHistoricalDashboardDiagnosticsV5={at:iso(),bootError:String(e?.message||e)}}}
-    setTimeout(refreshCityAndSalesmanSelectors,150);setTimeout(refreshCityAndSalesmanSelectors,600);setTimeout(()=>paintDashboard(window.__shadabMasterAggregateCache?.stats),500);
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>boot('dom-ready'),{once:true});else boot('immediate');
-  window.addEventListener('load',()=>boot('load'));window.addEventListener('online',()=>boot('online'));
+/* Explicit read-only boot: Firebase -> local cache/UI. Never reverse this direction. */
+async function v14Boot(reason){
+  const s=session();if(!s?.uid||!online())return {ok:false,offline:true};
+  const r=await hydrateMasterReadOnly(reason||'boot');
+  try{await window.spFinalHydrateAllSharedDocs?.()}catch(e){}
+  try{window.spV5HydrateLicense?.()}catch(e){}
+  return r;
+}
+window.shadabV14Hydrate= v14Boot;
+window.shadabV14FlushPending=async function(){
+  if(!isMaster())return {ok:false,skipped:true};
+  const pm=pendingMaster(),ps=pendingSchedule();
+  if(!pm&&!ps)return {ok:true,none:true};
+  if(pm){const r=await queueMaster(pm.reason||'pending-master');if(!r.ok)return r;}
+  if(ps){const r=await queueSchedule(ps.reason||'pending-schedule');if(!r.ok)return r;}
+  return {ok:true};
+};
 
-  document.addEventListener('click',function(ev){
-    const t=ev.target?.closest?.('[onclick*="openFieldVisitManager"],[onclick*="openMasterFieldDashboard"],[onclick*="openUploadTerritoryModal"]');
-    if(t){setTimeout(()=>{refreshCityAndSalesmanSelectors();if(isMaster())paintDashboard(window.__shadabMasterAggregateCache?.stats)},60);setTimeout(()=>{refreshCityAndSalesmanSelectors()},450)}
-  },true);
+/* Manual refresh = read-only for Master unless explicit pending changes exist. */
+window.shadabFirebaseRecheck=async function(){
+  if(!online()){status('Offline — local data mode active');return {ok:false,offline:true};}
+  const r=await v14Boot('manual-refresh');
+  if(r.ok)status('✓ Firebase: Cloud data refreshed');else if(r.paused)status('Cloud quota paused • local data safe');
+  return r;
+};
 
-  window.__shadabForensicFinalV5={scope:'catalog-global-propagation + historical-dashboard-only',autoSyncMs:POLL_MS,masterPath:MASTER_PATH,visitAuthority:'user_data/{uid}/visit_days + parent legacy visits',rulesChanged:false};
+/* Prevent old master boot wrappers from becoming an authority again. */
+window.shadabMasterAuthorityV3Bootstrap=async()=>await v14Boot('legacy-bootstrap-read-only');
+window.shadabMasterCatalogBootV11=async()=>await v14Boot('legacy-v11-bootstrap-read-only');
+window.shadabMasterCatalogRefresh=async()=>{const r=await v14Boot('catalog-refresh');return !!r.ok};
+window.shadabMasterCatalogSaveV11=async reason=>await queueMaster(reason||'legacy-v11-save-routed');
+
+window.__shadabCloudCanonicalV14={version:'V14',sourceOfTruth:'Firebase',codeSource:'GitHub/GitBase',masterPath:MASTER,schedulePath:SCHEDULE,masterWriteMode:'explicit-mutation-only',bootWrite:false,masterWriteQueue:true,quota429Pause:true,offlinePending:true,firestoreFieldMasks:true,conflictGuard:'updateTime precondition',visitTransport:'existing V12 visit_days + visit_media',sharedDocuments:'existing sharedDocuments chunk transport',storageMigrationReady:true,autoSyncMs:900000};
+window.shadabV14Status=()=>({
+  version:'V14',
+  online:navigator.onLine,
+  session:!!session()?.uid,
+  master:isMaster(),
+  pendingMaster:!!pendingMaster(),
+  pendingSchedule:!!pendingSchedule(),
+  quotaPauseUntil:Number(getStr('shadab_cloud_pause_until_v14','0')||0)||0,
+  remoteMasterUpdatedAt:getStr(REMOTE_VERSION,''),
+  autoSyncMs:900000
+});
+
+/* Startup: one read-only hydration after session restore; no catalog write. */
+function boot(){setTimeout(()=>{v14Boot('boot').catch(()=>{})},700);installMutationWrappers();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+window.addEventListener('online',()=>setTimeout(()=>{v14Boot('online').catch(()=>{});if(isMaster())window.shadabV14FlushPending().catch(()=>{})},900));
 })();
 </script>
-<!-- ===== V5 DEEP FORENSIC AUTHORITY END ===== -->
 
-<!-- ===== V7: VERIFIED ADMIN MASTER CATALOG WRITE-THROUGH + HARD HOLD ===== -->
-<script id="shadab-v7-verified-admin-master-catalog">
-(function(){
-  'use strict';
-
-  /*
-    Scope: Admin City / Territory / Salesman master persistence only.
-    No Firebase Rules, visit transport, PDFs, reports, navigation or sync cadence
-    are changed here.
-
-    Design:
-      Firebase app_settings/masterData is the canonical source.
-      Admin edits are written through the existing authenticated REST writer.
-      Every write is read back and verified before the UI reports success.
-      On every HTML boot/poll, the canonical catalog is re-hydrated so a new HTML
-      build cannot silently replace the saved Master catalog with its old seed.
-  */
-
-  const ADMIN_EMAIL='master@shadabpharmacy.com';
-  const MASTER_PATH='app_settings/masterData';
-  const V='v7-verified-catalog';
-  const FALLBACK_CITY='Sahiwal 2';
-  /* This is the city/territory data visibly created in the preceding live test.
-     It is used only to recover the already-created Master data if an older build
-     failed to commit it to Firebase. Future Admin edits are persisted dynamically. */
-  const KNOWN_ADMIN_TERRITORIES={
-    'Sahiwal 2':['NOOR SHAH','GAMBER','ADDA YOUSAFWALA','ADDA QADIRABAD','NULL BAGRI']
-  };
-
-  const clone=v=>{try{return JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
-  const norm=v=>String(v??'').trim().toLowerCase();
-  const stamp=()=>new Date().toISOString();
-  const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-  const isMaster=()=>{
-    const s=session();
-    if(String(s?.email||'').toLowerCase()===ADMIN_EMAIL)return true;
-    try{return window.adminLoggedIn===true}catch(e){return false}
-  };
-  const read=async()=>{
-    if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader unavailable');
-    return await window.shadabRestReadDoc(MASTER_PATH)||{};
-  };
-  const write=async payload=>{
-    if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST writer unavailable');
-    return await window.shadabRestWriteDoc(MASTER_PATH,payload);
-  };
-  const setLocal=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-
-  function localTerritoriesNow(){
-    try{
-      if(typeof territories!=='undefined'&&territories&&typeof territories==='object')return clone(territories)||{};
-    }catch(e){}
-    try{return clone(window.territories)||{}}catch(e){return {}}
-  }
-  function localCitiesNow(){
-    const out=[];const seen=new Set();
-    const add=v=>{const x=String(v??'').trim(),k=norm(x);if(x&&!seen.has(k)){seen.add(k);out.push(x)}};
-    try{if(typeof AREAS!=='undefined'&&Array.isArray(AREAS))AREAS.forEach(add)}catch(e){}
-    const t=localTerritoriesNow();Object.keys(t).forEach(add);
-    return out;
-  }
-  function localSalesmenNow(){
-    try{if(typeof window.customSalesmanNames==='function')return clone(window.customSalesmanNames())||[]}catch(e){}
-    try{return JSON.parse(localStorage.getItem('shadab_custom_salesmen_v1')||'[]')||[]}catch(e){return []}
-  }
-  function mergeList(a,b){
-    const out=[];const seen=new Set();
-    for(const src of [a,b])for(const x of (Array.isArray(src)?src:[])){
-      const v=String(x??'').trim(),k=norm(v);
-      if(v&&!seen.has(k)){seen.add(k);out.push(v)}
-    }
-    return out;
-  }
-  function mergeTerritories(a,b){
-    const out={};
-    for(const src of [a,b]){
-      if(!src||typeof src!=='object')continue;
-      for(const [city,vals] of Object.entries(src)){
-        const c=String(city||'').trim();if(!c)continue;
-        if(!Array.isArray(out[c]))out[c]=[];
-        for(const t of (Array.isArray(vals)?vals:[])){
-          const v=String(t??'').trim();if(v&&!out[c].some(x=>norm(x)===norm(v)))out[c].push(v);
-        }
-      }
-    }
-    return out;
-  }
-  function disabledList(key){try{const x=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(x)?x:[]}catch(e){return []}}
-
-  function readCurrentLiveCatalog(){
-    const t=mergeTerritories(KNOWN_ADMIN_TERRITORIES,localTerritoriesNow());
-    const cities=mergeList(localCitiesNow(),Object.keys(t));
-    if(!cities.some(c=>norm(c)===norm(FALLBACK_CITY)))cities.push(FALLBACK_CITY);
-    return {
-      territories:t,
-      cities,
-      customSalesmen:localSalesmenNow(),
-      disabledTerritories:disabledList('shadab_disabled_territories_v1'),
-      disabledCities:disabledList('shadab_disabled_cities_v1')
-    };
-  }
-
-  function applyCatalog(remote){
-    if(!remote||typeof remote!=='object')return;
-    const t=remote.territories&&typeof remote.territories==='object'?clone(remote.territories):{};
-    const cities=mergeList(remote.cities,Object.keys(t));
-    try{
-      if(typeof territories!=='undefined'&&territories&&typeof territories==='object'){
-        for(const k of Object.keys(territories))delete territories[k];
-        Object.assign(territories,t);
-      }
-    }catch(e){}
-    try{window.territories=clone(t)||{}}catch(e){}
-    try{
-      if(typeof AREAS!=='undefined'&&Array.isArray(AREAS)){
-        AREAS.length=0;cities.forEach(c=>AREAS.push(c));
-      }
-    }catch(e){}
-    try{window.AREAS=clone(cities)||[]}catch(e){}
-    try{window.SHADAB_MASTER_CITY_LIST=clone(cities)||[]}catch(e){}
-    setLocal('shadab_pharmacy_territories_v1',t);
-    try{localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify(remote.disabledTerritories||[]))}catch(e){}
-    try{localStorage.setItem('shadab_disabled_cities_v1',JSON.stringify(remote.disabledCities||[]))}catch(e){}
-    if(Array.isArray(remote.customSalesmen)&&typeof window.saveCustomSalesmanNames==='function'){
-      try{window.saveCustomSalesmanNames(remote.customSalesmen)}catch(e){}
-    }
-    try{window.refreshTerritories?.()}catch(e){}
-    try{window.refreshAssignmentTerritories?.()}catch(e){}
-    try{window.refreshUploadTerritories?.()}catch(e){}
-    try{window.renderTerritoryList?.()}catch(e){}
-    try{window.sp35RenderTerrNew?.();window.sp35RenderCityListNew?.()}catch(e){}
-    try{window.ensureSalesmanOptions?.();window.ensureAdminSalesmanOptions?.()}catch(e){}
-  }
-
-  function equivalentCatalog(a,b){
-    const clean=x=>JSON.stringify({
-      cities:Array.isArray(x?.cities)?x.cities.slice().sort((p,q)=>String(p).localeCompare(String(q))):[],
-      territories:x?.territories&&typeof x.territories==='object'?Object.fromEntries(Object.keys(x.territories).sort().map(k=>[k,(Array.isArray(x.territories[k])?x.territories[k]:[]).map(String).sort((p,q)=>p.localeCompare(q))])):{},
-      customSalesmen:Array.isArray(x?.customSalesmen)?x.customSalesmen.map(String).sort((p,q)=>p.localeCompare(q)):[]
-    });
-    return clean(a)===clean(b);
-  }
-
-  let busy=null;
-  async function verifiedCatalogWrite(reason, opts={}){
-    if(!isMaster())return {ok:false,skipped:true,reason:'not-master'};
-    if(!navigator.onLine)return {ok:false,pending:true,reason:'offline'};
-    if(busy)return busy;
-    busy=(async()=>{
-      let lastErr=null;
-      for(let attempt=1;attempt<=3;attempt++){
-        try{
-          const remote=await read();
-          const live=readCurrentLiveCatalog();
-          const merged={
-            ...remote,
-            territories:mergeTerritories(remote.territories,live.territories),
-            cities:mergeList(remote.cities,live.cities),
-            customSalesmen:mergeList(remote.customSalesmen,live.customSalesmen),
-            disabledTerritories:mergeList(remote.disabledTerritories,live.disabledTerritories),
-            disabledCities:mergeList(remote.disabledCities,live.disabledCities),
-            catalogAuthorityV7:true,
-            catalogAuthorityVersion:7,
-            catalogAuthorityAt:stamp(),
-            catalogAuthorityReason:String(reason||'admin-catalog-change')
-          };
-          await write(merged);
-          const check=await read();
-          const expected={cities:merged.cities,territories:merged.territories,customSalesmen:merged.customSalesmen};
-          const actual={cities:check?.cities,territories:check?.territories,customSalesmen:check?.customSalesmen};
-          if(!equivalentCatalog(expected,actual))throw new Error('Firebase masterData read-back verification failed.');
-          applyCatalog(check);
-          window.__shadabV7CatalogStatus={ok:true,at:stamp(),attempt,reason:reason||'',cities:check.cities||[],territoryCities:Object.keys(check.territories||{}),salesmen:check.customSalesmen||[]};
-          return {ok:true,verified:true,data:check};
-        }catch(e){lastErr=e;await new Promise(r=>setTimeout(r,350*attempt))}
-      }
-      window.__shadabV7CatalogStatus={ok:false,at:stamp(),reason:reason||'',error:String(lastErr?.message||lastErr)};
-      return {ok:false,error:lastErr,pending:true};
-    })();
-    try{return await busy}finally{busy=null}
-  }
-
-  async function hydrateCatalog(reason){
-    if(typeof window.shadabRestReadDoc!=='function')return null;
-    try{
-      const remote=await read();
-      let final=remote||{};
-      /* One-time recovery of the exact city/territories already created in the live test.
-         This never replaces remote data; it only fills a missing record. */
-      if(isMaster()){
-        const live=readCurrentLiveCatalog();
-        const merged={
-          ...final,
-          territories:mergeTerritories(final.territories,live.territories),
-          cities:mergeList(final.cities,live.cities),
-          customSalesmen:mergeList(final.customSalesmen,live.customSalesmen),
-          disabledTerritories:mergeList(final.disabledTerritories,live.disabledTerritories),
-          disabledCities:mergeList(final.disabledCities,live.disabledCities)
-        };
-        if(!equivalentCatalog(final,merged)){
-          const r=await verifiedCatalogWrite('boot-recovery');
-          final=r?.data||merged;
-        }
-      }
-      applyCatalog(final);
-      window.__shadabV7CatalogStatus={...(window.__shadabV7CatalogStatus||{}),hydrated:true,hydrateAt:stamp(),reason:reason||'boot',source:'firebase'};
-      return final;
-    }catch(e){
-      window.__shadabV7CatalogStatus={ok:false,hydrated:false,at:stamp(),reason:reason||'boot',error:String(e?.message||e)};
-      return null;
-    }
-  }
-
-  let persistTimer=0;
-  function queueCatalogPersist(reason){
-    clearTimeout(persistTimer);
-    persistTimer=setTimeout(()=>{verifiedCatalogWrite(reason).catch(()=>{})},220);
-  }
-
-  function wrapAsync(name,reason){
-    const fn=window[name];
-    if(typeof fn!=='function'||fn.__v7CatalogWrapped)return;
-    const w=function(){
-      const r=fn.apply(this,arguments);
-      Promise.resolve(r).then(()=>queueCatalogPersist(reason)).catch(()=>{});
-      return r;
-    };
-    w.__v7CatalogWrapped=true;w.__v7Original=fn;window[name]=w;
-  }
-
-  /* Directly wrap the underlying mutation points. */
-  ['sp35AddTerrNew','sp35AddTerritoryNew','sp35AddTerr','sp35AddStoreNew','sp35EditStoreSaveNew','sp35DisableStoreNew','sp35EnableStoreNew','sp35ToggleTerrNew','sp35ToggleTerr'].forEach(n=>wrapAsync(n,'admin-catalog-mutation:'+n));
-  ['promptAddSalesmanAdmin','addSalesmanFromComingNext'].forEach(n=>wrapAsync(n,'admin-salesman-mutation:'+n));
-  if(typeof window.addSalesman==='function'&&!window.addSalesman.__v7CatalogWrapped){
-    const old=window.addSalesman;
-    const w=function(){const r=old.apply(this,arguments);if(r!==false)queueCatalogPersist('admin-salesman-add');return r};
-    w.__v7CatalogWrapped=true;window.addSalesman=w;
-  }
-
-  /* Add City is an inline button created by sp35Point42. Attach the persistence hook
-     after the existing UI has rendered; the original Add City behavior is untouched. */
-  const point42=window.sp35Point42;
-  if(typeof point42==='function'&&!point42.__v7CityHook){
-    const wrapped=async function(){
-      const r=await point42.apply(this,arguments);
-      const btn=document.getElementById('sp35AddCityBtnNew');
-      if(btn&&!btn.__v7CityPersist){
-        btn.__v7CityPersist=true;
-        btn.addEventListener('click',()=>queueCatalogPersist('admin-city-add'),{passive:true});
-      }
-      return r;
-    };
-    wrapped.__v7CityHook=true;window.sp35Point42=wrapped;
-    try{window.sp35Point41=wrapped}catch(e){}
-  }
-
-  /* Final save wrapper: preserve all fields, then verified-write the canonical catalog. */
-  const oldSave=window.saveMasterData;
-  if(typeof oldSave==='function'&&!oldSave.__v7MasterSave){
-    const wrappedSave=async function(reason){
-      let base={ok:false};
-      try{base=await oldSave.apply(this,arguments)}catch(e){base={ok:false,error:e}}
-      if(isMaster()){
-        const r=await verifiedCatalogWrite(reason||'master-save');
-        if(r.ok)return {ok:true,verified:true,previous:base,data:r.data};
-      }
-      return base;
-    };
-    wrappedSave.__v7MasterSave=true;window.saveMasterData=wrappedSave;
-  }
-
-  /* Re-hydrate after the existing polling cycle as well. This does NOT create a new timer;
-     it only rides the already-existing 15-minute poll. */
-  const oldPoll=window.pollRemote;
-  if(typeof oldPoll==='function'&&!oldPoll.__v7CatalogPoll){
-    const wrappedPoll=async function(){
-      const r=await oldPoll.apply(this,arguments);
-      await hydrateCatalog('post-existing-poll');
-      return r;
-    };
-    wrappedPoll.__v7CatalogPoll=true;window.pollRemote=wrappedPoll;
-  }
-  const oldStart=window.startPolling;
-  if(typeof oldStart==='function'&&!oldStart.__v7CatalogStart){
-    const wrappedStart=async function(){
-      await hydrateCatalog('pre-start-poll');
-      return await oldStart.apply(this,arguments);
-    };
-    wrappedStart.__v7CatalogStart=true;window.startPolling=wrappedStart;
-  }
-
-  /* Boot after ALL previous runtime layers have loaded. */
-  const boot=()=>setTimeout(()=>{hydrateCatalog('final-v7-boot').catch(()=>{})},250);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  window.addEventListener('load',()=>setTimeout(()=>hydrateCatalog('final-v7-load'),450));
-  window.addEventListener('online',()=>setTimeout(()=>hydrateCatalog('final-v7-online'),700));
-
-  /* QA helper; nothing is rendered on screen. */
-  window.shadabVerifyAdminCatalogV7=async function(){
-    const x=await read();
-    const result={
-      cities:x?.cities||[],
-      territories:x?.territories||{},
-      customSalesmen:x?.customSalesmen||[],
-      verifiedAt:stamp(),
-      sahiwal2:!!(x?.territories&&Object.prototype.hasOwnProperty.call(x.territories,'Sahiwal 2'))
-    };
-    window.__shadabV7CatalogStatus={...(window.__shadabV7CatalogStatus||{}),qa:result};
-    return result;
-  };
-
-  window.__shadabForensicFinalV7={
-    scope:'verified admin catalog persistence only',
-    masterPath:MASTER_PATH,
-    rulesChanged:false,
-    autoSyncMs:900000,
-    readBackVerification:true,
-    futureHtmlHydration:true,
-    knownRecoveryCity:FALLBACK_CITY
-  };
-})();
-</script>
-<!-- ===== END V7 VERIFIED ADMIN MASTER CATALOG ===== -->
