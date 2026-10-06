@@ -20475,3 +20475,13 @@ document.addEventListener('keydown',function(e){const b=e.target.closest?.('#sha
   #shadabMenuPanel.shadab-portal-menu.open{display:block!important;}
 </style>
 
+
+
+<!-- ===== FINAL FORENSIC FIX: MAIN HEADER STAYS BELOW OPEN MODALS ===== -->
+<style id="shadab-header-modal-layer-lock">
+/* Header remains fixed at the main-screen top, but open modal/options must render above it.
+   Hamburger/menu portal keeps its own layer; no functions or app data are changed. */
+.topbar{z-index:80!important;}
+.modal{z-index:90!important;}
+</style>
+<!-- ===== END FINAL FORENSIC FIX ===== -->
