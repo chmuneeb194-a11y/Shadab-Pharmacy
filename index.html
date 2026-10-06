@@ -1145,6 +1145,7 @@ html[data-shadab-theme="dark"] .topbar{
   pointer-events:auto!important;
 }
 </style>
+<!-- SHADAB FORENSIC REPAIR V16: targeted fixes only -->
 </head>
 <body>
 <script id="shadab-global-jsonclone-fix">
@@ -2148,8 +2149,12 @@ function openUploadTerritoryModal(){
   if(!modal)return;
   const areaSel=document.getElementById("uploadTerritoryArea");
   const current=document.getElementById("area")?.value||"Sahiwal";
-  areaSel.innerHTML=AREAS.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join("");
-  areaSel.value=AREAS.includes(current)?current:"Sahiwal";
+  const disabled=(()=>{try{const x=JSON.parse(localStorage.getItem('shadab_disabled_cities_v1')||'[]');return new Set(Array.isArray(x)?x.map(v=>String(v).toLowerCase()):[])}catch(e){return new Set()}})();
+  const dynamicCities=[...(territories&&typeof territories==='object'?Object.keys(territories):[]),...(typeof AREAS!=='undefined'?AREAS:[])];
+  const cities=[...new Set(dynamicCities.map(a=>String(a||'').trim()).filter(Boolean))].filter(a=>!disabled.has(a.toLowerCase())).sort((a,b)=>a.localeCompare(b));
+  const finalCities=cities.length?cities:["Sahiwal"];
+  areaSel.innerHTML=finalCities.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join("");
+  areaSel.value=finalCities.includes(current)?current:finalCities[0];
   refreshUploadTerritories();
   const file=document.getElementById("uploadTerritoryFile");
   if(file)file.value="";
@@ -3958,10 +3963,21 @@ window.sp35Logout=async function(){
 window.sp35PopulateRegistrationNames=function(){
  const sel=document.getElementById('sp35RegName');if(!sel)return;
  const current=sel.value||'';
- let names=[];try{names=(typeof adminSalesmanNames==='function'?adminSalesmanNames():[])}catch(e){}
- names=[...new Set(names.map(x=>String(x||'').trim()).filter(Boolean))];
- sel.innerHTML='<option value="">Select your salesman name</option>'+names.map(n=>`<option value="${esc35(n)}">${esc35(n)}</option>`).join('');
- if(current&&names.includes(current))sel.value=current;
+ const render=(source)=>{
+   let names=[];try{names=Array.isArray(source)?source:(typeof adminSalesmanNames==='function'?adminSalesmanNames():[])}catch(e){names=[]}
+   names=[...new Set(names.map(x=>String(x||'').trim()).filter(Boolean))];
+   sel.innerHTML='<option value="">Select your salesman name</option>'+names.map(n=>`<option value="${esc35(n)}">${esc35(n)}</option>`).join('');
+   if(current&&names.includes(current))sel.value=current;
+ };
+ render();
+ /* The local directory is shown immediately. If the authoritative directory layer
+    is available, refresh it once and repaint this selector from the same source. */
+ try{
+   const refresh=window.shadabRefreshMasterDirectory;
+   if(typeof refresh==='function')Promise.resolve(refresh()).then(()=>{
+     try{render(typeof window.shadabGetMasterSalesmen==='function'?window.shadabGetMasterSalesmen():undefined)}catch(e){}
+   }).catch(()=>{});
+ }catch(e){}
 };
 window.sp35OpenAuth=(mode)=>{document.getElementById('sp35AuthModal')?.classList.add('show');sp35PopulateRegistrationNames();sp35ShowAuth(mode)};
 window.sp35CloseAuth=()=>document.getElementById('sp35AuthModal')?.classList.remove('show');
@@ -5613,7 +5629,7 @@ try{document.addEventListener('input',e=>{if(e.target?.closest?.('#salesmanExpen
 .sd-hero-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.sd-hero h3{margin:0 0 4px;font-size:22px}.sd-muted{color:#9eacbb;font-size:12px}.sd-total{margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08)}.sd-total b{font-size:26px;color:#42c8ff}.sd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.sd-card{border:1px solid rgba(120,170,210,.16);border-radius:18px;padding:15px;background:rgba(20,30,42,.82);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}.sd-card.full{grid-column:1/-1}.sd-card h4{margin:0 0 12px;font-size:17px}.sd-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.sd-field label,.sd-bank label{display:block;font-size:11px;color:#9eacbb;margin:0 0 5px}.sd-field input,.sd-bank select,.sd-bank input{width:100%;box-sizing:border-box;border:1px solid rgba(120,170,210,.2);background:#0e1722;color:#fff;border-radius:11px;padding:10px 11px;outline:none}.sd-calc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.sd-stat{padding:10px;border-radius:12px;background:rgba(0,122,255,.08);border:1px solid rgba(64,178,255,.12)}.sd-stat span{display:block;color:#9eacbb;font-size:11px}.sd-stat b{display:block;margin-top:3px;font-size:17px}.sd-bank-row{display:grid;grid-template-columns:1.4fr .8fr auto;gap:9px;align-items:end}.sd-btn{border:1px solid rgba(64,178,255,.25);border-radius:11px;padding:10px 13px;background:#12324a;color:#fff;font-weight:800;cursor:pointer}.sd-btn.primary{background:linear-gradient(135deg,#087fe8,#0ab6e8)}.sd-btn.success{background:linear-gradient(135deg,#087d4b,#0ab86d)}.sd-btn.danger{background:#4a2028}.sd-btn{transition:transform .16s ease,box-shadow .22s ease,filter .22s ease}.sd-btn:active{transform:scale(.96)}.sd-btn.sd-save-success{animation:sdSaveSuccess .62s ease}.sd-btn.sd-action-pulse{animation:sdActionPulse .42s ease}@keyframes sdSaveSuccess{0%{transform:scale(1);box-shadow:0 0 0 rgba(35,211,145,0)}45%{transform:scale(1.045);box-shadow:0 0 0 7px rgba(35,211,145,.12)}100%{transform:scale(1);box-shadow:0 0 0 rgba(35,211,145,0)}}@keyframes sdActionPulse{0%{transform:scale(1)}50%{transform:scale(1.035)}100%{transform:scale(1)}}.sd-list{display:grid;gap:7px;margin-top:10px}.sd-list-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:9px 11px;border-radius:11px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}.sd-table-wrap{overflow:auto}.sd-table{width:100%;border-collapse:collapse}.sd-table th,.sd-table td{padding:9px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left;font-size:12px}.sd-table th{color:#8fa0b2}.sd-bottom{margin-top:14px;padding:14px 16px;border-radius:17px;background:linear-gradient(135deg,#071c2b,#102e43);border:1px solid rgba(64,178,255,.2);display:flex;justify-content:space-between;align-items:center}.sd-bottom strong{font-size:24px;color:#54d0ff}.sd-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.sd-empty{color:#8393a4;text-align:center;padding:12px}.sd-negative{color:#ff9b9b}.sd-positive{color:#57df9c}@media(max-width:700px){.sd-grid{grid-template-columns:1fr}.sd-card.full{grid-column:auto}.sd-fields,.sd-calc{grid-template-columns:1fr 1fr}.sd-bank-row{grid-template-columns:1fr 1fr}.sd-bank-row .sd-btn{grid-column:1/-1}}@media(max-width:460px){.sd-fields,.sd-calc{grid-template-columns:1fr}.sd-hero-row,.sd-bottom{align-items:flex-start;flex-direction:column}.sd-total{align-items:flex-start;flex-direction:column}}
 </style>
 <style id="shadab-financial-salesman-selector-style">
-.sex-exp-salesman-card{background:linear-gradient(145deg,rgba(18,35,52,.98),rgba(13,26,40,.98))!important;border-color:rgba(90,190,255,.18)!important}.sex-salesman-line{display:grid;grid-template-columns:1.1fr auto 1fr auto;gap:8px;align-items:end}.sex-salesman-line select,.sex-salesman-line input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px 11px;background:var(--soft);color:inherit;font:inherit}.sex-salesman-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.sex-salesman-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(0,150,240,.12);border:1px solid rgba(70,190,255,.2);font-size:11px;font-weight:800}.sex-salesman-chip button{width:20px;height:20px;border:0;border-radius:50%;background:rgba(255,255,255,.10);color:inherit;cursor:pointer}@media(max-width:760px){.sex-salesman-line{grid-template-columns:1fr auto}.sex-salesman-line input{grid-column:1/-1}.sex-salesman-line input+button{grid-column:2}}
+.sex-exp-salesman-card{background:linear-gradient(145deg,rgba(18,35,52,.98),rgba(13,26,40,.98))!important;border-color:rgba(90,190,255,.18)!important}.sex-salesman-line{display:grid;grid-template-columns:1.1fr auto 1fr auto;gap:8px;align-items:end}.sex-salesman-line select,.sex-salesman-line input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:10px 11px;background:var(--soft);color:inherit;font:inherit}.sex-salesman-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.sex-salesman-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(0,150,240,.12);border:1px solid rgba(70,190,255,.2);font-size:11px;font-weight:800}.sex-salesman-chip button{width:20px;height:20px;border:0;border-radius:50%;background:rgba(255,255,255,.10);color:inherit;cursor:pointer}@media(max-width:1000px){.sex-salesman-line{grid-template-columns:minmax(0,1fr)!important;gap:8px!important;align-items:stretch!important}.sex-salesman-line>*{grid-column:1/-1!important;min-width:0!important;width:100%!important;max-width:none!important;box-sizing:border-box!important}.sex-salesman-line input+button{grid-column:1/-1!important}}
 </style>
 <style id="shadab-summary-detail-upgrade-style">
 .sd-card-title-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.sd-card-title-row h4{margin:0 0 3px}
@@ -6251,6 +6267,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
     name=String(name||'').trim();if(!name)return false;
     const before=allSalesmen().some(n=>n.toLowerCase()===name.toLowerCase());
     addCustom(name);refreshSalesmanDropdowns();
+    try{window.ensureSalesmanOptions?.();window.ensureAdminSalesmanOptions?.();window.sp35PopulateRegistrationNames?.()}catch(e){}
     return !before;
   };
 
@@ -7723,9 +7740,19 @@ setInterval(()=>{if(navigator.onLine&&sess()?.uid)hydrate()},600000);
 
   async function finalSync(){
     if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');
-    const s=session();
+    let s=session();
+    /* Master login can be visually restored before the REST token restoration
+       finishes. Reuse the existing REST sign-in path once, instead of reporting
+       a false "Not signed in" sync failure during that short window. */
+    if(!s?.uid && localStorage.getItem('shadab_admin_logged_in_v2')==='1'){
+      try{
+        const restored=await signInREST(ADMIN_EMAIL,ADMIN_PASS);
+        await loginSuccess(restored,true);
+        s=session();
+      }catch(e){/* keep the original authenticated-session error below */}
+    }
     if(!s?.uid)throw new Error('Firebase session is not available. Please sign in on this GitHub app first.');
-    /* THIS WAS MISSING IN V26: always refresh/validate before PATCH. */
+    /* Always refresh/validate before PATCH. */
     await freshToken();
     const isAdmin=String(s.email||'').toLowerCase()===ADMIN;
     return isAdmin?await syncAdmin():await syncSalesman(s.uid);
@@ -8382,7 +8409,7 @@ async function clearAllVisitsV3(){
   if(!navigator.onLine)return toast('Offline — connect to Firebase before clearing all visit data.');
   if(!confirm('CLEAR ALL VISIT DATA?\n\nThis permanently removes ALL visit/activity records for ALL salesmen from Firebase, dashboards, reports, visit-day storage and related media.\n\nMedical stores, cities, territories, assignments, salesman accounts, PDFs and settings remain safe.\n\nThis cannot be undone.'))return false;
   const b=document.getElementById('spMasterClearDashboardBtn'),st=document.getElementById('spMasterClearDashboardStatus');if(b)b.disabled=true;
-  if(b){b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">↻</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Deleting Firebase visit-days + media for every salesman</small></span><span class="sp-clear-v2-state">↻</span>'}
+  if(b){b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Deleting Firebase visit-days + media for every salesman</small></span><span class="sp-clear-v2-state">✓</span>'}
   try{
     const [profiles,users]=await Promise.all([readCol('salesmen'),readCol('user_data')]);
     const uids=new Set();(profiles||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});(users||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});
@@ -8441,7 +8468,7 @@ document.addEventListener('click',e=>{if(e.target.closest?.('#spAddedSalesmanDas
 document.addEventListener('change',e=>{if(e.target?.id==='spLiveCityFilter'||e.target?.id==='spLiveDateFilter')kickReports()});
 setTimeout(kickReports,700);setTimeout(kickReports,1800);
 })();
-<\/script>
+</script>
 <!-- ===== END SHADAB ADMIN GLOBAL VISIT DELETE + CLEAR HARDENING V3 ===== -->
 
 
@@ -8468,7 +8495,10 @@ body.dark .card, body.dark .premium-dashboard, body.dark .route-planner, body.da
   background:rgba(16,30,43,.92) !important;
   border-color:rgba(80,190,245,.18) !important;
 }
-body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6,
+body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6 {color:inherit;}
+body.dark .sp35-territory-row{color:#0a6fd3!important;background:#edf5ff!important;}
+body.dark .sp35-territory-row small{color:#6d7b88!important;}
+body.dark .sp35-territory-row .sp35-btn-final{color:#fff!important;}
 body.dark p, body.dark span, body.dark label, body.dark small, body.dark strong, body.dark b, body.dark .title, body.dark .subtitle, body.dark .muted, body.dark .section-title {
   color:inherit;
 }
@@ -11330,8 +11360,8 @@ button svg,.btn svg,[role=button] svg{filter:drop-shadow(0 2px 4px rgba(20,90,16
 #spMasterClearDashboardBtn .sp-clear-v2-copy small{display:block;margin-top:4px;color:#ffc5cf;font-size:9.5px;line-height:1.25;font-weight:700}
 #spMasterClearDashboardBtn .sp-clear-v2-state{position:relative;z-index:2;margin-left:auto;font-size:18px;color:#ffd1d8;transition:transform .25s ease}
 #spMasterClearDashboardBtn.sp-master-clear-v2.is-clearing{border-color:#25dcff!important;background:linear-gradient(145deg,#073f5c,#06253a)!important;box-shadow:0 0 30px rgba(37,220,255,.28),inset 0 1px 0 rgba(255,255,255,.14)!important}
-#spMasterClearDashboardBtn.sp-master-clear-v2.is-clearing .sp-clear-v2-icon{background:linear-gradient(145deg,#08c7ff,#0752ca)!important;animation:spMasterClearSpinV2 .72s linear infinite!important}
-#spMasterClearDashboardBtn.sp-master-clear-v2.is-clearing .sp-clear-v2-state{animation:spMasterClearSpinV2 .72s linear infinite!important}
+#spMasterClearDashboardBtn.sp-master-clear-v2.is-clearing .sp-clear-v2-icon{background:linear-gradient(145deg,#08c7ff,#0752ca)!important;animation:none!important}
+#spMasterClearDashboardBtn.sp-master-clear-v2.is-clearing .sp-clear-v2-state{animation:none!important}
 #spMasterClearDashboardBtn.sp-master-clear-v2.is-success{border-color:#19e58b!important;background:linear-gradient(145deg,#08764a,#063b2b)!important;box-shadow:0 0 28px rgba(25,229,139,.28),inset 0 1px 0 rgba(255,255,255,.14)!important}
 #spMasterClearDashboardBtn.sp-master-clear-v2.is-success .sp-clear-v2-icon{background:linear-gradient(145deg,#16e997,#0a7d56)!important}
 #spMasterClearDashboardBtn.sp-master-clear-v2.is-error{border-color:#ff5d77!important;background:linear-gradient(145deg,#7b1630,#3e0b19)!important;box-shadow:0 0 28px rgba(255,93,119,.28),inset 0 1px 0 rgba(255,255,255,.14)!important}
@@ -11372,7 +11402,7 @@ function setButtonState(state,msg){
   b.classList.remove('is-clearing','is-success','is-error');
   if(state==='clearing'){
     b.disabled=true;b.classList.add('is-clearing');
-    b.innerHTML='<span class="sp-clear-v2-icon">↻</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Removing visits from all salesmen &amp; syncing Firebase</small></span><span class="sp-clear-v2-state">↻</span>';
+    b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Removing visits from all salesmen &amp; syncing Firebase</small></span><span class="sp-clear-v2-state">✓</span>';
   }else if(state==='success'){
     b.disabled=false;b.classList.add('is-success');
     b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>DASHBOARD CLEARED</strong><small>All visit data cleared &amp; Firebase synchronized</small></span><span class="sp-clear-v2-state">✓</span>';
@@ -11783,7 +11813,7 @@ async function clearAllVisitsV3(){
   if(!navigator.onLine)return toast('Offline — connect to Firebase before clearing all visit data.');
   if(!confirm('CLEAR ALL VISIT DATA?\n\nThis permanently removes ALL visit/activity records for ALL salesmen from Firebase, dashboards, reports, visit-day storage and related media.\n\nMedical stores, cities, territories, assignments, salesman accounts, PDFs and settings remain safe.\n\nThis cannot be undone.'))return false;
   const b=document.getElementById('spMasterClearDashboardBtn'),st=document.getElementById('spMasterClearDashboardStatus');if(b)b.disabled=true;
-  if(b){b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">↻</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Deleting Firebase visit-days + media for every salesman</small></span><span class="sp-clear-v2-state">↻</span>'}
+  if(b){b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Deleting Firebase visit-days + media for every salesman</small></span><span class="sp-clear-v2-state">✓</span>'}
   try{
     const [profiles,users]=await Promise.all([readCol('salesmen'),readCol('user_data')]);
     const uids=new Set();(profiles||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});(users||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});
@@ -11842,7 +11872,7 @@ document.addEventListener('click',e=>{if(e.target.closest?.('#spAddedSalesmanDas
 document.addEventListener('change',e=>{if(e.target?.id==='spLiveCityFilter'||e.target?.id==='spLiveDateFilter')kickReports()});
 setTimeout(kickReports,700);setTimeout(kickReports,1800);
 })();
-<\/script>
+</script>
 <!-- ===== END SHADAB ADMIN GLOBAL VISIT DELETE + CLEAR HARDENING V3 ===== -->
 
 
@@ -11925,8 +11955,6 @@ body.dark .topbar{
 }
 </style>
 <!-- ===== END FINAL HEADER ROUNDED CORNER UI ===== -->
-
-</body>
 
 <!-- SHADAB PHARMACY — FINAL RUNTIME PDF/WHATSAPP + STORE CATALOG LOCK V5 -->
 <script id="sp-runtime-pdf-store-v5">
@@ -12993,7 +13021,7 @@ body:not(.dark) .sp-live-stat small{color:#587082!important}
     install();
   }
 })();
-</script></body></html>
+</script>
 <script id="shadab-current-latest-five-points-only-final">
 (function(){
 'use strict';
@@ -14801,7 +14829,7 @@ async function clearAllVisitsV3(){
   if(!navigator.onLine)return toast('Offline — connect to Firebase before clearing all visit data.');
   if(!confirm('CLEAR ALL VISIT DATA?\n\nThis permanently removes ALL visit/activity records for ALL salesmen from Firebase, dashboards, reports, visit-day storage and related media.\n\nMedical stores, cities, territories, assignments, salesman accounts, PDFs and settings remain safe.\n\nThis cannot be undone.'))return false;
   const b=document.getElementById('spMasterClearDashboardBtn'),st=document.getElementById('spMasterClearDashboardStatus');if(b)b.disabled=true;
-  if(b){b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">↻</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Deleting Firebase visit-days + media for every salesman</small></span><span class="sp-clear-v2-state">↻</span>'}
+  if(b){b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Deleting Firebase visit-days + media for every salesman</small></span><span class="sp-clear-v2-state">✓</span>'}
   try{
     const [profiles,users]=await Promise.all([readCol('salesmen'),readCol('user_data')]);
     const uids=new Set();(profiles||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});(users||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});
@@ -14860,7 +14888,7 @@ document.addEventListener('click',e=>{if(e.target.closest?.('#spAddedSalesmanDas
 document.addEventListener('change',e=>{if(e.target?.id==='spLiveCityFilter'||e.target?.id==='spLiveDateFilter')kickReports()});
 setTimeout(kickReports,700);setTimeout(kickReports,1800);
 })();
-<\/script>
+</script>
 <!-- ===== END SHADAB ADMIN GLOBAL VISIT DELETE + CLEAR HARDENING V3 ===== -->
 
 
@@ -14944,9 +14972,7 @@ body.dark .topbar{
 </style>
 <!-- ===== END FINAL HEADER ROUNDED CORNER UI ===== -->
 
-</body>
 
-</html>
 
 <!-- ===== V29 TARGETED PATCH: IDENTITY-BINDING + ASSIGNMENT DELIVERY + MASTER DASHBOARD LIVE SYNC ===== -->
 <script id="shadab-v29-identity-assignment-dashboard-sync">
@@ -18302,12 +18328,14 @@ setTimeout(observe,1600);
 const ADMIN='master@shadabpharmacy.com';
 const PATH='app_settings/masterData';
 const VERSION=11;
+const LAST_REMOTE_KEY='shadab_master_catalog_last_remote_v11';
 let ready=false;
 let bootPromise=null;
 
 const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
 const isMaster=()=>String(session()?.email||'').toLowerCase()===ADMIN;
 const clone=v=>{try{return window.jsonClone?window.jsonClone(v):JSON.parse(JSON.stringify(v??null))}catch(e){return null}};
+const safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const read=async()=>{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader unavailable.');return await window.shadabRestReadDoc(PATH)};
 const write=async v=>{if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST writer unavailable.');return await window.shadabRestWriteDoc(PATH,v)};
 const keyStore=r=>{const c=String(r?.code||'').trim().toLowerCase();return c?'code:'+c:'row:'+String(r?.area||'').trim().toLowerCase()+'|'+String(r?.name||r?.store||'').trim().toLowerCase()+'|'+String(r?.address||'').trim().toLowerCase()};
@@ -18374,8 +18402,29 @@ async function bootstrap(){
     const local=localSnapshot();
     let final;
     if(remote&&typeof remote==='object'&&Number(remote.masterAuthorityVersion||0)>=VERSION && Array.isArray(remote.stores) && remote.territories){
-      /* V11+ documents are already canonical Firebase snapshots. */
+      /* V11+ documents are canonical Firebase snapshots. On the first run of
+         this repaired build, retain only obvious local additions/status changes
+         (custom salesman names, disabled-city flags, and newly created city keys)
+         instead of allowing the shipped seed to replace Firebase authority. */
       final=remote;
+      let hasLast=false;try{hasLast=!!JSON.parse(localStorage.getItem(LAST_REMOTE_KEY)||'null')}catch(e){hasLast=false}
+      if(!hasLast){
+        const remoteCities=new Set([...(Array.isArray(remote.cities)?remote.cities:[]),...Object.keys(remote.territories||{})].map(x=>String(x||'').trim().toLowerCase()));
+        const extraCities=local.cities.filter(c=>!remoteCities.has(String(c||'').trim().toLowerCase()));
+        const extraTerritories={...remote.territories};
+        extraCities.forEach(c=>{extraTerritories[c]=Array.isArray(local.territories?.[c])?clone(local.territories[c]):[]});
+        final={...remote,
+          territories:extraTerritories,
+          cities:union(remote.cities,extraCities),
+          disabledCities:union(remote.disabledCities,local.disabledCities),
+          disabledTerritories:union(remote.disabledTerritories,local.disabledTerritories),
+          customSalesmen:union(remote.customSalesmen,local.customSalesmen)
+        };
+        if(extraCities.length||local.disabledCities.length||local.disabledTerritories.length||local.customSalesmen.length){
+          final.updatedAt=new Date().toISOString();final.updatedBy='master';final.reason='v11-repaired-local-catalog-preservation';
+          await write(final);
+        }
+      }
     }else if(remote&&typeof remote==='object'){
       /* One-time hardening for older/partial masterData. Preserve remote + current
          local records, then permanently write the normalized canonical snapshot. */
@@ -18397,6 +18446,7 @@ async function bootstrap(){
       await write(final);
     }
     applyExact(final);
+    try{safeSet(LAST_REMOTE_KEY,JSON.stringify(final));}catch(e){}
     ready=true;
     window.__shadabMasterCatalogV11={ready:true,at:Date.now(),version:VERSION};
     return true;
@@ -18407,22 +18457,46 @@ async function bootstrap(){
 async function save(reason){
   if(!isMaster())return {ok:false,skipped:true};
   try{
-    await bootstrap();
+    /* Do not call bootstrap() here. A local admin edit can occur before the
+       asynchronous hydration finishes; bootstrap() would apply the previous
+       Firebase snapshot over that edit and then save the old value back. */
     const current=await read()||{};
     const local=localSnapshot();
-    const territoriesNow=local.territories||{};
-    const payload={...current,
-      stores:local.stores,
-      territories:territoriesNow,
-      cities:[...new Set([...local.cities,...(Array.isArray(current.cities)?current.cities:[])].filter(c=>Object.prototype.hasOwnProperty.call(territoriesNow,c)||local.cities.includes(c)))],
-      disabledTerritories:local.disabledTerritories,
-      disabledCities:local.disabledCities,
-      customSalesmen:local.customSalesmen,
-      masterAuthorityVersion:VERSION,
-      updatedAt:new Date().toISOString(),updatedBy:'master',reason:reason||'master-change'
-    };
+    let lastRemote=null;
+    try{lastRemote=JSON.parse(localStorage.getItem(LAST_REMOTE_KEY)||'null')}catch(e){lastRemote=null}
+    const same=(a,b)=>{try{return JSON.stringify(a??null)===JSON.stringify(b??null)}catch(e){return false}};
+    const reasonText=String(reason||'master-change').toLowerCase();
+    const payload={...current};
+
+    /* Explicit catalog edits are authoritative from the local edit surface.
+       For generic saves, only fields that actually differ from the last
+       hydrated Firebase snapshot are promoted, which prevents stale HTML seed
+       data from overwriting newer cloud records. */
+    const localStores=local.stores||[], localTerritories=local.territories||{};
+    const localCities=local.cities||[];
+    const localDisabledT=local.disabledTerritories||[], localDisabledC=local.disabledCities||[], localSales=local.customSalesmen||[];
+    const explicitStore=/store-|store_|store-add|store-disable|store-enable|store-edit/.test(reasonText);
+    const explicitTerritory=/territory-|territory_|territory-add|territory-status|territory-edited|territory-deleted/.test(reasonText);
+    const explicitCity=/city-|city_|city-status|city-added/.test(reasonText);
+    const explicitSalesman=/salesman-directory-added|salesman-added|salesman/.test(reasonText);
+
+    if(explicitStore || !lastRemote || !same(localStores,lastRemote.stores)) payload.stores=localStores;
+    if(explicitTerritory || explicitCity || !lastRemote || !same(localTerritories,lastRemote.territories)) payload.territories=localTerritories;
+    if(explicitCity || !lastRemote || !same(localDisabledC,lastRemote.disabledCities)) payload.disabledCities=localDisabledC;
+    if(explicitTerritory || !lastRemote || !same(localDisabledT,lastRemote.disabledTerritories)) payload.disabledTerritories=localDisabledT;
+    if(explicitSalesman || !lastRemote || !same(localSales,lastRemote.customSalesmen)) payload.customSalesmen=localSales;
+
+    const territoryKeys=Object.keys(payload.territories&&typeof payload.territories==='object'?payload.territories:{});
+    payload.cities=[...new Set([...(Array.isArray(current.cities)?current.cities:[]),...localCities,...territoryKeys])]
+      .map(x=>String(x||'').trim()).filter(Boolean);
+    payload.masterAuthorityVersion=VERSION;
+    payload.updatedAt=new Date().toISOString();
+    payload.updatedBy='master';
+    payload.reason=reason||'master-change';
+
     await write(payload);
     applyExact(payload);
+    try{safeSet(LAST_REMOTE_KEY,JSON.stringify(payload));}catch(e){}
     ready=true;
     return {ok:true};
   }catch(e){
@@ -20108,5 +20182,5 @@ body.section-modal-records main>.card#visitRecordsCard,
 })();
 </script>
 
-
-
+</body>
+</html>
