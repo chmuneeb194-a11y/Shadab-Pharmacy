@@ -5004,52 +5004,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   };
 
   window.logoutAdmin=async function(){clearSession();stopPolling();try{adminLoggedIn=false}catch(e){}try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}try{showAdminLogin()}catch(e){}safeToast('Master logged out')};
-
-  /* Firebase password-reset link flow — REST only. No Firestore write and no
-     Firebase Rules change are required for this operation. */
-  async function sendSalesmanPasswordReset(email){
-    const address=String(email||'').trim().toLowerCase();
-    if(!address) throw new Error('Enter the salesman email first');
-    if(!navigator.onLine) throw new Error('Internet connection is required to send the password reset email.');
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),15000);
-    try{
-      const url='https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+encodeURIComponent(CFG.apiKey);
-      const r=await fetch(url,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Firebase-Locale':'en'},
-        body:JSON.stringify({requestType:'PASSWORD_RESET',email:address}),
-        signal:controller.signal,
-        cache:'no-store'
-      });
-      return await parseResponse(r);
-    }finally{
-      clearTimeout(timer);
-    }
-  }
-
-  function passwordResetMessage(e){
-    const raw=String(e?.api?.error?.message||e?.message||'').toUpperCase();
-    if(raw.includes('EMAIL_NOT_FOUND')||raw.includes('USER_NOT_FOUND')) return 'No Firebase salesman account was found for this email.';
-    if(raw.includes('INVALID_EMAIL')) return 'Please enter a valid salesman email address.';
-    if(raw.includes('USER_DISABLED')) return 'This salesman Firebase account is disabled.';
-    if(raw.includes('OPERATION_NOT_ALLOWED')) return 'Firebase password reset is not enabled for Email/Password accounts.';
-    if(raw.includes('TOO_MANY_ATTEMPTS')||raw.includes('TOO_MANY_ATTEMPTS_TRY_LATER')) return 'Too many reset attempts. Please wait and try again.';
-    if(e?.name==='AbortError') return 'Firebase reset request timed out. Please check internet and try again.';
-    if(e?.name==='TypeError') return 'Internet connection failed. Please check internet and try again.';
-    return authMessage(e);
-  }
-
   window.sp35Forgot=async function(){
     const email=String(get('sp35LoginEmail')?.value||'').trim().toLowerCase();
     if(!email)return safeToast('Enter the salesman email first');
     try{
-      await sendSalesmanPasswordReset(email);
-      safeToast('Password reset link sent. Check the salesman email inbox and Spam/Junk folder.');
-    }catch(e){
-      console.warn('REST SALESMAN PASSWORD RESET',e);
-      safeToast(passwordResetMessage(e));
-    }
+      const url='https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+encodeURIComponent(CFG.apiKey);
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestType:'PASSWORD_RESET',email}),cache:'no-store'});
+      await parseResponse(r);
+      safeToast('Password reset email sent');
+    }catch(e){safeToast(authMessage(e))}
   };
 
   window.sp35Logout=async function(){clearSession();stopPolling();try{localStorage.removeItem('shadab_current_salesman_email_v1')}catch(e){}try{sp35CloseAuth?.()}catch(e){}safeToast('Logged out')};
@@ -11350,7 +11313,7 @@ button svg,.btn svg,[role=button] svg{filter:drop-shadow(0 2px 4px rgba(20,90,16
 #spMasterClearDashboardBtn .sp-clear-v2-copy{position:relative;z-index:2;display:flex;flex-direction:column;align-items:flex-start;min-width:0;text-align:left}
 #spMasterClearDashboardBtn .sp-clear-v2-copy strong{display:block;color:#fff;font-size:14px;line-height:1.1;letter-spacing:.45px;font-weight:950}
 #spMasterClearDashboardBtn .sp-clear-v2-copy small{display:block;margin-top:4px;color:#ffc5cf;font-size:9.5px;line-height:1.25;font-weight:700}
-#spMasterClearDashboardBtn .sp-clear-v2-state{position:relative;z-index:2;margin-left:auto;font-size:18px;color:#ffd1d8;transition:transform .25s ease}
+#spMasterClearDashboardBtn .sp-clear-v2-state{display:none!important;position:relative;z-index:2;margin-left:auto;font-size:18px;color:#ffd1d8;transition:transform .25s ease}
 #spMasterClearDashboardBtn.sp-master-clear-v2.is-clearing{border-color:#25dcff!important;background:linear-gradient(145deg,#073f5c,#06253a)!important;box-shadow:0 0 30px rgba(37,220,255,.28),inset 0 1px 0 rgba(255,255,255,.14)!important}
 #spMasterClearDashboardBtn.sp-master-clear-v2.is-clearing .sp-clear-v2-icon{background:linear-gradient(145deg,#08c7ff,#0752ca)!important;animation:spMasterClearSpinV2 .72s linear infinite!important}
 #spMasterClearDashboardBtn.sp-master-clear-v2.is-clearing .sp-clear-v2-state{animation:spMasterClearSpinV2 .72s linear infinite!important}
