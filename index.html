@@ -13402,9 +13402,25 @@ async function hydrateExactSalesman(){
   }catch(e){console.warn('[V14] visit_days hydration failed:',e)}
   if(!cloudVisits.length && Array.isArray(data?.visits))cloudVisits=clone(data.visits)||[];
 
-  /* Clear previous user's volatile dataset only after the new user's cloud
-     source has been read. This prevents cross-user leakage and data loss. */
-  try{if(typeof visits!=='undefined'){visits=cloudVisits;localStorage.setItem(APP_KEY,JSON.stringify(visits));}}catch(e){}
+  /* Preserve the signed-in user's existing local visit history while hydrating
+     Firebase visit_days. The old assignment path replaced local visits wholesale;
+     that could make a recovered 75+ visit local history appear as only the smaller
+     cloud parent snapshot. Only merge local visits when the saved local UID matches
+     the current REST session, preventing cross-user leakage. */
+  try{
+    const localUid=String(localStorage.getItem('shadab_current_salesman_uid_v1')||'');
+    const sameUser=localUid && localUid===uid;
+    const localRows=(sameUser&&typeof visits!=='undefined'&&Array.isArray(visits))?visits:[];
+    const mergedMap=new Map();
+    [...localRows,...cloudVisits].forEach(v=>{
+      if(!v?.id)return;
+      const key=String(v.id);
+      const old=mergedMap.get(key);
+      mergedMap.set(key,old?{...old,...v}:v);
+    });
+    visits=[...mergedMap.values()].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.time||'').localeCompare(String(a.time||'')));
+    localStorage.setItem(APP_KEY,JSON.stringify(visits));
+  }catch(e){console.warn('[V14] local/cloud visit merge:',e)}
   try{const meta=loadMeta(uid);meta.hydrated=true;meta.hydratedDayDates=[...new Set(hydratedDayDates)];saveMeta(uid,meta)}catch(e){}
   try{if(typeof routeTasks!=='undefined')routeTasks=(data?.routeTasks&&typeof data.routeTasks==='object')?clone(data.routeTasks):{}}catch(e){}
   try{
@@ -19972,22 +19988,26 @@ function markPdfHandledV12(date){
 }
 
 /* Wrap the final PDF/share entry points. Existing PDF appearance and report engine stay unchanged. */
+/* Preserve the original user-gesture execution path for PDF download/share.
+   Photo hydration is deliberately scheduled AFTER the native action so Android
+   Chrome/content:// does not lose the click activation required by download/share. */
 const oldDownloadPDFV12=window.downloadPDFForDate;
 if(typeof oldDownloadPDFV12==='function'&&!oldDownloadPDFV12.__v12PhotoHook){
-  window.downloadPDFForDate=async function(date,event){
-    await hydrateDatePhotosV12(date);
-    const r=await oldDownloadPDFV12.apply(this,arguments);
-    markPdfHandledV12(date);
+  window.downloadPDFForDate=function(date,event){
+    const r=oldDownloadPDFV12.apply(this,arguments);
+    Promise.resolve(hydrateDatePhotosV12(date)).then(()=>markPdfHandledV12(date)).catch(()=>{});
     return r;
   };
   window.downloadPDFForDate.__v12PhotoHook=true;
 }
 const oldShareTodayV12=window.shareAllToday;
 if(typeof oldShareTodayV12==='function'&&!oldShareTodayV12.__v12PhotoHook){
-  window.shareAllToday=async function(){
-    const d=todayISOv12();await hydrateDatePhotosV12(d);
-    const r=await oldShareTodayV12.apply(this,arguments);
-    markPdfHandledV12(d);
+  window.shareAllToday=function(event){
+    const d=todayISOv12();
+    /* IMPORTANT: invoke the original share function synchronously while the
+       browser still considers this call user-initiated. */
+    const r=oldShareTodayV12.apply(this,arguments);
+    Promise.resolve(hydrateDatePhotosV12(d)).then(()=>markPdfHandledV12(d)).catch(()=>{});
     return r;
   };
   window.shareAllToday.__v12PhotoHook=true;
