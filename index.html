@@ -8206,9 +8206,148 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
   }
 
   function saveBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
+
+  /*
+     PDF PHOTO FORENSIC REPAIR:
+     The visit transport intentionally keeps photos outside localStorage and uses
+     IndexedDB + Firestore visit_media. The exact A4 PDF writer embeds native
+     JPEG bytes only, while the photo cache normally contains WebP. Prepare a
+     PDF-only copy of the selected date: recover the photo from the local vault
+     (or one Firestore collection read as fallback), then rasterize non-JPEG media
+     to a compact JPEG. The stored visit/photo transport is not changed.
+  */
+  async function pdfPhotoVaultMap(){
+    const map=new Map();
+    try{
+      if(!('indexedDB' in window))return map;
+      const db=await new Promise((resolve,reject)=>{
+        const req=indexedDB.open('shadab_visit_media_v12',1);
+        req.onsuccess=()=>resolve(req.result);
+        req.onerror=()=>reject(req.error||new Error('PDF photo vault unavailable'));
+      });
+      const rows=await new Promise((resolve,reject)=>{
+        const tx=db.transaction('photos','readonly'),req=tx.objectStore('photos').getAll();
+        req.onsuccess=()=>resolve(req.result||[]);
+        req.onerror=()=>reject(req.error||new Error('PDF photo vault read failed'));
+      });
+      for(const r of Array.isArray(rows)?rows:[]){
+        const id=String(r?.id||'');
+        const data=String(r?.data||'');
+        const exp=Number(r?.expiresAt||0);
+        if(id&&data.startsWith('data:image/')&&(!exp||exp>Date.now()))map.set(id,data);
+      }
+    }catch(e){console.warn('PDF photo vault read:',e)}
+    return map;
+  }
+
+  async function pdfCloudPhotoMapForRows(rows){
+    const map=new Map();
+    const read=window.shadabRestReadCollection;
+    if(typeof read!=='function')return map;
+    try{
+      const groups=new Map();
+      for(const v of Array.isArray(rows)?rows:[]){
+        if(v?.photo)continue;
+        const ref=String(v?.photoRef||'');
+        const m=ref.match(/^user_data\/([^\/]+)\/visit_media\//);
+        if(m)groups.set(decodeURIComponent(m[1]),true);
+      }
+      const current=window.shadabRestCurrentSession?.();
+      if(!groups.size&&current?.uid)groups.set(String(current.uid),true);
+      const nowMs=Date.now();
+      for(const uid of groups.keys()){
+        try{
+          const cloudRows=await read('user_data/'+encodeURIComponent(String(uid))+'/visit_media');
+          for(const row of Array.isArray(cloudRows)?cloudRows:[]){
+            const d=typeof row?.data==='function'?(row.data()||{}):(row?.data||{});
+            const id=String(d.visitId||row?.id||'');
+            const data=String(d.data||'');
+            const exp=Number(d.expiresAt||0);
+            if(id&&data.startsWith('data:image/')&&(!exp||exp>nowMs))map.set(id,data);
+          }
+        }catch(e){console.warn('PDF cloud photo read for uid:',uid,e)}
+      }
+    }catch(e){console.warn('PDF cloud photo fallback:',e)}
+    return map;
+  }
+  function rasterizePdfJpeg(src){
+    return new Promise(resolve=>{
+      const finish=jpeg=>resolve(jpeg||'');
+      try{
+        if(!String(src||'').startsWith('data:image/'))return finish('');
+        if(/^data:image\/(?:jpeg|jpg);/i.test(src))return finish(src);
+        const img=new Image();
+        img.onload=()=>{
+          try{
+            const max=1100,sw=img.naturalWidth||img.width||1,sh=img.naturalHeight||img.height||1;
+            const scale=Math.min(1,max/Math.max(sw,sh));
+            const w=Math.max(1,Math.round(sw*scale)),h=Math.max(1,Math.round(sh*scale));
+            const c=document.createElement('canvas');c.width=w;c.height=h;
+            const cx=c.getContext('2d',{alpha:false});
+            if(!cx)throw new Error('PDF photo canvas unavailable');
+            cx.drawImage(img,0,0,w,h);
+            finish(c.toDataURL('image/jpeg',.78));
+            c.width=1;c.height=1;
+          }catch(e){console.warn('PDF photo conversion:',e);finish('')}
+        };
+        img.onerror=()=>finish('');
+        img.src=src;
+      }catch(e){console.warn('PDF photo rasterizer:',e);finish('')}
+    });
+  }
+  async function prepareExactPdfRows(sourceRows){
+    const rows=Array.isArray(sourceRows)?sourceRows.map(v=>({...v})):[];
+    if(!rows.length)return rows;
+    const vault=await pdfPhotoVaultMap();
+    const missing=[];
+    for(const v of rows){
+      if(/^data:image\/(?:jpeg|jpg);/i.test(String(v?.photo||'')))continue;
+      if(!v.photo&&vault.has(String(v?.id||'')))v.photo=vault.get(String(v.id));
+      if(!v.photo&&v.photoRef)missing.push(v);
+    }
+    if(missing.length){
+      const cloud=await pdfCloudPhotoMapForRows(missing);
+      for(const v of missing){
+        if(!v.photo){
+          const byId=cloud.get(String(v?.id||''));
+          if(byId)v.photo=byId;
+        }
+      }
+    }
+    const targets=rows.filter(v=>v.photo&&!/^data:image\/(?:jpeg|jpg);/i.test(String(v.photo)));
+    let cursor=0;
+    const worker=async()=>{
+      while(cursor<targets.length){
+        const i=cursor++;
+        const v=targets[i];
+        const jpeg=await rasterizePdfJpeg(v.photo);
+        if(jpeg)v.photo=jpeg;
+        else delete v.photo;
+      }
+    };
+    await Promise.all(Array.from({length:Math.min(4,targets.length||1)},()=>worker()));
+    return rows;
+  }
+  window.shadabPrepareExactPdfRows=prepareExactPdfRows;
+
+  async function prepareExactPdfData(date){
+    return prepareExactPdfRows(dataFor(date));
+  }
+
   window.shadabExactVisitPDF=exactPDF;
 
-  window.downloadPDFForDate=function(date,event){try{event?.preventDefault?.();event?.stopPropagation?.();const data=dataFor(date);if(!data.length){toastSafe('No records for this date');return false;}const blob=exactPDF(data,date);saveBlob(blob,`Shadab-Pharmacy-${date}.pdf`);toastSafe(`✓ PDF downloaded • ${data.length} records`);return false;}catch(e){return fail("Today's PDF",e)}};
+  window.downloadPDFForDate=async function(date,event){
+    try{
+      event?.preventDefault?.();event?.stopPropagation?.();
+      const data=await prepareExactPdfData(date);
+      if(!data.length){toastSafe('No records for this date');return false;}
+      const blob=exactPDF(data,date);
+      saveBlob(blob,`Shadab-Pharmacy-${date}.pdf`);
+      try{window.__shadabMarkPdfHandledV12?.(date)}catch(_){}
+      toastSafe(`✓ PDF downloaded • ${data.length} records`);
+      return false;
+    }catch(e){return fail("Today's PDF",e)}
+  };
 
   window.shareAllToday=function(event){
     try{
@@ -10357,10 +10496,10 @@ if(typeof oldSync==='function'&&!oldSync.__premiumV2){const sync=async function(
 
 const meta={today:'Today • All Salesmen',week:'This Week • All Salesmen',month:'This Month • All Salesmen',unique:'Unique Stores • Current Month',planned:"Today's Planned Stores",visited:"Today's Visited Stores",orders:"Today's Orders",remaining:"Today's Remaining Stores",'quick-report':'All Salesmen Report','quick-route':"Today's Planned Route",'quick-details':'Detailed Reports'};
 function rows(kind){const c=window.__spMasterAggregateCache||{visits:[],plannedToday:[]},all=Array.isArray(c.visits)?c.visits:[],today=window.todayISO?.()||new Date().toISOString().slice(0,10),d=new Date(today+'T00:00:00'),shift=(d.getDay()+6)%7;d.setDate(d.getDate()-shift);const ws=d.toISOString().slice(0,10);d.setDate(d.getDate()+7);const we=d.toISOString().slice(0,10),m=today.slice(0,7),t=all.filter(v=>String(v.date||'').slice(0,10)===today),w=all.filter(v=>String(v.date||'').slice(0,10)>=ws&&String(v.date||'').slice(0,10)<we),mo=all.filter(v=>String(v.date||'').slice(0,7)===m),u=[],us=new Set();mo.forEach(v=>{const k=String(v.area||'')+'::'+String(v.store||v.name||'').trim().toLowerCase();if(!us.has(k)){us.add(k);u.push(v)}});const done=v=>!['planned','assigned','pending'].includes(String(v.status||v.result||'').toLowerCase().trim()),order=v=>['order','order received','order done','with order','order taken','order_received','order_done'].includes(String(v.status||v.orderStatus||'').toLowerCase().trim())||[v.order,v.orderReceived,v.orderTaken,v.hasOrder,v.isOrder,v.orderStatus].some(x=>x===true||['yes','true','received','done','order'].includes(String(x??'').toLowerCase().trim())),vis=t.filter(done),ord=t.filter(order),p=Array.isArray(c.plannedToday)?c.plannedToday:[],dk=new Set(vis.map(v=>[v.uid||'',v.visitedBy||v.salesman||'',v.area||'',v.store||v.name||''].join('::').toLowerCase())),rem=p.filter(v=>!dk.has([v.uid||'',v.visitedBy||v.salesman||'',v.area||'',v.store||v.name||''].join('::').toLowerCase())),map={today:t,week:w,month:mo,unique:u,planned:p,visited:vis,orders:ord,remaining:rem,'quick-report':t,'quick-route':p,'quick-details':mo};return(map[kind]||t).map(v=>({...v,store:v.store||v.name||v.storeName||'—',person:v.person||v.contactPerson||'',visitedBy:v.visitedBy||v.salesman||v.salesmanName||'—',type:v.type||v.storeType||'Medical Stores',area:v.area||v.city||'',territory:v.territory||'',phone:v.phone||v.mobile||'—',date:v.date||today,time:v.time||'',status:v.status||v.result||'Completed',notes:v.notes||'',photo:v.photo||v.image||''}))}
-function makePdf(kind){const rs=rows(kind);if(!rs.length)throw new Error('No records are available for this report yet.');if(typeof window.shadabExactVisitPDF!=='function')throw new Error('Built-in PDF engine is not available.');const title=meta[kind]||meta.today, enriched=rs.map(v=>({...v,notes:`Salesman: ${v.visitedBy||'—'} | Status: ${v.status||'—'} | ${v.notes||'—'}`})),blob=window.shadabExactVisitPDF(enriched,title);if(!(blob instanceof Blob))throw new Error('PDF engine returned invalid data.');const name=`Shadab-Pharmacy-${title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')}-${window.todayISO?.()||new Date().toISOString().slice(0,10)}.pdf`;return{blob,name,file:new File([blob],name,{type:'application/pdf'}),count:rs.length}}
+async function makePdf(kind){const rs=rows(kind);if(!rs.length)throw new Error('No records are available for this report yet.');if(typeof window.shadabExactVisitPDF!=='function')throw new Error('Built-in PDF engine is not available.');const title=meta[kind]||meta.today, enriched=rs.map(v=>({...v,notes:`Salesman: ${v.visitedBy||'—'} | Status: ${v.status||'—'} | ${v.notes||'—'}`})),prepared=typeof window.shadabPrepareExactPdfRows==='function'?await window.shadabPrepareExactPdfRows(enriched):enriched,blob=window.shadabExactVisitPDF(prepared,title);if(!(blob instanceof Blob))throw new Error('PDF engine returned invalid data.');const name=`Shadab-Pharmacy-${title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')}-${window.todayISO?.()||new Date().toISOString().slice(0,10)}.pdf`;return{blob,name,file:new File([blob],name,{type:'application/pdf'}),count:rs.length}}
 function savePdf(x){return new Promise((ok,bad)=>{try{const u=URL.createObjectURL(x.blob),a=document.createElement('a');a.href=u;a.download=x.name;a.rel='noopener';a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),7000);ok()}catch(e){bad(e)}})}
-window.downloadMasterReportPDF=async k=>{try{const x=makePdf(k);await savePdf(x);toast(`✓ PDF downloaded • ${x.count} records`);return true}catch(e){toast(`✕ PDF download failed • ${e?.message||e}`);return false}};
-window.shareMasterReportWhatsApp=async k=>{try{const x=makePdf(k);if(typeof navigator.share==='function'){let can=true;try{can=typeof navigator.canShare==='function'?navigator.canShare({files:[x.file]}):true}catch(_e){can=false}if(can){await navigator.share({title:'SHADAB PHARMACY',files:[x.file]});toast('✓ PDF shared — select WhatsApp');return true}}await savePdf(x);window.location.href='https://wa.me/'+WA+'?text='+encodeURIComponent('SHADAB PHARMACY • '+(meta[k]||'Report')+'\\nPDF downloaded: '+x.name+'\\nPlease attach the PDF.');toast('✓ PDF downloaded — WhatsApp opened');return true}catch(e){if(e?.name==='AbortError')return false;toast(`✕ WhatsApp/PDF failed • ${e?.message||e}`);return false}};
+window.downloadMasterReportPDF=async k=>{try{const x=await makePdf(k);await savePdf(x);toast(`✓ PDF downloaded • ${x.count} records`);return true}catch(e){toast(`✕ PDF download failed • ${e?.message||e}`);return false}};
+window.shareMasterReportWhatsApp=async k=>{try{const x=await makePdf(k);if(typeof navigator.share==='function'){let can=true;try{can=typeof navigator.canShare==='function'?navigator.canShare({files:[x.file]}):true}catch(_e){can=false}if(can){await navigator.share({title:'SHADAB PHARMACY',files:[x.file]});toast('✓ PDF shared — select WhatsApp');return true}}await savePdf(x);window.location.href='https://wa.me/'+WA+'?text='+encodeURIComponent('SHADAB PHARMACY • '+(meta[k]||'Report')+'\\nPDF downloaded: '+x.name+'\\nPlease attach the PDF.');toast('✓ PDF downloaded — WhatsApp opened');return true}catch(e){if(e?.name==='AbortError')return false;toast(`✕ WhatsApp/PDF failed • ${e?.message||e}`);return false}};
 const oldMetric=window.openMasterFieldMetric;if(typeof oldMetric==='function'&&!oldMetric.__premiumV2){const om=function(k){const r=oldMetric.apply(this,arguments);setTimeout(()=>{const w=document.querySelector('#spAddedActionBody .sp-master-report-btn.wa .i'),p=document.querySelector('#spAddedActionBody .sp-master-report-btn.pdf .i');if(w)w.innerHTML=I.whatsapp;if(p)p.innerHTML=I.pdf},30);return r};om.__premiumV2=true;window.openMasterFieldMetric=om;window.openSpAddedMasterAction=k=>window.openMasterFieldMetric(k==='report'?'quick-report':k==='route'?'quick-route':'quick-details')}
 icons();window.addEventListener('load',()=>setTimeout(icons,150));window.addEventListener('online',()=>setTimeout(()=>{if(root()?.classList.contains('show'))window.syncMasterFieldDashboard?.()},700),{passive:true});
 })();
@@ -10574,11 +10713,12 @@ function buildRowsHtml(rows){if(!rows.length)return '<div class="sp-master-repor
 function openPremiumReport(kind){const rows=masterRows(kind),body=$('spAddedActionBody'),ov=$('spAddedActionOverlay');if(!body||!ov)return;const meta=reportTitle(kind);const people=new Set(rows.map(r=>r.visitedBy).filter(Boolean)).size;const stores=new Set(rows.map(r=>(r.area+'::'+r.store).toLowerCase())).size;const c=window.__spMasterAggregateCache||{};const iconName=kind==='quick-route'?'route':kind==='quick-details'?'chart':'report';const colors=kind==='quick-route'?'green':kind==='quick-details'?'purple':'blue';$('spAddedActionIcon').innerHTML=icon(iconName);$('spAddedActionIcon').className='sp-added-action-bigicon sp-added-control-'+colors; $('spAddedActionTitle').textContent=meta;$('spAddedActionKicker').textContent='MASTER REPORT';$('spAddedActionSubtitle').textContent='Firebase-synchronized salesman activity';body.innerHTML=`<div class="sp-added-action-card"><div class="sp-premium-report-actions"><button class="sp-premium-report-btn wa" type="button" onclick='spFinalSharePdf(${JSON.stringify(kind)})'>${icon('check')}<span><b>WhatsApp Share</b><small>Share PDF through Android / WhatsApp</small></span></button><button class="sp-premium-report-btn pdf" type="button" onclick='spFinalDownloadPdf(${JSON.stringify(kind)})'>${icon('order')}<span><b>Download PDF</b><small>Download Shadab Pharmacy report</small></span></button></div><div class="sp-premium-summary"><div><b>${people}</b><small>Salesmen</small></div><div><b>${stores}</b><small>Stores</small></div><div><b>${rows.length}</b><small>Records</small></div><div><b>${c.salesmen?.length||0}</b><small>Accounts</small></div></div><div class="sp-master-report-list">${buildRowsHtml(rows)}</div></div>`;ov.classList.add('show');ov.setAttribute('aria-hidden','false');document.body.classList.add('sp-added-action-open')}
 window.openMasterFieldMetric=openPremiumReport;window.openSpAddedMasterAction=kind=>openPremiumReport(kind==='report'?'quick-report':kind==='route'?'quick-route':'quick-details');
 document.addEventListener('click',e=>{const card=e.target.closest?.('#spAddedMasterDashboard .sp-master-report-card');if(card){e.preventDefault();e.stopPropagation();openPremiumReport(card.getAttribute('data-master-report-kind'));}},true);
-function pdfBlobFor(kind){
+async function pdfBlobFor(kind){
   const rows=masterRows(kind);
   if(!rows.length)throw new Error('No data available for this report.');
   if(typeof window.shadabExactVisitPDF!=='function')throw new Error('Embedded Shadab PDF engine is not loaded.');
-  const blob=window.shadabExactVisitPDF(rows,today());
+  const prepared=typeof window.shadabPrepareExactPdfRows==='function'?await window.shadabPrepareExactPdfRows(rows):rows;
+  const blob=window.shadabExactVisitPDF(prepared,today());
   if(!(blob instanceof Blob)||blob.size<100)throw new Error('PDF engine returned an empty/invalid PDF.');
   return blob;
 }
@@ -10595,9 +10735,9 @@ function saveMasterPdfBlob(blob,name){
   setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},60000);
   return url;
 }
-window.spFinalDownloadPdf=function(kind){
+window.spFinalDownloadPdf=async function(kind){
   try{
-    const blob=pdfBlobFor(kind),name=masterPdfName(kind);
+    const blob=await pdfBlobFor(kind),name=masterPdfName(kind);
     /* Same download mechanism as the already-working Today/Visit Report. */
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
@@ -10614,12 +10754,12 @@ window.spFinalDownloadPdf=function(kind){
     return false;
   }
 };
-window.spFinalSharePdf=function(kind){
+window.spFinalSharePdf=async function(kind){
   const title=reportTitle(kind);
   try{
     const rows=masterRows(kind);
     if(!rows.length)throw new Error('No data available for this report.');
-    const blob=pdfBlobFor(kind),name=masterPdfName(kind);
+    const blob=await pdfBlobFor(kind),name=masterPdfName(kind);
     const file=new File([blob],name,{type:'application/pdf'});
     const text=`*SHADAB PHARMACY — ${title}*\nTotal: ${rows.length}\n\n`+rows.slice(0,100).map((v,i)=>`${i+1}. ${v.store||'—'} — ${v.visitedBy||'—'}\n${v.type||'—'} | ${v.area||'—'} | ${v.territory||'—'}\nTime: ${v.time||'—'}`).join('\n\n');
 
@@ -12012,7 +12152,7 @@ function spRows(kind){
     return [];
   }
 }
-function spPdfBlob(kind){
+async function spPdfBlob(kind){
   let rows=spRows(kind);
   let hadData=rows.length>0;
   /* Never let an empty report block the PDF/WhatsApp controls. For a genuinely
@@ -12036,7 +12176,8 @@ function spPdfBlob(kind){
   }
   if(typeof window.shadabExactVisitPDF!=='function')throw new Error('The working Visit Report PDF engine is not loaded.');
   const date=(typeof todayISO==='function'?todayISO():(typeof today==='function'?today():new Date().toISOString().slice(0,10)));
-  const blob=window.shadabExactVisitPDF(rows,date);
+  const prepared=typeof window.shadabPrepareExactPdfRows==='function'?await window.shadabPrepareExactPdfRows(rows):rows;
+  const blob=window.shadabExactVisitPDF(prepared,date);
   if(!(blob instanceof Blob)||blob.size<100)throw new Error('PDF engine returned an invalid/empty PDF.');
   return {blob,rows,date,hadData};
 }
@@ -12056,9 +12197,9 @@ function spSaveBlobLikeWorking(blob,name){
 }
 
 /* ---------- 3) Dashboard Download: working saveBlob + local PDF-viewer fallback ---------- */
-window.spFinalDownloadPdf=function(kind){
+window.spFinalDownloadPdf=async function(kind){
   try{
-    const x=spPdfBlob(kind),name=spPdfName(kind,x.date);
+    const x=await spPdfBlob(kind),name=spPdfName(kind,x.date);
     /* Direct download only: never open a PDF viewer/window from the dashboard button. */
     spSaveBlobLikeWorking(x.blob,name);
     try{window.toast35?.(x.hadData?'✓ PDF downloaded • '+spRows(kind).length+' records':'✓ PDF downloaded • no records in this view')}catch(e){}
@@ -12071,9 +12212,9 @@ window.spFinalDownloadPdf=function(kind){
 };
 
 /* ---------- 4) Dashboard WhatsApp: exact same native File-share path ---------- */
-window.spFinalSharePdf=function(kind){
+window.spFinalSharePdf=async function(kind){
   try{
-    const x=spPdfBlob(kind),name=spPdfName(kind,x.date);
+    const x=await spPdfBlob(kind),name=spPdfName(kind,x.date);
     const file=new File([x.blob],name,{type:'application/pdf'});
     const title=({today:'Today',week:'This Week',month:'This Month',unique:'Unique Stores',planned:'Planned',visited:'Visited',orders:'Orders',remaining:'Remaining','quick-report':'View Full Report','quick-route':'Smart Daily Route','quick-details':'Detailed Reports'}[kind]||'Report');
     const text='SHADAB PHARMACY — '+title+'\\nDate: '+x.date+'\\nTotal: '+x.rows.length;
@@ -12127,9 +12268,9 @@ window.downloadMasterFieldReportPDF=window.spFinalDownloadPdf;
 window.shareMasterFieldReportWhatsApp=window.spFinalSharePdf;
 
 /* ---------- 5) Runtime diagnostics available from the console ---------- */
-window.shadabPdfRuntimeDiag=function(kind='month'){
+window.shadabPdfRuntimeDiag=async function(kind='month'){
   let rows=[];try{rows=spRows(kind)}catch(e){}
-  let blob=null;try{blob=spPdfBlob(kind).blob}catch(e){}
+  let blob=null;try{blob=(await spPdfBlob(kind))?.blob}catch(e){}
   return {
     protocol:location.protocol,
     href:location.href,
@@ -15689,11 +15830,12 @@ function v34MasterRows(kind){
   }catch(e){}
   return [];
 }
-function v34MasterPdf(kind){
+async function v34MasterPdf(kind){
   const rows=v34MasterRows(kind);
   if(!rows.length)throw new Error('No data available for this Master Field Dashboard report.');
   if(typeof window.shadabExactVisitPDF!=='function')throw new Error('Locked A4 PDF engine is not available.');
-  const blob=window.shadabExactVisitPDF(rows,typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA'));
+  const prepared=typeof window.shadabPrepareExactPdfRows==='function'?await window.shadabPrepareExactPdfRows(rows):rows;
+  const blob=window.shadabExactVisitPDF(prepared,typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA'));
   if(!(blob instanceof Blob)||blob.size<100)throw new Error('PDF engine returned an empty/invalid PDF.');
   return {blob,rows};
 }
@@ -15702,9 +15844,9 @@ function v34MasterName(kind){
   const d=typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA');
   return `Shadab-Pharmacy-${String(title).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')}-${d}.pdf`;
 }
-window.downloadMasterFieldReportPDF=function(kind){
+window.downloadMasterFieldReportPDF=async function(kind){
   try{
-    const x=v34MasterPdf(kind),name=v34MasterName(kind),url=URL.createObjectURL(x.blob),a=document.createElement('a');
+    const x=await v34MasterPdf(kind),name=v34MasterName(kind),url=URL.createObjectURL(x.blob),a=document.createElement('a');
     a.href=url;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},60000);
     window.toast35?.(`✓ Master Field PDF downloaded • ${x.rows.length} records`);
@@ -15713,7 +15855,7 @@ window.downloadMasterFieldReportPDF=function(kind){
 };
 window.shareMasterFieldReportPDF=async function(kind){
   try{
-    const x=v34MasterPdf(kind),name=v34MasterName(kind),file=new File([x.blob],name,{type:'application/pdf'});
+    const x=await v34MasterPdf(kind),name=v34MasterName(kind),file=new File([x.blob],name,{type:'application/pdf'});
     if(typeof navigator.share==='function'){
       try{
         await navigator.share({title:'SHADAB PHARMACY — Master Field Dashboard',files:[file]});
@@ -15792,12 +15934,13 @@ function normalizeForExactPDF(arr,kind){
   }));
 }
 
-function make(kind){
+async function make(kind){
   const raw=rows(kind);
   if(!raw.length)throw new Error('No stores available for '+kind+'.');
   if(typeof window.shadabExactVisitPDF!=='function')throw new Error('The locked main Visit Report PDF engine is not available.');
   const data=normalizeForExactPDF(raw,kind);
-  const blob=window.shadabExactVisitPDF(data,typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA'));
+  const prepared=typeof window.shadabPrepareExactPdfRows==='function'?await window.shadabPrepareExactPdfRows(data):data;
+  const blob=window.shadabExactVisitPDF(prepared,typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA'));
   if(!(blob instanceof Blob)||blob.size<100)throw new Error('PDF engine returned an empty/invalid PDF.');
   const label={planned:'Planned',visited:'Visited',orders:'Orders',remaining:'Remaining'}[kind]||'Today Task';
   const date=typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA');
@@ -15807,7 +15950,7 @@ function make(kind){
 
 window.spV35MasterTodayTaskDownload=async function(kind){
   try{
-    const x=make(kind);
+    const x=await make(kind);
     const url=URL.createObjectURL(x.blob),a=document.createElement('a');
     a.href=url;a.download=x.name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},60000);
@@ -15817,7 +15960,7 @@ window.spV35MasterTodayTaskDownload=async function(kind){
 };
 window.spV35MasterTodayTaskShare=async function(kind){
   try{
-    const x=make(kind);
+    const x=await make(kind);
     if(typeof navigator.share==='function'){
       let can=true;try{can=typeof navigator.canShare==='function'?navigator.canShare({files:[x.file]}):true}catch(e){can=false}
       if(can){await navigator.share({title:'SHADAB PHARMACY — Today’s Tasks',files:[x.file]});window.toast35?.('✓ PDF shared — select WhatsApp');return true;}
@@ -19323,19 +19466,9 @@ function markPdfHandledV12(date){
   markVisitDayDirtyV12(d);
 }
 
-/* Wrap the final PDF/share entry points. Existing PDF appearance and report engine stay unchanged. */
-/* Preserve the original user-gesture execution path for PDF download/share.
-   Photo hydration is deliberately scheduled AFTER the native action so Android
-   Chrome/content:// does not lose the click activation required by download/share. */
-const oldDownloadPDFV12=window.downloadPDFForDate;
-if(typeof oldDownloadPDFV12==='function'&&!oldDownloadPDFV12.__v12PhotoHook){
-  window.downloadPDFForDate=function(date,event){
-    const r=oldDownloadPDFV12.apply(this,arguments);
-    Promise.resolve(hydrateDatePhotosV12(date)).then(()=>markPdfHandledV12(date)).catch(()=>{});
-    return r;
-  };
-  window.downloadPDFForDate.__v12PhotoHook=true;
-}
+/* PDF/report photo cleanup is called directly by the final download function after
+   the PDF has been prepared, so the download function owns that operation. */
+window.__shadabMarkPdfHandledV12=markPdfHandledV12;
 const oldShareTodayV12=window.shareAllToday;
 if(typeof oldShareTodayV12==='function'&&!oldShareTodayV12.__v12PhotoHook){
   window.shareAllToday=function(event){
