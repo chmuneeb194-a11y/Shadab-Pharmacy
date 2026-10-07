@@ -8631,7 +8631,15 @@ if(typeof originalSync==='function'&&!originalSync.__adminDeletionGuardV3){
 /* Re-apply authoritative report rows after the existing Control Center renders. */
 let reportTimer=0;
 const kickReports=()=>{clearTimeout(reportTimer);reportTimer=setTimeout(()=>enhanceReports().catch(()=>{}),120)};
-new MutationObserver(kickReports).observe(document.documentElement,{childList:true,subtree:true});
+new MutationObserver(records=>{
+  for(const rec of records){
+    const t=rec.target;
+    if(t?.closest?.('#spAddedSalesmanDashboard')){kickReports();return;}
+    for(const n of Array.from(rec.addedNodes||[])){
+      if(n.nodeType===1 && (n.matches?.('#spAddedSalesmanDashboard,.sp-added-salesman-dashboard') || n.querySelector?.('#spAddedSalesmanDashboard,.sp-added-salesman-dashboard'))){kickReports();return;}
+    }
+  }
+}).observe(document.documentElement,{childList:true,subtree:true});
 document.addEventListener('click',e=>{if(e.target.closest?.('#spAddedSalesmanDashboard .sp-added-tab'))kickReports()});
 document.addEventListener('change',e=>{if(e.target?.id==='spLiveCityFilter'||e.target?.id==='spLiveDateFilter')kickReports()});
 setTimeout(kickReports,700);setTimeout(kickReports,1800);
@@ -11821,307 +11829,22 @@ setTimeout(install,300);setTimeout(install,900);
     const w=async function(){const r=await base.apply(this,arguments);await apply();return r};
     w.__v13OffHook=true;w.__v13Original=base;window.shadabSyncSalesmanNow=w;window.sp35SyncNow=w;window.sp35SyncNew=w;
   }
-  function boot(){apply();hookSync();setTimeout(()=>{apply();hookSync()},300);setTimeout(()=>{apply();hookSync()},1200);setTimeout(()=>{apply();hookSync()},2500);setInterval(()=>{if(!document.hidden)guardFunctions(window.__shadabRuntimeFeatureState?.flags);},1500)}
+  function boot(){apply();hookSync();setTimeout(()=>{apply();hookSync()},300);setTimeout(()=>{apply();hookSync()},1200);setTimeout(()=>{apply();hookSync()},2500);setInterval(()=>{if(!document.hidden)guardFunctions(window.__shadabRuntimeFeatureState?.flags);},5000)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
   window.shadabV13RefreshFeaturePermissions=apply;
 })();
 </script>
 <!-- ===== END V13 FINAL ===== -->
 <!-- ===== SHADAB ADMIN GLOBAL VISIT DELETE + CLEAR HARDENING V3 ===== -->
-<style id="shadab-admin-visit-delete-v3-css">
-#spLiveDeleteToolbarV3{margin:10px 0;padding:10px;border:1px solid rgba(255,86,113,.42);border-radius:15px;background:linear-gradient(145deg,#3b1220,#1d0b14);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
-#spLiveDeleteToolbarV3 .v3-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#spLiveDeleteToolbarV3 .v3-title{font-weight:900;color:#ffd9df;font-size:12px;flex:1 1 180px}
-#spLiveDeleteToolbarV3 .v3-btn{border:1px solid rgba(255,255,255,.22);background:#102b40;color:#fff;padding:8px 12px;border-radius:11px;font-weight:800;cursor:pointer}
-#spLiveDeleteToolbarV3 .v3-btn.danger{background:linear-gradient(145deg,#d82e55,#8f1434);border-color:#ff6685}
-#spLiveDeleteToolbarV3 .v3-btn:disabled{opacity:.45;cursor:not-allowed}
-#spLiveDeleteToolbarV3 .v3-status{margin-top:6px;color:#b9cddd;font-size:9px;line-height:1.3}
-.sp-live-report-row.v3-selectable{grid-template-columns:28px minmax(0,1fr) minmax(90px,.65fr) minmax(70px,.45fr)!important;align-items:center}
-.sp-live-report-row.v3-selectable .v3-check{width:20px!important;height:20px!important;margin:0!important;accent-color:#ff3860!important}
-#spLiveReportSelectAllV3{width:19px!important;height:19px!important;margin:0 5px 0 0!important;accent-color:#ff3860!important}
-</style>
-<script id="shadab-admin-visit-delete-v3-js">
-(function(){
-'use strict';
-if(window.__shadabAdminVisitDeleteV3Installed)return;
-window.__shadabAdminVisitDeleteV3Installed=true;
-const ADMIN='master@shadabpharmacy.com';
-const CLEAR_PATH='app_settings/masterDashboardState';
-const CLEAR_LOCAL='shadab_master_dashboard_clear_state_v3';
-const DELETED_LIMIT=1000;
-const sess=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-const isMaster=()=>String(sess()?.email||'').toLowerCase()===ADMIN;
-const read=async p=>window.shadabRestReadDoc(p);
-const readCol=async p=>window.shadabRestReadCollection(p);
-const write=async(p,v)=>window.shadabRestWriteDoc(p,v);
-const del=async p=>window.shadabRestDeleteDoc(p);
-const iso=()=>new Date().toISOString();
-const today=()=>typeof window.todayISO==='function'?window.todayISO():new Date().toISOString().slice(0,10);
-const clone=v=>{try{return JSON.parse(JSON.stringify(v??null))}catch(e){return v}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const toast=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
-const localVisits=()=>{try{return typeof visits!=='undefined'&&Array.isArray(visits)?visits:[]}catch(e){return[]}};
-const saveLocal=()=>{try{if(typeof saveData==='function')saveData();else localStorage.setItem('shadab_pharmacy_visits_v1',JSON.stringify(localVisits()))}catch(e){}};
-const clearLocalTasks=()=>{try{if(typeof routeTasks!=='undefined')routeTasks={};localStorage.setItem('shadab_pharmacy_route_tasks_v1','{}');if(typeof saveRouteTasks==='function')saveRouteTasks()}catch(e){}};
 
-function selectedUid(){try{return String(window.__spLiveSalesmanControlV15?.getSelected?.()?.uid||'')}catch(e){return''}}
-function selectedName(){try{const x=window.__spLiveSalesmanControlV15?.getSelected?.()||{};return String(x.profile?.fullName||x.profile?.displayName||x.profile?.salesmanName||x.profile?.name||'Salesman')}catch(e){return'Salesman'}}
-function currentFilters(){return {city:String(document.getElementById('spLiveCityFilter')?.value||'ALL'),date:String(document.getElementById('spLiveDateFilter')?.value||'ALL')}}
-function cityOf(v){return String(v?.city||v?.area||v?.town||v?.region||'').trim()}
-function filterRows(rows){const f=currentFilters();return rows.filter(v=>{if(f.city!=='ALL'&&cityOf(v).toLowerCase()!==f.city.toLowerCase())return false;if(f.date!=='ALL'&&String(v?.date||'')!==f.date)return false;return true})}
 
-async function authoritativeVisits(uid){
-  if(!uid) return [];
-  const rows=await readCol('user_data/'+encodeURIComponent(uid)+'/visit_days');
-  const out=[];
-  for(const r of Array.isArray(rows)?rows:[]){
-    const d=r?.data?.()||{};const date=String(d.date||r.id||'').slice(0,10);
-    for(const v of (Array.isArray(d.visits)?d.visits:[])){if(v?.id)out.push({...clone(v),date:String(v.date||date).slice(0,10)});}
-  }
-  return out.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.time||'').localeCompare(String(a.time||'')));
-}
-
-async function refreshReportData(){
-  try{if(window.__spLiveSalesmanControlV15?.getSelected)await window.__spLiveSalesmanControlV15.getSelected();}catch(e){}
-  try{window.refreshSpAddedSalesmanLive?.()}catch(e){}
-}
-
-function renderDeleteRows(rows){
-  const body=document.querySelector('#spLiveSalesmanTabContent .sp-live-report-list');
-  if(!body)return;
-  if(!rows.length){body.innerHTML='<div class="sp-live-empty">No visit records are synchronized for this salesman in the selected filters.</div>';return}
-  body.innerHTML=rows.slice().reverse().map(v=>`<div class="sp-live-report-row v3-selectable" data-v3-id="${esc(v.id)}" data-v3-date="${esc(v.date)}"><div><input class="v3-check" type="checkbox" data-v3-visit-id="${esc(v.id)}" data-v3-visit-date="${esc(v.date)}" aria-label="Select ${esc(v.store||'visit')}"></div><div><b>${esc(v.store||'—')}</b><small>${esc(cityOf(v)||(v.area||''))}${v.territory?' • '+esc(v.territory):''}</small></div><div><b>${esc(v.person||'—')}</b><small>${esc(v.date||'')} ${esc(v.time||'')}</small></div><div class="status"><small>${esc(v.status||'Completed')}</small></div></div>`).join('');
-}
-
-async function enhanceReports(){
-  if(!isMaster())return;
-  const tab=document.querySelector('#spAddedSalesmanDashboard .sp-added-tabs .sp-added-tab.active');
-  if(!tab||String(tab.dataset.tab)!=='1')return;
-  const c=document.getElementById('spLiveSalesmanTabContent');if(!c)return;
-  let toolbar=document.getElementById('spLiveDeleteToolbarV3');
-  if(!toolbar){
-    toolbar=document.createElement('div');toolbar.id='spLiveDeleteToolbarV3';
-    toolbar.innerHTML='<div class="v3-row"><input id="spLiveReportSelectAllV3" type="checkbox"><span class="v3-title">Admin Visit Delete • select one or multiple visits</span><button type="button" class="v3-btn" id="spLiveReportReloadV3">↻ Reload</button><button type="button" class="v3-btn danger" id="spLiveDeleteSelectedV3" disabled>🗑 Delete Selected</button></div><div class="v3-status" id="spLiveDeleteStatusV3">Only visit records are affected. Medical stores, cities, territories and salesman accounts stay safe.</div>';
-    const list=c.querySelector('.sp-live-report-list');
-    if(list)list.parentNode.insertBefore(toolbar,list);
-    else c.appendChild(toolbar);
-    toolbar.querySelector('#spLiveReportSelectAllV3')?.addEventListener('change',e=>{c.querySelectorAll('.v3-check').forEach(x=>x.checked=e.target.checked);updateDeleteButton()});
-    toolbar.querySelector('#spLiveDeleteSelectedV3')?.addEventListener('click',deleteSelected);
-    toolbar.querySelector('#spLiveReportReloadV3')?.addEventListener('click',loadAndRender);
-  }
-  await loadAndRender();
-}
-
-let loading=false;
-async function loadAndRender(){
-  if(loading||!isMaster())return;loading=true;
-  const status=document.getElementById('spLiveDeleteStatusV3');
-  try{
-    const uid=selectedUid();if(!uid)throw new Error('Select a salesman first.');
-    if(status)status.textContent='Reading authoritative visit_days from Firebase…';
-    const rows=filterRows(await authoritativeVisits(uid));
-    renderDeleteRows(rows);updateDeleteButton();
-    const stats=document.querySelectorAll('#spLiveSalesmanTabContent .sp-live-grid .sp-live-stat b');
-    const td=today(),mon=td.slice(0,7);
-    const todayRows=rows.filter(v=>String(v.date||'')===td),monthRows=rows.filter(v=>String(v.date||'').slice(0,7)===mon);
-    [rows.length,todayRows.length,monthRows.length,new Set(monthRows.map(v=>String(v.store||'').trim().toLowerCase()).filter(Boolean)).size].forEach((n,i)=>{if(stats[i])stats[i].textContent=String(n)});
-    if(status)status.textContent=`${rows.length} synchronized visit record(s) in the selected filters.`;
-  }catch(e){if(status)status.textContent='✕ '+(e?.message||e)}finally{loading=false}
-}
-function updateDeleteButton(){const checks=[...document.querySelectorAll('#spLiveSalesmanTabContent .v3-check')];const n=checks.filter(x=>x.checked).length;const b=document.getElementById('spLiveDeleteSelectedV3');if(b){b.disabled=!n;b.textContent=n?`🗑 Delete Selected (${n})`:'🗑 Delete Selected'}const all=document.getElementById('spLiveReportSelectAllV3');if(all)all.checked=!!checks.length&&n===checks.length}
-
-document.addEventListener('change',e=>{if(e.target?.classList?.contains('v3-check'))updateDeleteButton()});
-
-async function recomputeParentStats(uid,parent){
-  const days=await readCol('user_data/'+encodeURIComponent(uid)+'/visit_days');
-  const byDate={},storesByMonth={};
-  for(const r of Array.isArray(days)?days:[]){const d=r?.data?.()||{},date=String(d.date||r.id||'').slice(0,10),vs=Array.isArray(d.visits)?d.visits:[];if(!date)continue;if(vs.length)byDate[date]=vs.length;const m=date.slice(0,7);if(!storesByMonth[m])storesByMonth[m]=[];for(const v of vs){const k=String(v.code||'')+'::'+String(v.area||'')+'::'+String(v.store||v.name||'').trim().toLowerCase();if(k&&!storesByMonth[m].includes(k))storesByMonth[m].push(k)}}
-  const months=Object.keys(storesByMonth).filter(m=>storesByMonth[m].length);const latestMonths=months.sort().slice(-18);const trimmed={};latestMonths.forEach(m=>trimmed[m]=storesByMonth[m]);
-  const dates=Object.keys(byDate).sort().slice(-730);const trimmedDates={};dates.forEach(d=>trimmedDates[d]=byDate[d]);
-  const td=today(),month=td.slice(0,7),dt=new Date(td+'T00:00:00');dt.setDate(dt.getDate()-((dt.getDay()+6)%7));const ws=dt.toISOString().slice(0,10),weD=new Date(dt);weD.setDate(weD.getDate()+7);const we=weD.toISOString().slice(0,10);
-  const todayCount=Number(trimmedDates[td]||0),week=Object.entries(trimmedDates).reduce((n,[d,c])=>n+(d>=ws&&d<we?Number(c)||0:0),0),monthCount=Object.entries(trimmedDates).reduce((n,[d,c])=>n+(d.slice(0,7)===month?Number(c)||0:0),0);
-  parent.visitStats={version:12,byDate:trimmedDates,storesByMonth:trimmed,updatedAt:iso()};parent.visitCounts={today:todayCount,week,month:monthCount};
-}
-
-async function deleteSelected(){
-  if(!isMaster())return toast('Master login required.');
-  const uid=selectedUid();if(!uid)return toast('Select a salesman first.');
-  const ids=[...document.querySelectorAll('#spLiveSalesmanTabContent .v3-check:checked')].map(x=>({id:String(x.dataset.v3VisitId||''),date:String(x.dataset.v3VisitDate||'').slice(0,10)})).filter(x=>x.id);
-  if(!ids.length)return;
-  const ok=confirm(`Delete ${ids.length} selected visit record${ids.length===1?'':'s'} for ${selectedName()}?\n\nThis permanently removes the selected visit(s) from Firebase, the salesman report, Master Dashboard data, visit-day storage and related cached media.\n\nMedical stores, cities, territories, assignments and the salesman account will NOT be deleted.`);
-  if(!ok)return;
-  const status=document.getElementById('spLiveDeleteStatusV3'),btn=document.getElementById('spLiveDeleteSelectedV3');if(btn)btn.disabled=true;
-  try{
-    const parent=await read('user_data/'+encodeURIComponent(uid))||{};
-    const tomb=parent.adminDeletedVisitIds&&typeof parent.adminDeletedVisitIds==='object'?{...parent.adminDeletedVisitIds}:{};
-    const grouped={};ids.forEach(x=>(grouped[x.date]||(grouped[x.date]=[])).push(x.id));
-    let deleted=0;
-    for(const [date,visitIds] of Object.entries(grouped)){
-      const path='user_data/'+encodeURIComponent(uid)+'/visit_days/'+encodeURIComponent(date);
-      const day=await read(path)||{};const old=Array.isArray(day.visits)?day.visits:[];const kill=new Set(visitIds);const keep=old.filter(v=>!kill.has(String(v?.id||'')));
-      for(const v of old){if(kill.has(String(v?.id||''))){deleted++;if(v?.photoRef){try{await del(String(v.photoRef))}catch(e){}}try{await del('user_data/'+encodeURIComponent(uid)+'/visit_media/'+encodeURIComponent(String(v.id)))}catch(e){}try{await window.photoDelete?.(String(v.id))}catch(e){}}}
-      if(keep.length)await write(path,{...day,uid,date,visits:keep,count:keep.length,updatedAt:iso(),version:12});else await del(path);
-      visitIds.forEach(id=>{tomb[id]=iso()});
-    }
-    const keys=Object.keys(tomb).sort((a,b)=>String(tomb[b]).localeCompare(String(tomb[a]))).slice(0,DELETED_LIMIT);const compact={};keys.forEach(k=>compact[k]=tomb[k]);
-    parent.uid=uid;parent.adminDeletedVisitIds=compact;parent.updatedAt=iso();parent.updatedBy=ADMIN;parent.adminVisitDeleteAt=iso();delete parent.visits;
-    await recomputeParentStats(uid,parent);await write('user_data/'+encodeURIComponent(uid),parent);
-    try{const meta=localStorage.getItem('shadab_master_deleted_visits_v3')||'{}';const x=JSON.parse(meta);ids.forEach(i=>x[uid+'::'+i.id]=iso());localStorage.setItem('shadab_master_deleted_visits_v3',JSON.stringify(x))}catch(e){}
-    toast(`✓ ${deleted} visit record${deleted===1?'':'s'} deleted everywhere`);
-    if(status)status.textContent=`✓ ${deleted} record(s) permanently deleted from Firebase and synchronized visit storage.`;
-    await loadAndRender();
-    try{await window.refreshSpAddedSalesmanLive?.()}catch(e){}
-  }catch(e){if(status)status.textContent='✕ Delete failed: '+(e?.message||e);toast('✕ Visit delete failed — no further records were intentionally changed.')}
-}
-window.shadabAdminDeleteSelectedVisitsV3=deleteSelected;
-
-/* ===== Global CLEAR: remove the authoritative V12 day/media records, not only parent visits[] ===== */
-async function clearAllVisitsV3(){
-  if(!isMaster())return toast('Master login required to clear all visit data.');
-  if(!navigator.onLine)return toast('Offline — connect to Firebase before clearing all visit data.');
-  if(!confirm('CLEAR ALL VISIT DATA?\n\nThis permanently removes ALL visit/activity records for ALL salesmen from Firebase, dashboards, reports, visit-day storage and related media.\n\nMedical stores, cities, territories, assignments, salesman accounts, PDFs and settings remain safe.\n\nThis cannot be undone.'))return false;
-  const b=document.getElementById('spMasterClearDashboardBtn'),st=document.getElementById('spMasterClearDashboardStatus');if(b)b.disabled=true;
-  if(b){b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Deleting Firebase visit-days + media for every salesman</small></span><span class="sp-clear-v2-state">✓</span>'}
-  try{
-    const [profiles,users]=await Promise.all([readCol('salesmen'),readCol('user_data')]);
-    const uids=new Set();(profiles||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});(users||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});
-    let cleared=0,dayDeletes=0,mediaDeletes=0;
-    for(const uid of uids){
-      const base='user_data/'+encodeURIComponent(uid);
-      const [days,media]=await Promise.all([readCol(base+'/visit_days').catch(()=>[]),readCol(base+'/visit_media').catch(()=>[])]);
-      for(const r of Array.isArray(days)?days:[]){await del(base+'/visit_days/'+encodeURIComponent(String(r.id)));dayDeletes++}
-      for(const r of Array.isArray(media)?media:[]){await del(base+'/visit_media/'+encodeURIComponent(String(r.id)));mediaDeletes++}
-      const old=(users||[]).find(r=>String(r.id)===uid)?.data?.()||{};
-      const next=clone(old)||{};delete next.visits;delete next.visitStats;delete next.visitCounts;delete next.routeTasks;delete next.adminDeletedVisitIds;next.uid=String(old.uid||uid);next.updatedAt=iso();next.masterDashboardClearedAt=iso();next.masterDashboardClearedBy=ADMIN;await write(base,next);cleared++;
-    }
-    const state={clearedAt:iso(),clearedBy:ADMIN,version:3,scope:'ALL_V12_VISIT_DAYS_MEDIA_AND_ROUTE_TASKS',affectedUserDataDocuments:cleared,deletedVisitDayDocuments:dayDeletes,deletedVisitMediaDocuments:mediaDeletes};
-    await write(CLEAR_PATH,state);localStorage.setItem(CLEAR_LOCAL,JSON.stringify(state));
-    try{if(typeof visits!=='undefined'){visits=[];saveLocal()}}catch(e){}clearLocalTasks();
-    try{const all=await window.photoListAll?.();for(const x of (all||[]))await window.photoDelete?.(x.id)}catch(e){}
-    try{window.__spMasterAggregateCache={salesmen:window.__spMasterAggregateCache?.salesmen||[],visits:[],plannedToday:[],rawByUid:{},sourceCounts:{salesmen:uids.size,userData:uids.size,visitDays:0},stats:{today:0,week:0,month:0,uniqueStores:0},at:iso(),dashboardCleared:true};window.updateStats?.();window.updatePremiumDashboard?.();window.renderTodayTasks?.();window.renderRecords?.()}catch(e){}
-    if(b){b.classList.remove('is-clearing','is-error');b.classList.add('is-success');b.disabled=false;b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>DASHBOARD CLEARED</strong><small>All Firebase visit data + media cleared and synchronized</small></span><span class="sp-clear-v2-state">✓</span>'}
-    if(st)st.textContent=`✓ Cleared ${dayDeletes} visit-day records + ${mediaDeletes} media records across ${cleared} salesman data accounts.`;
-    toast('✓ ALL VISIT DATA CLEARED — Firebase synchronized');
-    setTimeout(()=>{if(b){b.classList.remove('is-success');b.innerHTML='<span class="sp-clear-v2-icon">⌫</span><span class="sp-clear-v2-copy"><strong>CLEAR DASHBOARD</strong><small>All salesmen • all cities • all visit dates</small></span><span class="sp-clear-v2-state">›</span>'}if(st)st.textContent='Clears synchronized visit data everywhere; non-visit master settings remain safe.'},3500);
-    return true;
-  }catch(e){
-    console.error('Global Clear V3',e);if(b){b.classList.remove('is-clearing','is-success');b.classList.add('is-error');b.disabled=false;b.innerHTML='<span class="sp-clear-v2-icon">!</span><span class="sp-clear-v2-copy"><strong>CLEAR FAILED</strong><small>Some Firebase visit data could not be cleared</small></span><span class="sp-clear-v2-state">!</span>'}if(st)st.textContent='✕ '+(e?.message||e);toast('✕ Clear Dashboard failed — no success state was claimed.');return false;
-  }
-}
-window.clearMasterDashboard=clearAllVisitsV3;
-
-/* ===== Salesman-device guard: honor Admin global clear + per-visit tombstones before upload ===== */
-async function applyAdminDeletionGuards(){
-  if(isMaster())return;
-  const s=sess();if(!s?.uid)return;
-  try{
-    const state=await read(CLEAR_PATH).catch(()=>null);const ts=String(state?.clearedAt||'');const key='shadab_master_clear_applied_v3';const applied=String(localStorage.getItem(key)||'');
-    if(ts&&(!applied||new Date(ts).getTime()>new Date(applied).getTime())){
-      try{if(typeof visits!=='undefined'){visits=[];saveLocal()}}catch(e){}clearLocalTasks();
-      try{const all=await window.photoListAll?.();for(const x of (all||[]))await window.photoDelete?.(x.id)}catch(e){}
-      localStorage.setItem(key,ts);
-    }
-    const parent=await read('user_data/'+encodeURIComponent(s.uid)).catch(()=>null);const tomb=parent?.adminDeletedVisitIds&&typeof parent.adminDeletedVisitIds==='object'?parent.adminDeletedVisitIds:{};const ids=new Set(Object.keys(tomb));if(ids.size&&typeof visits!=='undefined'&&Array.isArray(visits)){
-      const before=visits.length;visits=visits.filter(v=>!ids.has(String(v?.id||'')));if(visits.length!==before)saveLocal();
-      for(const id of [...ids]){try{await window.photoDelete?.(id)}catch(e){}}
-    }
-  }catch(e){console.warn('Admin deletion guard:',e)}
-}
-const originalSync=window.shadabSyncSalesmanNow;
-if(typeof originalSync==='function'&&!originalSync.__adminDeletionGuardV3){
-  const guarded=async function(){await applyAdminDeletionGuards();return originalSync.apply(this,arguments)};guarded.__adminDeletionGuardV3=true;guarded.__adminDeletionGuardOriginal=originalSync;window.shadabSyncSalesmanNow=guarded;window.sp35SyncNow=guarded;window.sp35SyncNew=guarded;window.sp35ManualServerRefresh=guarded;
-}
-
-/* Re-apply authoritative report rows after the existing Control Center renders. */
-let reportTimer=0;
-const kickReports=()=>{clearTimeout(reportTimer);reportTimer=setTimeout(()=>enhanceReports().catch(()=>{}),120)};
-new MutationObserver(kickReports).observe(document.documentElement,{childList:true,subtree:true});
-document.addEventListener('click',e=>{if(e.target.closest?.('#spAddedSalesmanDashboard .sp-added-tab'))kickReports()});
-document.addEventListener('change',e=>{if(e.target?.id==='spLiveCityFilter'||e.target?.id==='spLiveDateFilter')kickReports()});
-setTimeout(kickReports,700);setTimeout(kickReports,1800);
-})();
-</script>
 <!-- ===== END SHADAB ADMIN GLOBAL VISIT DELETE + CLEAR HARDENING V3 ===== -->
 
 
-<style id="shadab-final-dark-mode-override">
-/* FINAL DARK MODE OVERRIDE: must come after legacy/generated global body rules */
-html:has(body.dark), body.dark {
-  background:#080b10 !important;
-  color:#f5f7fa !important;
-  --bg:#080b10 !important;
-  --card:rgba(24,29,37,.62) !important;
-  --card-solid:#171c24 !important;
-  --text:#f5f7fa !important;
-  --muted:#a6afbd !important;
-  --line:rgba(255,255,255,.09) !important;
-}
-body.dark {
-  background:radial-gradient(circle at 10% 0%,rgba(54,200,255,.10),transparent 28%),radial-gradient(circle at 90% 10%,rgba(0,122,255,.10),transparent 25%),#080b10 !important;
-  color:#f5f7fa !important;
-}
-body.dark .topbar, body.dark header, body.dark main, body.dark .card, body.dark .premium-dashboard, body.dark .route-planner, body.dark .record, body.dark .stat, body.dark .overview-card, body.dark .follow-stat, body.dark .dash-stat, body.dark .optional-row, body.dark .offline-bar {
-  color:#f5f7fa !important;
-}
-body.dark .card, body.dark .premium-dashboard, body.dark .route-planner, body.dark .record, body.dark .stat, body.dark .overview-card, body.dark .follow-stat, body.dark .dash-stat, body.dark .optional-row {
-  background:rgba(16,30,43,.92) !important;
-  border-color:rgba(80,190,245,.18) !important;
-}
-body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6,
-body.dark p, body.dark span, body.dark label, body.dark small, body.dark strong, body.dark b, body.dark .title, body.dark .subtitle, body.dark .muted, body.dark .section-title {
-  color:inherit;
-}
-body.dark input, body.dark select, body.dark textarea {
-  background:#172330 !important; color:#f5f7fa !important; border-color:rgba(80,190,245,.22) !important;
-}
-body.dark input::placeholder, body.dark textarea::placeholder { color:#9eabb8 !important; opacity:1 !important; }
-body.dark .shadab-menu-panel, body.dark .modal-box { background:#111923 !important; color:#f5f7fa !important; }
-body.dark .shadab-menu-item { color:#f5f7fa !important; }
-body.dark .theme-toggle { background:linear-gradient(135deg,#202733,#11161d) !important; color:#fff !important; }
-</style>
+
 
 <!-- ===== FINAL HEADER ROUNDED CORNER UI ===== -->
-<style id="shadab-header-rounded-corners-final">
-/* User-requested UI only: give the main app header a clean premium rounded frame. */
-.topbar{
-  position:sticky!important;
-  top:0!important;
-  z-index:20!important;
-  margin:10px 0 10px!important;
-  padding:10px 12px!important;
-  border-radius:22px!important;
-  overflow:visible!important;
-  border:1px solid rgba(120,170,200,.34)!important;
-  border-bottom:1px solid rgba(120,170,200,.34)!important;
-  box-shadow:0 10px 28px rgba(25,70,100,.10), inset 0 1px 0 rgba(255,255,255,.58)!important;
-}
-.topbar .nav{
-  width:100%!important;
-  max-width:none!important;
-  border-radius:18px!important;
-  overflow:visible!important;
-}
-html[data-shadab-theme="light"] .topbar,
-body:not(.dark) .topbar{
-  background:rgba(248,252,255,.76)!important;
-  border-color:rgba(92,154,188,.34)!important;
-  box-shadow:0 10px 28px rgba(25,70,100,.10), inset 0 1px 0 rgba(255,255,255,.82)!important;
-}
-html[data-shadab-theme="dark"] .topbar,
-body.dark .topbar{
-  background:rgba(7,20,30,.78)!important;
-  border-color:rgba(66,194,255,.30)!important;
-  box-shadow:0 10px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.08)!important;
-}
-@media(max-width:520px){
-  .topbar{
-    margin:8px 0 9px!important;
-    padding:9px 10px!important;
-    border-radius:20px!important;
-  }
-  .topbar .nav{border-radius:16px!important}
-}
-</style>
+
 <!-- ===== END FINAL HEADER ROUNDED CORNER UI ===== -->
 
 <!-- SHADAB PHARMACY — FINAL RUNTIME PDF/WHATSAPP + STORE CATALOG LOCK V5 -->
@@ -12480,7 +12203,7 @@ body.section-modal-records main>.card#visitRecordsCard{position:fixed!important;
   }
   const oldLive=window.refreshSpAddedSalesmanLive;
   window.refreshSpAddedSalesmanLive=async function(){const r=typeof oldLive==='function'?await oldLive():true;setTimeout(syncHeader,0);return r};
-  setInterval(()=>{if(document.getElementById('spAddedSalesmanDashboard')?.classList.contains('show'))syncHeader()},5000);
+  setInterval(()=>{if(document.getElementById('spAddedSalesmanDashboard')?.classList.contains('show'))syncHeader()},10000);
 })();
 </script>
 <!-- ===== START: V18 FINAL — REALTIME PRESENCE / PROFILE SYNC / 15-MIN DATA SYNC ===== -->
@@ -12620,7 +12343,7 @@ function patchListStatus(){
 // Expose a real presence helper for the existing control center without replacing its data-sync engine.
 window.shadabRealtimePresence={heartbeat,refreshSelectedHeader,onlineFor};
 startPresence();
-setInterval(()=>{refreshSelectedHeader();patchListStatus()},5000);
+setInterval(()=>{refreshSelectedHeader();patchListStatus()},10000);
 })();
 </script>
 <!-- ===== END: V18 FINAL — REALTIME PRESENCE / PROFILE SYNC / 15-MIN DATA SYNC ===== -->
@@ -14495,7 +14218,7 @@ async function startPermissionWatch(){
       const p=await readDoc(permissionUid);
       if(p) setRuntimeFlags(permissionUid,p);
     }catch(e){}
-  },1000);
+  },60000);
 }
 
 function ensurePermissionWatch(){
@@ -14546,7 +14269,7 @@ function ensurePresence(){
 
 function installPresence(){
   if(!presenceSessionTimer){
-    presenceSessionTimer=setInterval(()=>{ensurePresence();ensurePermissionWatch()},1000);
+    presenceSessionTimer=setInterval(()=>{ensurePresence();ensurePermissionWatch()},10000);
   }
   ensurePresence();ensurePermissionWatch();
   window.addEventListener('online',()=>setTimeout(()=>{ensurePresence();ensurePermissionWatch()},500),{passive:true});
@@ -14844,300 +14567,15 @@ window.addEventListener('pageshow',()=>setTimeout(()=>loadSignedInAssignment().c
 })();
 </script>
 <!-- ===== SHADAB ADMIN GLOBAL VISIT DELETE + CLEAR HARDENING V3 ===== -->
-<style id="shadab-admin-visit-delete-v3-css">
-#spLiveDeleteToolbarV3{margin:10px 0;padding:10px;border:1px solid rgba(255,86,113,.42);border-radius:15px;background:linear-gradient(145deg,#3b1220,#1d0b14);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
-#spLiveDeleteToolbarV3 .v3-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#spLiveDeleteToolbarV3 .v3-title{font-weight:900;color:#ffd9df;font-size:12px;flex:1 1 180px}
-#spLiveDeleteToolbarV3 .v3-btn{border:1px solid rgba(255,255,255,.22);background:#102b40;color:#fff;padding:8px 12px;border-radius:11px;font-weight:800;cursor:pointer}
-#spLiveDeleteToolbarV3 .v3-btn.danger{background:linear-gradient(145deg,#d82e55,#8f1434);border-color:#ff6685}
-#spLiveDeleteToolbarV3 .v3-btn:disabled{opacity:.45;cursor:not-allowed}
-#spLiveDeleteToolbarV3 .v3-status{margin-top:6px;color:#b9cddd;font-size:9px;line-height:1.3}
-.sp-live-report-row.v3-selectable{grid-template-columns:28px minmax(0,1fr) minmax(90px,.65fr) minmax(70px,.45fr)!important;align-items:center}
-.sp-live-report-row.v3-selectable .v3-check{width:20px!important;height:20px!important;margin:0!important;accent-color:#ff3860!important}
-#spLiveReportSelectAllV3{width:19px!important;height:19px!important;margin:0 5px 0 0!important;accent-color:#ff3860!important}
-</style>
-<script id="shadab-admin-visit-delete-v3-js">
-(function(){
-'use strict';
-if(window.__shadabAdminVisitDeleteV3Installed)return;
-window.__shadabAdminVisitDeleteV3Installed=true;
-const ADMIN='master@shadabpharmacy.com';
-const CLEAR_PATH='app_settings/masterDashboardState';
-const CLEAR_LOCAL='shadab_master_dashboard_clear_state_v3';
-const DELETED_LIMIT=1000;
-const sess=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
-const isMaster=()=>String(sess()?.email||'').toLowerCase()===ADMIN;
-const read=async p=>window.shadabRestReadDoc(p);
-const readCol=async p=>window.shadabRestReadCollection(p);
-const write=async(p,v)=>window.shadabRestWriteDoc(p,v);
-const del=async p=>window.shadabRestDeleteDoc(p);
-const iso=()=>new Date().toISOString();
-const today=()=>typeof window.todayISO==='function'?window.todayISO():new Date().toISOString().slice(0,10);
-const clone=v=>{try{return JSON.parse(JSON.stringify(v??null))}catch(e){return v}};
-const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const toast=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
-const localVisits=()=>{try{return typeof visits!=='undefined'&&Array.isArray(visits)?visits:[]}catch(e){return[]}};
-const saveLocal=()=>{try{if(typeof saveData==='function')saveData();else localStorage.setItem('shadab_pharmacy_visits_v1',JSON.stringify(localVisits()))}catch(e){}};
-const clearLocalTasks=()=>{try{if(typeof routeTasks!=='undefined')routeTasks={};localStorage.setItem('shadab_pharmacy_route_tasks_v1','{}');if(typeof saveRouteTasks==='function')saveRouteTasks()}catch(e){}};
 
-function selectedUid(){try{return String(window.__spLiveSalesmanControlV15?.getSelected?.()?.uid||'')}catch(e){return''}}
-function selectedName(){try{const x=window.__spLiveSalesmanControlV15?.getSelected?.()||{};return String(x.profile?.fullName||x.profile?.displayName||x.profile?.salesmanName||x.profile?.name||'Salesman')}catch(e){return'Salesman'}}
-function currentFilters(){return {city:String(document.getElementById('spLiveCityFilter')?.value||'ALL'),date:String(document.getElementById('spLiveDateFilter')?.value||'ALL')}}
-function cityOf(v){return String(v?.city||v?.area||v?.town||v?.region||'').trim()}
-function filterRows(rows){const f=currentFilters();return rows.filter(v=>{if(f.city!=='ALL'&&cityOf(v).toLowerCase()!==f.city.toLowerCase())return false;if(f.date!=='ALL'&&String(v?.date||'')!==f.date)return false;return true})}
 
-async function authoritativeVisits(uid){
-  if(!uid) return [];
-  const rows=await readCol('user_data/'+encodeURIComponent(uid)+'/visit_days');
-  const out=[];
-  for(const r of Array.isArray(rows)?rows:[]){
-    const d=r?.data?.()||{};const date=String(d.date||r.id||'').slice(0,10);
-    for(const v of (Array.isArray(d.visits)?d.visits:[])){if(v?.id)out.push({...clone(v),date:String(v.date||date).slice(0,10)});}
-  }
-  return out.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.time||'').localeCompare(String(a.time||'')));
-}
-
-async function refreshReportData(){
-  try{if(window.__spLiveSalesmanControlV15?.getSelected)await window.__spLiveSalesmanControlV15.getSelected();}catch(e){}
-  try{window.refreshSpAddedSalesmanLive?.()}catch(e){}
-}
-
-function renderDeleteRows(rows){
-  const body=document.querySelector('#spLiveSalesmanTabContent .sp-live-report-list');
-  if(!body)return;
-  if(!rows.length){body.innerHTML='<div class="sp-live-empty">No visit records are synchronized for this salesman in the selected filters.</div>';return}
-  body.innerHTML=rows.slice().reverse().map(v=>`<div class="sp-live-report-row v3-selectable" data-v3-id="${esc(v.id)}" data-v3-date="${esc(v.date)}"><div><input class="v3-check" type="checkbox" data-v3-visit-id="${esc(v.id)}" data-v3-visit-date="${esc(v.date)}" aria-label="Select ${esc(v.store||'visit')}"></div><div><b>${esc(v.store||'—')}</b><small>${esc(cityOf(v)||(v.area||''))}${v.territory?' • '+esc(v.territory):''}</small></div><div><b>${esc(v.person||'—')}</b><small>${esc(v.date||'')} ${esc(v.time||'')}</small></div><div class="status"><small>${esc(v.status||'Completed')}</small></div></div>`).join('');
-}
-
-async function enhanceReports(){
-  if(!isMaster())return;
-  const tab=document.querySelector('#spAddedSalesmanDashboard .sp-added-tabs .sp-added-tab.active');
-  if(!tab||String(tab.dataset.tab)!=='1')return;
-  const c=document.getElementById('spLiveSalesmanTabContent');if(!c)return;
-  let toolbar=document.getElementById('spLiveDeleteToolbarV3');
-  if(!toolbar){
-    toolbar=document.createElement('div');toolbar.id='spLiveDeleteToolbarV3';
-    toolbar.innerHTML='<div class="v3-row"><input id="spLiveReportSelectAllV3" type="checkbox"><span class="v3-title">Admin Visit Delete • select one or multiple visits</span><button type="button" class="v3-btn" id="spLiveReportReloadV3">↻ Reload</button><button type="button" class="v3-btn danger" id="spLiveDeleteSelectedV3" disabled>🗑 Delete Selected</button></div><div class="v3-status" id="spLiveDeleteStatusV3">Only visit records are affected. Medical stores, cities, territories and salesman accounts stay safe.</div>';
-    const list=c.querySelector('.sp-live-report-list');
-    if(list)list.parentNode.insertBefore(toolbar,list);
-    else c.appendChild(toolbar);
-    toolbar.querySelector('#spLiveReportSelectAllV3')?.addEventListener('change',e=>{c.querySelectorAll('.v3-check').forEach(x=>x.checked=e.target.checked);updateDeleteButton()});
-    toolbar.querySelector('#spLiveDeleteSelectedV3')?.addEventListener('click',deleteSelected);
-    toolbar.querySelector('#spLiveReportReloadV3')?.addEventListener('click',loadAndRender);
-  }
-  await loadAndRender();
-}
-
-let loading=false;
-async function loadAndRender(){
-  if(loading||!isMaster())return;loading=true;
-  const status=document.getElementById('spLiveDeleteStatusV3');
-  try{
-    const uid=selectedUid();if(!uid)throw new Error('Select a salesman first.');
-    if(status)status.textContent='Reading authoritative visit_days from Firebase…';
-    const rows=filterRows(await authoritativeVisits(uid));
-    renderDeleteRows(rows);updateDeleteButton();
-    const stats=document.querySelectorAll('#spLiveSalesmanTabContent .sp-live-grid .sp-live-stat b');
-    const td=today(),mon=td.slice(0,7);
-    const todayRows=rows.filter(v=>String(v.date||'')===td),monthRows=rows.filter(v=>String(v.date||'').slice(0,7)===mon);
-    [rows.length,todayRows.length,monthRows.length,new Set(monthRows.map(v=>String(v.store||'').trim().toLowerCase()).filter(Boolean)).size].forEach((n,i)=>{if(stats[i])stats[i].textContent=String(n)});
-    if(status)status.textContent=`${rows.length} synchronized visit record(s) in the selected filters.`;
-  }catch(e){if(status)status.textContent='✕ '+(e?.message||e)}finally{loading=false}
-}
-function updateDeleteButton(){const checks=[...document.querySelectorAll('#spLiveSalesmanTabContent .v3-check')];const n=checks.filter(x=>x.checked).length;const b=document.getElementById('spLiveDeleteSelectedV3');if(b){b.disabled=!n;b.textContent=n?`🗑 Delete Selected (${n})`:'🗑 Delete Selected'}const all=document.getElementById('spLiveReportSelectAllV3');if(all)all.checked=!!checks.length&&n===checks.length}
-
-document.addEventListener('change',e=>{if(e.target?.classList?.contains('v3-check'))updateDeleteButton()});
-
-async function recomputeParentStats(uid,parent){
-  const days=await readCol('user_data/'+encodeURIComponent(uid)+'/visit_days');
-  const byDate={},storesByMonth={};
-  for(const r of Array.isArray(days)?days:[]){const d=r?.data?.()||{},date=String(d.date||r.id||'').slice(0,10),vs=Array.isArray(d.visits)?d.visits:[];if(!date)continue;if(vs.length)byDate[date]=vs.length;const m=date.slice(0,7);if(!storesByMonth[m])storesByMonth[m]=[];for(const v of vs){const k=String(v.code||'')+'::'+String(v.area||'')+'::'+String(v.store||v.name||'').trim().toLowerCase();if(k&&!storesByMonth[m].includes(k))storesByMonth[m].push(k)}}
-  const months=Object.keys(storesByMonth).filter(m=>storesByMonth[m].length);const latestMonths=months.sort().slice(-18);const trimmed={};latestMonths.forEach(m=>trimmed[m]=storesByMonth[m]);
-  const dates=Object.keys(byDate).sort().slice(-730);const trimmedDates={};dates.forEach(d=>trimmedDates[d]=byDate[d]);
-  const td=today(),month=td.slice(0,7),dt=new Date(td+'T00:00:00');dt.setDate(dt.getDate()-((dt.getDay()+6)%7));const ws=dt.toISOString().slice(0,10),weD=new Date(dt);weD.setDate(weD.getDate()+7);const we=weD.toISOString().slice(0,10);
-  const todayCount=Number(trimmedDates[td]||0),week=Object.entries(trimmedDates).reduce((n,[d,c])=>n+(d>=ws&&d<we?Number(c)||0:0),0),monthCount=Object.entries(trimmedDates).reduce((n,[d,c])=>n+(d.slice(0,7)===month?Number(c)||0:0),0);
-  parent.visitStats={version:12,byDate:trimmedDates,storesByMonth:trimmed,updatedAt:iso()};parent.visitCounts={today:todayCount,week,month:monthCount};
-}
-
-async function deleteSelected(){
-  if(!isMaster())return toast('Master login required.');
-  const uid=selectedUid();if(!uid)return toast('Select a salesman first.');
-  const ids=[...document.querySelectorAll('#spLiveSalesmanTabContent .v3-check:checked')].map(x=>({id:String(x.dataset.v3VisitId||''),date:String(x.dataset.v3VisitDate||'').slice(0,10)})).filter(x=>x.id);
-  if(!ids.length)return;
-  const ok=confirm(`Delete ${ids.length} selected visit record${ids.length===1?'':'s'} for ${selectedName()}?\n\nThis permanently removes the selected visit(s) from Firebase, the salesman report, Master Dashboard data, visit-day storage and related cached media.\n\nMedical stores, cities, territories, assignments and the salesman account will NOT be deleted.`);
-  if(!ok)return;
-  const status=document.getElementById('spLiveDeleteStatusV3'),btn=document.getElementById('spLiveDeleteSelectedV3');if(btn)btn.disabled=true;
-  try{
-    const parent=await read('user_data/'+encodeURIComponent(uid))||{};
-    const tomb=parent.adminDeletedVisitIds&&typeof parent.adminDeletedVisitIds==='object'?{...parent.adminDeletedVisitIds}:{};
-    const grouped={};ids.forEach(x=>(grouped[x.date]||(grouped[x.date]=[])).push(x.id));
-    let deleted=0;
-    for(const [date,visitIds] of Object.entries(grouped)){
-      const path='user_data/'+encodeURIComponent(uid)+'/visit_days/'+encodeURIComponent(date);
-      const day=await read(path)||{};const old=Array.isArray(day.visits)?day.visits:[];const kill=new Set(visitIds);const keep=old.filter(v=>!kill.has(String(v?.id||'')));
-      for(const v of old){if(kill.has(String(v?.id||''))){deleted++;if(v?.photoRef){try{await del(String(v.photoRef))}catch(e){}}try{await del('user_data/'+encodeURIComponent(uid)+'/visit_media/'+encodeURIComponent(String(v.id)))}catch(e){}try{await window.photoDelete?.(String(v.id))}catch(e){}}}
-      if(keep.length)await write(path,{...day,uid,date,visits:keep,count:keep.length,updatedAt:iso(),version:12});else await del(path);
-      visitIds.forEach(id=>{tomb[id]=iso()});
-    }
-    const keys=Object.keys(tomb).sort((a,b)=>String(tomb[b]).localeCompare(String(tomb[a]))).slice(0,DELETED_LIMIT);const compact={};keys.forEach(k=>compact[k]=tomb[k]);
-    parent.uid=uid;parent.adminDeletedVisitIds=compact;parent.updatedAt=iso();parent.updatedBy=ADMIN;parent.adminVisitDeleteAt=iso();delete parent.visits;
-    await recomputeParentStats(uid,parent);await write('user_data/'+encodeURIComponent(uid),parent);
-    try{const meta=localStorage.getItem('shadab_master_deleted_visits_v3')||'{}';const x=JSON.parse(meta);ids.forEach(i=>x[uid+'::'+i.id]=iso());localStorage.setItem('shadab_master_deleted_visits_v3',JSON.stringify(x))}catch(e){}
-    toast(`✓ ${deleted} visit record${deleted===1?'':'s'} deleted everywhere`);
-    if(status)status.textContent=`✓ ${deleted} record(s) permanently deleted from Firebase and synchronized visit storage.`;
-    await loadAndRender();
-    try{await window.refreshSpAddedSalesmanLive?.()}catch(e){}
-  }catch(e){if(status)status.textContent='✕ Delete failed: '+(e?.message||e);toast('✕ Visit delete failed — no further records were intentionally changed.')}
-}
-window.shadabAdminDeleteSelectedVisitsV3=deleteSelected;
-
-/* ===== Global CLEAR: remove the authoritative V12 day/media records, not only parent visits[] ===== */
-async function clearAllVisitsV3(){
-  if(!isMaster())return toast('Master login required to clear all visit data.');
-  if(!navigator.onLine)return toast('Offline — connect to Firebase before clearing all visit data.');
-  if(!confirm('CLEAR ALL VISIT DATA?\n\nThis permanently removes ALL visit/activity records for ALL salesmen from Firebase, dashboards, reports, visit-day storage and related media.\n\nMedical stores, cities, territories, assignments, salesman accounts, PDFs and settings remain safe.\n\nThis cannot be undone.'))return false;
-  const b=document.getElementById('spMasterClearDashboardBtn'),st=document.getElementById('spMasterClearDashboardStatus');if(b)b.disabled=true;
-  if(b){b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>CLEARING ALL VISIT DATA…</strong><small>Deleting Firebase visit-days + media for every salesman</small></span><span class="sp-clear-v2-state">✓</span>'}
-  try{
-    const [profiles,users]=await Promise.all([readCol('salesmen'),readCol('user_data')]);
-    const uids=new Set();(profiles||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});(users||[]).forEach(r=>{if(r?.id)uids.add(String(r.id))});
-    let cleared=0,dayDeletes=0,mediaDeletes=0;
-    for(const uid of uids){
-      const base='user_data/'+encodeURIComponent(uid);
-      const [days,media]=await Promise.all([readCol(base+'/visit_days').catch(()=>[]),readCol(base+'/visit_media').catch(()=>[])]);
-      for(const r of Array.isArray(days)?days:[]){await del(base+'/visit_days/'+encodeURIComponent(String(r.id)));dayDeletes++}
-      for(const r of Array.isArray(media)?media:[]){await del(base+'/visit_media/'+encodeURIComponent(String(r.id)));mediaDeletes++}
-      const old=(users||[]).find(r=>String(r.id)===uid)?.data?.()||{};
-      const next=clone(old)||{};delete next.visits;delete next.visitStats;delete next.visitCounts;delete next.routeTasks;delete next.adminDeletedVisitIds;next.uid=String(old.uid||uid);next.updatedAt=iso();next.masterDashboardClearedAt=iso();next.masterDashboardClearedBy=ADMIN;await write(base,next);cleared++;
-    }
-    const state={clearedAt:iso(),clearedBy:ADMIN,version:3,scope:'ALL_V12_VISIT_DAYS_MEDIA_AND_ROUTE_TASKS',affectedUserDataDocuments:cleared,deletedVisitDayDocuments:dayDeletes,deletedVisitMediaDocuments:mediaDeletes};
-    await write(CLEAR_PATH,state);localStorage.setItem(CLEAR_LOCAL,JSON.stringify(state));
-    try{if(typeof visits!=='undefined'){visits=[];saveLocal()}}catch(e){}clearLocalTasks();
-    try{const all=await window.photoListAll?.();for(const x of (all||[]))await window.photoDelete?.(x.id)}catch(e){}
-    try{window.__spMasterAggregateCache={salesmen:window.__spMasterAggregateCache?.salesmen||[],visits:[],plannedToday:[],rawByUid:{},sourceCounts:{salesmen:uids.size,userData:uids.size,visitDays:0},stats:{today:0,week:0,month:0,uniqueStores:0},at:iso(),dashboardCleared:true};window.updateStats?.();window.updatePremiumDashboard?.();window.renderTodayTasks?.();window.renderRecords?.()}catch(e){}
-    if(b){b.classList.remove('is-clearing','is-error');b.classList.add('is-success');b.disabled=false;b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>DASHBOARD CLEARED</strong><small>All Firebase visit data + media cleared and synchronized</small></span><span class="sp-clear-v2-state">✓</span>'}
-    if(st)st.textContent=`✓ Cleared ${dayDeletes} visit-day records + ${mediaDeletes} media records across ${cleared} salesman data accounts.`;
-    toast('✓ ALL VISIT DATA CLEARED — Firebase synchronized');
-    setTimeout(()=>{if(b){b.classList.remove('is-success');b.innerHTML='<span class="sp-clear-v2-icon">⌫</span><span class="sp-clear-v2-copy"><strong>CLEAR DASHBOARD</strong><small>All salesmen • all cities • all visit dates</small></span><span class="sp-clear-v2-state">›</span>'}if(st)st.textContent='Clears synchronized visit data everywhere; non-visit master settings remain safe.'},3500);
-    return true;
-  }catch(e){
-    console.error('Global Clear V3',e);if(b){b.classList.remove('is-clearing','is-success');b.classList.add('is-error');b.disabled=false;b.innerHTML='<span class="sp-clear-v2-icon">!</span><span class="sp-clear-v2-copy"><strong>CLEAR FAILED</strong><small>Some Firebase visit data could not be cleared</small></span><span class="sp-clear-v2-state">!</span>'}if(st)st.textContent='✕ '+(e?.message||e);toast('✕ Clear Dashboard failed — no success state was claimed.');return false;
-  }
-}
-window.clearMasterDashboard=clearAllVisitsV3;
-
-/* ===== Salesman-device guard: honor Admin global clear + per-visit tombstones before upload ===== */
-async function applyAdminDeletionGuards(){
-  if(isMaster())return;
-  const s=sess();if(!s?.uid)return;
-  try{
-    const state=await read(CLEAR_PATH).catch(()=>null);const ts=String(state?.clearedAt||'');const key='shadab_master_clear_applied_v3';const applied=String(localStorage.getItem(key)||'');
-    if(ts&&(!applied||new Date(ts).getTime()>new Date(applied).getTime())){
-      try{if(typeof visits!=='undefined'){visits=[];saveLocal()}}catch(e){}clearLocalTasks();
-      try{const all=await window.photoListAll?.();for(const x of (all||[]))await window.photoDelete?.(x.id)}catch(e){}
-      localStorage.setItem(key,ts);
-    }
-    const parent=await read('user_data/'+encodeURIComponent(s.uid)).catch(()=>null);const tomb=parent?.adminDeletedVisitIds&&typeof parent.adminDeletedVisitIds==='object'?parent.adminDeletedVisitIds:{};const ids=new Set(Object.keys(tomb));if(ids.size&&typeof visits!=='undefined'&&Array.isArray(visits)){
-      const before=visits.length;visits=visits.filter(v=>!ids.has(String(v?.id||'')));if(visits.length!==before)saveLocal();
-      for(const id of [...ids]){try{await window.photoDelete?.(id)}catch(e){}}
-    }
-  }catch(e){console.warn('Admin deletion guard:',e)}
-}
-const originalSync=window.shadabSyncSalesmanNow;
-if(typeof originalSync==='function'&&!originalSync.__adminDeletionGuardV3){
-  const guarded=async function(){await applyAdminDeletionGuards();return originalSync.apply(this,arguments)};guarded.__adminDeletionGuardV3=true;guarded.__adminDeletionGuardOriginal=originalSync;window.shadabSyncSalesmanNow=guarded;window.sp35SyncNow=guarded;window.sp35SyncNew=guarded;window.sp35ManualServerRefresh=guarded;
-}
-
-/* Re-apply authoritative report rows after the existing Control Center renders. */
-let reportTimer=0;
-const kickReports=()=>{clearTimeout(reportTimer);reportTimer=setTimeout(()=>enhanceReports().catch(()=>{}),120)};
-new MutationObserver(kickReports).observe(document.documentElement,{childList:true,subtree:true});
-document.addEventListener('click',e=>{if(e.target.closest?.('#spAddedSalesmanDashboard .sp-added-tab'))kickReports()});
-document.addEventListener('change',e=>{if(e.target?.id==='spLiveCityFilter'||e.target?.id==='spLiveDateFilter')kickReports()});
-setTimeout(kickReports,700);setTimeout(kickReports,1800);
-})();
-</script>
 <!-- ===== END SHADAB ADMIN GLOBAL VISIT DELETE + CLEAR HARDENING V3 ===== -->
 
 
-<style id="shadab-final-dark-mode-override">
-/* FINAL DARK MODE OVERRIDE: must come after legacy/generated global body rules */
-html:has(body.dark), body.dark {
-  background:#080b10 !important;
-  color:#f5f7fa !important;
-  --bg:#080b10 !important;
-  --card:rgba(24,29,37,.62) !important;
-  --card-solid:#171c24 !important;
-  --text:#f5f7fa !important;
-  --muted:#a6afbd !important;
-  --line:rgba(255,255,255,.09) !important;
-}
-body.dark {
-  background:radial-gradient(circle at 10% 0%,rgba(54,200,255,.10),transparent 28%),radial-gradient(circle at 90% 10%,rgba(0,122,255,.10),transparent 25%),#080b10 !important;
-  color:#f5f7fa !important;
-}
-body.dark .topbar, body.dark header, body.dark main, body.dark .card, body.dark .premium-dashboard, body.dark .route-planner, body.dark .record, body.dark .stat, body.dark .overview-card, body.dark .follow-stat, body.dark .dash-stat, body.dark .optional-row, body.dark .offline-bar {
-  color:#f5f7fa !important;
-}
-body.dark .card, body.dark .premium-dashboard, body.dark .route-planner, body.dark .record, body.dark .stat, body.dark .overview-card, body.dark .follow-stat, body.dark .dash-stat, body.dark .optional-row {
-  background:rgba(16,30,43,.92) !important;
-  border-color:rgba(80,190,245,.18) !important;
-}
-body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6,
-body.dark p, body.dark span, body.dark label, body.dark small, body.dark strong, body.dark b, body.dark .title, body.dark .subtitle, body.dark .muted, body.dark .section-title {
-  color:inherit;
-}
-body.dark input, body.dark select, body.dark textarea {
-  background:#172330 !important; color:#f5f7fa !important; border-color:rgba(80,190,245,.22) !important;
-}
-body.dark input::placeholder, body.dark textarea::placeholder { color:#9eabb8 !important; opacity:1 !important; }
-body.dark .shadab-menu-panel, body.dark .modal-box { background:#111923 !important; color:#f5f7fa !important; }
-body.dark .shadab-menu-item { color:#f5f7fa !important; }
-body.dark .theme-toggle { background:linear-gradient(135deg,#202733,#11161d) !important; color:#fff !important; }
-</style>
+
 
 <!-- ===== FINAL HEADER ROUNDED CORNER UI ===== -->
-<style id="shadab-header-rounded-corners-final">
-/* User-requested UI only: give the main app header a clean premium rounded frame. */
-.topbar{
-  position:sticky!important;
-  top:0!important;
-  z-index:20!important;
-  margin:10px 0 10px!important;
-  padding:10px 12px!important;
-  border-radius:22px!important;
-  overflow:visible!important;
-  border:1px solid rgba(120,170,200,.34)!important;
-  border-bottom:1px solid rgba(120,170,200,.34)!important;
-  box-shadow:0 10px 28px rgba(25,70,100,.10), inset 0 1px 0 rgba(255,255,255,.58)!important;
-}
-.topbar .nav{
-  width:100%!important;
-  max-width:none!important;
-  border-radius:18px!important;
-  overflow:visible!important;
-}
-html[data-shadab-theme="light"] .topbar,
-body:not(.dark) .topbar{
-  background:rgba(248,252,255,.76)!important;
-  border-color:rgba(92,154,188,.34)!important;
-  box-shadow:0 10px 28px rgba(25,70,100,.10), inset 0 1px 0 rgba(255,255,255,.82)!important;
-}
-html[data-shadab-theme="dark"] .topbar,
-body.dark .topbar{
-  background:rgba(7,20,30,.78)!important;
-  border-color:rgba(66,194,255,.30)!important;
-  box-shadow:0 10px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.08)!important;
-}
-@media(max-width:520px){
-  .topbar{
-    margin:8px 0 9px!important;
-    padding:9px 10px!important;
-    border-radius:20px!important;
-  }
-  .topbar .nav{border-radius:16px!important}
-}
-</style>
+
 <!-- ===== END FINAL HEADER ROUNDED CORNER UI ===== -->
 
 
@@ -19732,47 +19170,7 @@ html[data-shadab-theme="dark"] #sp35LoginButton.sp35-master-header-clean{
 </style>
 <!-- ===== END FINAL HEADER BOX REMOVAL — MASTER ACCOUNT ONLY ===== -->
 <!-- ===== FINAL HEADER ROUNDED CORNER UI ===== -->
-<style id="shadab-header-rounded-corners-final">
-/* User-requested UI only: give the main app header a clean premium rounded frame. */
-.topbar{
-  position:sticky!important;
-  top:0!important;
-  z-index:20!important;
-  margin:10px 0 10px!important;
-  padding:10px 12px!important;
-  border-radius:22px!important;
-  overflow:visible!important;
-  border:1px solid rgba(120,170,200,.34)!important;
-  border-bottom:1px solid rgba(120,170,200,.34)!important;
-  box-shadow:0 10px 28px rgba(25,70,100,.10), inset 0 1px 0 rgba(255,255,255,.58)!important;
-}
-.topbar .nav{
-  width:100%!important;
-  max-width:none!important;
-  border-radius:18px!important;
-  overflow:visible!important;
-}
-html[data-shadab-theme="light"] .topbar,
-body:not(.dark) .topbar{
-  background:rgba(248,252,255,.76)!important;
-  border-color:rgba(92,154,188,.34)!important;
-  box-shadow:0 10px 28px rgba(25,70,100,.10), inset 0 1px 0 rgba(255,255,255,.82)!important;
-}
-html[data-shadab-theme="dark"] .topbar,
-body.dark .topbar{
-  background:rgba(7,20,30,.78)!important;
-  border-color:rgba(66,194,255,.30)!important;
-  box-shadow:0 10px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.08)!important;
-}
-@media(max-width:520px){
-  .topbar{
-    margin:8px 0 9px!important;
-    padding:9px 10px!important;
-    border-radius:20px!important;
-  }
-  .topbar .nav{border-radius:16px!important}
-}
-</style>
+
 <!-- ===== END FINAL HEADER ROUNDED CORNER UI ===== -->
 
 <!-- ===== FINAL FUNCTION FULLSCREEN + MAIN HEADER ISOLATION ===== -->
@@ -19824,7 +19222,11 @@ body.sp-function-open #spAdminExact41.sp-open {
   window.__shadabSyncFunctionShell=syncFunctionShell;
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',syncFunctionShell,{once:true});
   else syncFunctionShell();
-  const mo=new MutationObserver(function(){syncFunctionShell()});
+  let shellTimer=0;
+  const mo=new MutationObserver(function(){
+    if(shellTimer)return;
+    shellTimer=setTimeout(()=>{shellTimer=0;syncFunctionShell()},120);
+  });
   try{mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','aria-hidden']})}catch(e){}
 })();
 </script>
@@ -20697,7 +20099,22 @@ function mountAdminGridCard(){
   const grid=$('spAdminCCGrid');if(!grid||grid.querySelector('[data-company-contact-control]'))return;const card=document.createElement('button');card.className='sp-cc-card';card.type='button';card.setAttribute('data-company-contact-control','1');card.innerHTML='<span class="ic">☎</span><span><b>Company Contacts Control</b><small>Companies, contacts, import &amp; export</small></span>';card.onclick=()=>openModal('admin');grid.appendChild(card);
 }
 function install(){buildModal();buildEditor();mountFieldCard();mountMasterMainCard();mountAdminGridCard()}
-const observer=new MutationObserver(()=>{try{mountFieldCard();mountMasterMainCard();mountAdminGridCard()}catch(e){}});
+let ccMountTimer=0;
+function scheduleCompanyContactsMount(){
+  if(ccMountTimer)return;
+  ccMountTimer=setTimeout(()=>{ccMountTimer=0;try{mountFieldCard();mountMasterMainCard();mountAdminGridCard()}catch(e){}},150);
+}
+const observer=new MutationObserver(records=>{
+  let relevant=false;
+  for(const rec of records){
+    if(rec.target?.closest?.('#sharedDocsDashboard,#spAddedDashboardShortcuts,#spAdminCCGrid')){relevant=true;break;}
+    for(const n of Array.from(rec.addedNodes||[])){
+      if(n.nodeType===1 && (n.matches?.('#sharedDocsDashboard,#spAddedDashboardShortcuts,#spAdminCCGrid') || n.querySelector?.('#sharedDocsDashboard,#spAddedDashboardShortcuts,#spAdminCCGrid'))){relevant=true;break;}
+    }
+    if(relevant)break;
+  }
+  if(relevant)scheduleCompanyContactsMount();
+});
 if(document.body)observer.observe(document.body,{childList:true,subtree:true});else document.addEventListener('DOMContentLoaded',()=>observer.observe(document.body,{childList:true,subtree:true}),{once:true});
 document.addEventListener('click',e=>{if(e.target?.closest?.('#spAdminCCLauncher'))setTimeout(mountAdminGridCard,100);if(e.target?.closest?.('#spCompanyContactsMainControl'))setTimeout(()=>openModal('admin'),0)},true);
 window.addEventListener('load',()=>setTimeout(install,200));window.addEventListener('focus',()=>{if($('spCompanyContactsModal')?.classList.contains('sp-cc-open'))loadRemote(false)});
