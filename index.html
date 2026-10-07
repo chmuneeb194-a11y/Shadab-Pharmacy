@@ -3566,13 +3566,7 @@ function renderSmartDailyRoute(mode="remaining"){
    return '<label class="assign-row task-pick-row" style="display:flex;align-items:center;gap:10px"><span style="min-width:30px;font-weight:800">'+(i+1)+'</span><span style="flex:1"><b>'+esc(s.name)+'</b><small>'+esc(s.territory)+' • '+esc(s.status||"Planned")+follow+'</small></span><button class="mini" onclick=\"'+onclick.replace(/\"/g,'&quot;')+'\">Open</button></label>';
  }).join(""): "<div class='empty-state'>All today's stores have been visited.</div>";
 }
-function printSmartDailyRoute(){const rows=smartRouteRows(smartRouteMode);if(!rows.length)return toast("No stores in today's route");const w=window.open("","_blank","width=900,height=800");if(!w)return toast("Please allow the print popup");const tr=rows.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.name)}</td><td>${esc(s.area)}</td><td>${esc(s.territory)}</td><td>${esc(s.status||"Planned")}</td></tr>`).join("");w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>SHADAB PHARMACY — Smart Daily Route</title><style>@page{size:A4;margin:10mm}body{font-family:Arial;color:#111}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #aaa;padding:6px;text-align:left}h1{margin:0 0 4px}</style><style id="shadab-new-assignment-style">
-.territory-multiselect{min-height:44px;width:100%;border-radius:12px;padding:8px;background:var(--card,#fff);border:1px solid rgba(0,0,0,.12)}
-.territory-multiselect option{padding:7px 8px}
-.field-hint{display:block;color:var(--muted);font-size:11px;margin-top:5px}
-.admin-week{display:grid;gap:8px;margin-top:14px}.admin-day-row{border:1px solid rgba(0,0,0,.08);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.78)}.admin-day-row.open .admin-day-content{display:block}.admin-day-content{display:none;padding:10px 12px 12px}.admin-saved-block{margin-top:18px}.admin-saved-block h4{margin:0 0 8px}.admin-day-toggle{width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;border:0;background:transparent;font-weight:800;cursor:pointer}.admin-day-toggle .day-meta{margin-left:auto;color:var(--muted);font-size:11px;font-weight:600}.admin-territory-list{display:flex;flex-wrap:wrap;gap:7px}.admin-territory-list label{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid rgba(0,0,0,.1);border-radius:11px;background:#fff;font-size:12px}.admin-territory-list input{accent-color:#0b63ce}
-body.dark .territory-multiselect,body.dark .admin-day-row,body.dark .admin-territory-list label{background:rgba(19,47,64,.72);color:#fff;border-color:rgba(255,255,255,.12)}
-</style></head><body><h1>SHADAB PHARMACY</h1><p>Smart Daily Route — ${formatDate(todayISO())} • ${rows.length} stores</p><table><thead><tr><th>#</th><th>Medical Store</th><th>Area</th><th>Territory</th><th>Status</th></tr></thead><tbody>${tr}</tbody></table>
+function printSmartDailyRoute(){const rows=smartRouteRows(smartRouteMode);if(!rows.length)return toast("No stores in today's route");const w=window.open("","_blank","width=900,height=800");if(!w)return toast("Please allow the print popup");const tr=rows.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.name)}</td><td>${esc(s.area)}</td><td>${esc(s.territory)}</td><td>${esc(s.status||"Planned")}</td></tr>`).join("");w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>SHADAB PHARMACY — Smart Daily Route</title><style>@page{size:A4;margin:10mm}body{font-family:Arial;color:#111}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #aaa;padding:6px;text-align:left}h1{margin:0 0 4px}</style></head><body><h1>SHADAB PHARMACY</h1><p>Smart Daily Route — ${formatDate(todayISO())} • ${rows.length} stores</p><table><thead><tr><th>#</th><th>Medical Store</th><th>Area</th><th>Territory</th><th>Status</th></tr></thead><tbody>${tr}</tbody></table>
 
 
 <!-- ===== END SHADAB PHARMACY: ADMIN 35-CONTROL LAUNCHER + WORKING CONTROLS ===== -->
@@ -5085,7 +5079,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.sp35Logout=async function(){clearSession();stopPolling();try{localStorage.removeItem('shadab_current_salesman_email_v1')}catch(e){}try{sp35CloseAuth?.()}catch(e){}safeToast('Logged out')};
 
   // Kill the previous SDK sync entry points so they cannot hang or compete with REST sync.
-  window.queueMasterSync=function(){};
+  window.queueMasterSync=function(reason){try{if(typeof window.saveMasterData==='function'){clearTimeout(window.__shadabQueueMasterSyncTimer);window.__shadabQueueMasterSyncTimer=setTimeout(function(){Promise.resolve(window.saveMasterData(reason||'master-change')).catch(function(e){console.warn('Master queued sync:',e)});},250);}}catch(e){console.warn('Master queued sync setup:',e)}};
   window.saveMasterData=async function(reason){return await writeMaster(reason||'master-change')};
   window.saveScheduleNow=async function(){return await writeSchedules('schedule-change')};
   window.startRealtimeForUser=async function(){startPolling()};
@@ -6737,39 +6731,6 @@ window.saveAndWhatsAppSummaryDetail=async function(){
   const ORIGINAL=['Chaudhry Asad','Chaudhry Wasim','Atif','Usman','Saad','Waqas'];
   const esc4=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const toast4=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
-
-  /* SUMMARY DETAIL SALESMAN = LOCKED TO THE ORIGINAL SALESMAN LIST.
-     Existing chips are preserved so old records remain editable/removable. */
-  window.renderSummarySalesmen=function(selectedList){
-    const list=[...new Set((Array.isArray(selectedList)?selectedList:[]).map(x=>String(x||'').trim()).filter(Boolean))];
-    window.__sdSalesmenSelected=list;
-    const p=document.getElementById('sdSalesmanPicker');
-    if(p){
-      p.innerHTML='<option value="">Select salesman…</option>'+ORIGINAL.map(n=>`<option value="${esc4(n)}">${esc4(n)}</option>`).join('');
-      p.value='';
-    }
-    const chips=document.getElementById('sdSalesmanChips');
-    if(chips)chips.innerHTML=list.length?list.map(n=>`<span class="sd-salesman-chip"><span>${esc4(n)}</span><button type="button" class="sd-salesman-chip-remove" title="Remove salesman" onclick='window.removeSummarySalesman(${JSON.stringify(n)})'>×</button></span>`).join(''):'<span class="sd-muted">No salesman selected yet.</span>';
-  };
-  window.addSummarySelectedSalesman=function(){
-    const n=String(document.getElementById('sdSalesmanPicker')?.value||'').trim();
-    if(!n)return;
-    const list=Array.isArray(window.__sdSalesmenSelected)?window.__sdSalesmenSelected.slice():[];
-    if(!list.some(x=>x.toLowerCase()===n.toLowerCase()))list.push(n);
-    window.renderSummarySalesmen(list);window.shadabQueueSummaryAutosave?.();
-  };
-  window.addSummaryTypedSalesman=function(){
-    toast4('Summary Detail salesman is locked. Select from the original salesman list.');
-    return false;
-  };
-  function lockSummarySalesmanUI(){
-    const input=document.getElementById('sdSalesmanNew'),btn=input?.parentElement?.nextElementSibling;
-    if(input){input.disabled=true;input.placeholder='Salesman list locked';input.value='';input.style.opacity='.55'}
-    if(btn){btn.disabled=true;btn.style.opacity='.45';btn.title='Salesman list is locked'}
-    const p=document.getElementById('sdSalesmanPicker');
-    if(p){p.innerHTML='<option value="">Select salesman…</option>'+ORIGINAL.map(n=>`<option value="${esc4(n)}">${esc4(n)}</option>`).join('')}
-  }
-  document.addEventListener('DOMContentLoaded',lockSummarySalesmanUI,{once:true});setTimeout(lockSummarySalesmanUI,300);
 
   /* FIELD VISIT TERRITORY ENGINE: the old file references these functions but
      they are absent in the current build. Recreate the canonical Area -> Territory
@@ -8631,15 +8592,7 @@ if(typeof originalSync==='function'&&!originalSync.__adminDeletionGuardV3){
 /* Re-apply authoritative report rows after the existing Control Center renders. */
 let reportTimer=0;
 const kickReports=()=>{clearTimeout(reportTimer);reportTimer=setTimeout(()=>enhanceReports().catch(()=>{}),120)};
-new MutationObserver(records=>{
-  for(const rec of records){
-    const t=rec.target;
-    if(t?.closest?.('#spAddedSalesmanDashboard')){kickReports();return;}
-    for(const n of Array.from(rec.addedNodes||[])){
-      if(n.nodeType===1 && (n.matches?.('#spAddedSalesmanDashboard,.sp-added-salesman-dashboard') || n.querySelector?.('#spAddedSalesmanDashboard,.sp-added-salesman-dashboard'))){kickReports();return;}
-    }
-  }
-}).observe(document.documentElement,{childList:true,subtree:true});
+new MutationObserver(kickReports).observe(document.documentElement,{childList:true,subtree:true});
 document.addEventListener('click',e=>{if(e.target.closest?.('#spAddedSalesmanDashboard .sp-added-tab'))kickReports()});
 document.addEventListener('change',e=>{if(e.target?.id==='spLiveCityFilter'||e.target?.id==='spLiveDateFilter')kickReports()});
 setTimeout(kickReports,700);setTimeout(kickReports,1800);
@@ -11829,7 +11782,7 @@ setTimeout(install,300);setTimeout(install,900);
     const w=async function(){const r=await base.apply(this,arguments);await apply();return r};
     w.__v13OffHook=true;w.__v13Original=base;window.shadabSyncSalesmanNow=w;window.sp35SyncNow=w;window.sp35SyncNew=w;
   }
-  function boot(){apply();hookSync();setTimeout(()=>{apply();hookSync()},300);setTimeout(()=>{apply();hookSync()},1200);setTimeout(()=>{apply();hookSync()},2500);setInterval(()=>{if(!document.hidden)guardFunctions(window.__shadabRuntimeFeatureState?.flags);},5000)}
+  function boot(){apply();hookSync();setTimeout(()=>{apply();hookSync()},300);setTimeout(()=>{apply();hookSync()},1200);setTimeout(()=>{apply();hookSync()},2500);setInterval(()=>{if(!document.hidden)guardFunctions(window.__shadabRuntimeFeatureState?.flags);},1500)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
   window.shadabV13RefreshFeaturePermissions=apply;
 })();
@@ -11841,7 +11794,41 @@ setTimeout(install,300);setTimeout(install,900);
 <!-- ===== END SHADAB ADMIN GLOBAL VISIT DELETE + CLEAR HARDENING V3 ===== -->
 
 
-
+<style id="shadab-final-dark-mode-override-2">
+/* FINAL DARK MODE OVERRIDE: must come after legacy/generated global body rules */
+html:has(body.dark), body.dark {
+  background:#080b10 !important;
+  color:#f5f7fa !important;
+  --bg:#080b10 !important;
+  --card:rgba(24,29,37,.62) !important;
+  --card-solid:#171c24 !important;
+  --text:#f5f7fa !important;
+  --muted:#a6afbd !important;
+  --line:rgba(255,255,255,.09) !important;
+}
+body.dark {
+  background:radial-gradient(circle at 10% 0%,rgba(54,200,255,.10),transparent 28%),radial-gradient(circle at 90% 10%,rgba(0,122,255,.10),transparent 25%),#080b10 !important;
+  color:#f5f7fa !important;
+}
+body.dark .topbar, body.dark header, body.dark main, body.dark .card, body.dark .premium-dashboard, body.dark .route-planner, body.dark .record, body.dark .stat, body.dark .overview-card, body.dark .follow-stat, body.dark .dash-stat, body.dark .optional-row, body.dark .offline-bar {
+  color:#f5f7fa !important;
+}
+body.dark .card, body.dark .premium-dashboard, body.dark .route-planner, body.dark .record, body.dark .stat, body.dark .overview-card, body.dark .follow-stat, body.dark .dash-stat, body.dark .optional-row {
+  background:rgba(16,30,43,.92) !important;
+  border-color:rgba(80,190,245,.18) !important;
+}
+body.dark h1, body.dark h2, body.dark h3, body.dark h4, body.dark h5, body.dark h6,
+body.dark p, body.dark span, body.dark label, body.dark small, body.dark strong, body.dark b, body.dark .title, body.dark .subtitle, body.dark .muted, body.dark .section-title {
+  color:inherit;
+}
+body.dark input, body.dark select, body.dark textarea {
+  background:#172330 !important; color:#f5f7fa !important; border-color:rgba(80,190,245,.22) !important;
+}
+body.dark input::placeholder, body.dark textarea::placeholder { color:#9eabb8 !important; opacity:1 !important; }
+body.dark .shadab-menu-panel, body.dark .modal-box { background:#111923 !important; color:#f5f7fa !important; }
+body.dark .shadab-menu-item { color:#f5f7fa !important; }
+body.dark .theme-toggle { background:linear-gradient(135deg,#202733,#11161d) !important; color:#fff !important; }
+</style>
 
 <!-- ===== FINAL HEADER ROUNDED CORNER UI ===== -->
 
@@ -12203,7 +12190,7 @@ body.section-modal-records main>.card#visitRecordsCard{position:fixed!important;
   }
   const oldLive=window.refreshSpAddedSalesmanLive;
   window.refreshSpAddedSalesmanLive=async function(){const r=typeof oldLive==='function'?await oldLive():true;setTimeout(syncHeader,0);return r};
-  setInterval(()=>{if(document.getElementById('spAddedSalesmanDashboard')?.classList.contains('show'))syncHeader()},10000);
+  setInterval(()=>{if(document.getElementById('spAddedSalesmanDashboard')?.classList.contains('show'))syncHeader()},5000);
 })();
 </script>
 <!-- ===== START: V18 FINAL — REALTIME PRESENCE / PROFILE SYNC / 15-MIN DATA SYNC ===== -->
@@ -12343,7 +12330,7 @@ function patchListStatus(){
 // Expose a real presence helper for the existing control center without replacing its data-sync engine.
 window.shadabRealtimePresence={heartbeat,refreshSelectedHeader,onlineFor};
 startPresence();
-setInterval(()=>{refreshSelectedHeader();patchListStatus()},10000);
+setInterval(()=>{refreshSelectedHeader();patchListStatus()},5000);
 })();
 </script>
 <!-- ===== END: V18 FINAL — REALTIME PRESENCE / PROFILE SYNC / 15-MIN DATA SYNC ===== -->
@@ -14218,7 +14205,7 @@ async function startPermissionWatch(){
       const p=await readDoc(permissionUid);
       if(p) setRuntimeFlags(permissionUid,p);
     }catch(e){}
-  },60000);
+  },1000);
 }
 
 function ensurePermissionWatch(){
@@ -14269,7 +14256,7 @@ function ensurePresence(){
 
 function installPresence(){
   if(!presenceSessionTimer){
-    presenceSessionTimer=setInterval(()=>{ensurePresence();ensurePermissionWatch()},10000);
+    presenceSessionTimer=setInterval(()=>{ensurePresence();ensurePermissionWatch()},1000);
   }
   ensurePresence();ensurePermissionWatch();
   window.addEventListener('online',()=>setTimeout(()=>{ensurePresence();ensurePermissionWatch()},500),{passive:true});
@@ -15295,10 +15282,16 @@ function v34MasterRows(kind){
   }catch(e){}
   return [];
 }
-function v34MasterPdf(kind){
-  const rows=v34MasterRows(kind);
+async function v34MasterPdf(kind){
+  let rows=v34MasterRows(kind);
   if(!rows.length)throw new Error('No data available for this Master Field Dashboard report.');
   if(typeof window.shadabExactVisitPDF!=='function')throw new Error('Locked A4 PDF engine is not available.');
+  /* The Master aggregate intentionally stores photoRef instead of Base64.
+     Before PDF generation, hydrate only the rows being exported so the exact
+     existing A4 engine receives the real image bytes. */
+  if(typeof window.__v16PrepareExactPdfDataForTest==='function'){
+    try{rows=await window.__v16PrepareExactPdfDataForTest(rows,typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA'))}catch(e){console.warn('Master PDF photo hydration:',e)}
+  }
   const blob=window.shadabExactVisitPDF(rows,typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA'));
   if(!(blob instanceof Blob)||blob.size<100)throw new Error('PDF engine returned an empty/invalid PDF.');
   return {blob,rows};
@@ -15308,9 +15301,9 @@ function v34MasterName(kind){
   const d=typeof window.todayISO==='function'?window.todayISO():new Date().toLocaleDateString('en-CA');
   return `Shadab-Pharmacy-${String(title).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')}-${d}.pdf`;
 }
-window.downloadMasterFieldReportPDF=function(kind){
+window.downloadMasterFieldReportPDF=async function(kind){
   try{
-    const x=v34MasterPdf(kind),name=v34MasterName(kind),url=URL.createObjectURL(x.blob),a=document.createElement('a');
+    const x=await v34MasterPdf(kind),name=v34MasterName(kind),url=URL.createObjectURL(x.blob),a=document.createElement('a');
     a.href=url;a.download=name;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},60000);
     window.toast35?.(`✓ Master Field PDF downloaded • ${x.rows.length} records`);
@@ -15319,7 +15312,7 @@ window.downloadMasterFieldReportPDF=function(kind){
 };
 window.shareMasterFieldReportPDF=async function(kind){
   try{
-    const x=v34MasterPdf(kind),name=v34MasterName(kind),file=new File([x.blob],name,{type:'application/pdf'});
+    const x=await v34MasterPdf(kind),name=v34MasterName(kind),file=new File([x.blob],name,{type:'application/pdf'});
     if(typeof navigator.share==='function'){
       try{
         await navigator.share({title:'SHADAB PHARMACY — Master Field Dashboard',files:[file]});
@@ -16305,6 +16298,7 @@ async function rebuildMasterAggregateV8(){
       const taskEls=root.querySelectorAll('.sp-added-taskgrid .num');const done=v=>{const st=String(v.status||v.result||'').toLowerCase().trim();return st!==''&&!['planned','assigned','pending'].includes(st)};const order=v=>['order','order received','order done','order taken','with order','order_received','order_done'].includes(String(v.status||v.orderStatus||'').toLowerCase().trim())||[v.order,v.orderReceived,v.orderTaken,v.hasOrder,v.isOrder,v.orderStatus].some(x=>x===true||['yes','true','received','done','order'].includes(String(x??'').toLowerCase().trim()));const selectedName=String(document.getElementById('spV32MasterTaskSalesman')?.value||(()=>{try{return localStorage.getItem('sp_v32_master_task_salesman')||''}catch(e){return ''}})()).trim();const selected=selectedName?salesmen.find(x=>norm(x.name)===norm(selectedName)):null;const tv=selected?visits.filter(v=>String(v.uid||'')===String(selected.uid||'')&&done(v)&&(!String(v.visitedBy||v.salesman||v.salesmanName||'').trim()||norm(v.visitedBy||v.salesman||v.salesmanName)===norm(selected.name))):visits.filter(done);const to=tv.filter(order);const seen=new Set(tv.map(v=>String(v.uid)+'::'+String(v.area||'')+'::'+String(v.store||v.name||'').toLowerCase()));const rem=selected?plannedToday.filter(v=>String(v.uid||'')===String(selected.uid||'')&&!seen.has(String(v.uid)+'::'+String(v.area||'')+'::'+String(v.store||v.name||'').toLowerCase())):plannedToday.filter(v=>!seen.has(String(v.uid)+'::'+String(v.area||'')+'::'+String(v.store||v.name||'').toLowerCase()));const plannedCount=selected?plannedToday.filter(v=>String(v.uid||'')===String(selected.uid||'')).length:plannedToday.length;[plannedCount,tv.length,to.length,rem.length].forEach((n,i)=>{if(taskEls[i])taskEls[i].textContent=String(n)});
       const sel=document.getElementById('spV32MasterTaskSalesman');if(sel){const old=sel.value;sel.innerHTML=salesmen.map(x=>'<option value="'+String(x.name).replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+String(x.name).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))+'</option>').join('');if(old&&salesmen.some(x=>norm(x.name)===norm(old)))sel.value=old;}
     }
+    try{await window.__shadabHydrateMasterDashboardPhotos?.()}catch(e){}
     return cache;
   })();
   try{return await aggregateBusy}finally{aggregateBusy=null}
@@ -16323,7 +16317,14 @@ function installSelectedTaskReader(){
   const sel=document.getElementById('spV32MasterTaskSalesman');if(!sel||sel.dataset.v8Reader==='1')return;
   sel.dataset.v8Reader='1';sel.addEventListener('change',async()=>{
     const p=(window.__spMasterAggregateCache?.salesmen||[]).find(x=>norm(x.name)===norm(sel.value));if(!p)return;
-    const rows=await readToday(p.uid);const root=document.getElementById('spAddedMasterDashboard');if(!root)return;
+    let rows=[];
+    try{rows=await readToday(p.uid)}catch(e){
+      const msg='Selected salesman visit read failed — '+(e?.message||e);
+      try{window.toast35?.('✕ '+msg)}catch(_){}
+      console.warn('Selected salesman dashboard read:',e);
+      return;
+    }
+    const root=document.getElementById('spAddedMasterDashboard');if(!root)return;
     const done=v=>{const st=String(v.status||v.result||'').toLowerCase().trim();return st!==''&&!['planned','assigned','pending'].includes(st)};
     const order=v=>['order','order received','order done','order taken','with order','order_received','order_done'].includes(norm(v.status||v.orderStatus))||[v.order,v.orderReceived,v.orderTaken,v.hasOrder,v.isOrder,v.orderStatus].some(x=>x===true||['yes','true','received','done','order'].includes(norm(x)));
     const vv=rows.filter(v=>{const owner=String(v.visitedBy||v.salesman||v.salesmanName||'').trim();return done(v)&&(!owner||norm(owner)===norm(p.name))});const oo=vv.filter(order);
@@ -16336,6 +16337,14 @@ installSelectedTaskReader();setTimeout(installSelectedTaskReader,600);setTimeout
 window.shadabHydrateSelectedVisitPhotos=async function(){
   const c=window.__spMasterAggregateCache;const sel=document.getElementById('spV32MasterTaskSalesman');const p=(c?.salesmen||[]).find(x=>norm(x.name)===norm(sel?.value));if(!p||!Array.isArray(c.visits))return c;
   const mine=c.visits.filter(v=>String(v.uid)===String(p.uid)&&v.photoRef);await Promise.all(mine.map(async v=>{const d=await readPhoto(v.photoRef);if(d)v.photo=d;}));return c;
+};
+window.__shadabHydrateMasterDashboardPhotos=async function(){
+  const c=window.__spMasterAggregateCache;
+  if(!c||!Array.isArray(c.visits))return c;
+  const targets=c.visits.filter(v=>v?.photoRef&&!v?.photo);
+  await Promise.all(targets.map(async v=>{try{const d=await readPhoto(v.photoRef);if(d)v.photo=d}catch(e){console.warn('Master dashboard photo read:',v.photoRef,e)}}));
+  try{window.renderRecords?.();}catch(e){}
+  return c;
 };
 window.addEventListener('load',()=>setTimeout(()=>{try{installSelectedTaskReader();if(String(session()?.email||'').toLowerCase()===ADMIN)window.rebuildMasterAggregate?.()}catch(e){}},900));
 })();
@@ -18766,6 +18775,10 @@ async function rebuildMasterAggregateV12(){
     stats:{today:todayCount,week:weekCount,month:monthCount,uniqueStores:uniqueStoresSet.size}
   };
   window.__spMasterAggregateCache=cache;
+  /* Hydrate only the current day's photo refs for the visible Master dashboard.
+     This keeps Base64 out of Firestore visit_days while making dashboard/PDF
+     consumers receive the actual image when available. */
+  try{await window.__shadabHydrateMasterDashboardPhotos?.()}catch(e){}
 
   const root=document.getElementById('spAddedMasterDashboard');
   if(root){
@@ -18776,6 +18789,24 @@ async function rebuildMasterAggregateV12(){
   }
   return cache;
 }
+
+/* V12 is the authoritative Master Dashboard aggregate.
+   It reads today's visit_days directly and uses the compact visitStats written by
+   the same visit_days transport for Week/Month/Unique counts. The older V8
+   aggregate remains in the file for backwards compatibility but is no longer
+   the public dashboard owner. */
+window.rebuildMasterAggregate = rebuildMasterAggregateV12;
+window.syncMasterFieldDashboard = async function(){
+  const b=document.getElementById('spMasterDashboardSyncBtn');
+  if(b)b.disabled=true;
+  try{
+    const c=await rebuildMasterAggregateV12();
+    const st=document.getElementById('spMasterDashboardSyncStatus');
+    if(st)st.textContent='Synced '+c.salesmen.length+' accounts • '+c.visits.length+' today visits';
+    return c;
+  }finally{if(b)b.disabled=false;}
+};
+window.refreshSpAddedMaster=window.syncMasterFieldDashboard;
 
 /* ---------- V12 cloud sync: one authoritative salesman transport ---------- */
 let syncBusyV12=null;
@@ -19222,11 +19253,7 @@ body.sp-function-open #spAdminExact41.sp-open {
   window.__shadabSyncFunctionShell=syncFunctionShell;
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',syncFunctionShell,{once:true});
   else syncFunctionShell();
-  let shellTimer=0;
-  const mo=new MutationObserver(function(){
-    if(shellTimer)return;
-    shellTimer=setTimeout(()=>{shellTimer=0;syncFunctionShell()},120);
-  });
+  const mo=new MutationObserver(function(){syncFunctionShell()});
   try{mo.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','aria-hidden']})}catch(e){}
 })();
 </script>
@@ -20099,26 +20126,26 @@ function mountAdminGridCard(){
   const grid=$('spAdminCCGrid');if(!grid||grid.querySelector('[data-company-contact-control]'))return;const card=document.createElement('button');card.className='sp-cc-card';card.type='button';card.setAttribute('data-company-contact-control','1');card.innerHTML='<span class="ic">☎</span><span><b>Company Contacts Control</b><small>Companies, contacts, import &amp; export</small></span>';card.onclick=()=>openModal('admin');grid.appendChild(card);
 }
 function install(){buildModal();buildEditor();mountFieldCard();mountMasterMainCard();mountAdminGridCard()}
-let ccMountTimer=0;
-function scheduleCompanyContactsMount(){
-  if(ccMountTimer)return;
-  ccMountTimer=setTimeout(()=>{ccMountTimer=0;try{mountFieldCard();mountMasterMainCard();mountAdminGridCard()}catch(e){}},150);
-}
-const observer=new MutationObserver(records=>{
-  let relevant=false;
-  for(const rec of records){
-    if(rec.target?.closest?.('#sharedDocsDashboard,#spAddedDashboardShortcuts,#spAdminCCGrid')){relevant=true;break;}
-    for(const n of Array.from(rec.addedNodes||[])){
-      if(n.nodeType===1 && (n.matches?.('#sharedDocsDashboard,#spAddedDashboardShortcuts,#spAdminCCGrid') || n.querySelector?.('#sharedDocsDashboard,#spAddedDashboardShortcuts,#spAdminCCGrid'))){relevant=true;break;}
-    }
-    if(relevant)break;
-  }
-  if(relevant)scheduleCompanyContactsMount();
-});
+const observer=new MutationObserver(()=>{try{mountFieldCard();mountMasterMainCard();mountAdminGridCard()}catch(e){}});
 if(document.body)observer.observe(document.body,{childList:true,subtree:true});else document.addEventListener('DOMContentLoaded',()=>observer.observe(document.body,{childList:true,subtree:true}),{once:true});
 document.addEventListener('click',e=>{if(e.target?.closest?.('#spAdminCCLauncher'))setTimeout(mountAdminGridCard,100);if(e.target?.closest?.('#spCompanyContactsMainControl'))setTimeout(()=>openModal('admin'),0)},true);
 window.addEventListener('load',()=>setTimeout(install,200));window.addEventListener('focus',()=>{if($('spCompanyContactsModal')?.classList.contains('sp-cc-open'))loadRemote(false)});
 window.spCompanyContacts={open:openModal,close:closeModal,refresh:loadRemote};
+})();
+</script>
+
+<script id="shadab-final-master-aggregate-v12-authority">
+(function(){
+  /* Final authority only: keep the already-defined V12 aggregate as the public
+     Master Dashboard source after later clear-dashboard wrappers are installed. */
+  if(typeof window.rebuildMasterAggregate==='function' && /visit_days/.test(String(window.rebuildMasterAggregate))){
+    const active=window.rebuildMasterAggregate;
+    window.syncMasterFieldDashboard=async function(){
+      const b=document.getElementById('spMasterDashboardSyncBtn');if(b)b.disabled=true;
+      try{return await active()}finally{if(b)b.disabled=false}
+    };
+    window.refreshSpAddedMaster=window.syncMasterFieldDashboard;
+  }
 })();
 </script>
 <!-- ===== END COMPANY CONTACTS — ISOLATED FEATURE ONLY ===== -->
