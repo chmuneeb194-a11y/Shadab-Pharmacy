@@ -8829,11 +8829,12 @@ body.dark .topbar{
     if (typeof window.rows === 'function') return window.rows(getKind(k));
     throw new Error('Master report data engine is not loaded.');
   };
-  const makeBlob = k => {
+  const makeBlob = async k => {
     const rows = getRows(k);
     if (!Array.isArray(rows) || !rows.length) throw new Error('No records are available for this report yet.');
     if (typeof window.shadabExactVisitPDF !== 'function') throw new Error('PDF engine is not loaded.');
-    const blob = window.shadabExactVisitPDF(rows, getKind(k));
+    const prepared = typeof window.shadabPrepareExactPdfRows === 'function' ? await window.shadabPrepareExactPdfRows(rows) : rows;
+    const blob = window.shadabExactVisitPDF(prepared, getKind(k));
     if (!(blob instanceof Blob) || blob.size < 100) throw new Error('PDF engine returned an empty/invalid PDF.');
     return blob;
   };
@@ -8862,9 +8863,9 @@ body.dark .topbar{
     setTimeout(()=>URL.revokeObjectURL(url),60000);
     return clicked;
   };
-  window.spFinalDownloadPdf = function(kind){
+  window.spFinalDownloadPdf = async function(kind){
     try {
-      const k=getKind(kind), blob=makeBlob(k), name=filename(k);
+      const k=getKind(kind), blob=await makeBlob(k), name=filename(k);
       triggerDownload(blob,name);
       toast(`✓ PDF download started • ${blob.size} bytes`);
       return true;
@@ -8874,17 +8875,17 @@ body.dark .topbar{
       return false;
     }
   };
-  window.spFinalSharePdf = function(kind){
+  window.spFinalSharePdf = async function(kind){
     const k=getKind(kind);
     try {
-      const blob=makeBlob(k), name=filename(k), file=new File([blob],name,{type:'application/pdf'});
+      const blob=await makeBlob(k), name=filename(k), file=new File([blob],name,{type:'application/pdf'});
       const shareData={title:'SHADAB PHARMACY — '+title(k), text:title(k), files:[file]};
       if (typeof navigator.share === 'function') {
         let supported=true;
         try { if (typeof navigator.canShare==='function') supported=navigator.canShare({files:[file]}); } catch(e) { supported=true; }
         if (supported) {
           // Keep navigator.share directly in the user-click path.
-          navigator.share(shareData).then(()=>toast('✓ Share sheet opened — choose WhatsApp')).catch(e=>{
+          await navigator.share(shareData).then(()=>toast('✓ Share sheet opened — choose WhatsApp')).catch(e=>{
             if (e?.name==='AbortError') return;
             try {
               triggerDownload(blob,name);
@@ -11398,7 +11399,7 @@ async function setFlags(next){const st=$('spLiveControlStatus');let before=null,
  // Restore the last authoritative Firebase state on failure.
  try{if(selectedUid){const actual=await readDoc('salesmen/'+encodeURIComponent(selectedUid));if(actual){selectedProfile={...actual};cachePut(profileCache,selectedUid,selectedProfile);profiles=profiles.map(x=>x.uid===selectedUid?{...x,...selectedProfile}:x);updateHeader();renderList();renderTab();}}}catch(_e){}
  if(st){st.textContent='✕ Firebase save failed: '+(e.message||e);st.className='sp-live-status err'}toast('✕ Feature control sync failed')}}
-async function reportPdf(share){try{const fresh=selectedData||await readDoc('user_data/'+encodeURIComponent(selectedUid))||{};const allRows=visitsOf(fresh).map(v=>{const city=cityOfVisit(v);return {...v,city,area:v.area||city,visitedBy:profileName(selectedProfile,selectedUid),status:v.status||'Completed'}});const rows=filteredVisits(allRows);if(!rows.length){const z=$('spLiveReportStatus');if(z){const bits=[];if(selectedCity!=='ALL')bits.push(selectedCity);if(selectedDate!=='ALL')bits.push(selectedDate);z.textContent=bits.length?'No visit records found for '+bits.join(' • ')+'.':'No visit records found for this salesman in Firebase.';z.className='sp-live-status err'}return}if(typeof window.shadabExactVisitPDF!=='function')throw new Error('Locked A4 PDF engine is not available.');const pdfDate=selectedDate==='ALL'?new Date().toISOString().slice(0,10):selectedDate;const blob=window.shadabExactVisitPDF(rows,pdfDate);if(!(blob instanceof Blob))throw new Error('PDF engine returned invalid data.');const safe=profileName(selectedProfile,selectedUid).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'Salesman';const citySafe=selectedCity==='ALL'?'All-Cities':selectedCity.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g);const dateSafe=selectedDate==='ALL'?'All-Dates':selectedDate;const name='Shadab-Pharmacy-'+safe+'-'+citySafe+'-'+dateSafe+'-Visit-Report.pdf';const reportLabel=profileName(selectedProfile,selectedUid)+' Visit Report'+(selectedCity==='ALL'?'':(' — '+selectedCity))+(selectedDate==='ALL'?'':(' — '+selectedDate));if(share&&typeof navigator.share==='function'){const file=new File([blob],name,{type:'application/pdf'});let can=true;try{if(navigator.canShare)can=navigator.canShare({files:[file]})}catch(e){can=false}if(can){await navigator.share({title:'SHADAB PHARMACY — '+profileName(selectedProfile,selectedUid),text:reportLabel,files:[file]});$('spLiveReportStatus').textContent='✓ Same A4 PDF shared — select WhatsApp';return}}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);if(share)window.location.href='whatsapp://send?text='+encodeURIComponent('SHADAB PHARMACY — '+reportLabel+'\nPDF downloaded: '+name+'\nPlease attach the PDF.');$('spLiveReportStatus').textContent=share?'✓ PDF downloaded — WhatsApp opened':'✓ A4 PDF downloaded'}catch(e){if(e?.name==='AbortError')return;const x=$('spLiveReportStatus');if(x){x.textContent='✕ PDF/WhatsApp failed: '+(e.message||e);x.className='sp-live-status err'}}}
+async function reportPdf(share){try{const fresh=selectedData||await readDoc('user_data/'+encodeURIComponent(selectedUid))||{};const allRows=visitsOf(fresh).map(v=>{const city=cityOfVisit(v);return {...v,city,area:v.area||city,visitedBy:profileName(selectedProfile,selectedUid),status:v.status||'Completed'}});const rows=filteredVisits(allRows);if(!rows.length){const z=$('spLiveReportStatus');if(z){const bits=[];if(selectedCity!=='ALL')bits.push(selectedCity);if(selectedDate!=='ALL')bits.push(selectedDate);z.textContent=bits.length?'No visit records found for '+bits.join(' • ')+'.':'No visit records found for this salesman in Firebase.';z.className='sp-live-status err'}return}if(typeof window.shadabExactVisitPDF!=='function')throw new Error('Locked A4 PDF engine is not available.');const pdfDate=selectedDate==='ALL'?new Date().toISOString().slice(0,10):selectedDate;const prepared=typeof window.shadabPrepareExactPdfRows==='function'?await window.shadabPrepareExactPdfRows(rows):rows;const blob=window.shadabExactVisitPDF(prepared,pdfDate);if(!(blob instanceof Blob))throw new Error('PDF engine returned invalid data.');const safe=profileName(selectedProfile,selectedUid).replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'Salesman';const citySafe=selectedCity==='ALL'?'All-Cities':selectedCity.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g);const dateSafe=selectedDate==='ALL'?'All-Dates':selectedDate;const name='Shadab-Pharmacy-'+safe+'-'+citySafe+'-'+dateSafe+'-Visit-Report.pdf';const reportLabel=profileName(selectedProfile,selectedUid)+' Visit Report'+(selectedCity==='ALL'?'':(' — '+selectedCity))+(selectedDate==='ALL'?'':(' — '+selectedDate));if(share&&typeof navigator.share==='function'){const file=new File([blob],name,{type:'application/pdf'});let can=true;try{if(navigator.canShare)can=navigator.canShare({files:[file]})}catch(e){can=false}if(can){await navigator.share({title:'SHADAB PHARMACY — '+profileName(selectedProfile,selectedUid),text:reportLabel,files:[file]});$('spLiveReportStatus').textContent='✓ Same A4 PDF shared — select WhatsApp';return}}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);if(share)window.location.href='whatsapp://send?text='+encodeURIComponent('SHADAB PHARMACY — '+reportLabel+'\nPDF downloaded: '+name+'\nPlease attach the PDF.');$('spLiveReportStatus').textContent=share?'✓ PDF downloaded — WhatsApp opened':'✓ A4 PDF downloaded'}catch(e){if(e?.name==='AbortError')return;const x=$('spLiveReportStatus');if(x){x.textContent='✕ PDF/WhatsApp failed: '+(e.message||e);x.className='sp-live-status err'}}}
 
 function bindTabEvents(){
  $('spLiveEnableAll')?.addEventListener('click',()=>setFlags(Object.fromEntries(FEATURE_META.map(f=>[f.key,true]))));
