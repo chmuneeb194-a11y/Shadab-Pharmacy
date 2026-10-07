@@ -3476,7 +3476,35 @@ function applyScheduledTasksForSalesman(salesman,force=false){
  const rs=document.getElementById("routeAssignedSummary");if(rs)rs.innerHTML=`<b>${esc(salesman)}</b><div class="admin-assignment-meta">${activeAssignments.map(a=>`<span>📍 ${esc(a.area)}</span><span>🛣️ ${esc(a.town||"Route")}</span><span>🧭 ${(a.days[dayName]||[]).length} territories</span>`).join("")}<span>🏪 ${scheduled.length} stores</span></div>`;
  renderTodayTasks();updatePremiumDashboard();
 }
-function onSalesmanChanged(){const salesman=document.getElementById("visitedBy")?.value||"";localStorage.setItem("shadab_current_salesman_v1",salesman);ensureSalesmanOptions();const d=adminSchedules[salesman];if(d){const normalized=normalizeAdminSchedule(salesman),day=new Date().toLocaleDateString("en-US",{weekday:"long"}),active=normalized.assignments.filter(a=>a.dayEnabled?.[day]!==false&&Array.isArray(a.days?.[day])&&a.days[day].length);const first=active[0]||normalized.assignments[0];document.getElementById("area").value=first?.area||"Sahiwal";refreshTerritories();const assigned=first?.days?.[day]||[];setSelectedTerritories(assigned);localStorage.setItem("shadab_current_territories_v1",JSON.stringify({salesman,area:first?.area||"Sahiwal",territories:assigned}));applyScheduledTasksForSalesman(salesman,true);showStoreSuggestions()}else{const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();const area=(saved&&saved.salesman===salesman&&saved.area)||localStorage.getItem("shadab_current_area_v1")||"Sahiwal";document.getElementById("area").value=area;refreshTerritories(saved&&saved.salesman===salesman?saved.territories||[]:[]);const rs=document.getElementById("routeAssignedSummary");if(rs)rs.innerHTML='<span class="field-manager-badge">No Field Manager assignment for this salesman</span>';showStoreSuggestions();renderTodayTasks();updatePremiumDashboard()}}
+function onSalesmanChanged(){
+ const salesman=document.getElementById("visitedBy")?.value||"";
+ localStorage.setItem("shadab_current_salesman_v1",salesman);
+ ensureSalesmanOptions();
+ const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();
+ const hasSavedContext=!!(saved&&saved.salesman===salesman&&saved.area);
+ const d=adminSchedules[salesman];
+ if(d){
+   const normalized=normalizeAdminSchedule(salesman),day=new Date().toLocaleDateString("en-US",{weekday:"long"}),active=normalized.assignments.filter(a=>a.dayEnabled?.[day]!==false&&Array.isArray(a.days?.[day])&&a.days[day].length);
+   const first=active[0]||normalized.assignments[0];
+   const area=hasSavedContext?saved.area:(first?.area||"Sahiwal");
+   const territories=hasSavedContext?(Array.isArray(saved.territories)?saved.territories:[]):(first?.days?.[day]||[]);
+   document.getElementById("area").value=area;
+   refreshTerritories(territories);
+   setSelectedTerritories(territories);
+   localStorage.setItem("shadab_current_territories_v1",JSON.stringify({salesman,area,territories}));
+   localStorage.setItem("shadab_current_area_v1",area);
+   applyScheduledTasksForSalesman(salesman,true);
+   showStoreSuggestions();
+ }else{
+   const area=hasSavedContext?saved.area:(localStorage.getItem("shadab_current_area_v1")||"Sahiwal");
+   const territories=hasSavedContext?(Array.isArray(saved.territories)?saved.territories:[]):[];
+   document.getElementById("area").value=area;
+   refreshTerritories(territories);
+   setSelectedTerritories(territories);
+   const rs=document.getElementById("routeAssignedSummary");if(rs)rs.innerHTML='<span class="field-manager-badge">No Field Manager assignment for this salesman</span>';
+   showStoreSuggestions();renderTodayTasks();updatePremiumDashboard();
+ }
+}
 
 /* ===== START: SMART ADMIN LIVE EDIT HOOKS ===== */
 document.addEventListener("change",e=>{
@@ -20380,6 +20408,303 @@ body.section-modal-records main>.card#visitRecordsCard,
 }
 </style>
 <!-- ===== END DESKTOP ONLY BOTTOM NAV FIX ===== -->
+
+
+<!-- ===== COMPANY CONTACTS — ISOLATED FEATURE ONLY ===== -->
+<style id="sp-company-contacts-feature-css">
+#spCompanyContactsFieldCard{grid-column:1/-1!important;width:100%!important;box-sizing:border-box}
+#spCompanyContactsMainControl{width:100%!important;box-sizing:border-box}
+#spCompanyContactsModal{position:fixed!important;inset:0!important;z-index:2147483647!important;display:none!important;align-items:center!important;justify-content:center!important;padding:12px!important;box-sizing:border-box!important;background:rgba(0,10,18,.76)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important}
+#spCompanyContactsModal.sp-cc-open{display:flex!important}
+#spCompanyContactsShell{width:min(980px,100%);height:min(92dvh,900px);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(90,205,255,.30);border-radius:26px;background:linear-gradient(145deg,rgba(8,30,44,.99),rgba(5,17,28,.99));box-shadow:0 30px 90px rgba(0,0,0,.50),0 0 45px rgba(20,190,255,.18);color:#f4fbff}
+#spCompanyContactsHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(130,220,255,.14);background:linear-gradient(145deg,rgba(8,43,64,.88),rgba(7,25,39,.82))}
+.sp-cc-head-copy{min-width:0}.sp-cc-head-kicker{display:block;color:#3ecfff;font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase}.sp-cc-head-copy h2{margin:3px 0 2px;font-size:21px;line-height:1.1}.sp-cc-head-copy small{display:block;color:#a9c2d3;font-size:11px}
+.sp-cc-head-actions{display:flex;gap:8px;align-items:center}.sp-cc-head-btn{appearance:none;border:1px solid rgba(95,205,255,.28);background:rgba(18,68,94,.65);color:#fff;border-radius:14px;min-width:46px;min-height:46px;font-weight:900;font-size:20px;cursor:pointer}.sp-cc-head-btn.danger{background:rgba(130,32,50,.68);border-color:rgba(255,95,125,.36)}
+#spCompanyContactsToolbar{display:none;gap:8px;flex-direction:column;padding:12px 14px;border-bottom:1px solid rgba(130,220,255,.12);background:rgba(5,23,35,.82)}
+#spCompanyContactsModal.sp-cc-admin #spCompanyContactsToolbar{display:flex}
+.sp-cc-wide-btn{width:100%!important;min-height:48px!important;border-radius:15px!important;border:1px solid rgba(95,205,255,.28)!important;background:linear-gradient(135deg,rgba(10,111,188,.92),rgba(37,74,174,.92))!important;color:#fff!important;font-weight:900!important;font-size:14px!important;cursor:pointer!important;box-shadow:0 10px 24px rgba(0,100,180,.18),inset 0 1px 0 rgba(255,255,255,.12)!important}
+.sp-cc-wide-btn.secondary{background:linear-gradient(135deg,rgba(10,53,78,.96),rgba(7,35,53,.98))!important}
+.sp-cc-wide-btn.green{background:linear-gradient(135deg,rgba(0,137,90,.95),rgba(0,79,66,.98))!important;border-color:rgba(40,242,157,.32)!important}
+#spCompanyContactsBody{flex:1;overflow:auto;padding:14px;overscroll-behavior:contain}
+#spCompanyContactsList{display:grid;gap:11px}
+.sp-company-card{width:100%;box-sizing:border-box;padding:15px;border:1px solid rgba(140,220,255,.20);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.025));box-shadow:0 12px 30px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.08);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.sp-company-card:active{transform:scale(.995)}
+.sp-company-top{display:flex;align-items:center;gap:12px}.sp-company-icon{width:58px;height:58px;min-width:58px;border-radius:19px;display:grid;place-items:center;background:linear-gradient(145deg,#06b8ff 0%,#2679f5 52%,#874dff 100%);box-shadow:0 13px 30px rgba(17,137,255,.28),inset 0 1px 0 rgba(255,255,255,.34);font-size:15px;font-weight:1000;letter-spacing:-.03em;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);position:relative;overflow:hidden}.sp-company-icon:after{content:'';position:absolute;inset:1px;border-radius:18px;border:1px solid rgba(255,255,255,.16);pointer-events:none}.sp-company-name{min-width:0;flex:1}.sp-company-name b{display:block;font-size:16px;line-height:1.2}.sp-company-name small{display:block;margin-top:4px;color:#a9c5d6;font-size:10px}
+.sp-company-actions{display:flex;gap:6px}.sp-company-action{border:1px solid rgba(110,210,255,.25);background:rgba(14,53,73,.72);color:#fff;border-radius:12px;min-width:40px;min-height:40px;font-weight:900;cursor:pointer}.sp-company-action.danger{border-color:rgba(255,93,118,.34);background:rgba(114,31,45,.66)}
+.sp-contact-list{display:grid;gap:7px;margin-top:12px}.sp-contact-row{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid rgba(130,210,255,.12);border-radius:15px;background:rgba(4,24,36,.72)}.sp-contact-main{min-width:0;flex:1}.sp-contact-main b{display:block;font-size:13px}.sp-contact-main button{display:block;margin:2px 0 0;padding:0;border:0;background:none;color:#6bdcff;font:800 12px/1.2 system-ui;cursor:pointer}.sp-contact-actions{display:flex;gap:6px}.sp-contact-actions button{border:1px solid rgba(110,210,255,.22);background:rgba(16,57,78,.75);color:#fff;border-radius:11px;min-width:38px;min-height:38px;font-weight:900;cursor:pointer}.sp-contact-actions .danger{border-color:rgba(255,93,118,.34);background:rgba(114,31,45,.66)}
+#spCompanyContactsEditor{display:none;position:fixed;inset:0;z-index:2147483648;background:rgba(0,10,18,.74);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);align-items:center;justify-content:center;padding:14px;box-sizing:border-box}
+#spCompanyContactsEditor.sp-show{display:flex}.sp-cc-editor{width:min(560px,100%);border-radius:24px;border:1px solid rgba(100,210,255,.28);background:linear-gradient(145deg,#0a2a3f,#061926);box-shadow:0 28px 80px rgba(0,0,0,.52);padding:16px}.sp-cc-editor h3{margin:0 0 12px}.sp-cc-field{margin-top:10px}.sp-cc-field label{display:block;font-size:11px;font-weight:800;color:#b9d0df;margin:0 0 5px}.sp-cc-field input,.sp-cc-field select{width:100%;box-sizing:border-box;height:48px;border-radius:14px;border:1px solid rgba(105,205,255,.22);background:#0d2232;color:#fff;padding:0 13px;font-size:15px;outline:none}.sp-cc-field select{appearance:auto;-webkit-appearance:auto}.sp-cc-field select:disabled{opacity:.72}.sp-cc-editor-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.sp-cc-empty{padding:32px 12px;text-align:center;color:#9db5c5}.sp-cc-status{margin:2px 14px 0;color:#8fb5c8;font-size:10px}
+.sp-cc-phone-picker{width:100%;min-height:48px;margin-top:9px;border-radius:15px;border:1px solid rgba(84,211,255,.34);background:linear-gradient(135deg,rgba(8,73,103,.98),rgba(8,43,66,.98));color:#fff;font-weight:900;font-size:13px;letter-spacing:.01em;cursor:pointer;box-shadow:0 9px 22px rgba(0,89,130,.18),inset 0 1px 0 rgba(255,255,255,.10)}.sp-cc-phone-picker:active{transform:scale(.995)}.sp-cc-phone-picker:disabled{opacity:.62;cursor:wait}
+@media(max-width:680px){#spCompanyContactsShell{height:94dvh;border-radius:22px}.sp-company-actions{flex-wrap:wrap}.sp-company-action{min-width:38px}.sp-cc-editor-actions{grid-template-columns:1fr}}
+</style>
+<style id="sp-company-contacts-editor-message-css">
+.sp-cc-editor-message{display:none;margin:2px 0 4px;padding:10px 12px;border-radius:12px;font-size:13px;font-weight:700;text-align:center;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);color:#8ff0c4}.sp-cc-editor-message.ok,.sp-cc-editor-message.error{display:block}.sp-cc-editor-message.error{background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.4);color:#ff9caf}
+</style>
+<style id="sp-company-contacts-save-state-css">
+#spCompanyEditorSave.sp-cc-saving{opacity:.78;pointer-events:none;display:flex;align-items:center;justify-content:center;gap:9px}
+.sp-cc-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spCCSpin .75s linear infinite}
+@keyframes spCCSpin{to{transform:rotate(360deg)}}
+</style>
+<script id="sp-company-contacts-feature-js">
+(function(){
+'use strict';
+const PATH='app_settings/companyContacts';
+const LEGACY_PATH='sharedDocuments/companyContacts';
+const MASTER_PATH='app_settings/masterData';
+const ADMIN='master@shadabpharmacy.com';
+const LOCAL='shadab_company_contacts_cache_v2';
+const TOMBSTONE_LOCAL='shadab_company_contacts_tombstones_v1';
+const DEFAULT_COMPANIES=[
+  'A.N.Z',"A'RAF (PVT) LTD.",'AXIOM PHARMACEUTICALS.','BIO NIAZ PHARMA','BLESS LABORATORIES.',
+  'BROOKLYN INTERNATIONAL','CANDID PHARMA','CELL LABORATORIES (PVT) LTD.','CRESCENT PHARMA','DERMSOL PHARMA.',
+  'GENTEK PHARMA','Hisun pvt ltd','JOHN FOSTER',
+  "LINTA PHARMACEUTICAL'S","MARZEH PHRMACEUTICAL'S",'MINDCARE PHARMA',"MM.PHARMACEUTICAL'S",
+  'NOVOTEK PHARMA','NUTRIFY BY SAKOON',"PAKISTAN PHARMACEUTICAL'S","PHARMEGO PHARMACEUTICAL'S",
+  'S.P.B PHARMACEUTICAL','SALWAY HEALTH CARE',"SALWAY PHARMACEUTICAL'S",'SEMOS PHARMACEUTICALS',
+  'TITLIS PHARMA','VAN SERVICE .','WINLET PHARMA'
+];
+let contacts=[];
+let mode='main';
+let editor={type:'',companyId:'',contactId:''};
+let saveChain=Promise.resolve();
+const $=id=>document.getElementById(id);
+const toast=m=>{try{window.toast35?.(m)}catch(e){}try{window.toast?.(m)}catch(e){}};
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const sid=v=>String(v||'').replace(/[^a-zA-Z0-9_-]/g,'_');
+const uid=()=>{try{return crypto.randomUUID()}catch(e){return 'cc_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}};
+const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+function isAdmin(){const s=session();return !!s?.uid&&String(s.email||'').toLowerCase()===ADMIN;}
+function normalizePhone(v){return String(v||'').trim().replace(/[^0-9+]/g,'')}
+function dial(v){const p=normalizePhone(v);if(!p)return;window.location.href='tel:'+p}
+function normalizeData(value){
+  const list=Array.isArray(value)?value:[];
+  return list.map(c=>({id:String(c?.id||uid()),name:String(c?.name||'Unnamed Company').trim()||'Unnamed Company',contacts:(Array.isArray(c?.contacts)?c.contacts:[]).map(x=>({id:String(x?.id||uid()),name:String(x?.name||'Contact').trim()||'Contact',phone:String(x?.phone||'').trim()}))})).filter(c=>c.name);
+}
+function companyInitials(name){
+  const words=String(name||'').replace(/[^A-Za-z0-9 ]/g,' ').trim().split(/\s+/).filter(Boolean);
+  if(!words.length)return 'CC';
+  if(words.length===1)return words[0].slice(0,2).toUpperCase();
+  return (words[0][0]+words[1][0]).toUpperCase();
+}
+function withDefaultCompanies(list){
+  const next=normalizeData(list);
+  const byName=new Map(next.map(c=>[c.name.trim().toLowerCase(),c]));
+  DEFAULT_COMPANIES.forEach(name=>{const key=name.toLowerCase();if(!byName.has(key)){const c={id:uid(),name,contacts:[]};next.push(c);byName.set(key,c)}});
+  return next;
+}
+function tombstoneKeyCompany(c){return String(c?.name||'').trim().toLowerCase()}
+function tombstoneKeyContact(company,contact){return tombstoneKeyCompany(company)+'|'+String(contact?.phone||'').trim().replace(/[^0-9+]/g,'')+'|'+String(contact?.name||'').trim().toLowerCase()}
+function loadTombstones(){try{const x=JSON.parse(localStorage.getItem(TOMBSTONE_LOCAL)||'{}');return {companies:new Set(Array.isArray(x.companies)?x.companies:[]),contacts:new Set(Array.isArray(x.contacts)?x.contacts:[])}}catch(e){return {companies:new Set(),contacts:new Set()}}}
+let tombstones=loadTombstones();
+function saveTombstones(){try{localStorage.setItem(TOMBSTONE_LOCAL,JSON.stringify({companies:[...tombstones.companies],contacts:[...tombstones.contacts]}))}catch(e){}}
+function localSave(){try{localStorage.setItem(LOCAL,JSON.stringify(contacts))}catch(e){}}
+function localLoad(){try{return normalizeData(JSON.parse(localStorage.getItem(LOCAL)||'[]'))}catch(e){return[]}}
+function mergeLists(lists){
+  const out=[];const byName=new Map();
+  for(const list of lists){for(const raw of normalizeData(list)){const key=tombstoneKeyCompany(raw);if(!key||tombstones.companies.has(key))continue;let c=byName.get(key);if(!c){c={id:String(raw.id||uid()),name:raw.name,contacts:[]};byName.set(key,c);out.push(c)}
+      const byContact=new Map(c.contacts.map(x=>[tombstoneKeyContact(c,x),x]));
+      for(const p of raw.contacts||[]){const pk=tombstoneKeyContact(c,p);if(!p?.phone||tombstones.contacts.has(pk))continue;if(!byContact.has(pk)){const cp={id:String(p.id||uid()),name:String(p.name||'Contact').trim()||'Contact',phone:String(p.phone||'').trim()};c.contacts.push(cp);byContact.set(pk,cp)}}
+    }}
+  return out;
+}
+function withDefaultCompanies(list){
+  const next=mergeLists([list]);const byName=new Map(next.map(c=>[tombstoneKeyCompany(c),c]));
+  DEFAULT_COMPANIES.forEach(name=>{const key=name.toLowerCase();if(!tombstones.companies.has(key)&&!byName.has(key)){const c={id:uid(),name,contacts:[]};next.push(c);byName.set(key,c)}});
+  return next;
+}
+async function tryRead(path){
+  try{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader unavailable.');return {ok:true,data:await window.shadabRestReadDoc(path)}}catch(e){return {ok:false,error:e}}
+}
+function extractSource(data){
+  const d=data||{};return {companies:d.companies||d.companyContacts||d.companyDirectory||[],deletedCompanies:Array.isArray(d.deletedCompanies)?d.deletedCompanies:Array.isArray(d.companyContactsDeletedCompanies)?d.companyContactsDeletedCompanies:[],deletedContacts:Array.isArray(d.deletedContacts)?d.deletedContacts:Array.isArray(d.companyContactsDeletedContacts)?d.companyContactsDeletedContacts:[]};
+}
+async function readAllRemote(){
+  const results=await Promise.all([tryRead(PATH),tryRead(LEGACY_PATH),tryRead(MASTER_PATH)]);
+  const lists=[];let readable=0;let failures=[];let primaryData=null;
+  results.forEach((r,i)=>{if(r.ok){readable++;const x=extractSource(r.data);lists.push(x.companies);x.deletedCompanies.forEach(v=>tombstones.companies.add(String(v).toLowerCase()));x.deletedContacts.forEach(v=>tombstones.contacts.add(String(v).toLowerCase()));if(i===0)primaryData=r.data||{}}else failures.push(r.error)});
+  if(readable===0 && failures.length)throw new Error('Firebase company data could not be read from any known storage path. '+(failures[0]?.message||''));
+  saveTombstones();
+  return {companies:mergeLists(lists),readable,primaryData,failures};
+}
+async function readRemote(){
+  const r=await readAllRemote();return withDefaultCompanies(r.companies);
+}
+async function ensureAdminSession(){
+  let s=session();
+  if(!s?.uid){try{await window.shadabRestResumeSync?.()}catch(e){}s=session()}
+  if(!s?.uid){try{const raw=localStorage.getItem('shadab_rest_auth_v3');const saved=raw?JSON.parse(raw):null;if(saved?.uid&&String(saved.email||'').toLowerCase()===ADMIN&&saved?.idToken){window.shadabRestAdoptSession?.(saved);s=session()}}catch(e){}}
+  if(!s?.uid||String(s.email||'').toLowerCase()!==ADMIN)throw new Error('Master Firebase session is required for Company Contacts Control.');
+  if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader unavailable.');
+  return s;
+}
+async function writeToPath(path,payload){
+  if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST writer unavailable.');
+  const old=await window.shadabRestReadDoc(path)||{};
+  await window.shadabRestWriteDoc(path,Object.assign({},old,payload));
+}
+async function writeRemote(next,reason,opts={}){
+  const s=await ensureAdminSession();
+  const merged=withDefaultCompanies(next);
+  const payload={companies:merged,updatedAt:new Date().toISOString(),updatedBy:String(s.email||ADMIN),reason:String(reason||'company-contact-change'),deletedCompanies:[...tombstones.companies],deletedContacts:[...tombstones.contacts]};
+  let ok=false,errors=[];
+  // Primary Company Contacts document is the first authority. Existing master data is only a migration/fallback target.
+  try{await writeToPath(PATH,payload);ok=true}catch(e){errors.push(e)}
+  if(!ok){
+    try{const master=await window.shadabRestReadDoc(MASTER_PATH)||{};const mp=Object.assign({},master,{companyContacts:merged,companyContactsDeletedCompanies:[...tombstones.companies],companyContactsDeletedContacts:[...tombstones.contacts],companyContactsUpdatedAt:payload.updatedAt,companyContactsUpdatedBy:payload.updatedBy});await window.shadabRestWriteDoc(MASTER_PATH,mp);ok=true}catch(e){errors.push(e)}
+  }
+  if(!ok)throw new Error('Firebase Company Contacts write failed. '+errors.map(e=>e?.message||e).join(' | '));
+  return merged;
+}
+async function loadRemote(showError=true){
+  try{
+    const remote=await readAllRemote();
+    contacts=withDefaultCompanies(mergeLists([remote.companies,localLoad()]));localSave();render();setStatus('Firebase contacts synced — permanent storage active.');return contacts;
+  }catch(e){
+    contacts=withDefaultCompanies(localLoad());render();setStatus('Firebase read unavailable — local saved contacts shown; existing contacts preserved.');if(showError)console.warn('Company Contacts Firebase read:',e);return contacts;
+  }
+}
+function setStatus(msg){const x=$('spCompanyContactsStatus');if(x)x.textContent=String(msg||'')}
+function buildModal(){
+  if($('spCompanyContactsModal'))return;
+  const m=document.createElement('div');m.id='spCompanyContactsModal';m.innerHTML='<div id="spCompanyContactsShell"><div id="spCompanyContactsHead"><div class="sp-cc-head-copy"><span class="sp-cc-head-kicker">SHADAB PHARMACY</span><h2 id="spCompanyContactsTitle">Company Contacts</h2><small id="spCompanyContactsSub">Company names and direct calling contacts</small></div><div class="sp-cc-head-actions"><button class="sp-cc-head-btn" id="spCompanyContactsRefresh" type="button" aria-label="Refresh contacts">↻</button><button class="sp-cc-head-btn danger" id="spCompanyContactsClose" type="button" aria-label="Close">×</button></div></div><div id="spCompanyContactsToolbar"><button class="sp-cc-wide-btn" id="spCompanyContactsAdd" type="button">＋ Add Contact</button><button class="sp-cc-wide-btn secondary" id="spCompanyContactsImport" type="button">⬆ Import Contacts</button><button class="sp-cc-wide-btn green" id="spCompanyContactsExport" type="button">⬇ Export Contacts</button><input id="spCompanyContactsFile" type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" multiple style="display:none"></div><div id="spCompanyContactsBody"><div class="sp-cc-status" id="spCompanyContactsStatus"></div><div id="spCompanyContactsList"></div></div></div>';
+  document.body.appendChild(m);
+  $('spCompanyContactsClose').onclick=closeModal;$('spCompanyContactsRefresh').onclick=()=>loadRemote();$('spCompanyContactsAdd').onclick=()=>openEditor('contact');$('spCompanyContactsImport').onclick=importContacts;$('spCompanyContactsExport').onclick=exportContacts;$('spCompanyContactsFile').addEventListener('change',handleImportFiles);
+  m.addEventListener('click',e=>{if(e.target===m)closeModal()});
+}
+function buildEditor(){
+  if($('spCompanyContactsEditor'))return;
+  const e=document.createElement('div');e.id='spCompanyContactsEditor';
+  e.innerHTML='<div class="sp-cc-editor"><h3 id="spCompanyContactsEditorTitle">Add Contact</h3><div class="sp-cc-field"><label>Company</label><select id="spCompanyCompanySelect"><option value="">Select company</option></select></div><div class="sp-cc-field"><label>Contact Person</label><input id="spCompanyContactNameInput" type="text" placeholder="Contact person name"></div><div class="sp-cc-field"><label>Phone Number</label><input id="spCompanyPhoneInput" type="tel" inputmode="tel" placeholder="03xxxxxxxxx"><button class="sp-cc-phone-picker" id="spCompanyPhoneContactsPicker" type="button">📱 Add from Phone Contacts</button></div><div id="spCompanyEditorMessage" class="sp-cc-editor-message" aria-live="polite"></div><div class="sp-cc-editor-actions"><button class="sp-cc-wide-btn secondary" id="spCompanyEditorCancel" type="button">Cancel</button><button class="sp-cc-wide-btn" id="spCompanyEditorSave" type="button">Save Contact</button></div></div>';
+  document.body.appendChild(e);$('spCompanyEditorCancel').onclick=closeEditor;$('spCompanyEditorSave').onclick=saveEditor;$('spCompanyPhoneContactsPicker').onclick=pickPhoneContactForEditor;e.addEventListener('click',x=>{if(x.target===e)closeEditor()});
+}
+function fillCompanySelect(selected=''){
+  const select=$('spCompanyCompanySelect');if(!select)return;
+  const list=withDefaultCompanies(contacts);
+  select.innerHTML='<option value="">Select company</option>'+list.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  if(selected)select.value=selected;
+}
+async function pickPhoneContactForEditor(){
+  const companySelect=$('spCompanyCompanySelect');
+  if(!companySelect?.value){toast('Please select a company first.');companySelect?.focus();return}
+  const picker=$('spCompanyPhoneContactsPicker');
+  if(!navigator.contacts?.select){toast('Phone Contacts Picker is not available in this browser.');return}
+  try{
+    if(picker){picker.disabled=true;picker.textContent='📱 Opening Phone Contacts…'}
+    const picked=await navigator.contacts.select(['name','tel'],{multiple:false});
+    const contact=Array.isArray(picked)?picked[0]:null;
+    if(!contact)return;
+    const names=Array.isArray(contact.name)?contact.name:[];
+    const tels=Array.isArray(contact.tel)?contact.tel:[];
+    const name=String(names.find(v=>String(v||'').trim())||'Contact').trim();
+    const phone=String(tels.find(v=>String(v||'').trim())||'').trim();
+    if(!phone){toast('Selected contact has no phone number.');return}
+    $('spCompanyContactNameInput').value=name||'Contact';
+    $('spCompanyPhoneInput').value=phone;
+    $('spCompanyContactNameInput').dispatchEvent(new Event('input',{bubbles:true}));
+    $('spCompanyPhoneInput').dispatchEvent(new Event('input',{bubbles:true}));
+    toast('✓ Contact name and phone number added.');
+  }catch(e){
+    if(e?.name!=='AbortError')toast('✕ Phone contact selection failed — '+(e?.message||e||'Unknown error.'));
+  }finally{
+    if(picker){picker.disabled=false;picker.textContent='📱 Add from Phone Contacts'}
+  }
+}
+async function openModal(which){
+  buildModal();buildEditor();mode=which==='admin'?'admin':'main';
+  const m=$('spCompanyContactsModal');m.classList.toggle('sp-cc-admin',mode==='admin');$('spCompanyContactsTitle').textContent=mode==='admin'?'Company Contacts Control':'Company Contacts';$('spCompanyContactsSub').textContent=mode==='admin'?'Master-managed • Firebase connected • Import / Export':'Tap any phone number to open the dialer';
+  m.classList.add('sp-cc-open');
+  contacts=withDefaultCompanies(localLoad());render();setStatus('Loading Firebase company contacts…');await loadRemote(false);
+}
+function closeModal(){$('spCompanyContactsModal')?.classList.remove('sp-cc-open');closeEditor()}
+function openEditor(type,companyId='',contactId=''){
+  buildEditor();editor={type,companyId,contactId};
+  const c=contacts.find(x=>x.id===companyId),p=c?.contacts?.find(x=>x.id===contactId);
+  $('spCompanyContactsEditorTitle').textContent=contactId?'Edit Contact':'Add Contact';
+  fillCompanySelect(c?.id||'');
+  $('spCompanyContactNameInput').value=p?.name||'';$('spCompanyPhoneInput').value=p?.phone||'';
+  $('spCompanyCompanySelect').disabled=!!contactId;
+  $('spCompanyEditorMessage').textContent='';$('spCompanyEditorMessage').classList.remove('ok','error');
+  const picker=$('spCompanyPhoneContactsPicker');if(picker){picker.disabled=!!contactId;picker.textContent='📱 Add from Phone Contacts'}
+  $('spCompanyContactsEditor').classList.add('sp-show');setTimeout(()=>$(contactId?'spCompanyContactNameInput':'spCompanyCompanySelect')?.focus(),50)
+}
+function closeEditor(){editor={type:'',companyId:'',contactId:''};$('spCompanyContactsEditor')?.classList.remove('sp-show')}
+async function saveEditor(){
+  const btn=$('spCompanyEditorSave'),oldText=btn?.textContent||'Save Contact',msg=$('spCompanyEditorMessage');
+  const showMsg=(message,ok=false)=>{if(msg){msg.textContent=String(message||'');msg.classList.toggle('ok',!!ok);msg.classList.toggle('error',!ok)}};
+  const fail=(message)=>{showMsg(message,false);setStatus('✕ '+String(message||'Save failed.'));toast('✕ '+String(message||'Save failed.'));};
+  try{
+    if(btn){btn.disabled=true;btn.classList.add('sp-cc-saving');btn.innerHTML='<span class="sp-cc-spinner"></span> Saving…';}
+    showMsg('Reading existing Firebase companies before saving…',true);setStatus('Protecting existing Company Contacts…');
+    const companyId=String($('spCompanyCompanySelect')?.value||'').trim(),contactName=String($('spCompanyContactNameInput')?.value||'').trim()||'Contact',phone=String($('spCompanyPhoneInput')?.value||'').trim();
+    if(!companyId){fail('Please select a company.');return}
+    if(!phone){fail('Phone number required.');return}
+    await ensureAdminSession();
+    const remote=await readAllRemote();
+    const base=withDefaultCompanies(mergeLists([remote.companies,contacts,localLoad()]));
+    const next=normalizeData(base);const c=next.find(x=>x.id===companyId)||next.find(x=>tombstoneKeyCompany(x)===tombstoneKeyCompany(contacts.find(z=>z.id===companyId)));
+    if(!c)throw new Error('Selected company record not found.');
+    const idx=c.contacts.findIndex(x=>x.id===editor.contactId);
+    if(idx>=0){const oldKey=tombstoneKeyContact(c,c.contacts[idx]);tombstones.contacts.delete(oldKey);c.contacts[idx].name=contactName;c.contacts[idx].phone=phone}else c.contacts.push({id:uid(),name:contactName,phone});
+    saveTombstones();
+    const saved=await writeRemote(next,editor.contactId?'contact-edit':'contact-add');
+    contacts=withDefaultCompanies(saved);localSave();render();closeEditor();setStatus('✓ Saved permanently to Firebase — existing companies preserved.');toast('✓ Company Contact saved and synced.');
+  }catch(e){console.error('Company Contacts save:',e);fail('Save failed — '+(e?.message||e||'Unknown Firebase error.'));}
+  finally{if(btn){btn.disabled=false;btn.classList.remove('sp-cc-saving');btn.textContent=oldText;}}
+}
+async function deleteContact(companyId,contactId){
+  if(!confirm('Delete this contact?'))return;
+  try{await ensureAdminSession();const remote=await readAllRemote();const next=withDefaultCompanies(mergeLists([remote.companies,contacts,localLoad()]));const c=next.find(x=>x.id===companyId);if(!c)return;const p=c.contacts.find(x=>x.id===contactId);if(!p)return;tombstones.contacts.add(tombstoneKeyContact(c,p));c.contacts=c.contacts.filter(x=>x.id!==contactId);saveTombstones();contacts=withDefaultCompanies(await writeRemote(next,'contact-delete'));localSave();render();setStatus('✓ Contact explicitly deleted and synced.');toast('✓ Contact deleted.')}catch(e){toast('✕ Delete failed — '+(e.message||e))}}
+async function deleteCompany(companyId){
+  const c=contacts.find(x=>x.id===companyId);if(!c)return;if(!confirm('Delete '+c.name+' and all its contacts?'))return;
+  try{await ensureAdminSession();const remote=await readAllRemote();const next=withDefaultCompanies(mergeLists([remote.companies,contacts,localLoad()]));const target=next.find(x=>x.id===companyId)||next.find(x=>tombstoneKeyCompany(x)===tombstoneKeyCompany(c));if(!target)return;tombstones.companies.add(tombstoneKeyCompany(target));for(const p of target.contacts||[])tombstones.contacts.add(tombstoneKeyContact(target,p));const filtered=next.filter(x=>tombstoneKeyCompany(x)!==tombstoneKeyCompany(target));saveTombstones();contacts=await writeRemote(filtered,'company-delete');localSave();render();setStatus('✓ Company explicitly deleted and synced.');toast('✓ Company deleted.')}catch(e){toast('✕ Delete failed — '+(e.message||e))}}
+function render(){
+  const root=$('spCompanyContactsList');if(!root)return;
+  if(!contacts.length){root.innerHTML='<div class="sp-cc-empty">No company contacts yet.<br><small>Add a company/contact from Company Contacts Control.</small></div>';return}
+  root.innerHTML=contacts.map(c=>{const rows=c.contacts.length?c.contacts.map(p=>`<div class="sp-contact-row"><div class="sp-contact-main"><b>${esc(p.name)}</b><button type="button" data-call="${esc(p.phone)}">${esc(p.phone)}</button></div><div class="sp-contact-actions"><button type="button" title="Call" data-call="${esc(p.phone)}">☎</button>${mode==='admin'?`<button type="button" title="Edit" data-edit="${sid(c.id)}" data-contact="${sid(p.id)}">✎</button><button type="button" title="Delete" class="danger" data-del="${sid(c.id)}" data-contact="${sid(p.id)}">⌫</button>`:''}</div></div>`).join(''):'<div class="sp-cc-empty">No contacts added yet.</div>';return `<div class="sp-company-card"><div class="sp-company-top"><div class="sp-company-icon">${esc(companyInitials(c.name))}</div><div class="sp-company-name"><b>${esc(c.name)}</b><small>${c.contacts.length} contact${c.contacts.length===1?'':'s'}</small></div>${mode==='admin'?`<div class="sp-company-actions"><button class="sp-company-action" title="Add contact" data-add-contact="${sid(c.id)}">＋</button><button class="sp-company-action" title="Edit company" data-edit-company="${sid(c.id)}">✎</button><button class="sp-company-action danger" title="Delete company" data-del-company="${sid(c.id)}">⌫</button></div>`:''}</div><div class="sp-contact-list">${rows}</div></div>`}).join('');
+  root.querySelectorAll('[data-call]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();dial(b.dataset.call)}));
+  root.querySelectorAll('[data-add-contact]').forEach(b=>b.addEventListener('click',()=>openEditor('contact',b.dataset.addContact)));
+  root.querySelectorAll('[data-edit-company]').forEach(b=>b.addEventListener('click',()=>openEditor('company',b.dataset.editCompany)));
+  root.querySelectorAll('[data-del-company]').forEach(b=>b.addEventListener('click',()=>deleteCompany(b.dataset.delCompany)));
+  root.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEditor('contact',b.dataset.edit,b.dataset.contact)));
+  root.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>deleteContact(b.dataset.del,b.dataset.contact)));
+}
+function parseCsv(text){
+  const rows=[];let row=[],cell='',q=false;
+  for(let i=0;i<text.length;i++){const ch=text[i],nx=text[i+1];if(ch==='"'){if(q&&nx==='"'){cell+='"';i++}else q=!q}else if(ch===','&&!q){row.push(cell);cell=''}else if((ch==='\n'||ch==='\r')&&!q){if(ch==='\r'&&nx==='\n')i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell=''}else cell+=ch}
+  if(cell||row.length){row.push(cell);if(row.some(v=>v.trim()))rows.push(row)}return rows;
+}
+function importRecords(records){
+  const next=normalizeData(contacts);const byCompany=new Map(next.map(c=>[c.name.toLowerCase(),c]));let added=0;
+  records.forEach(r=>{const company=String(r.company||'Imported Contacts').trim()||'Imported Contacts',name=String(r.name||'Contact').trim()||'Contact',phone=String(r.phone||'').trim();if(!phone)return;let c=byCompany.get(company.toLowerCase());if(!c){c={id:uid(),name:company,contacts:[]};next.push(c);byCompany.set(company.toLowerCase(),c)}const norm=normalizePhone(phone);if(c.contacts.some(x=>normalizePhone(x.phone)===norm))return;c.contacts.push({id:uid(),name,phone});added++});return {next,added}}
+async function importPhoneContacts(){
+  if(!navigator.contacts?.select){$('spCompanyContactsFile')?.click();toast('Phone Contacts Picker unavailable here — select VCF or CSV instead.');return}
+  try{const picked=await navigator.contacts.select(['name','tel'],{multiple:true});const records=[];(picked||[]).forEach(x=>(x.tel||[]).forEach(t=>records.push({company:'Imported Contacts',name:(x.name||[])[0]||'Contact',phone:t})));if(!records.length)return toast('No phone contacts selected.');await ensureAdminSession();const r=importRecords(records);contacts=await writeRemote(r.next,'phone-contacts-import');localSave();render();setStatus('✓ Phone contacts imported and synced.');toast('✓ '+r.added+' contacts imported.')}catch(e){toast('✕ Phone contact import failed — '+(e.message||e))}}
+function importContacts(){if(navigator.contacts?.select)return importPhoneContacts();$('spCompanyContactsFile')?.click();}
+async function handleImportFiles(e){
+  const files=[...(e.target.files||[])];if(!files.length)return;try{await ensureAdminSession();let records=[];for(const f of files){const text=await f.text();if(/\.vcf$|vcard/i.test(f.name)){text.split(/END:VCARD/i).filter(x=>/BEGIN:VCARD/i.test(x)).forEach(block=>{const pick=(key)=>{const m=block.match(new RegExp('(?:^|\\n)'+key+'[^:]*:([^\\n\\r]*)','i'));return m?m[1].trim():''};const org=pick('ORG')||'Imported Contacts',name=pick('FN')||'Contact',tel=pick('TEL');if(tel)records.push({company:org.split(';')[0]||org,name,phone:tel})})}else{const rows=parseCsv(text);if(!rows.length)continue;const h=rows[0].map(v=>v.trim().toLowerCase()),col=(names)=>{for(const n of names){const i=h.indexOf(n);if(i>=0)return i}return -1};const ci=col(['company','organization','org']),ni=col(['name','contact','contact person','fullname']),pi=col(['phone','mobile','tel','telephone','number']);rows.slice(1).forEach(r=>{const phone=pi>=0?r[pi]:'';if(phone)records.push({company:ci>=0?r[ci]:'Imported Contacts',name:ni>=0?r[ni]:'Contact',phone})})}}
+    const rr=importRecords(records);contacts=await writeRemote(rr.next,'file-import');localSave();render();setStatus('✓ Import synced to Firebase.');toast('✓ '+rr.added+' contacts imported and synced.')}catch(e){toast('✕ Import failed — '+(e.message||e))}finally{e.target.value=''}
+}
+function exportContacts(){
+  if(!contacts.length)return toast('No contacts to export.');const rows=[['Company','Contact Name','Phone']];contacts.forEach(c=>c.contacts.forEach(p=>rows.push([c.name,p.name,p.phone])));const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Shadab-Pharmacy-Company-Contacts.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('✓ Company Contacts CSV exported.');
+}
+function mountFieldCard(){
+  const dash=$('sharedDocsDashboard'),lic=$('spLockedLicenseCard');if(!dash||!lic||$('spCompanyContactsFieldCard'))return;const card=document.createElement('button');card.id='spCompanyContactsFieldCard';card.type='button';card.className='shared-doc-card';card.innerHTML='<span class="shared-doc-icon">🏢</span><span class="shared-doc-copy"><b>Company Contacts</b><small>Companies • contact numbers • direct calling</small></span><span class="shared-doc-arrow">›</span><span class="shared-doc-status">Synced</span>';card.onclick=()=>openModal('main');lic.insertAdjacentElement('afterend',card);
+}
+function mountMasterMainCard(){
+  const box=$('spAddedDashboardShortcuts'),admin=$('spAdminCCLauncher');if(!box||!admin||$('spCompanyContactsMainControl'))return;const card=document.createElement('button');card.id='spCompanyContactsMainControl';card.type='button';card.className='sp-added-dashboard-card';card.innerHTML='<span aria-hidden="true" class="sp-added-dashboard-icon" style="background:linear-gradient(145deg,#08b4f7,#4168f5,#7c55ff)">☎</span><span class="sp-added-dashboard-copy"><strong>Company Contacts Control</strong><small>Manage companies, contact numbers, import &amp; export</small><em>Tap to open Company Contacts Control</em></span><span aria-hidden="true" class="sp-added-dashboard-go">›</span>';card.onclick=()=>openModal('admin');admin.insertAdjacentElement('afterend',card);
+}
+function mountAdminGridCard(){
+  const grid=$('spAdminCCGrid');if(!grid||grid.querySelector('[data-company-contact-control]'))return;const card=document.createElement('button');card.className='sp-cc-card';card.type='button';card.setAttribute('data-company-contact-control','1');card.innerHTML='<span class="ic">☎</span><span><b>Company Contacts Control</b><small>Companies, contacts, import &amp; export</small></span>';card.onclick=()=>openModal('admin');grid.appendChild(card);
+}
+function install(){buildModal();buildEditor();mountFieldCard();mountMasterMainCard();mountAdminGridCard()}
+const observer=new MutationObserver(()=>{try{mountFieldCard();mountMasterMainCard();mountAdminGridCard()}catch(e){}});
+if(document.body)observer.observe(document.body,{childList:true,subtree:true});else document.addEventListener('DOMContentLoaded',()=>observer.observe(document.body,{childList:true,subtree:true}),{once:true});
+document.addEventListener('click',e=>{if(e.target?.closest?.('#spAdminCCLauncher'))setTimeout(mountAdminGridCard,100);if(e.target?.closest?.('#spCompanyContactsMainControl'))setTimeout(()=>openModal('admin'),0)},true);
+window.addEventListener('load',()=>setTimeout(install,200));window.addEventListener('focus',()=>{if($('spCompanyContactsModal')?.classList.contains('sp-cc-open'))loadRemote(false)});
+window.spCompanyContacts={open:openModal,close:closeModal,refresh:loadRemote};
+})();
+</script>
+<!-- ===== END COMPANY CONTACTS — ISOLATED FEATURE ONLY ===== -->
 
 </body>
 </html>
