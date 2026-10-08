@@ -20710,6 +20710,34 @@ window.openCustomerContactEditor=openEditor;window.spCustomerContacts={open:open
 .sp-customer-editor{background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.035))!important;border-color:rgba(220,247,255,.34)!important;backdrop-filter:blur(22px) saturate(150%)!important;-webkit-backdrop-filter:blur(22px) saturate(150%)!important}
 </style>
 
+<!-- ===== START: AREA DROPDOWN TARGETED REPAIR ===== -->
+<style id="sp-area-dropdown-targeted-repair">
+#area{position:relative!important;z-index:2147483001!important;pointer-events:auto!important;touch-action:manipulation!important;-webkit-appearance:auto!important;appearance:auto!important}
+#area.field-area-repair{isolation:isolate!important}
+.field:has(> #area){position:relative!important;z-index:2147483000!important;pointer-events:auto!important}
+.field:has(> #area)::before,.field:has(> #area)::after{pointer-events:none!important}
+</style>
+<script id="sp-area-dropdown-targeted-repair-js">
+(function(){
+'use strict';
+function repairArea(){
+ const a=document.getElementById('area');if(!a)return;
+ a.classList.add('field-area-repair');
+ a.disabled=false;a.removeAttribute('disabled');
+ a.style.setProperty('pointer-events','auto','important');
+ a.style.setProperty('position','relative','important');
+ a.style.setProperty('z-index','2147483001','important');
+ if(!a.options.length){['Sahiwal','Chichawatni','Pakpattan','Arifwala'].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;a.appendChild(o)})}
+ if(a.options.length&&!([...a.options].some(o=>String(o.value)===String(a.value))))a.value=a.options[0].value;
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',repairArea,{once:true});else repairArea();
+[250,700,1500].forEach(ms=>setTimeout(repairArea,ms));
+document.addEventListener('click',e=>{if(e.target?.id==='area')repairArea()},true);
+document.addEventListener('touchstart',e=>{if(e.target?.id==='area')repairArea()},true);
+})();
+</script>
+<!-- ===== END: AREA DROPDOWN TARGETED REPAIR ===== -->
+
 </body>
 </html>
 
