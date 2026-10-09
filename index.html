@@ -3315,6 +3315,7 @@ function printHTML(title,data){
 }
 </style>
 
+
 </body>
 </html>`;
   let frame=null,done=false;
@@ -5265,7 +5266,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         // updateMask so the protected contact fields are never overwritten.
         try{
           const current=await readDoc(path);
-          const union=new Set([...Object.keys(current||{}),...payloadKeys]);
+          /* Durable Clear Dashboard tombstones are managed independently from
+             ordinary catalog/PDF/alert payloads. Keep them in the PATCH body
+             whenever they already exist, otherwise this writer's updateMask
+             would remove the fields simply because a normal payload omitted them. */
+          for(const key of ['masterDashboardClearState','masterDashboardState','dashboardClearState']){
+            if(!Object.prototype.hasOwnProperty.call(safePayload,key) && current && Object.prototype.hasOwnProperty.call(current,key)){
+              safePayload[key]=current[key];
+            }
+          }
+          const union=new Set([...Object.keys(current||{}),...Object.keys(safePayload)]);
           maskKeys=[...union].filter(k=>!CUSTOMER_CONTACTS_PROTECTED_FIELDS.has(k));
         }catch(readErr){
           // Do not block normal app sync on a transient read failure. The mask
@@ -18670,12 +18680,16 @@ async function rebuildMasterAggregateV12(options={}){
       return 0;
     };
     visits=visits.filter(v=>{
-      const stamp=rowStamp(v);if(stamp)return stamp>clearMs;
-      const d=dateOf(v);if(!d)return false;if(d<clearDate)return false;if(d>clearDate)return true;
+      /* Use the visit's event date/time before metadata timestamps. A legacy
+         sync can refresh a record's metadata even though the visit itself was
+         created before the clear marker. */
+      const d=dateOf(v);
+      if(d&&d<clearDate)return false;
+      if(d&&d>clearDate)return true;
       const rawTime=String(v?.time||v?.visitTime||'').trim();
-      const mt=rawTime.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
-      if(mt){let hh=Number(mt[1]),mm=Number(mt[2]);const ap=String(mt[3]||'').toUpperCase();if(ap==='PM'&&hh<12)hh+=12;if(ap==='AM'&&hh===12)hh=0;return hh*60+mm>clearMinute}
-      return false;
+      const mt=rawTime.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+      if(d===clearDate&&mt){let hh=Number(mt[1]),mm=Number(mt[2]),ss=Number(mt[3]||0);const ap=String(mt[4]||'').toUpperCase();if(ap==='PM'&&hh<12)hh+=12;if(ap==='AM'&&hh===12)hh=0;const eventMs=Date.parse(clearDate+'T'+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')+'+05:00');if(!Number.isFinite(eventMs))return false;if(Math.floor(eventMs/60000)===Math.floor(clearMs/60000)){const precise=rowStamp(v);return precise>clearMs}return eventMs>clearMs}
+      const stamp=rowStamp(v);return stamp>clearMs;
     });
   }
   const todayVisits=visits.filter(v=>dateOf(v)===today),weekVisits=visits.filter(v=>dateOf(v)>=weekStart&&dateOf(v)<weekEnd),monthVisits=visits.filter(v=>dateOf(v).slice(0,7)===month);
@@ -19713,6 +19727,7 @@ body.section-modal-records main>.card#visitRecordsCard,
     const check=await read(MASTER_PATH);
     if(!check?.[CLEAR_FIELD]?.clearedAt || check[CLEAR_FIELD].clearedAt!==state.clearedAt) throw new Error('Firebase clear marker write could not be verified in masterData.');
     saveState(state);
+    try{window.__shadabActivateClearMarker?.(check[CLEAR_FIELD])}catch(e){}
     return check[CLEAR_FIELD];
   }
   async function getState(){try{const x=await read(MASTER_PATH);if(x?.[CLEAR_FIELD]?.clearedAt)return x[CLEAR_FIELD]}catch(e){}try{return JSON.parse(localStorage.getItem(CLEAR_LOCAL)||localStorage.getItem('shadab_master_dashboard_clear_state_v3')||'null')}catch(e){return null}}
@@ -19720,25 +19735,133 @@ body.section-modal-records main>.card#visitRecordsCard,
   function filterCache(c,state){if(!c||!state?.clearedAt)return c;const cut=Date.parse(state.clearedAt)||0;const out=clone(c)||{};out.visits=(Array.isArray(c.visits)?c.visits:[]).filter(v=>{const t=Date.parse(v?.createdAt||v?.updatedAt||'')||0;return !t||t>cut});out.plannedToday=(Array.isArray(c.plannedToday)?c.plannedToday:[]).filter(v=>{const t=Date.parse(v?.__updatedAt||v?.updatedAt||'')||0;return t>cut});out.dashboardCleared=true;out.clearStateAt=state.clearedAt;return out}
   /* Clear Dashboard no longer wraps/replaces the central visit loader. */
   async function clearDashboard(){
-    const s=session();if(!s?.uid){toast('Master Firebase login is required to clear all visit data.');return false}if(String(s.email||'').toLowerCase()!==ADMIN){toast('Master login is required to clear all visit data.');return false}if(navigator.onLine===false){toast('Offline — connect to Firebase before clearing all visit data.');return false}if(!confirm('CLEAR ALL VISIT DATA?\n\nAll existing salesman visit/activity data will be reset from the Master Dashboard. Salesman accounts, stores, cities, territories, PDFs and settings remain safe.'))return false;
-    const b=document.getElementById('spMasterClearDashboardBtn'),st=document.getElementById('spMasterClearDashboardStatus');if(b){b.disabled=true;b.classList.add('is-clearing');b.classList.remove('is-error','is-success');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>CLEARING DASHBOARD…</strong><small>Publishing the Firebase clear marker and removing visit storage</small></span><span class="sp-clear-v2-state">✓</span>'}
-    const stamp=now();const state={clearedAt:stamp,clearedBy:String(s.email||ADMIN),version:4,scope:'MASTER_DASHBOARD_VISITS_AND_ROUTE_TASKS',permissionSafe:true};
+    const s=session();
+    if(!s?.uid){toast('Master Firebase login is required to clear all visit data.');return false}
+    if(String(s.email||'').toLowerCase()!==ADMIN){toast('Master login is required to clear all visit data.');return false}
+    if(navigator.onLine===false){toast('Offline — connect to Firebase before clearing all visit data.');return false}
+    if(!confirm('CLEAR ALL VISIT DATA?\n\nAll existing salesman visit/activity data will be reset from the Master Dashboard. Salesman accounts, stores, cities, territories, PDFs and settings remain safe.'))return false;
+
+    const b=document.getElementById('spMasterClearDashboardBtn'),st=document.getElementById('spMasterClearDashboardStatus');
+    if(b){b.disabled=true;b.classList.add('is-clearing');b.classList.remove('is-error','is-success');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>CLEARING DASHBOARD…</strong><small>Publishing the clear marker, clearing local visits and verifying Firebase cleanup</small></span><span class="sp-clear-v2-state">✓</span>'}
+    const stamp=now();
+    const state={clearedAt:stamp,clearedBy:String(s.email||ADMIN),version:5,scope:'MASTER_DASHBOARD_VISITS_AND_ROUTE_TASKS',permissionSafe:true};
+    let dayDeletes=0,mediaDeletes=0,parentWrites=0,dayDocsRemaining=0,mediaDocsRemaining=0;
+    const cleanupErrors=[];
+    const errText=e=>String(e?.message||e||'Unknown Firebase error').slice(0,240);
+    const dataOf=r=>{try{return typeof r?.data==='function'?(r.data()||{}):(r?.data||r||{})}catch(e){return {}}};
+    const idOf=r=>String(r?.uid||dataOf(r)?.uid||r?.id||'').trim();
     try{
       if(typeof write!=='function')throw new Error('Firebase REST writer unavailable.');
+      if(typeof readCol!=='function')throw new Error('Firebase REST collection reader unavailable.');
+      if(typeof del!=='function')throw new Error('Firebase REST delete function unavailable.');
+
+      /* Write first, then read back: this marker is the durable logical boundary
+         used by the Master aggregation if a deployed Rule blocks individual deletes. */
       await writeClearState(state);
-      let dayDeletes=0,mediaDeletes=0,parentWrites=0;let rows=[];try{rows=await readCol?.('user_data')||[]}catch(e){console.warn('Clear user_data scan:',e)}
-      const uids=new Set((Array.isArray(rows)?rows:[]).map(r=>String(r?.id||'')).filter(Boolean));
-      for(const uid of uids){const base='user_data/'+encodeURIComponent(uid);
-        try{const days=await readCol?.(base+'/visit_days')||[];for(const r of Array.isArray(days)?days:[]){try{await del?.(base+'/visit_days/'+encodeURIComponent(String(r.id)));dayDeletes++}catch(e){}}}catch(e){}
-        try{const media=await readCol?.(base+'/visit_media')||[];for(const r of Array.isArray(media)?media:[]){try{await del?.(base+'/visit_media/'+encodeURIComponent(String(r.id)));mediaDeletes++}catch(e){}}}catch(e){}
-        try{const old=typeof window.shadabRestReadDoc==='function'?(await read(base)||{}):{};const next=clone(old)||{};delete next.visits;delete next.visitStats;delete next.visitCounts;delete next.routeTasks;delete next.adminDeletedVisitIds;next.uid=String(old.uid||uid);next.updatedAt=stamp;next.masterDashboardClearedAt=stamp;next.masterDashboardClearedBy=String(s.email||ADMIN);await write(base,next);parentWrites++}catch(e){console.warn('Clear legacy user_data write skipped:',uid,e?.message||e)}
+
+      let userRows=[],profileRows=[];
+      try{userRows=await readCol('user_data')||[]}catch(e){cleanupErrors.push('Cannot list user_data: '+errText(e))}
+      try{profileRows=await readCol('salesmen')||[]}catch(e){cleanupErrors.push('Cannot list salesmen: '+errText(e))}
+      const uids=new Set([...(Array.isArray(userRows)?userRows:[]),...(Array.isArray(profileRows)?profileRows:[])].map(idOf).filter(Boolean));
+
+      for(const uid of uids){
+        const base='user_data/'+encodeURIComponent(uid);
+        let days=[];
+        try{days=await readCol(base+'/visit_days')||[]}catch(e){cleanupErrors.push('Cannot list visit_days for '+uid+': '+errText(e))}
+        for(const r of Array.isArray(days)?days:[]){
+          const id=String(r?.id||'').trim();if(!id){cleanupErrors.push('A visit_days document had no readable ID for '+uid);continue}
+          try{await del(base+'/visit_days/'+encodeURIComponent(id));dayDeletes++}
+          catch(e){cleanupErrors.push('Cannot delete visit_days '+uid+'/'+id+': '+errText(e))}
+        }
+
+        let media=[];
+        try{media=await readCol(base+'/visit_media')||[]}catch(e){cleanupErrors.push('Cannot list visit_media for '+uid+': '+errText(e))}
+        for(const r of Array.isArray(media)?media:[]){
+          const id=String(r?.id||'').trim();if(!id){cleanupErrors.push('A visit_media document had no readable ID for '+uid);continue}
+          try{await del(base+'/visit_media/'+encodeURIComponent(id));mediaDeletes++}
+          catch(e){cleanupErrors.push('Cannot delete visit_media '+uid+'/'+id+': '+errText(e))}
+        }
+
+        /* Clean the legacy parent arrays too, but preserve unrelated salesman
+           fields and avoid creating a user_data parent where none existed. */
+        try{
+          const old=await read(base);
+          if(old&&typeof old==='object'){
+            const next=clone(old)||{};
+            delete next.visits;delete next.visitStats;delete next.visitCounts;delete next.routeTasks;delete next.adminDeletedVisitIds;
+            next.uid=String(old.uid||uid);next.updatedAt=stamp;next.masterDashboardClearedAt=stamp;next.masterDashboardClearedBy=String(s.email||ADMIN);
+            await write(base,next);
+            const check=await read(base);
+            const legacyKeys=['visits','visitStats','visitCounts','routeTasks','adminDeletedVisitIds'];
+            if(check&&legacyKeys.some(k=>Object.prototype.hasOwnProperty.call(check,k))){cleanupErrors.push('Legacy visit fields remain in user_data/'+uid)}
+            else parentWrites++;
+          }
+        }catch(e){cleanupErrors.push('Cannot clean legacy user_data/'+uid+': '+errText(e))}
+
+        /* Read-after-delete verifies the actual cloud state rather than assuming
+           a resolved/no-op delete means that the documents disappeared. */
+        try{const remaining=await readCol(base+'/visit_days')||[];if(Array.isArray(remaining)&&remaining.length){dayDocsRemaining+=remaining.length;cleanupErrors.push(remaining.length+' visit_days document(s) remain for '+uid)}}
+        catch(e){cleanupErrors.push('Cannot verify visit_days for '+uid+': '+errText(e))}
+        try{const remaining=await readCol(base+'/visit_media')||[];if(Array.isArray(remaining)&&remaining.length){mediaDocsRemaining+=remaining.length;cleanupErrors.push(remaining.length+' visit_media document(s) remain for '+uid)}}
+        catch(e){cleanupErrors.push('Cannot verify visit_media for '+uid+': '+errText(e))}
       }
-      state.affectedUserDataDocuments=uids.size;state.deletedVisitDayDocuments=dayDeletes;state.deletedVisitMediaDocuments=mediaDeletes;state.legacyParentWrites=parentWrites;await writeClearState(state);
-      try{if(typeof visits!=='undefined'){visits=[];if(typeof saveLocal==='function')saveLocal()}}catch(e){}try{if(typeof routeTasks!=='undefined'&&routeTasks&&typeof routeTasks==='object'){Object.keys(routeTasks).forEach(k=>delete routeTasks[k]);if(typeof saveRouteTasks==='function')saveRouteTasks()}}catch(e){}
-      try{const all=await window.photoListAll?.();for(const x of (all||[])){try{await window.photoDelete?.(x.id)}catch(e){}}}catch(e){}
+
+      state.affectedUserDataDocuments=uids.size;
+      state.deletedVisitDayDocuments=dayDeletes;
+      state.deletedVisitMediaDocuments=mediaDeletes;
+      state.verifiedLegacyParentWrites=parentWrites;
+      state.remainingVisitDayDocuments=dayDocsRemaining;
+      state.remainingVisitMediaDocuments=mediaDocsRemaining;
+      state.cleanupVerified=cleanupErrors.length===0;
+      state.cleanupErrors=cleanupErrors.slice(0,40);
+      await writeClearState(state);
+
+      /* The previous version called saveLocal(), which belongs to another
+         private closure and is unavailable here. That silently left the old
+         shadab_pharmacy_visits_v1 array in localStorage, restoring counts on refresh. */
+      try{if(typeof visits!=='undefined')visits=[]}catch(e){cleanupErrors.push('Could not reset in-memory visits: '+errText(e))}
+      try{
+        if(typeof window.saveData==='function')window.saveData();
+        localStorage.setItem('shadab_pharmacy_visits_v1','[]');
+      }catch(e){
+        try{localStorage.setItem('shadab_pharmacy_visits_v1','[]')}catch(_){cleanupErrors.push('Could not persist local empty visit list: '+errText(e))}
+      }
+      try{
+        if(typeof routeTasks!=='undefined'&&routeTasks&&typeof routeTasks==='object'){
+          Object.keys(routeTasks).forEach(k=>delete routeTasks[k]);
+          if(typeof saveRouteTasks==='function')saveRouteTasks();
+        }
+        localStorage.setItem('shadab_pharmacy_route_tasks_v1','{}');
+        localStorage.setItem('shadab_pharmacy_today_tasks_v1','{}');
+      }catch(e){console.warn('Clear Dashboard local task persistence:',e)}
+      try{const all=await window.photoListAll?.();for(const x of (all||[])){try{await window.photoDelete?.(x.id)}catch(e){cleanupErrors.push('Local photo cleanup failed: '+errText(e))}}}catch(e){cleanupErrors.push('Cannot list local photo vault: '+errText(e))}
+
+      /* Rewrite updated cleanup diagnostics after local persistence; the masterData
+         writer now preserves this marker during the queued ordinary saveData sync. */
+      state.cleanupVerified=cleanupErrors.length===0;
+      state.cleanupErrors=cleanupErrors.slice(0,40);
+      if(cleanupErrors.length)state.cleanupWarningCount=cleanupErrors.length;
+      await writeClearState(state);
       renderZero();
-      if(b){b.disabled=false;b.classList.remove('is-clearing','is-error');b.classList.add('is-success');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>DASHBOARD CLEARED</strong><small>Firebase clear marker synchronized • visit storage cleanup attempted</small></span><span class="sp-clear-v2-state">✓</span>'}if(st)st.textContent=`✓ Dashboard reset at ${new Date(stamp).toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})} • ${dayDeletes} visit-day + ${mediaDeletes} media records removed.`;toast('✓ DASHBOARD CLEARED — Firebase clear marker synchronized');setTimeout(()=>{if(b){b.classList.remove('is-success');b.innerHTML='<span class="sp-clear-v2-icon">⌫</span><span class="sp-clear-v2-copy"><strong>CLEAR DASHBOARD</strong><small>All salesmen • all cities • all visit dates</small></span><span class="sp-clear-v2-state">›</span>'}},3500);return true;
-    }catch(e){console.error('Permission-safe Clear Dashboard:',e);if(b){b.disabled=false;b.classList.remove('is-clearing','is-success');b.classList.add('is-error');b.innerHTML='<span class="sp-clear-v2-icon">!</span><span class="sp-clear-v2-copy"><strong>CLEAR FAILED</strong><small>Firebase clear marker could not be synchronized</small></span><span class="sp-clear-v2-state">!</span>'}if(st)st.textContent='✕ '+(e?.message||e);toast('✕ Clear Dashboard failed — Firebase clear marker was not accepted.');return false}
+
+      if(cleanupErrors.length){
+        if(b){b.disabled=false;b.classList.remove('is-clearing','is-success');b.classList.add('is-error');b.innerHTML='<span class="sp-clear-v2-icon">!</span><span class="sp-clear-v2-copy"><strong>DASHBOARD RESET — PARTIAL CLOUD CLEANUP</strong><small>Clear marker saved; '+cleanupErrors.length+' cloud/local check(s) need attention</small></span><span class="sp-clear-v2-state">!</span>'}
+        if(st)st.textContent='⚠ Dashboard is reset locally and the Firebase clear marker is saved, but cloud deletion/read-back was incomplete. '+dayDeletes+' visit-day and '+mediaDeletes+' media records deleted; '+dayDocsRemaining+' visit-day and '+mediaDocsRemaining+' media records still reported.';
+        toast('⚠ DASHBOARD RESET SAVED — some Firebase records could not be verified; see clear status.');
+      }else{
+        if(b){b.disabled=false;b.classList.remove('is-clearing','is-error');b.classList.add('is-success');b.innerHTML='<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>DASHBOARD CLEARED & VERIFIED</strong><small>Local visits saved empty; Firebase cleanup read-back verified</small></span><span class="sp-clear-v2-state">✓</span>'}
+        if(st)st.textContent='✓ Dashboard reset at '+new Date(stamp).toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})+' • '+dayDeletes+' visit-day + '+mediaDeletes+' media records removed across '+uids.size+' accounts.';
+        toast('✓ DASHBOARD CLEARED — local state saved and Firebase cleanup verified');
+      }
+      setTimeout(()=>{if(b){b.classList.remove('is-success');if(!cleanupErrors.length)b.classList.remove('is-error');b.innerHTML='<span class="sp-clear-v2-icon">⌫</span><span class="sp-clear-v2-copy"><strong>CLEAR DASHBOARD</strong><small>All salesmen • all cities • all visit dates</small></span><span class="sp-clear-v2-state">›</span>'}},4500);
+      return cleanupErrors.length===0;
+    }catch(e){
+      console.error('Permission-safe Clear Dashboard:',e);
+      if(b){b.disabled=false;b.classList.remove('is-clearing','is-success');b.classList.add('is-error');b.innerHTML='<span class="sp-clear-v2-icon">!</span><span class="sp-clear-v2-copy"><strong>CLEAR FAILED</strong><small>'+(errText(e))+'</small></span><span class="sp-clear-v2-state">!</span>'}
+      if(st)st.textContent='✕ '+errText(e);
+      toast('✕ Clear Dashboard failed — Firebase clear marker or its read-back could not be verified.');
+      return false;
+    }
   }
   window.clearMasterDashboard=clearDashboard;window.__shadabPermissionSafeClearV4=true;
 })();
@@ -20553,6 +20676,98 @@ html[data-shadab-theme="light"] #shadabBottomNav .sbn-label,body:not(.dark) #sha
 })();
 </script>
 <!-- ===== END TARGETED FIX V3 ===== -->
+<!-- CLEAR DASHBOARD PERSISTENCE FIX V5: local save + durable marker + verified cleanup -->
+<script id="sp-clear-dashboard-persistent-marker-guard-v5">
+(function(){
+  'use strict';
+  const MASTER_PATH='app_settings/masterData';
+  let activeMarker=null,readInFlight=null,lastReadAt=0;
+  const ADMIN='master@shadabpharmacy.com';
+  const clone=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+  function pkDate(ms){
+    try{const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Karachi',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(ms));const g=t=>p.find(x=>x.type===t)?.value||'';return g('year')+'-'+g('month')+'-'+g('day')}catch(e){return new Date(ms).toISOString().slice(0,10)}
+  }
+  function eventStamp(v){
+    for(const raw of [v?.createdAt,v?.timestamp,v?.visitedAt,v?.dateTime,v?.timeStamp]){
+      if(raw==null||raw==='')continue;
+      if(typeof raw==='number'){const n=raw>1e12?raw:raw>1e9?raw*1000:0;if(n>0)return n;continue}
+      if(typeof raw==='object'){const sec=Number(raw.seconds??raw._seconds??0);if(sec>0)return sec*1000;const ms=Number(raw.toMillis?.()||raw.milliseconds||0);if(ms>0)return ms;continue}
+      const text=String(raw).trim();if(!/^\d{1,2}:\d{2}(?::\d{2})?\s*(AM|PM)?$/i.test(text)){const n=Date.parse(text);if(Number.isFinite(n))return n}
+    }
+    return 0;
+  }
+  function eventDate(v){
+    const raw=v?.date??v?.visitDate??v?.visitedDate??'';
+    if(typeof raw==='number'){const n=raw>1e12?raw:raw>1e9?raw*1000:0;if(n>0)return pkDate(n)}
+    if(raw&&typeof raw==='object'){const sec=Number(raw.seconds??raw._seconds??0);if(sec>0)return pkDate(sec*1000);const ms=Number(raw.toMillis?.()||raw.milliseconds||0);if(ms>0)return pkDate(ms)}
+    const text=String(raw||'').trim();
+    let m=text.match(/^(\d{4}-\d{2}-\d{2})/);if(m)return m[1];
+    m=text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(m){const dd=Number(m[1]),mm=Number(m[2]);if(dd>=1&&dd<=31&&mm>=1&&mm<=12)return m[3]+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0')}
+    if(text){const n=Date.parse(text);if(Number.isFinite(n)&&/[T ]/.test(text))return pkDate(n)}
+    const stamp=eventStamp(v);return stamp?pkDate(stamp):'';
+  }
+  function keepAfterClear(v,state){
+    const cut=Date.parse(state?.clearedAt||'');if(!Number.isFinite(cut)||cut<=0)return true;
+    const cutDate=pkDate(cut),d=eventDate(v);
+    if(d&&d<cutDate)return false;
+    if(d&&d>cutDate)return true;
+    const raw=String(v?.time||v?.visitTime||'').trim();
+    const mt=raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+    if(d===cutDate&&mt){let hh=Number(mt[1]),mm=Number(mt[2]),ss=Number(mt[3]||0);const ap=String(mt[4]||'').toUpperCase();if(ap==='PM'&&hh<12)hh+=12;if(ap==='AM'&&hh===12)hh=0;const eventMs=Date.parse(cutDate+'T'+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')+'+05:00');if(!Number.isFinite(eventMs))return false;if(Math.floor(eventMs/60000)===Math.floor(cut/60000)){const precise=eventStamp(v);return precise>cut}return eventMs>cut}
+    return eventStamp(v)>cut;
+  }
+  function apply(){
+    if(!activeMarker?.clearedAt)return false;
+    let changed=false,localRows=null;
+    try{
+      if(typeof visits!=='undefined'&&Array.isArray(visits)){
+        const next=visits.filter(v=>keepAfterClear(v,activeMarker));
+        if(next.length!==visits.length){visits=next;localRows=next;changed=true}
+      }
+    }catch(e){}
+    try{
+      if(Array.isArray(window.visits)){
+        const next=window.visits.filter(v=>keepAfterClear(v,activeMarker));
+        if(next.length!==window.visits.length){window.visits=next;if(!localRows)localRows=next;changed=true}
+      }
+    }catch(e){}
+    if(changed){
+      try{const safe=(localRows||[]).map(v=>{const x=clone(v)||{};delete x.photo;return x});localStorage.setItem('shadab_pharmacy_visits_v1',JSON.stringify(safe))}catch(e){console.warn('Clear marker local persistence:',e)}
+    }
+    return changed;
+  }
+  function repaint(){try{window.renderRecords?.()}catch(e){}try{window.updateStats?.()}catch(e){}try{window.updatePremiumDashboard?.()}catch(e){}try{window.renderTodayTasks?.()}catch(e){}}
+  window.__shadabActivateClearMarker=function(state){if(state?.clearedAt){activeMarker=state;try{window.__shadabActiveClearMarker=state}catch(e){}apply();repaint()}return true};
+  async function readMarker(force=false){
+    if(!force&&activeMarker&&Date.now()-lastReadAt<60000)return activeMarker;
+    if(readInFlight)return readInFlight;
+    const s=(()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}})();
+    if(!s?.uid||!navigator.onLine||typeof window.shadabRestReadDoc!=='function')return activeMarker;
+    readInFlight=(async()=>{
+      try{const m=await window.shadabRestReadDoc(MASTER_PATH);const state=m?.masterDashboardClearState||m?.masterDashboardState||m?.dashboardClearState||null;if(state?.clearedAt){activeMarker=state;window.__shadabActiveClearMarker=state;lastReadAt=Date.now();const changed=apply();if(changed)repaint()}else{lastReadAt=Date.now()}return activeMarker}
+      catch(e){console.warn('Clear marker read:',e?.message||e);return activeMarker}
+      finally{readInFlight=null}
+    })();
+    return readInFlight;
+  }
+  function wrap(name){
+    const old=window[name];if(typeof old!=='function'||old.__spClearMarkerGuardV5)return;
+    const wrapped=function(){apply();return old.apply(this,arguments)};wrapped.__spClearMarkerGuardV5=true;wrapped.__spClearMarkerGuardOriginal=old;window[name]=wrapped;
+  }
+  ['saveData','renderRecords','updateStats','updatePremiumDashboard','renderTodayTasks'].forEach(wrap);
+  function wrapSync(name){
+    const old=window[name];if(typeof old!=='function'||old.__spClearMarkerSyncGuardV5)return;
+    const wrapped=async function(){await readMarker(true);apply();const result=await old.apply(this,arguments);apply();return result};wrapped.__spClearMarkerSyncGuardV5=true;wrapped.__spClearMarkerSyncGuardOriginal=old;window[name]=wrapped;
+  }
+  ['shadabSyncSalesmanNow','sp35SyncNow','sp35SyncNew','sp35ManualServerRefresh'].forEach(wrapSync);
+  const boot=()=>{setTimeout(()=>readMarker(false),350)};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  window.addEventListener('pageshow',()=>readMarker(true));
+  window.addEventListener('online',()=>setTimeout(()=>readMarker(true),400));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)readMarker(true)});
+})();
+</script>
+<!-- CLEAR DASHBOARD PERSISTENCE FIX V5: local save + durable marker + verified cleanup -->
 </body>
 </html>
 
