@@ -5270,7 +5270,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
              ordinary catalog/PDF/alert payloads. Keep them in the PATCH body
              whenever they already exist, otherwise this writer's updateMask
              would remove the fields simply because a normal payload omitted them. */
-          for(const key of ['masterDashboardClearState','masterDashboardState','dashboardClearState']){
+          for(const key of ['masterDashboardClearState','masterDashboardState','dashboardClearState','territoryRenames']){
             if(!Object.prototype.hasOwnProperty.call(safePayload,key) && current && Object.prototype.hasOwnProperty.call(current,key)){
               safePayload[key]=current[key];
             }
@@ -18660,6 +18660,16 @@ async function rebuildMasterAggregateV12(options={}){
   const weekStartDate=new Date(today+'T12:00:00');weekStartDate.setDate(weekStartDate.getDate()-((weekStartDate.getDay()+6)%7));
   const weekStart=pkISO(weekStartDate),weekEndDate=new Date(weekStartDate);weekEndDate.setDate(weekEndDate.getDate()+7);const weekEnd=pkISO(weekEndDate);
   const diagnostics={date:today,accountsChecked:salesmen.length,legacyRows:0,partitionDocs:0,partitionEntries:0,readFailures:[],latestPartitionDate:'',localVisitsSeen:0,localPublished:0,localAlreadyPresent:0,localUnmapped:0,localWithoutId:0,localPublishError:'',at:iso()};
+  /* Apply the durable global clear marker to local rows BEFORE explicit Master Sync
+     can publish them back into salesman visit_days. This is a key anti-resurrection guard. */
+  const masterClearForPublish=master?.masterDashboardClearState||master?.masterDashboardState||master?.dashboardClearState||null;
+  if(masterClearForPublish?.clearedAt){
+    const keepAfterClear=window.__shadabKeepVisitAfterClearV12;
+    if(typeof keepAfterClear!=='function')throw new Error('Global clear filter is unavailable; local visit publication paused.');
+    const currentLocal=localVisitList();
+    const filteredLocal=currentLocal.filter(v=>keepAfterClear(v,masterClearForPublish));
+    if(filteredLocal.length!==currentLocal.length){currentLocal.splice(0,currentLocal.length,...filteredLocal);saveLocalVisitsNoPhotos();}
+  }
   /* On an explicit Master Sync, safely publish new locally saved Master visits
      to the selected salesman's own day document. Read/merge/verify; never replace
      an existing day list or delete the original local/master record. */
@@ -18829,6 +18839,26 @@ async function syncSalesmanFirebaseV12(reason){
   if(syncBusyV12)return syncBusyV12;
   syncBusyV12=(async()=>{
     const uid=String(s.uid);
+    let observedClearAt='';
+    // Verify global clear state before any photo/visit write; do not resurrect stale local visits.
+    try{
+      const clearDoc=await readDoc('app_settings/masterData');
+      const clearState=clearDoc?.masterDashboardClearState||clearDoc?.masterDashboardState||clearDoc?.dashboardClearState||null;
+      observedClearAt=String(clearState?.clearedAt||'');
+      if(clearState?.clearedAt){
+        const applyClear=window.__shadabApplyClearMarkerLocallyV12;
+        if(typeof applyClear!=='function')throw new Error('Clear marker guard is not available');
+        applyClear(clearState);
+        const metaForClear=getMeta(uid);
+        if(metaForClear.dirtyDays&&typeof metaForClear.dirtyDays==='object'){
+          const clearDay=String(clearState.clearedAt).slice(0,10);
+          Object.keys(metaForClear.dirtyDays).forEach(day=>{if(/^\d{4}-\d{2}-\d{2}$/.test(day)&&day<clearDay)delete metaForClear.dirtyDays[day]});
+          setMeta(uid,metaForClear);
+        }
+      }
+    }catch(clearGuardError){
+      throw new Error('Global dashboard clear marker could not be verified; sync paused to prevent deleted visits returning: '+String(clearGuardError?.message||clearGuardError));
+    }
     try{
       await purgeExpiredLocalPhotos();
       await cleanupExpiredCloudPhotos(uid,false);
@@ -18855,6 +18885,31 @@ async function syncSalesmanFirebaseV12(reason){
       }
 
       const current=localVisitList();
+      // Re-read immediately before collecting/uploading photos and visit-day documents.
+      // If Master cleared while this sync was already running, trim the same array before any write.
+      try{
+        const latestDoc=await readDoc('app_settings/masterData');
+        const latestClear=latestDoc?.masterDashboardClearState||latestDoc?.masterDashboardState||latestDoc?.dashboardClearState||null;
+        const latestClearAt=String(latestClear?.clearedAt||'');
+        if(observedClearAt&&!latestClearAt)throw new Error('The previously verified global clear marker is missing.');
+        if(latestClearAt&&latestClearAt!==observedClearAt){
+          const applyClear=window.__shadabApplyClearMarkerLocallyV12;
+          const keepAfterClear=window.__shadabKeepVisitAfterClearV12;
+          if(typeof applyClear!=='function'||typeof keepAfterClear!=='function')throw new Error('Clear marker filter is not available.');
+          applyClear(latestClear);
+          const updated=localVisitList().filter(v=>keepAfterClear(v,latestClear));
+          current.splice(0,current.length,...updated);
+          visits=current;
+          saveLocalVisitsNoPhotos();
+          observedClearAt=latestClearAt;
+          const newerMeta=getMeta(uid);
+          if(newerMeta.dirtyDays&&typeof newerMeta.dirtyDays==='object'){
+            const clearDay=latestClearAt.slice(0,10);
+            Object.keys(newerMeta.dirtyDays).forEach(day=>{if(/^\d{4}-\d{2}-\d{2}$/.test(day)&&day<clearDay)delete newerMeta.dirtyDays[day]});
+            setMeta(uid,newerMeta);
+          }
+        }
+      }catch(latestClearError){throw new Error('Clear marker changed or could not be re-verified before upload; sync stopped to protect cleared data: '+String(latestClearError?.message||latestClearError))}
       /* Make sure each runtime photo has a local compressed cache entry. */
       await cacheRuntimeVisitPhotos();
 
@@ -20851,6 +20906,330 @@ html[data-shadab-theme="light"] #shadabBottomNav .sbn-label,body:not(.dark) #sha
 })();
 </script>
 <!-- CLEAR DASHBOARD PERSISTENCE FIX V5: local save + durable marker + verified cleanup -->
+<!-- ===== V12 FORENSIC PATCH: CANONICAL TERRITORY RENAMES + FAST DURABLE CLEAR ===== -->
+<script id="shadab-v12-canonical-territories-and-clear">
+(function(){
+'use strict';
+const ADMIN='master@shadabpharmacy.com';
+const MASTER_PATH='app_settings/masterData';
+const SCHEDULE_PATH='app_settings/adminSchedules';
+const ALIAS_KEY='shadab_territory_rename_aliases_v1';
+const CLEAR_FIELD='masterDashboardClearState';
+const CLEAR_LOCAL='shadab_master_dashboard_clear_state_v4';
+const CLEAR_TASK_APPLIED='shadab_clear_route_tasks_applied_v12';
+const SEED_ALIASES={
+  'sahiwal|green market':'GMKT+ARF+FC+CHOWK PK',
+  'sahiwal|sir syed road':'SIR SYED ROAD+BUND RD',
+  'sahiwal|karbala road':'KARBALA+FATEH SHER'
+};
+const stamp=()=>new Date().toISOString();
+const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+const isMaster=()=>String(session()?.email||'').toLowerCase()===ADMIN;
+const read=async p=>{if(typeof window.shadabRestReadDoc!=='function')throw new Error('Firebase REST reader unavailable');return await window.shadabRestReadDoc(p)};
+const readCol=async p=>{if(typeof window.shadabRestReadCollection!=='function')throw new Error('Firebase collection reader unavailable');return await window.shadabRestReadCollection(p)};
+const write=async(p,v)=>{if(typeof window.shadabRestWriteDoc!=='function')throw new Error('Firebase REST writer unavailable');return await window.shadabRestWriteDoc(p,v)};
+const del=async p=>{if(typeof window.shadabRestDeleteDoc!=='function')throw new Error('Firebase delete function unavailable');return await window.shadabRestDeleteDoc(p)};
+const clone=v=>{try{return JSON.parse(JSON.stringify(v??null))}catch(e){return v}};
+const clean=s=>String(s??'').trim().replace(/\s+/g,' ');
+const norm=s=>clean(s).toLowerCase();
+const safeJSON=(k,d)=>{try{const x=JSON.parse(localStorage.getItem(k)||'null');return x??d}catch(e){return d}};
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const toast=m=>{try{window.toast35?.(m)}catch(e){}try{window.toast?.(m)}catch(e){}};
+
+function normalizeAliases(x){
+  const o={};
+  Object.entries(SEED_ALIASES).forEach(([k,v])=>o[norm(k)]=clean(v));
+  if(x&&typeof x==='object'){
+    if(Array.isArray(x))x.forEach(a=>{if(a&&a.city&&a.from&&a.to)o[norm(a.city)+'|'+norm(a.from)]=clean(a.to)});
+    else Object.entries(x).forEach(([k,v])=>{if(v&&typeof v==='string'&&clean(k).includes('|')&&clean(v))o[norm(k)]=clean(v)});
+  }
+  return o;
+}
+let aliases=normalizeAliases(safeJSON(ALIAS_KEY,{}));
+try{localStorage.setItem(ALIAS_KEY,JSON.stringify(aliases))}catch(e){}
+function canonicalName(city,territory,map=aliases){
+  let out=clean(territory);const c=norm(city);if(!out)return out;
+  const seen=new Set();
+  for(let i=0;i<12;i++){
+    const k=c+'|'+norm(out);if(seen.has(k))break;seen.add(k);
+    const next=map[k];if(!next||norm(next)===norm(out))break;out=clean(next);
+  }
+  return out;
+}
+function canonicalTerritories(input,map=aliases){
+  const src=input&&typeof input==='object'&&!Array.isArray(input)?input:{};const out={};
+  Object.entries(src).forEach(([city,list])=>{
+    const arr=Array.isArray(list)?list:[];const vals=[];const seen=new Set();
+    arr.forEach(t=>{const v=canonicalName(city,t,map);if(!v)return;const k=norm(v);if(!seen.has(k)){seen.add(k);vals.push(v)}});
+    out[city]=vals;
+  });
+  return out;
+}
+function canonicalStoreRows(rows,map=aliases){
+  return (Array.isArray(rows)?rows:[]).map(row=>{
+    if(!row||typeof row!=='object')return row;
+    const x={...row};const city=x.area||x.city||x.town||'';if(x.territory)x.territory=canonicalName(city,x.territory,map);return x;
+  });
+}
+function remapAssignment(as,map){
+  if(!as||typeof as!=='object')return;const city=as.area||as.city||as.town||'';
+  if(Array.isArray(as.territories))as.territories=as.territories.map(t=>canonicalName(city,t,map)).filter(Boolean).filter((v,i,a)=>a.findIndex(x=>norm(x)===norm(v))===i);
+  if(as.days&&typeof as.days==='object')Object.keys(as.days).forEach(d=>{if(Array.isArray(as.days[d]))as.days[d]=as.days[d].map(t=>canonicalName(city,t,map)).filter(Boolean).filter((v,i,a)=>a.findIndex(x=>norm(x)===norm(v))===i)});
+}
+function normalizeSchedules(){
+  try{if(typeof adminSchedules!=='undefined'&&adminSchedules&&typeof adminSchedules==='object')Object.values(adminSchedules).forEach(cfg=>{if(!cfg||typeof cfg!=='object')return;const aa=Array.isArray(cfg.assignments)?cfg.assignments:[cfg];aa.forEach(as=>remapAssignment(as,aliases))})}catch(e){}
+  try{if(typeof routeTasks!=='undefined'&&routeTasks&&typeof routeTasks==='object')Object.values(routeTasks).forEach(day=>{if(!day||typeof day!=='object')return;const city=day.area||'';if(Array.isArray(day.territories))day.territories=day.territories.map(t=>canonicalName(city,t,aliases)).filter(Boolean).filter((v,i,a)=>a.findIndex(x=>norm(x)===norm(v))===i);if(Array.isArray(day.stores))day.stores.forEach(st=>{if(st?.territory)st.territory=canonicalName(st.area||city,st.territory,aliases)});if(Array.isArray(day.assignments))day.assignments.forEach(as=>remapAssignment(as,aliases))})}catch(e){}
+}
+function normalizeLocalCatalog(){
+  try{if(typeof territories!=='undefined'&&territories&&typeof territories==='object')territories=canonicalTerritories(territories,aliases)}catch(e){}
+  try{if(typeof storeDatabase!=='undefined'&&Array.isArray(storeDatabase))storeDatabase=canonicalStoreRows(storeDatabase,aliases)}catch(e){}
+  try{const d=safeJSON('shadab_disabled_territories_v1',[]);if(Array.isArray(d)){const out=d.map(v=>{const i=String(v).indexOf('|');if(i<0)return v;const c=v.slice(0,i),t=v.slice(i+1);return c+'|'+canonicalName(c,t,aliases)});localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify([...new Set(out)]))}}catch(e){}
+  try{normalizeSchedules()}catch(e){}
+  try{const tm=safeJSON('shadab_territory_master_data_v1',null);if(tm&&typeof tm==='object'){if(tm.territories)tm.territories=canonicalTerritories(tm.territories,aliases);if(tm.stores&&typeof tm.stores==='object')Object.values(tm.stores).forEach(st=>{if(st?.territory)st.territory=canonicalName(st.area||'',st.territory,aliases)});localStorage.setItem('shadab_territory_master_data_v1',JSON.stringify(tm))}}catch(e){}
+  try{if(typeof territories!=='undefined')localStorage.setItem('shadab_pharmacy_territories_v1',JSON.stringify(territories))}catch(e){}
+  try{if(typeof storeDatabase!=='undefined')localStorage.setItem('shadab_pharmacy_store_database_v1',JSON.stringify(storeDatabase))}catch(e){}
+  try{if(typeof loadTerritoryMasterData==='function'){const tm=loadTerritoryMasterData();if(tm&&typeof tm==='object'){tm.territories=canonicalTerritories(tm.territories||{},aliases);if(tm.stores&&typeof tm.stores==='object')Object.values(tm.stores).forEach(st=>{if(st?.territory)st.territory=canonicalName(st.area||'',st.territory,aliases)});localStorage.setItem('shadab_territory_master_data_v1',JSON.stringify(tm))}}}catch(e){}
+}
+function ingestAliases(remoteMap){
+  const next=normalizeAliases({...aliases,...(remoteMap&&typeof remoteMap==='object'?remoteMap:{})});
+  const changed=JSON.stringify(next)!==JSON.stringify(aliases);aliases=next;
+  try{localStorage.setItem(ALIAS_KEY,JSON.stringify(aliases))}catch(e){}
+  normalizeLocalCatalog();
+  return changed;
+}
+
+function canonicalDisabledList(list,map=aliases){
+  return (Array.isArray(list)?list:[]).map(v=>{const raw=String(v??'');const i=raw.indexOf('|');if(i<0)return raw;const city=raw.slice(0,i),territory=raw.slice(i+1);return city+'|'+canonicalName(city,territory,map)});
+}
+function canonicalStoreShape(value,map=aliases){
+  if(Array.isArray(value))return canonicalStoreRows(value,map);
+  if(!value||typeof value!=='object')return value;
+  const out={};Object.entries(value).forEach(([k,row])=>{if(!row||typeof row!=='object'){out[k]=row;return}const x={...row};const city=x.area||x.city||x.town||'';if(x.territory)x.territory=canonicalName(city,x.territory,map);out[k]=x});return out;
+}
+function storeRowsToMap(rows){
+  const out={};(Array.isArray(rows)?rows:[]).forEach(st=>{if(!st||typeof st!=='object')return;const key=String(st.code||('NAME|'+st.area+'|'+st.name)).toLowerCase();out[key]={area:st.area||'',territory:canonicalName(st.area||st.city||'',st.territory||''),name:st.name||'',code:st.code||''}});return out;
+}
+async function publishCanonicalCatalog(reason,preserveRemote=false){
+  if(!isMaster()||!navigator.onLine)return false;
+  const current=await read(MASTER_PATH)||{};
+  if(preserveRemote){
+    // During migration, canonicalize Firebase's own data in place. Never replace a newer
+    // cloud catalog with a possibly stale local copy just because the app has reopened.
+    if(current.territories&&typeof current.territories==='object')current.territories=canonicalTerritories(current.territories,aliases);
+    if(Array.isArray(current.stores))current.stores=canonicalStoreRows(current.stores,aliases);
+    if(Array.isArray(current.storeDatabase))current.storeDatabase=canonicalStoreRows(current.storeDatabase,aliases);
+    if(Array.isArray(current.disabledTerritories))current.disabledTerritories=canonicalDisabledList(current.disabledTerritories,aliases);
+    if(current.territoryMaster&&typeof current.territoryMaster==='object'){
+      const tm={...current.territoryMaster};
+      if(tm.territories)tm.territories=canonicalTerritories(tm.territories,aliases);
+      if(tm.stores)tm.stores=canonicalStoreShape(tm.stores,aliases);
+      if(current.territoryMasterLocked){
+        const sourceRows=Array.isArray(current.stores)?current.stores:(Array.isArray(current.storeDatabase)?current.storeDatabase:null);
+        tm.territories=canonicalTerritories(current.territories||tm.territories||{},aliases);
+        tm.stores=sourceRows?storeRowsToMap(sourceRows):canonicalStoreShape(tm.stores||{},aliases);
+        tm.lockedAt=tm.lockedAt||stamp();tm.version=tm.version||1;
+      }
+      current.territoryMaster=tm;
+    }
+  }else{
+    normalizeLocalCatalog();
+    current.territories=clone(typeof territories!=='undefined'?territories:{})||{};
+    current.stores=clone(typeof storeDatabase!=='undefined'?storeDatabase:[])||[];
+    current.disabledTerritories=safeJSON('shadab_disabled_territories_v1',[]);
+    if(current.territoryMasterLocked){current.territoryMaster={...(current.territoryMaster||{}),territories:clone(current.territories),stores:storeRowsToMap(current.stores),lockedAt:current.territoryMaster?.lockedAt||stamp(),version:current.territoryMaster?.version||1}}
+  }
+  current.territoryRenames=clone(aliases)||{};
+  current.updatedAt=stamp();current.updatedBy='master';current.reason=reason||'canonical-territory-rename';
+  await write(MASTER_PATH,current);
+  const check=await read(MASTER_PATH);
+  if(!check||JSON.stringify(canonicalTerritories(check.territories||{},aliases))!==JSON.stringify(canonicalTerritories(current.territories||{},aliases)))throw new Error('Firebase territory catalog verification failed');
+  const savedAliases=check.territoryRenames||{};
+  if(Object.entries(aliases).some(([k,v])=>savedAliases[k]!==v))throw new Error('Firebase territory rename map verification failed');
+  return true;
+}
+
+// Fix both legacy and current territory Edit buttons. The rename is a canonical
+// migration, not a simple array rename: it updates stores, locks, schedules,
+// route tasks and a durable cloud alias so stale clients cannot resurrect names.
+async function renameTerritoryCanonical(city,oldName){
+  if(typeof window.guardTerritoryMasterEdit==='function'&&!window.guardTerritoryMasterEdit('admin territory'))return;
+  city=clean(city);oldName=clean(oldName);if(!city||!oldName)return;
+  const input=prompt('New territory name',oldName);if(input===null)return;
+  const newName=clean(input);if(!newName){toast('Territory name is required');return}
+  if(norm(newName)===norm(oldName))return;
+  const arr=Array.isArray(territories?.[city])?territories[city]:[];
+  if(arr.some(x=>norm(x)===norm(newName)&&norm(x)!==norm(oldName))){toast('Territory already exists');return}
+  aliases=normalizeAliases({...aliases,[norm(city)+'|'+norm(oldName)]:newName});
+  try{localStorage.setItem(ALIAS_KEY,JSON.stringify(aliases))}catch(e){}
+  territories[city]=arr.map(x=>norm(x)===norm(oldName)?newName:x).filter((v,i,a)=>a.findIndex(x=>norm(x)===norm(v))===i);
+  try{if(Array.isArray(storeDatabase))storeDatabase.forEach(st=>{if(norm(st.area||st.city||'')===norm(city)&&norm(st.territory)===norm(oldName))st.territory=newName})}catch(e){}
+  normalizeLocalCatalog();
+  try{if(typeof saveData==='function')saveData()}catch(e){}
+  try{if(typeof saveRouteTasks==='function')saveRouteTasks()}catch(e){}
+  try{localStorage.setItem('shadab_pharmacy_store_database_v1',JSON.stringify(storeDatabase||[]));localStorage.setItem('shadab_pharmacy_territories_v1',JSON.stringify(territories||{}))}catch(e){}
+  let cloudOk=false;
+  try{cloudOk=await publishCanonicalCatalog('territory-rename-'+norm(city)+'-'+norm(oldName));}catch(e){console.warn('Canonical territory rename publish:',e)}
+  try{if(typeof window.saveScheduleNow==='function'){const r=await window.saveScheduleNow('territory-rename');cloudOk=cloudOk&&r?.ok!==false}}catch(e){cloudOk=false}
+  try{window.refreshTerritories?.();window.refreshAssignmentTerritories?.();window.renderTodayTasks?.();window.updatePremiumDashboard?.();window.sp35RenderTerritoriesNew?.();window.sp35RenderTerrNew?.();window.sp35RenderTerritories?.()}catch(e){}
+  toast(cloudOk?'✓ Territory renamed, references migrated, and synced':'✓ Territory renamed locally; cloud sync needs retry');
+}
+window.sp35EditTerrNew=renameTerritoryCanonical;
+window.sp35EditTerr=renameTerritoryCanonical;
+
+// Wrap catalog renders/saves so hard-coded PDF repair maps and old local snapshots
+// are normalized before they can be presented or persisted.
+function wrapBefore(name){const old=window[name];if(typeof old!=='function'||old.__v12CanonicalTerritories)return;const f=function(){normalizeLocalCatalog();const r=old.apply(this,arguments);if(r&&typeof r.then==='function')return r.then(v=>{normalizeLocalCatalog();return v},e=>{normalizeLocalCatalog();throw e});normalizeLocalCatalog();return r};f.__v12CanonicalTerritories=true;f.__v12Original=old;window[name]=f}
+['refreshTerritories','refreshAssignmentTerritories','sp35RenderTerritoriesNew','sp35RenderTerrNew','sp35RenderTerritories','shadabRepairTerritoryStores'].forEach(wrapBefore);
+['saveData','saveMasterData'].forEach(name=>{const old=window[name];if(typeof old!=='function'||old.__v12CanonicalTerritories)return;const f=function(){normalizeLocalCatalog();const r=old.apply(this,arguments);if(r&&typeof r.then==='function')return r.then(v=>{normalizeLocalCatalog();return v},e=>{normalizeLocalCatalog();throw e});normalizeLocalCatalog();return r};f.__v12CanonicalTerritories=true;f.__v12Original=old;window[name]=f});
+
+// Whenever any existing code reads the shared masterData document, ingest the
+// cloud alias map first. This keeps already-open salesman devices consistent.
+const oldRestRead=window.shadabRestReadDoc;
+if(typeof oldRestRead==='function'&&!oldRestRead.__v12AliasIngest){const f=async function(path){const x=await oldRestRead.apply(this,arguments);if(String(path||'').replace(/^\/+|\/+$/g,'')===MASTER_PATH&&x&&typeof x==='object'&&x.territoryRenames)ingestAliases(x.territoryRenames);return x};f.__v12AliasIngest=true;f.__v12Original=oldRestRead;window.shadabRestReadDoc=f}
+
+// Seed and publish the three known stale Sahiwal aliases from the screenshots,
+// then hydrate every device's canonical territory list from the same document.
+async function bootAliases(){
+  normalizeLocalCatalog();
+  try{
+    if(navigator.onLine&&session()?.uid){const m=await read(MASTER_PATH);if(m&&typeof m==='object'){
+      ingestAliases(m.territoryRenames||{});
+      // Do not let an older local snapshot overwrite Firebase on app startup.
+      // Migrate Firebase's own old names to canonical names and persist the alias map.
+      normalizeLocalCatalog();
+      if(isMaster()){
+        const remoteAliases=m.territoryRenames||{};
+        const aliasMapNeedsSave=Object.entries(aliases).some(([k,v])=>remoteAliases[k]!==v);
+        const remoteTerr=canonicalTerritories(m.territories||{},aliases);
+        const remoteStores=Array.isArray(m.stores)?canonicalStoreRows(m.stores,aliases):m.stores;
+        const remoteStoreDb=Array.isArray(m.storeDatabase)?canonicalStoreRows(m.storeDatabase,aliases):m.storeDatabase;
+        const catalogNeedsSave=JSON.stringify(m.territories||{})!==JSON.stringify(remoteTerr)||
+          JSON.stringify(m.stores||[])!==JSON.stringify(remoteStores||[])||
+          JSON.stringify(m.storeDatabase||[])!==JSON.stringify(remoteStoreDb||[]);
+        if(aliasMapNeedsSave||catalogNeedsSave){
+          const remoteHasCatalog=!!(m.territories&&Object.keys(m.territories).length);
+          await publishCanonicalCatalog('territory-alias-migration-v12',remoteHasCatalog);
+        }
+      }
+    }}
+  }catch(e){console.warn('Territory alias hydrate:',e)}
+  try{window.refreshTerritories?.();window.refreshAssignmentTerritories?.();window.sp35RenderTerritoriesNew?.();window.sp35RenderTerrNew?.();window.sp35RenderTerritories?.()}catch(e){}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(bootAliases,400),{once:true});else setTimeout(bootAliases,400);
+window.addEventListener('pageshow',()=>setTimeout(bootAliases,300));
+window.addEventListener('online',()=>setTimeout(bootAliases,500));
+window.spV12NormalizeTerritories=normalizeLocalCatalog;
+
+/* =================== Durable, fast, verified Clear Dashboard =================== */
+function pkDate(ms){try{const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Karachi',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(ms));const g=t=>p.find(x=>x.type===t)?.value||'';return g('year')+'-'+g('month')+'-'+g('day')}catch(e){return new Date(ms).toISOString().slice(0,10)}}
+function eventStamp(v){for(const raw of [v?.createdAt,v?.timestamp,v?.visitedAt,v?.dateTime,v?.timeStamp]){if(raw==null||raw==='')continue;if(typeof raw==='number'){const n=raw>1e12?raw:raw>1e9?raw*1000:0;if(n>0)return n;continue}if(typeof raw==='object'){const sec=Number(raw.seconds??raw._seconds??0);if(sec>0)return sec*1000;const ms=Number(raw.toMillis?.()||raw.milliseconds||0);if(ms>0)return ms;continue}const n=Date.parse(String(raw));if(Number.isFinite(n))return n}return 0}
+function eventDate(v){const raw=v?.date??v?.visitDate??v?.visitedDate??'';if(typeof raw==='number'){const n=raw>1e12?raw:raw>1e9?raw*1000:0;if(n>0)return pkDate(n)}if(raw&&typeof raw==='object'){const sec=Number(raw.seconds??raw._seconds??0);if(sec>0)return pkDate(sec*1000);const ms=Number(raw.toMillis?.()||raw.milliseconds||0);if(ms>0)return pkDate(ms)}const text=String(raw||'').trim();let m=text.match(/^(\d{4}-\d{2}-\d{2})/);if(m)return m[1];m=text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(m){const dd=Number(m[1]),mm=Number(m[2]);if(dd>=1&&dd<=31&&mm>=1&&mm<=12)return m[3]+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0')}if(text){const n=Date.parse(text);if(Number.isFinite(n)&&/[T ]/.test(text))return pkDate(n)}const ts=eventStamp(v);return ts?pkDate(ts):''}
+function keepPostClear(v,state){const cut=Date.parse(state?.clearedAt||'');if(!Number.isFinite(cut)||cut<=0)return true;const cd=pkDate(cut),d=eventDate(v);if(d&&d<cd)return false;if(d&&d>cd)return true;const raw=String(v?.time||v?.visitTime||'').trim();const m=raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);if(d===cd&&m){let h=Number(m[1]),mi=Number(m[2]),ss=Number(m[3]||0);const ap=String(m[4]||'').toUpperCase();if(ap==='PM'&&h<12)h+=12;if(ap==='AM'&&h===12)h=0;const ms=Date.parse(cd+'T'+String(h).padStart(2,'0')+':'+String(mi).padStart(2,'0')+':'+String(ss).padStart(2,'0')+'+05:00');if(!Number.isFinite(ms))return false;if(Math.floor(ms/60000)===Math.floor(cut/60000)){const precise=eventStamp(v);return precise>cut}return ms>cut}return eventStamp(v)>cut}
+function applyClearLocally(state){
+  if(!state?.clearedAt)return;
+  const ts=String(state.clearedAt),previous=String(localStorage.getItem(CLEAR_TASK_APPLIED)||'');
+  try{if(typeof visits!=='undefined'&&Array.isArray(visits)){const next=visits.filter(v=>keepPostClear(v,state));visits=next;localStorage.setItem('shadab_pharmacy_visits_v1',JSON.stringify(next.map(v=>{const x=clone(v)||{};delete x.photo;return x})))} }catch(e){}
+  try{if(Array.isArray(window.visits))window.visits=window.visits.filter(v=>keepPostClear(v,state))}catch(e){}
+  // When a newer global clear arrives, clear stale local route progress once.
+  // It does not erase the master assignment schedules or territory catalog.
+  if(!previous||Date.parse(ts)>Date.parse(previous)){
+    try{if(typeof routeTasks!=='undefined')routeTasks={}}catch(e){}
+    try{localStorage.setItem('shadab_pharmacy_route_tasks_v1','{}');localStorage.setItem('shadab_pharmacy_today_tasks_v1','{}')}catch(e){}
+    try{if(typeof saveRouteTasks==='function')saveRouteTasks()}catch(e){}
+    try{localStorage.setItem(CLEAR_TASK_APPLIED,ts)}catch(e){}
+  }
+  try{localStorage.setItem(CLEAR_LOCAL,JSON.stringify(state));localStorage.setItem('shadab_master_dashboard_clear_state_v3',JSON.stringify(state))}catch(e){}
+}
+window.__shadabKeepVisitAfterClearV12=keepPostClear;
+window.__shadabApplyClearMarkerLocallyV12=applyClearLocally;
+async function writeClearStateV12(state){
+  const cur=clone(await read(MASTER_PATH)||{})||{};cur[CLEAR_FIELD]=state;cur.updatedAt=stamp();cur.updatedBy=ADMIN;await write(MASTER_PATH,cur);
+  const check=await read(MASTER_PATH);if(!check?.[CLEAR_FIELD]?.clearedAt||check[CLEAR_FIELD].clearedAt!==state.clearedAt)throw new Error('Firebase clear marker could not be verified.');
+  try{window.__shadabActivateClearMarker?.(check[CLEAR_FIELD])}catch(e){}applyClearLocally(check[CLEAR_FIELD]);return check[CLEAR_FIELD];
+}
+async function pool(items,limit,worker){let cursor=0;const n=Math.min(limit,items.length);const runners=Array.from({length:n},async()=>{while(true){const i=cursor++;if(i>=items.length)return;await worker(items[i],i)}});await Promise.all(runners)}
+function dataOf(r){try{return typeof r?.data==='function'?(r.data()||{}):(r?.data||r||{})}catch(e){return {}}}
+function idOf(r){return String(r?.id||dataOf(r)?.uid||r?.uid||'').trim()}
+function renderClearZero(){try{const prev=window.__spMasterAggregateCache||{};window.__spMasterAggregateCache={at:stamp(),salesmen:Array.isArray(prev.salesmen)?prev.salesmen:[],visits:[],plannedToday:[],rawByUid:{},sourceCounts:{userData:Number(prev?.sourceCounts?.userData||0),salesmen:Number(prev?.sourceCounts?.salesmen||0),visitDays:0},stats:{today:0,week:0,month:0,uniqueStores:0},dashboardCleared:true,clearStateAt:localStorage.getItem(CLEAR_TASK_APPLIED)||''};window.render?.(window.__spMasterAggregateCache);window.updateStats?.();window.updatePremiumDashboard?.();window.renderTodayTasks?.();window.renderRecords?.();document.querySelectorAll('#spAddedMasterDashboard .num').forEach(x=>x.textContent='0')}catch(e){console.warn('V12 clear dashboard render:',e)}}
+async function clearDashboardV12(){
+  const s=session();if(!s?.uid||!isMaster()){toast('Master login is required to clear all visit data.');return false}if(!navigator.onLine){toast('Offline — connect to Firebase before clearing dashboard.');return false}if(!confirm('CLEAR ALL VISIT DATA?\n\nThis clears old visit/activity records and saved route progress across all salesman devices. Medical stores, cities, territories, assignments, salesman accounts, reports/PDF settings and master schedules remain safe. New visits can be recorded after the clear.\n\nThis cannot be undone.'))return false;
+  const b=document.getElementById('spMasterClearDashboardBtn'),st=document.getElementById('spMasterClearDashboardStatus');const putStatus=t=>{if(st)st.textContent=t};if(b){b.disabled=true;b.classList.remove('is-error','is-success');b.classList.add('is-clearing');b.innerHTML='<span class="sp-clear-v2-icon">↻</span><span class="sp-clear-v2-copy"><strong>CLEARING DASHBOARD…</strong><small>Publishing clear marker, removing visit records in parallel</small></span><span class="sp-clear-v2-state">…</span>'}
+  const state={clearedAt:stamp(),clearedBy:String(s.email||ADMIN),version:6,scope:'ALL_VISITS_MEDIA_LEGACY_ARRAYS_AND_ROUTE_PROGRESS',permissionSafe:true};let dayDeletes=0,mediaDeletes=0,parentWrites=0,remainingDays=0,remainingMedia=0;const errors=[];const err=e=>String(e?.message||e||'Unknown error').slice(0,220);const push=(ctx,e)=>errors.push(ctx+': '+err(e));
+  try{
+    // The cloud tombstone is published and verified FIRST, before any slow cleanup.
+    await writeClearStateV12(state);applyClearLocally(state);putStatus('Clear marker verified. Gathering salesman visit records…');
+    try{if(typeof visits!=='undefined')visits=[];localStorage.setItem('shadab_pharmacy_visits_v1','[]')}catch(e){}
+    try{if(typeof routeTasks!=='undefined')routeTasks={};localStorage.setItem('shadab_pharmacy_route_tasks_v1','{}');localStorage.setItem('shadab_pharmacy_today_tasks_v1','{}');localStorage.setItem(CLEAR_TASK_APPLIED,state.clearedAt)}catch(e){}
+    try{window.__spMasterAggregateCache={salesmen:window.__spMasterAggregateCache?.salesmen||[],visits:[],plannedToday:[],rawByUid:{},stats:{today:0,week:0,month:0,uniqueStores:0},at:stamp(),dashboardCleared:true,clearStateAt:state.clearedAt}}catch(e){}
+    let users=[],profiles=[];
+    const accountReads=await Promise.allSettled([readCol('user_data'),readCol('salesmen')]);
+    if(accountReads[0].status==='fulfilled')users=accountReads[0].value;else push('List user_data accounts',accountReads[0].reason);
+    if(accountReads[1].status==='fulfilled')profiles=accountReads[1].value;else push('List salesman profiles',accountReads[1].reason);
+    const userIds=new Set((Array.isArray(users)?users:[]).map(r=>idOf(r)).filter(Boolean));
+    const uids=[...new Set([...(Array.isArray(users)?users:[]),...(Array.isArray(profiles)?profiles:[])].map(r=>idOf(r)).filter(Boolean))];
+    putStatus('Found '+uids.length+' salesman accounts. Reading visit/media documents in parallel…');
+    const inventories=[];
+    await pool(uids,4,async uid=>{
+      const base='user_data/'+encodeURIComponent(uid);let days=[],media=[];
+      const r=await Promise.allSettled([readCol(base+'/visit_days'),readCol(base+'/visit_media')]);
+      if(r[0].status==='fulfilled')days=r[0].value;else push('List visit_days for '+uid,r[0].reason);
+      if(r[1].status==='fulfilled')media=r[1].value;else push('List visit_media for '+uid,r[1].reason);
+      inventories.push({uid,base,days:Array.isArray(days)?days:[],media:Array.isArray(media)?media:[]});
+    });
+    const deletes=[];inventories.forEach(inv=>{inv.days.forEach(r=>{const id=String(r?.id||'').trim();if(id)deletes.push({path:inv.base+'/visit_days/'+encodeURIComponent(id),type:'day',uid:inv.uid});else push('Visit-day document',new Error('missing document id'))});inv.media.forEach(r=>{const id=String(r?.id||'').trim();if(id)deletes.push({path:inv.base+'/visit_media/'+encodeURIComponent(id),type:'media',uid:inv.uid});else push('Visit-media document',new Error('missing document id'))})});
+    putStatus('Removing '+deletes.length+' visit/media documents using bounded parallel requests…');
+    let done=0;await pool(deletes,8,async d=>{try{await del(d.path);if(d.type==='day')dayDeletes++;else mediaDeletes++}catch(e){push('Delete '+d.uid+'/'+d.type,e)}done++});
+    // Strip legacy parent arrays but retain credentials, expenses, summary detail and profile data.
+    const rootIds=[...userIds];await pool(rootIds,4,async uid=>{try{const old=await read('user_data/'+encodeURIComponent(uid));if(!old||typeof old!=='object')return;const next=clone(old)||{};['visits','visitStats','visitCounts','routeTasks','adminDeletedVisitIds'].forEach(k=>delete next[k]);next.uid=String(old.uid||uid);next.updatedAt=stamp();next.masterDashboardClearedAt=state.clearedAt;next.masterDashboardClearedBy=ADMIN;await write('user_data/'+encodeURIComponent(uid),next);const chk=await read('user_data/'+encodeURIComponent(uid));if(chk&&['visits','visitStats','visitCounts','routeTasks','adminDeletedVisitIds'].some(k=>Object.prototype.hasOwnProperty.call(chk,k)))throw new Error('Legacy visit field remained after write');parentWrites++}catch(e){push('Clean legacy fields for '+uid,e)}});
+    // Route progress is cleared separately from assignments/schedules.
+    try{const sch=await read(SCHEDULE_PATH);if(sch&&typeof sch==='object'){sch.routeTasks={};sch.updatedAt=stamp();sch.updatedBy=ADMIN;sch.reason='master-dashboard-clear-v12';await write(SCHEDULE_PATH,sch);const chk=await read(SCHEDULE_PATH);if(chk?.routeTasks&&Object.keys(chk.routeTasks).length)throw new Error('Route task state remains');}}catch(e){push('Clear global route progress',e)}
+    putStatus('Rechecking for records written by a sync already in progress…');
+    const lateDocs=[];
+    await pool(uids,4,async uid=>{
+      const base='user_data/'+encodeURIComponent(uid);
+      const r=await Promise.allSettled([readCol(base+'/visit_days'),readCol(base+'/visit_media')]);
+      if(r[0].status==='fulfilled'){for(const x of Array.isArray(r[0].value)?r[0].value:[]){const id=String(x?.id||'').trim();if(id)lateDocs.push({path:base+'/visit_days/'+encodeURIComponent(id),type:'day',uid});else push('Late visit_days document for '+uid,new Error('missing document id'))}}
+      else push('Recheck visit_days for '+uid,r[0].reason);
+      if(r[1].status==='fulfilled'){for(const x of Array.isArray(r[1].value)?r[1].value:[]){const id=String(x?.id||'').trim();if(id)lateDocs.push({path:base+'/visit_media/'+encodeURIComponent(id),type:'media',uid});else push('Late visit_media document for '+uid,new Error('missing document id'))}}
+      else push('Recheck visit_media for '+uid,r[1].reason);
+      // Older app builds may still be completing an in-flight write to the parent document.
+      try{const old=await read(base);if(old&&typeof old==='object'){const keys=['visits','visitStats','visitCounts','routeTasks','adminDeletedVisitIds'];if(keys.some(k=>Object.prototype.hasOwnProperty.call(old,k))){const next=clone(old)||{};keys.forEach(k=>delete next[k]);next.uid=String(old.uid||uid);next.updatedAt=stamp();next.masterDashboardClearedAt=state.clearedAt;next.masterDashboardClearedBy=ADMIN;await write(base,next);const check=await read(base);if(check&&keys.some(k=>Object.prototype.hasOwnProperty.call(check,k)))push('Second-pass parent cleanup for '+uid,new Error('legacy visit fields remain'));}}}catch(e){push('Second-pass parent cleanup for '+uid,e)}
+    });
+    if(lateDocs.length){putStatus('Final sweep removing '+lateDocs.length+' late visit/media records…');await pool(lateDocs,8,async d=>{try{await del(d.path);if(d.type==='day')dayDeletes++;else mediaDeletes++}catch(e){push('Final delete '+d.uid+'/'+d.type,e)}})}
+    putStatus('Final Firebase read-back verification…');
+    await pool(uids,4,async uid=>{const base='user_data/'+encodeURIComponent(uid);try{const x=await readCol(base+'/visit_days');if(Array.isArray(x)&&x.length){remainingDays+=x.length;push('Verify visit_days for '+uid,new Error(x.length+' document(s) remain'))}}catch(e){push('Verify visit_days for '+uid,e)}try{const x=await readCol(base+'/visit_media');if(Array.isArray(x)&&x.length){remainingMedia+=x.length;push('Verify visit_media for '+uid,new Error(x.length+' document(s) remain'))}}catch(e){push('Verify visit_media for '+uid,e)}});
+    // Local photo cleanup is also parallel; failure is reported rather than hidden.
+    try{const all=await window.photoListAll?.()||[];await pool(all,4,async x=>{try{await window.photoDelete?.(x.id)}catch(e){push('Local photo '+x.id,e)}})}catch(e){push('List local photos',e)}
+    state.affectedUserDataDocuments=uids.length;state.deletedVisitDayDocuments=dayDeletes;state.deletedVisitMediaDocuments=mediaDeletes;state.verifiedLegacyParentWrites=parentWrites;state.remainingVisitDayDocuments=remainingDays;state.remainingVisitMediaDocuments=remainingMedia;state.cleanupVerified=errors.length===0;state.cleanupErrors=errors.slice(0,50);state.cleanupWarningCount=errors.length;
+    await writeClearStateV12(state);applyClearLocally(state);renderClearZero();
+    const success=errors.length===0;
+    if(b){b.disabled=false;b.classList.remove('is-clearing','is-error','is-success');b.classList.add(success?'is-success':'is-error');b.innerHTML=success?'<span class="sp-clear-v2-icon">✓</span><span class="sp-clear-v2-copy"><strong>DASHBOARD CLEARED & VERIFIED</strong><small>Clear marker locked in • cleanup read-back verified</small></span><span class="sp-clear-v2-state">✓</span>':'<span class="sp-clear-v2-icon">!</span><span class="sp-clear-v2-copy"><strong>DASHBOARD RESET — PARTIAL CLEANUP</strong><small>Clear marker remains active • '+errors.length+' check(s) need attention</small></span><span class="sp-clear-v2-state">!</span>'}
+    putStatus((success?'✓':'⚠')+' '+dayDeletes+' visit-day + '+mediaDeletes+' media docs removed across '+uids.length+' accounts. '+remainingDays+' visit-day and '+remainingMedia+' media docs remain. Legacy parent records cleaned: '+parentWrites+'. '+(success?'Firebase cleanup verified.':'Review errors: '+errors.slice(0,3).join(' | ')));
+    toast(success?'✓ Dashboard cleared and Firebase cleanup verified':'⚠ Dashboard is logically cleared; some cloud cleanup checks need attention');
+    setTimeout(()=>{if(b){b.classList.remove('is-success','is-error');b.innerHTML='<span class="sp-clear-v2-icon">⌫</span><span class="sp-clear-v2-copy"><strong>CLEAR DASHBOARD</strong><small>All salesmen • all cities • all visit dates</small></span><span class="sp-clear-v2-state">›</span>'}},5500);
+    return success;
+  }catch(e){
+    console.error('Clear Dashboard V12:',e);try{state.cleanupVerified=false;state.cleanupErrors=[...errors,err(e)].slice(0,50);await writeClearStateV12(state)}catch(_e){}
+    if(b){b.disabled=false;b.classList.remove('is-clearing','is-success');b.classList.add('is-error');b.innerHTML='<span class="sp-clear-v2-icon">!</span><span class="sp-clear-v2-copy"><strong>CLEAR FAILED / PARTIAL</strong><small>Marker may be active; verify status before retrying</small></span><span class="sp-clear-v2-state">!</span>'}
+    putStatus('✕ '+err(e)+'; previous cloud writes may have completed. Check marker/status before retry.');toast('✕ Clear Dashboard did not complete verification.');return false;
+  }
+}
+window.clearMasterDashboard=clearDashboardV12;
+window.__shadabClearDashboardV12=true;
+
+// Fail closed on salesman sync if the current global clear marker cannot be read.
+// This prevents a stale local visit array from being uploaded over a completed clear.
+async function refreshClearMarkerForSync(){
+  const s=session();if(!s?.uid||String(s.email||'').toLowerCase()===ADMIN||!navigator.onLine)return;
+  const master=await read(MASTER_PATH);const state=master?.[CLEAR_FIELD]||master?.masterDashboardState||master?.dashboardClearState||null;
+  if(state?.clearedAt){window.__shadabActiveClearMarker=state;applyClearLocally(state)}
+}
+const oldSync=window.shadabSyncSalesmanNow;
+if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function(){if(String(session()?.email||'').toLowerCase()!==ADMIN){try{await refreshClearMarkerForSync()}catch(e){throw new Error('Cannot verify global clear marker. Sync paused to protect cleared dashboard data: '+(e?.message||e))}}return await oldSync.apply(this,arguments)};f.__v12ClearGuard=true;f.__v12Original=oldSync;window.shadabSyncSalesmanNow=f;window.sp35SyncNow=f;window.sp35SyncNew=f;window.sp35ManualServerRefresh=f}
+
+})();
+</script>
+<!-- ===== END V12 FORENSIC PATCH ===== -->
 </body>
 </html>
 
