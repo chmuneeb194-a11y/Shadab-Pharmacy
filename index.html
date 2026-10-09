@@ -15843,24 +15843,20 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
 })();
 
 /* =========================================================
-   2) MIC -> ORDER / BUSINESS NOTES
-   Keep the existing audio-note behavior, but run a single,
-   authoritative SpeechRecognition instance that writes live
-   final/interim speech into #notes.
+   2) MIC -> ORDER / BUSINESS NOTES — OPTION A
+   Android Chrome: use SpeechRecognition only. Do not open
+   getUserMedia/MediaRecorder in parallel; that conflicts with
+   Chrome's native speech recognizer on Android.
    ========================================================= */
 (function(){
   let recognition=null;
-  let stream=null;
-  let recorder=null;
-  let chunks=[];
   let active=false;
   let baseline='';
   let finalParts=[];
   let timer=null;
-
+  let restartTimer=null;
   const SR=()=>window.SpeechRecognition||window.webkitSpeechRecognition;
   const getLang=()=>String(document.getElementById('voiceLanguage')?.value||'ur-PK');
-
   function state(msg,live){
     const s=document.getElementById('voiceState');
     if(s){s.classList.toggle('live',!!live);if(msg)s.textContent=msg;}
@@ -15876,65 +15872,66 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
     ta.value=(baseline+(baseline&&spoken?' ':'')+spoken).trim();
     ta.dispatchEvent(new Event('input',{bubbles:true}));
   }
+  function cleanup(message){
+    active=false;voiceRecording=false;
+    clearTimeout(timer);timer=null;clearTimeout(restartTimer);restartTimer=null;
+    try{recognition?.abort()}catch(_e){}
+    recognition=null;voiceRecognition=null;voiceRecorder=null;pendingVoiceBlob=null;
+    setButton(false);writeNotes('');
+    state(message|| (finalParts.length?'Speech converted to Business Notes.':'Speech stopped. No text was recognized.'),false);
+  }
   function makeRecognition(){
     const C=SR();if(!C)return null;
     const r=new C();
     r.continuous=true;r.interimResults=true;r.maxAlternatives=1;r.lang=getLang();
-    r.onstart=()=>state('Recording + converting speech to Notes…',true);
+    r.onstart=()=>{if(active)state('Listening — speak to write directly into Business Notes…',true)};
     r.onresult=e=>{
       let interim='';
       for(let i=e.resultIndex;i<e.results.length;i++){
         const t=String(e.results[i][0]?.transcript||'').trim();if(!t)continue;
-        if(e.results[i].isFinal)finalParts.push(t);else interim+=(interim?' ':'')+t;
+        if(e.results[i].isFinal){if(!finalParts.length||finalParts[finalParts.length-1]!==t)finalParts.push(t)}
+        else interim+=(interim?' ':'')+t;
       }
       writeNotes(interim);
     };
     r.onerror=e=>{
       const err=String(e?.error||'');
       if(err==='language-not-supported'&&r.lang!=='en-US'){
-        try{r.lang='en-US';if(active)setTimeout(()=>{try{r.start()}catch(_e){}},80);return}catch(_e){}
+        try{r.lang='en-US';state('Selected speech language unavailable; trying English…',true);if(active)restartTimer=setTimeout(()=>{try{r.start()}catch(_e){}},180);return}catch(_e){}
       }
-      if(err==='not-allowed'||err==='service-not-allowed')state('Microphone permission is allowed, but speech recognition was blocked by the browser.',true);
-      else if(err!=='aborted'&&err!=='no-speech')state('Recording is active; speech-to-text is temporarily unavailable.',true);
+      if(err==='not-allowed'||err==='service-not-allowed')cleanup('Speech recognition was blocked. Check Chrome microphone permission and Google speech service.');
+      else if(err==='audio-capture')cleanup('Microphone is busy or unavailable. Close other apps using the mic and try again.');
+      else if(err==='network')state('Speech service network error. Check internet and try again.',true);
+      else if(err!=='aborted'&&err!=='no-speech')state('Speech recognition error: '+err+'. Tap Mic to retry.',false);
     };
     r.onend=()=>{
-      if(active)setTimeout(()=>{try{r.lang=getLang();r.start()}catch(_e){}},120);
+      if(active){restartTimer=setTimeout(()=>{if(active){try{r.lang=getLang();r.start()}catch(_e){cleanup('Speech recognition stopped. Tap Mic to try again.')}}},220)}
+      else {recognition=null;voiceRecognition=null;}
     };
     return r;
   }
   async function start(){
     if(active)return;
-    if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){try{window.toast?.('Voice recording is not supported on this browser')}catch(e){}return;}
-    baseline=(document.getElementById('notes')?.value||'').trim();finalParts=[];chunks=[];
+    const C=SR();
+    if(!C){state('Live speech-to-text is not supported in this browser. Try updated Chrome.',false);return;}
+    baseline=(document.getElementById('notes')?.value||'').trim();
+    finalParts=[];active=true;voiceRecording=true;pendingVoiceBlob=null;voiceRecorder=null;
+    setButton(true);state('Starting speech recognition…',true);
     try{
-      stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      recorder=new MediaRecorder(stream);
-      active=true;voiceRecording=true;setButton(true);
-      recognition=makeRecognition();voiceRecognition=recognition;voiceRecorder=recorder;
-      if(recognition){try{recognition.start()}catch(_e){}}
-      state(recognition?'Recording + converting speech to Notes…':'Recording voice note… speech-to-text not available in this browser.',true);
-      recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data)};
-      recorder.onstop=()=>{
-        const type=recorder?.mimeType||'audio/webm';pendingVoiceBlob=chunks.length?new Blob(chunks,{type}):null;
-        try{recognition?.stop()}catch(_e){};recognition=null;voiceRecognition=null;
-        try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){};stream=null;voiceRecorder=null;
-        active=false;voiceRecording=false;clearTimeout(timer);timer=null;writeNotes('');setButton(false);
-        state(finalParts.length?'Voice + text captured. Both will be saved with this visit.':'Voice note captured. It will be saved with this visit.',false);
-      };
-      recorder.start();
+      recognition=makeRecognition();voiceRecognition=recognition;
+      if(!recognition)throw new Error('SPEECH_RECOGNITION_UNAVAILABLE');
+      recognition.start();
       timer=setTimeout(()=>{if(active)stop()},60000);
-    }catch(e){
-      active=false;voiceRecording=false;try{recognition?.abort()}catch(_e){};recognition=null;voiceRecognition=null;
-      try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){};stream=null;setButton(false);state('',false);
-      try{window.toast?.('Microphone permission denied or unavailable')}catch(_e){}
-    }
+    }catch(e){cleanup('Could not start speech recognition. Check Chrome mic permission and try again.');}
   }
   function stop(){
     if(!active&&!window.voiceRecording)return;
-    active=false;voiceRecording=false;clearTimeout(timer);timer=null;
+    active=false;voiceRecording=false;clearTimeout(timer);timer=null;clearTimeout(restartTimer);restartTimer=null;
     try{recognition?.stop()}catch(_e){}
-    if(recorder&&recorder.state!=='inactive'){try{recorder.stop()}catch(_e){}}
-    else{try{stream?.getTracks()?.forEach(t=>t.stop())}catch(_e){};stream=null;setButton(false);writeNotes('')}
+    const hadText=finalParts.length>0;
+    writeNotes('');setButton(false);
+    state(hadText?'Speech converted to Business Notes.':'Stopped. If no text appeared, check speech language and Chrome/Google speech service.',false);
+    setTimeout(()=>{recognition=null;voiceRecognition=null;voiceRecorder=null;pendingVoiceBlob=null},250);
   }
   window.startVoiceNote=start;window.stopVoiceNote=stop;
   window.toggleVoiceNote=function(){if(active||window.voiceRecording){stop();return;}start()};
