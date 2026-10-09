@@ -15880,8 +15880,31 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
     }
     return out.join(' ');
   }
+  // Context-aware Roman Urdu spelling normalization for common ASR confusions.
+  // Do not rewrite English 'call' generally; only correct it in clear Urdu context.
+  function normalizeRomanUrdu(text){
+    let s=cleanSpeech(text);
+    if(!s)return '';
+    const urduContext='(?:dunga|dungi|hoga|hogi|karunga|karungi|aana|ana|aaunga|aaungi|milunga|milungi|confirm|order|payment|visit|bhejunga|bhejungi|dega|degi|lena|lunga|lungi|aaj|kal)';
+    // Spoken Roman Urdu "kal" is often recognized by English models as "cal" or "call".
+    // Correct only where nearby words indicate a Roman Urdu sentence.
+    const words=s.split(/\s+/);
+    for(let i=0;i<words.length;i++){
+      const raw=words[i], bare=raw.toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g,'');
+      if(bare==='cal'||bare==='call'){
+        const prev=(words[i-1]||'').toLowerCase().replace(/[^a-z]/g,'');
+        const next=(words[i+1]||'').toLowerCase().replace(/[^a-z]/g,'');
+        const ctx=new RegExp('^(?:'+urduContext+')$','i');
+        if(ctx.test(prev)||ctx.test(next))words[i]=raw.replace(/cal|call/i,m=>m===m.toUpperCase()?'KAL':m[0]===m[0].toUpperCase()?'Kal':'kal');
+      }
+    }
+    s=words.join(' ');
+    // Normalize a few high-confidence Roman Urdu spellings without translating script.
+    s=s.replace(/\b(?:dun-ga|dunga)\b/gi,'dunga').replace(/\b(?:ho-ga|hoga)\b/gi,'hoga');
+    return s;
+  }
   function appendFinal(text){
-    const next=cleanSpeech(text);if(!next)return;
+    const next=normalizeRomanUrdu(text);if(!next)return;
     const prev=cleanSpeech(finalParts.join(' '));
     if(!prev){finalParts=[next];return;}
     const a=prev.split(' '), b=next.split(' ');
@@ -15899,7 +15922,7 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
   }
   function writeNotes(interim){
     const ta=document.getElementById('notes');if(!ta)return;
-    const spoken=cleanSpeech(finalParts.join(' ')+(interim?' '+cleanSpeech(interim):''));
+    const spoken=normalizeRomanUrdu(finalParts.join(' ')+(interim?' '+cleanSpeech(interim):''));
     ta.value=(baseline+(baseline&&spoken?' ':'')+spoken).trim();
     ta.dispatchEvent(new Event('input',{bubbles:true}));
   }
