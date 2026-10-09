@@ -15973,16 +15973,26 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
     r.onerror=e=>{
       const err=String(e?.error||'');
       if(err==='language-not-supported'&&r.lang!=='en-US'){
-        try{r.lang='en-US';state('Selected speech language unavailable; trying English…',true);if(active)restartTimer=setTimeout(()=>{try{r.start()}catch(_e){}},180);return}catch(_e){}
+        state('This speech language is unavailable in Chrome. Select English (US) and tap Mic again.',false);
+        return;
       }
       if(err==='not-allowed'||err==='service-not-allowed')cleanup('Speech recognition was blocked. Check Chrome microphone permission and Google speech service.');
       else if(err==='audio-capture')cleanup('Microphone is busy or unavailable. Close other apps using the mic and try again.');
       else if(err==='network')state('Speech service network error. Check internet and try again.',true);
       else if(err!=='aborted'&&err!=='no-speech')state('Speech recognition error: '+err+'. Tap Mic to retry.',false);
     };
+    // Android Chrome can fire onend during brief pauses. Automatically calling
+    // start() here repeatedly causes microphone beeps/on-off cycling. Never
+    // auto-restart the native recognizer; finish this session cleanly instead.
     r.onend=()=>{
-      if(active){restartTimer=setTimeout(()=>{if(active){try{r.lang=getLang();r.start()}catch(_e){cleanup('Speech recognition stopped. Tap Mic to try again.')}}},220)}
-      else {recognition=null;voiceRecognition=null;}
+      if(active){
+        active=false;voiceRecording=false;
+        clearTimeout(timer);timer=null;
+        clearTimeout(restartTimer);restartTimer=null;
+        writeNotes('');setButton(false);
+        state(finalParts.length?'Speech converted to Business Notes. Tap Mic for another note.':'Speech recognition ended. Tap Mic to try again.',false);
+      }
+      recognition=null;voiceRecognition=null;
     };
     return r;
   }
