@@ -11761,7 +11761,7 @@ function renderTab(){
     const last=latestVisit(allVs),ls=p.lastSeen?Date.parse(p.lastSeen):0,online=profileStatus(p)!=='Disabled'&&!!ls&&Date.now()-ls<90000;
     c.innerHTML=`<div class="sp-live-card"><h3>◷ Activity &amp; Sync</h3><p>Live status is read from the selected salesman profile and synchronized <code>user_data</code>.</p><div class="sp-live-grid"><div class="sp-live-stat"><b>${online?'ONLINE':'OFFLINE'}</b><small>Current status</small></div><div class="sp-live-stat"><b>${esc(fmtTs(p.lastSync||p.syncedAt||d.updatedAt))}</b><small>Last Sync</small></div><div class="sp-live-stat"><b>${esc(fmtVisitTs(last)||'—')}</b><small>Last Activity</small></div><div class="sp-live-stat"><b>${allVs.length}</b><small>Total Visits</small></div></div><div class="sp-live-card" style="margin-top:9px;padding:11px;background:#041b2c"><b>Current Area / Territory</b><p style="margin:5px 0 0">${esc(p.currentArea||p.area||last?.area||'—')} ${(p.currentTerritory||p.territory||last?.territory)?('• '+esc(p.currentTerritory||p.territory||last?.territory)):''}</p></div><div class="sp-live-actions"><button class="sp-live-btn primary" id="spLiveActivityRefresh">↻ Refresh from Firebase</button></div><div id="spLiveActivityStatus" class="sp-live-status"></div></div>`;
   } else if(activeTab===3){
-    c.innerHTML=`<div class="sp-live-card"><h3>👤 Account Settings</h3><p>Master changes are written to the selected salesman Firebase profile. Password uses Firebase’s secure reset-email flow.</p><div class="sp-live-form"><label class="sp-live-label">Full Name<input id="spLiveName" class="sp-live-input" value="${esc(p.fullName||profileName(p,selectedUid))}"></label><label class="sp-live-label">Mobile<input id="spLiveMobile" class="sp-live-input" value="${esc(p.mobile||'')}"></label><label class="sp-live-label">Email (read only)<input class="sp-live-input" value="${esc(p.email||'')}" readonly></label><label class="sp-live-label">Status<select id="spLiveStatusSelect" class="sp-live-input"><option ${profileStatus(p)==='Active'?'selected':''}>Active</option><option ${profileStatus(p)==='Disabled'?'selected':''}>Disabled</option></select></label></div><div class="sp-live-actions"><button class="sp-live-btn primary" id="spLiveSaveAccount">💾 Save Account</button><button class="sp-live-btn green" id="spLiveResetPassword">🔑 Send Password Reset</button></div><div id="spLiveAccountStatus" class="sp-live-status"></div></div>`;
+    c.innerHTML=`<div class="sp-live-card"><h3>👤 Account Settings</h3><p>Master changes are written to the selected salesman Firebase profile. Password uses Firebase’s secure reset-email flow.</p><div class="sp-live-form"><label class="sp-live-label">Full Name<input id="spLiveName" class="sp-live-input" value="${esc(p.fullName||profileName(p,selectedUid))}"></label><label class="sp-live-label">Mobile<input id="spLiveMobile" class="sp-live-input" value="${esc(p.mobile||'')}"></label><label class="sp-live-label">Email (read only)<input class="sp-live-input" value="${esc(p.email||'')}" readonly></label><label class="sp-live-label">Status<select id="spLiveStatusSelect" class="sp-live-input"><option ${profileStatus(p)==='Active'?'selected':''}>Active</option><option ${profileStatus(p)==='Disabled'?'selected':''}>Disabled</option></select></label></div><div class="sp-live-actions"><button class="sp-live-btn primary" id="spLiveSaveAccount">💾 Save Account</button><button class="sp-live-btn green" id="spLiveResetPassword">🔑 Send Password Reset</button></div>${isMaster()?`<div class="sp-live-actions" style="margin-top:12px"><button class="sp-live-btn red" id="spLiveDeleteAccount" type="button">🗑 Delete Salesman Account</button></div><p class="sp-delete-account-note">Removes this profile from the active app and Firestore profile list. Previous visit history is retained for audit. Deleted UIDs are recorded so later HTML updates cannot restore them. Firebase Authentication credential deletion requires a trusted Admin backend; login is blocked by this app’s deletion ledger.</p>`:''}<div id="spLiveAccountStatus" class="sp-live-status"></div></div>`;
   } else {
     c.innerHTML=`<div class="sp-live-card"><h3>▤ Admin Note for ${esc(profileName(p,selectedUid))}</h3><p>This note is stored in the salesman Firebase profile as <b>controlNotes</b>.</p><textarea id="spLiveNotes" class="sp-live-textarea" placeholder="Write a note for this salesman…">${esc(p.controlNotes||'')}</textarea><div class="sp-live-actions"><button class="sp-live-btn primary" id="spLiveSaveNote">💾 Save Note &amp; Sync</button></div><div id="spLiveNotesStatus" class="sp-live-status"></div></div>`;
   }
@@ -11788,6 +11788,29 @@ function bindTabEvents(){
  $('spLiveActivityRefresh')?.addEventListener('click',async()=>{const st=$('spLiveActivityStatus');try{if(st)st.textContent='Refreshing Firebase…';await loadSelected(selectedUid);renderTab()}catch(e){if(st)st.textContent='Refresh failed: '+(e.message||e)}});
  $('spLiveSaveAccount')?.addEventListener('click',async()=>{const st=$('spLiveAccountStatus');try{await saveProfilePatch({fullName:String($('spLiveName')?.value||'').trim()||profileName(selectedProfile,selectedUid),mobile:String($('spLiveMobile')?.value||'').trim(),status:String($('spLiveStatusSelect')?.value||'Active')},st);try{const ud=await readDoc('user_data/'+encodeURIComponent(selectedUid))||{};ud.fullName=selectedProfile.fullName;ud.displayName=selectedProfile.fullName;ud.salesmanName=selectedProfile.fullName;ud.email=selectedProfile.email;ud.updatedAt=new Date().toISOString();await writeDoc('user_data/'+encodeURIComponent(selectedUid),ud)}catch(e){}renderTab();toast('✓ Account settings synced') }catch(e){if(st){st.textContent='✕ '+(e.message||e);st.className='sp-live-status err'}}});
  $('spLiveResetPassword')?.addEventListener('click',async()=>{const st=$('spLiveAccountStatus'),email=String(selectedProfile?.email||'').trim();if(!email){if(st)st.textContent='No email is saved for this salesman.';return}try{const key='AIzaSyAi5c8pdkxxfZyvZEG9hi4q5nugVGXfKUc';const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestType:'PASSWORD_RESET',email})});if(!r.ok)throw new Error((await r.text()).slice(0,220));if(st){st.textContent='✓ Password reset email sent to '+email;st.className='sp-live-status ok'}}catch(e){if(st){st.textContent='✕ Password reset failed: '+(e.message||e);st.className='sp-live-status err'}}});
+ $('spLiveDeleteAccount')?.addEventListener('click',async()=>{
+   const st=$('spLiveAccountStatus');
+   try{
+     if(!isMaster())throw new Error('Master login is required to delete a salesman account.');
+     if(!navigator.onLine)throw new Error('Internet is required. Account was not changed.');
+     const uid=String(selectedUid||'').trim(),name=profileName(selectedProfile,selectedUid),email=String(selectedProfile?.email||'').trim();
+     if(!uid)throw new Error('Select a salesman first.');
+     if(uid===String(session()?.uid||'' ) || email.toLowerCase()===ADMIN)throw new Error('The Master account cannot be deleted from Salesman Control Center.');
+     const first=confirm('DELETE SALESMAN ACCOUNT?\n\nName: '+name+'\nEmail: '+(email||'Not recorded')+'\nUID: '+uid+'\n\nThis removes the active Firestore salesman profile and assignments from Shadab Pharmacy and permanently records a deletion marker. Previous visit history is retained for audit. Continue?');
+     if(!first)return;
+     const second=prompt('For safety, type DELETE to confirm removal of '+name+'.');
+     if(second!=='DELETE')return;
+     if(st){st.textContent='Writing permanent deletion marker…';st.className='sp-live-status'}
+     const result=await window.shadabDeleteSalesmanAccountV13({uid,name,email,deletedBy:String(session()?.email||ADMIN)});
+     profileCache.delete(uid);userDataCache.delete(uid);
+     profiles=profiles.filter(x=>String(x.uid)!==uid);
+     if(String(selectedUid)===uid){selectedUid='';selectedProfile=null;selectedData=null}
+     await fetchProfiles();
+     renderList();renderTab();
+     if(st){st.textContent=result.warnings?.length?'⚠ Account removed from active app. Some Firebase cleanup needs review: '+result.warnings.join(' • '):'✓ Salesman removed from the active app and Firestore profile list. Deletion marker verified; later file updates will not restore this UID.';st.className='sp-live-status '+(result.warnings?.length?'err':'ok')}
+     toast('✓ '+name+' removed from active salesman list');
+   }catch(e){if(st){st.textContent='✕ Delete failed safely: '+(e.message||e);st.className='sp-live-status err'}toast('✕ Salesman deletion did not complete')}
+ });
  $('spLiveSaveNote')?.addEventListener('click',async()=>{const st=$('spLiveNotesStatus');try{await saveProfilePatch({controlNotes:String($('spLiveNotes')?.value||'')},st);if(st)st.className='sp-live-status ok';toast('✓ Note synced to Firebase')}catch(e){if(st){st.textContent='✕ '+(e.message||e);st.className='sp-live-status err'}}});
 }
 function bindTabs(){document.querySelectorAll('#spAddedSalesmanDashboard .sp-added-tabs .sp-added-tab').forEach((t,i)=>{if(t.dataset.liveBound==='1')return;t.dataset.liveBound='1';t.addEventListener('click',async()=>{activeTab=i;renderTab()})});$('spAddedSalesmenList')?.addEventListener('click',e=>{const row=e.target.closest('.sp-added-person');if(row?.dataset.uid)select(row.dataset.uid)});$('spAddedSalesSearch')?.addEventListener('input',renderList)}
@@ -21230,6 +21253,183 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
 })();
 </script>
 <!-- ===== END V12 FORENSIC PATCH ===== -->
+<style id="shadab-v13-salesman-delete-css">
+.sp-delete-account-note{margin:7px 0 0!important;padding:10px 11px;border:1px solid rgba(255,91,112,.28);border-radius:10px;background:rgba(155,24,46,.12);color:#b7c8d8!important;font-size:11px!important;line-height:1.45}
+#spLiveDeleteAccount{background:linear-gradient(145deg,#de294a,#86112c)!important;border-color:rgba(255,110,130,.4)!important}
+</style>
+<script id="shadab-v13-permanent-salesman-deletion-ledger">
+(function(){
+ 'use strict';
+ const ADMIN='master@shadabpharmacy.com';
+ const LEDGER='app_settings/salesmanDeletionLedger';
+ const MASTER='app_settings/masterData';
+ const SCHEDULE='app_settings/adminSchedules';
+ const rawRead=window.shadabRestReadDoc;
+ const rawWrite=window.shadabRestWriteDoc;
+ const rawReadCollection=window.shadabRestReadCollection;
+ const rawDelete=window.shadabRestDeleteDoc;
+ if(typeof rawRead!=='function'||typeof rawWrite!=='function'||typeof rawReadCollection!=='function'||typeof rawDelete!=='function'){
+   console.error('[Salesman Delete V13] REST layer missing; delete engine not installed.'); return;
+ }
+ let ledgerCache=null,ledgerAt=0,profilesCache=null,profilesAt=0,guardInstalled=false;
+ const norm=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,' ');
+ const decode=v=>{try{return decodeURIComponent(String(v||''))}catch(e){return String(v||'')}};
+ const getSession=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+ const isMaster=()=>norm(getSession()?.email)===ADMIN;
+ const toast=m=>{try{if(typeof window.toast35==='function')window.toast35(m);else if(typeof window.toast==='function')window.toast(m);else console.log(m)}catch(e){console.log(m)}};
+ async function readLedger(force){
+   if(!force&&ledgerCache&&Date.now()-ledgerAt<3000)return ledgerCache;
+   const x=await rawRead(LEDGER).catch(()=>null);
+   ledgerCache=x&&typeof x==='object'?x:{entries:{}};
+   if(!ledgerCache.entries||typeof ledgerCache.entries!=='object')ledgerCache.entries={};
+   ledgerAt=Date.now();return ledgerCache;
+ }
+ function deletedEntry(ledger,uid){return ledger?.entries?.[String(uid||'')]||null}
+ async function isDeleted(uid){if(!uid)return false;const l=await readLedger(false);return !!deletedEntry(l,uid)}
+ function rowData(r){try{return typeof r?.data==='function'?(r.data()||{}):(r?.data||{})}catch(e){return {}}}
+ function getProfileName(p){return String(p?.fullName||p?.displayName||p?.salesmanName||p?.name||'').trim()}
+ async function activeProfiles(force){
+   if(!force&&profilesCache&&Date.now()-profilesAt<20000)return profilesCache;
+   const rows=await rawReadCollection('salesmen');
+   const ledger=await readLedger(false);
+   profilesCache=(rows||[]).map(r=>({uid:String(r?.id||rowData(r).uid||''),...rowData(r)})).filter(p=>p.uid&&!deletedEntry(ledger,p.uid)&&p.isDeleted!==true&&norm(p.status)!=='deleted');
+   profilesAt=Date.now();return profilesCache;
+ }
+ function uidFromPath(path){
+   const parts=String(path||'').split('?')[0].replace(/^\/+|\/+$/g,'').split('/').map(decode);
+   if((parts[0]==='salesmen'||parts[0]==='user_data')&&parts.length>=2&&parts[1])return parts[1];
+   return '';
+ }
+ function filterRows(path,rows,ledger){
+   if(path==='salesmen')return (rows||[]).filter(r=>{const uid=String(r?.id||rowData(r).uid||''),d=rowData(r);return uid&&!deletedEntry(ledger,uid)&&d.isDeleted!==true&&norm(d.status)!=='deleted'});
+   if(path==='user_data')return (rows||[]).filter(r=>!deletedEntry(ledger,String(r?.id||rowData(r).uid||'')));
+   const m=String(path||'').match(/^salesmen\/([^/]+)\/supply_summaries$/);
+   if(m&&deletedEntry(ledger,decode(m[1])))return [];
+   return rows;
+ }
+ async function namesStillActive(ledger){
+   const ps=await activeProfiles(true);
+   return new Set(ps.map(p=>norm(getProfileName(p))).filter(Boolean));
+ }
+ function shouldPruneName(n,ledger,active){
+   const k=norm(n);if(!k||active.has(k))return false;
+   return Object.values(ledger?.entries||{}).some(e=>norm(e?.name)===k);
+ }
+ function itemName(x){return typeof x==='string'?x:getProfileName(x)||String(x?.salesman||x?.label||x?.value||'')}
+ function pruneArray(a,ledger,active){return Array.isArray(a)?a.filter(v=>!shouldPruneName(itemName(v),ledger,active)):a}
+ async function sanitizeMasterDoc(doc,path){
+   if(!doc||typeof doc!=='object')return doc;
+   const ledger=await readLedger(false);
+   const active=await namesStillActive(ledger);
+   if(path===MASTER){
+     const out={...doc};
+     ['customSalesmen','salesmen','salesmanNames','salesmanList'].forEach(k=>{if(Array.isArray(out[k]))out[k]=pruneArray(out[k],ledger,active)});
+     return out;
+   }
+   if(path===SCHEDULE){
+     const out={...doc};
+     ['schedules','routeTasks'].forEach(k=>{if(out[k]&&typeof out[k]==='object'&&!Array.isArray(out[k])){out[k]={...out[k]};Object.keys(out[k]).forEach(n=>{if(shouldPruneName(n,ledger,active))delete out[k][n]})}});
+     return out;
+   }
+   return doc;
+ }
+
+ // Every current-version caller that uses the shared REST read layer sees the UID tombstones.
+ window.shadabRestReadCollection=async function(path){
+   const rows=await rawReadCollection(path);
+   if(path==='salesmen'||path==='user_data'||String(path||'').startsWith('salesmen/')){
+     const l=await readLedger(false);return filterRows(String(path||''),rows,l);
+   }
+   return rows;
+ };
+ window.shadabRestReadDoc=async function(path){
+   const uid=uidFromPath(path);
+   if(uid&&(String(path).startsWith('salesmen/')||String(path).startsWith('user_data/'))&&await isDeleted(uid))return null;
+   const doc=await rawRead(path);
+   if(path===MASTER||path===SCHEDULE)return sanitizeMasterDoc(doc,path);
+   return doc;
+ };
+ window.shadabRestWriteDoc=async function(path,obj,opts){
+   const uid=uidFromPath(path);
+   if(uid&&(String(path).startsWith('salesmen/')||String(path).startsWith('user_data/'))&&await isDeleted(uid)){
+     const e=new Error('This salesman UID has a permanent Master deletion marker. Firebase sync write blocked.');e.code='SHADAB_SALESMAN_DELETED';throw e;
+   }
+   let payload=obj;
+   if(path===MASTER||path===SCHEDULE)payload=await sanitizeMasterDoc(obj,path);
+   return rawWrite(path,payload,opts);
+ };
+
+ window.shadabIsSalesmanDeletedV13=isDeleted;
+ window.shadabDeleteSalesmanAccountV13=async function(input){
+   if(!isMaster())throw new Error('Master login is required.');
+   if(!navigator.onLine)throw new Error('Internet connection is required.');
+   const uid=String(input?.uid||'').trim(),name=String(input?.name||'').trim(),email=String(input?.email||'').trim();
+   if(!uid)throw new Error('UID missing. No deletion was performed.');
+   if(uid===String(getSession()?.uid||'')||norm(email)===ADMIN)throw new Error('Master account deletion is blocked.');
+   const deletedAt=new Date().toISOString();
+   // Commit and read back the durable UID tombstone FIRST; never delete profile before this succeeds.
+   const ledger=await rawRead(LEDGER).catch(()=>null)||{entries:{}};
+   const entries={...(ledger.entries&&typeof ledger.entries==='object'?ledger.entries:{})};
+   entries[uid]={uid,name,email,deletedAt,deletedBy:String(input?.deletedBy||ADMIN),kind:'salesman-account-removal',schemaVersion:1};
+   await rawWrite(LEDGER,{...ledger,entries,updatedAt:deletedAt,updatedBy:String(input?.deletedBy||ADMIN)});
+   const verify=await rawRead(LEDGER);
+   if(!verify?.entries?.[uid]?.deletedAt)throw new Error('Permanent deletion marker could not be verified. Profile was left untouched.');
+   ledgerCache=verify;ledgerAt=Date.now();profilesCache=null;profilesAt=0;
+   const warnings=[];
+   // Remove Summary assignment rows belonging to this UID. The Summary documents themselves remain intact.
+   try{
+     const child='salesmen/'+encodeURIComponent(uid)+'/supply_summaries';
+     const rows=await rawReadCollection(child);
+     for(const row of rows||[]){try{await rawDelete(child+'/'+encodeURIComponent(String(row.id)))}catch(e){warnings.push('Summary assignment '+String(row.id)+' could not be removed: '+String(e?.message||e))}}
+   }catch(e){warnings.push('Could not list Summary assignments: '+String(e?.message||e))}
+   // Remove the active account registry profile. The independent tombstone survives future app versions.
+   try{await rawDelete('salesmen/'+encodeURIComponent(uid))}catch(e){warnings.push('Firestore profile deletion needs review: '+String(e?.message||e))}
+   // Clean stale name entries only if there is no other live UID with the same display name.
+   try{
+     const ledgerNow=await rawRead(LEDGER)||verify;
+     const live=await activeProfiles(true);
+     const nameStillUsed=live.some(p=>norm(getProfileName(p))===norm(name));
+     if(!nameStillUsed&&name){
+       const md=await rawRead(MASTER).catch(()=>null);
+       if(md&&typeof md==='object'){
+         const out={...md};
+         ['customSalesmen','salesmen','salesmanNames','salesmanList'].forEach(k=>{if(Array.isArray(out[k]))out[k]=out[k].filter(v=>norm(itemName(v))!==norm(name))});
+         await rawWrite(MASTER,out);
+       }
+       const sch=await rawRead(SCHEDULE).catch(()=>null);
+       if(sch&&typeof sch==='object'){
+         const out={...sch};['schedules','routeTasks'].forEach(k=>{if(out[k]&&typeof out[k]==='object'&&!Array.isArray(out[k])){out[k]={...out[k]};Object.keys(out[k]).forEach(k2=>{if(norm(k2)===norm(name))delete out[k][k2]})}});
+         await rawWrite(SCHEDULE,out);
+       }
+       try{const list=JSON.parse(localStorage.getItem('shadab_custom_salesmen_v1')||'[]');if(Array.isArray(list))localStorage.setItem('shadab_custom_salesmen_v1',JSON.stringify(list.filter(v=>norm(itemName(v))!==norm(name))))}catch(e){}
+       try{document.querySelectorAll('#visitedBy option,#adminSalesman option').forEach(o=>{if(norm(o.value||o.textContent)===norm(name))o.remove()})}catch(e){}
+     }
+   }catch(e){warnings.push('Stale dropdown/schedule cleanup needs review: '+String(e?.message||e))}
+   // Verify the marker again after cleanup. It is the source of truth for every later HTML update.
+   const end=await rawRead(LEDGER);
+   if(!end?.entries?.[uid]?.deletedAt)throw new Error('Deletion marker verification failed after cleanup. Stop and inspect Firebase.');
+   ledgerCache=end;ledgerAt=Date.now();profilesCache=null;profilesAt=0;
+   return {uid,name,email,deletedAt,verified:true,warnings};
+ };
+
+ // Prevent a removed UID from logging into or syncing through the current app.
+ const rawSignIn=window.shadabRestSignIn;
+ if(typeof rawSignIn==='function'&&!rawSignIn.__v13DeleteGuard){
+   const g=async function(){const r=await rawSignIn.apply(this,arguments);if(r?.uid&&await isDeleted(r.uid)){try{window.shadabRestClearSession?.()}catch(e){};try{const a=typeof window.auth==='function'?window.auth():null;if(a?.signOut)await a.signOut()}catch(e){};throw new Error('This salesman account was permanently removed by Master. Contact Master if this is unexpected.')}return r};g.__v13DeleteGuard=true;window.shadabRestSignIn=g;
+ }
+ const login=window.sp35Login;
+ if(typeof login==='function'&&!login.__v13DeleteGuard){
+   const g=async function(){const r=await login.apply(this,arguments);let uid='';try{uid=String(window.shadabRestCurrentSession?.()?.uid||'')}catch(e){};if(!uid){try{const a=typeof window.auth==='function'?window.auth():null;uid=String(a?.currentUser?.uid||'')}catch(e){}}if(uid&&await isDeleted(uid)){try{await window.sp35Logout?.()}catch(e){};try{window.shadabRestClearSession?.()}catch(e){};toast('This salesman account was permanently removed by Master.');return false}return r};g.__v13DeleteGuard=true;window.sp35Login=g;
+ }
+ const hydrate=window.shadabHydrateExactSalesman;
+ if(typeof hydrate==='function'&&!hydrate.__v13DeleteGuard){const g=async function(){const uid=String(getSession()?.uid||'');if(uid&&await isDeleted(uid)){try{await window.sp35Logout?.()}catch(e){};return null}return hydrate.apply(this,arguments)};g.__v13DeleteGuard=true;window.shadabHydrateExactSalesman=g}
+ ['syncSalesmanDataAuto','sp35ManualServerRefresh','sp35ManualSyncFinal','sp35SyncNow','pollRemote'].forEach(key=>{
+   const fn=window[key];if(typeof fn!=='function'||fn.__v13DeleteGuard)return;
+   const g=async function(){const s=getSession();if(s?.uid&&norm(s.email)!==ADMIN&&await isDeleted(s.uid)){try{await window.sp35Logout?.()}catch(e){};toast('This salesman account has been removed by Master. Sync is blocked.');return false}return fn.apply(this,arguments)};g.__v13DeleteGuard=true;window[key]=g;
+ });
+ window.__SHADAB_V13_SALESMAN_DELETE_READY=true;
+})();
+</script>
 </body>
 </html>
 
