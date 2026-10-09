@@ -15878,14 +15878,23 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
       if(key && key===prev)continue;
       out.push(w);
     }
-    return out.join(' ');
+    // Remove repeated short phrase blocks (e.g. 'stock hai stock hai') that some recognizers emit.
+    let result=out.join(' '), toks=result.split(' ');
+    for(let size=Math.min(6,Math.floor(toks.length/2));size>=2;size--){
+      for(let i=0;i+size*2<=toks.length;){
+        const left=toks.slice(i,i+size).map(x=>x.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,'')).join(' ');
+        const right=toks.slice(i+size,i+size*2).map(x=>x.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,'')).join(' ');
+        if(left && left===right)toks.splice(i+size,size);else i++;
+      }
+    }
+    return toks.join(' ');
   }
   // Context-aware Roman Urdu spelling normalization for common ASR confusions.
   // Do not rewrite English 'call' generally; only correct it in clear Urdu context.
   function normalizeRomanUrdu(text){
     let s=cleanSpeech(text);
     if(!s)return '';
-    const urduContext='(?:dunga|dungi|hoga|hogi|karunga|karungi|aana|ana|aaunga|aaungi|milunga|milungi|confirm|order|payment|visit|bhejunga|bhejungi|dega|degi|lena|lunga|lungi|aaj|kal)';
+    const urduContext='(?:dunga|dungi|hoga|hogi|karunga|karungi|aana|ana|aaunga|aaungi|milunga|milungi|confirm|order|payment|visit|bhejunga|bhejungi|dega|degi|lena|lunga|lungi|aaj|kal|stock|hai|hain|nahi|nahin|main|to|poora|pura|filhal|abhi|du|do|dunga|dunga)';
     // Spoken Roman Urdu "kal" is often recognized by English models as "cal" or "call".
     // Correct only where nearby words indicate a Roman Urdu sentence.
     const words=s.split(/\s+/);
@@ -15937,13 +15946,26 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
   function makeRecognition(){
     const C=SR();if(!C)return null;
     const r=new C();
-    r.continuous=true;r.interimResults=true;r.maxAlternatives=1;r.lang=getLang();
+    r.continuous=true;r.interimResults=true;r.maxAlternatives=3;r.lang=getLang();
     r.onstart=()=>{if(active)state('Listening — speak to write directly into Business Notes…',true)};
     r.onresult=e=>{
       let interim='';
+      const chooseCandidate=result=>{
+        const candidates=Array.from(result||[]).map((a,index)=>({text:String(a?.transcript||'').trim(),confidence:Number(a?.confidence)||0,index})).filter(x=>x.text);
+        if(candidates.length<2)return candidates[0]?.text||'';
+        // Prefer alternatives that preserve common pharmacy/business words and Roman Urdu context.
+        const score=x=>{
+          const t=x.text.toLowerCase();let n=x.confidence*2;
+          for(const w of ['stock','order','medical','store','payment','dunga','dungi','kal','aaj','nahi','hai','filhal','poora','pura','confirm','visit']) if(new RegExp('\\b'+w+'\\b','i').test(t))n+=0.35;
+          const toks=t.split(/\s+/);if(toks.length>2){let repeats=0;for(let i=1;i<toks.length;i++)if(toks[i]===toks[i-1])repeats++;n-=repeats*0.6}
+          return n;
+        };
+        return candidates.sort((a,b)=>score(b)-score(a))[0].text;
+      };
       for(let i=e.resultIndex;i<e.results.length;i++){
-        const t=String(e.results[i][0]?.transcript||'').trim();if(!t)continue;
-        if(e.results[i].isFinal){appendFinal(t)}
+        const result=e.results[i];
+        const t=chooseCandidate(result);if(!t)continue;
+        if(result.isFinal){appendFinal(t)}
         else interim+=(interim?' ':'')+t;
       }
       writeNotes(interim);
