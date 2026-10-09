@@ -3704,7 +3704,7 @@ function saveCustomSalesmanNames(list){localStorage.setItem(SALESMAN_KEY,JSON.st
 function adminSalesmanNames(){const base=[...document.querySelectorAll("#visitedBy option")].map(o=>o.value).filter(Boolean);return [...new Set([...base,...customSalesmanNames()])]}
 function ensureSalesmanOptions(){const sel=document.getElementById("visitedBy");if(!sel)return;const current=sel.value||localStorage.getItem("shadab_current_salesman_v1")||"";const existing=new Set([...sel.options].map(o=>o.value));customSalesmanNames().forEach(n=>{if(!existing.has(n)){const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o)}});if(current)sel.value=current}
 function ensureAdminSalesmanOptions(){const sel=document.getElementById("adminSalesman");if(!sel)return;const current=sel.value;sel.innerHTML=adminSalesmanNames().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(current&&adminSalesmanNames().includes(current))sel.value=current}
-function addSalesman(name){name=String(name||"").trim();if(!name)return false;if(adminSalesmanNames().some(n=>n.toLowerCase()===name.toLowerCase()))return false;const names=customSalesmanNames();names.push(name);saveCustomSalesmanNames(names);ensureSalesmanOptions();ensureAdminSalesmanOptions();return true}
+function addSalesman(name){name=String(name||"").trim();if(!name)return false;if(adminSalesmanNames().some(n=>n.toLowerCase()===name.toLowerCase()))return false;const names=customSalesmanNames();names.push(name);saveCustomSalesmanNames(names);ensureSalesmanOptions();ensureAdminSalesmanOptions();/* Persist new Admin salesman names through the same REST-authoritative master/schedule documents without blocking this synchronous legacy API. */try{setTimeout(()=>{if(String(window.shadabRestCurrentSession?.()?.email||'').toLowerCase()==='master@shadabpharmacy.com'){Promise.resolve(window.saveMasterData?.('salesman-added')).catch(e=>console.warn('Salesman master persistence:',e));Promise.resolve(window.saveAdminSchedules?.()).catch(e=>console.warn('Salesman schedule persistence:',e));}},0)}catch(e){}return true}
 function openComingNextSalesman(){ensureSalesmanOptions();renderComingNextSalesmanList();document.getElementById("comingNextSalesmanModal")?.classList.add("show")}
 function closeComingNextSalesman(){document.getElementById("comingNextSalesmanModal")?.classList.remove("show")}
 function renderComingNextSalesmanList(){
@@ -5341,7 +5341,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!x)return;
     applyingRemote=true;
     try{
-      if(x.territoryMasterLocked&&x.territoryMaster){
+      /* A locked legacy territoryMaster snapshot must not override the newer
+         Firebase-authoritative catalog after the V3 catalog bootstrap has
+         completed. Otherwise renamed territories revert on the next poll. */
+      if(x.territoryMasterLocked&&x.territoryMaster && !(window.shadabMasterCatalogReady?.() || window.shadabMasterAuthorityV3Ready?.())){
         saveTerritoryMasterLock(x.territoryMaster);
         if(x.territoryMaster.territories&&typeof territories!=="undefined") territories=jsonClone(x.territoryMaster.territories)||territories;
         if(x.territoryMaster.stores&&typeof storeDatabase!=="undefined"){
@@ -5888,7 +5891,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(read&&status?.signedIn){
         const m=await read('app_settings/masterData');
         if(m){
-          if(m.territoryMasterLocked&&m.territoryMaster){
+          /* Do not revive the old locked snapshot after the current catalog has
+             already hydrated from Firebase. */
+          if(m.territoryMasterLocked&&m.territoryMaster && !(window.shadabMasterCatalogReady?.() || window.shadabMasterAuthorityV3Ready?.())){
             if(m.territoryMaster.territories&&typeof territories!=='undefined')territories=JSON.parse(JSON.stringify(m.territoryMaster.territories));
             if(Array.isArray(m.stores)&&typeof storeDatabase!=='undefined')storeDatabase=JSON.parse(JSON.stringify(m.stores));
           }else{
@@ -8348,10 +8353,51 @@ window.sp35EditTerrNew=async function(a,t){
  if(list.some(x=>String(x).trim().toLowerCase()===name.toLowerCase()&&String(x)!==String(t)))return toastM('Territory already exists');
  territories[a]=list.map(x=>x===t?name:x);
  if(Array.isArray(storeDatabase))storeDatabase.forEach(s=>{if(String(s.area||'')===String(a)&&String(s.territory||'')===String(t))s.territory=name});
+ /* Rename references in saved salesman schedules and route state as well as
+    the catalog. Otherwise the Admin UI can show the new name while assignments
+    and the New Visit selector restore the old one after refresh. */
+ try{
+  if(typeof adminSchedules!=='undefined'&&adminSchedules&&typeof adminSchedules==='object'){
+   Object.values(adminSchedules).forEach(cfg=>{
+    if(!cfg||typeof cfg!=='object')return;
+    const assignments=Array.isArray(cfg.assignments)?cfg.assignments:[cfg];
+    assignments.forEach(as=>{
+     if(String(as?.area||'')!==String(a))return;
+     if(as.days&&typeof as.days==='object')Object.keys(as.days).forEach(day=>{if(Array.isArray(as.days[day]))as.days[day]=as.days[day].map(v=>String(v)===String(t)?name:v)});
+     if(Array.isArray(as.territories))as.territories=as.territories.map(v=>String(v)===String(t)?name:v);
+    });
+   });
+   if(typeof saveAdminSchedules==='function')saveAdminSchedules();
+  }
+ }catch(e){console.warn('Territory rename schedule migration:',e)}
+ try{
+  if(typeof routeTasks!=='undefined'&&routeTasks&&typeof routeTasks==='object')Object.values(routeTasks).forEach(day=>{
+   if(!day||typeof day!=='object'||String(day.area||a)!==String(a))return;
+   if(Array.isArray(day.territories))day.territories=day.territories.map(v=>String(v)===String(t)?name:v);
+   if(Array.isArray(day.assignments))day.assignments.forEach(as=>{if(String(as?.area||a)===String(a)&&Array.isArray(as.territories))as.territories=as.territories.map(v=>String(v)===String(t)?name:v)});
+   if(Array.isArray(day.stores))day.stores.forEach(st=>{if(String(st?.area||a)===String(a)&&String(st?.territory||'')===String(t))st.territory=name});
+  });
+  if(typeof saveRouteTasks==='function')saveRouteTasks();
+ }catch(e){console.warn('Territory rename route migration:',e)}
+ try{
+  const saved=JSON.parse(localStorage.getItem('shadab_current_territories_v1')||'null');
+  if(saved&&String(saved.area||'')===String(a)&&Array.isArray(saved.territories)){
+   saved.territories=saved.territories.map(v=>String(v)===String(t)?name:v);
+   saved.updatedAt=Date.now();localStorage.setItem('shadab_current_territories_v1',JSON.stringify(saved));
+  }
+  const tm=JSON.parse(localStorage.getItem('shadab_territory_master_data_v1')||'null');
+  if(tm&&tm.territories&&typeof tm.territories==='object'){
+   tm.territories[a]=Array.isArray(tm.territories[a])?tm.territories[a].map(v=>String(v)===String(t)?name:v):territories[a].slice();
+   if(tm.stores&&typeof tm.stores==='object')Object.values(tm.stores).forEach(st=>{if(String(st?.area||'')===String(a)&&String(st?.territory||'')===String(t))st.territory=name});
+   localStorage.setItem('shadab_territory_master_data_v1',JSON.stringify(tm));
+  }
+ }catch(e){console.warn('Territory rename saved context migration:',e)}
  let dis=[];try{dis=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}
  dis=dis.map(x=>x===a+'|'+t?a+'|'+name:x);localStorage.setItem('shadab_disabled_territories_v1',JSON.stringify([...new Set(dis)]));
  persistMasterLocal();try{window.log35?.('Territory edited',{area:a,from:t,to:name})}catch(e){}
- const ok=await syncAdminChange('territory-edited');window.sp35RenderTerrNew();try{window.refreshTerritories?.()}catch(e){}try{window.refreshAssignmentTerritories?.()}catch(e){}toastM(ok?'✓ Territory updated and synced':'✓ Territory updated locally');
+ let ok=await syncAdminChange('territory-edited');
+ try{if(typeof window.saveScheduleNow==='function'){const sr=await window.saveScheduleNow();ok=ok&&sr?.ok!==false}}catch(e){ok=false;console.warn('Territory rename schedule cloud sync:',e)}
+ window.sp35RenderTerrNew();try{window.refreshTerritories?.()}catch(e){}try{window.refreshAssignmentTerritories?.()}catch(e){}toastM(ok?'✓ Territory updated and synced':'✓ Territory updated locally — schedule sync pending');
 };
 window.sp35ToggleTerrNew=async function(a,t){
  let x=[];try{x=JSON.parse(localStorage.getItem('shadab_disabled_territories_v1')||'[]')}catch(e){}
@@ -17096,6 +17142,15 @@ window.shadabMasterCatalogReady=()=>!!cloudReady;
   async function writeMasterPayload(payload,reason){
     const remote=(await restRead(MASTER_PATH))||{};
     const merged=Object.assign({},remote,payload,{updatedAt:stamp(),updatedBy:'master',reason:reason||'admin-change'});
+    /* Keep the legacy locked snapshot in step with the canonical catalog too.
+       Some existing app layers still read this snapshot before V3 hydration;
+       leaving it stale makes renamed territories revert on refresh. */
+    if(remote.territoryMasterLocked && payload?.territories && Array.isArray(payload?.stores)){
+      const snapshotStores={};
+      payload.stores.forEach(st=>{if(!st||typeof st!=='object')return;const k=String(st.code||('NAME|'+st.area+'|'+st.name)).toLowerCase();snapshotStores[k]={area:st.area||'',territory:st.territory||'',name:st.name||'',code:st.code||''}});
+      merged.territoryMaster={...(remote.territoryMaster||{}),territories:clone(payload.territories)||{},stores:snapshotStores,lockedAt:remote.territoryMaster?.lockedAt||stamp(),version:remote.territoryMaster?.version||1};
+      merged.territoryMasterLocked=true;
+    }
     await restWrite(MASTER_PATH,merged);
     return merged;
   }
@@ -18594,7 +18649,35 @@ async function rebuildMasterAggregateV12(options={}){
   diagnostics.partitionDocs=partitionResults.reduce((n,x)=>n+x.docs,0);diagnostics.partitionEntries=partitionResults.reduce((n,x)=>n+x.entries,0);diagnostics.latestPartitionDate=partitionResults.map(x=>x.latest).filter(Boolean).sort().pop()||'';diagnostics.readFailures=partitionResults.filter(x=>x.error);diagnostics.accounts=partitionResults;
   // Local unsynced visits stay visible locally; on Manual Sync they are safely published above.
   if(isAdmin())for(const v of localVisitList())addVisit(v,masterUid,'local');
-  const visits=[...visitRows.values()].map(x=>x.row).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.time||'').localeCompare(String(a.time||'')));
+  let visits=[...visitRows.values()].map(x=>x.row).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.time||'').localeCompare(String(a.time||'')));
+  /* The Clear Dashboard marker lives on the already-used masterData document.
+     Apply it here (the actual aggregate source) so a stale partition/legacy row
+     cannot repopulate the front dashboard after a refresh. New visits after the
+     marker remain visible; undated legacy rows are treated as pre-clear. */
+  const clearMarker=master?.masterDashboardClearState||master?.masterDashboardState||master?.dashboardClearState||null;
+  const clearMs=Date.parse(clearMarker?.clearedAt||'');
+  if(Number.isFinite(clearMs)&&clearMs>0){
+    const clearDate=pkISO(new Date(clearMs));
+    const clearClock=new Date(clearMs).toLocaleTimeString('en-US',{timeZone:'Asia/Karachi',hour:'2-digit',minute:'2-digit',hour12:false});
+    const clearMinute=Number(clearClock.slice(0,2))*60+Number(clearClock.slice(3,5));
+    const rowStamp=v=>{
+      for(const raw of [v?.createdAt,v?.timestamp,v?.visitedAt,v?.dateTime,v?.timeStamp]){
+        if(raw==null||raw==='')continue;
+        if(typeof raw==='number'){const n=raw>1e12?raw:raw>1e9?raw*1000:0;if(n>0)return n}
+        if(typeof raw==='object'){const sec=Number(raw.seconds??raw._seconds??0);if(sec>0)return sec*1000;const ms=Number(raw.toMillis?.()||raw.milliseconds||0);if(ms>0)return ms}
+        const n=Date.parse(String(raw));if(Number.isFinite(n))return n;
+      }
+      return 0;
+    };
+    visits=visits.filter(v=>{
+      const stamp=rowStamp(v);if(stamp)return stamp>clearMs;
+      const d=dateOf(v);if(!d)return false;if(d<clearDate)return false;if(d>clearDate)return true;
+      const rawTime=String(v?.time||v?.visitTime||'').trim();
+      const mt=rawTime.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+      if(mt){let hh=Number(mt[1]),mm=Number(mt[2]);const ap=String(mt[3]||'').toUpperCase();if(ap==='PM'&&hh<12)hh+=12;if(ap==='AM'&&hh===12)hh=0;return hh*60+mm>clearMinute}
+      return false;
+    });
+  }
   const todayVisits=visits.filter(v=>dateOf(v)===today),weekVisits=visits.filter(v=>dateOf(v)>=weekStart&&dateOf(v)<weekEnd),monthVisits=visits.filter(v=>dateOf(v).slice(0,7)===month);
   const uniqueStores=new Set(monthVisits.map(v=>String(v.area||'').trim().toLowerCase()+'::'+String(v.store||v.name||v.storeName||'').trim().toLowerCase()).filter(x=>!x.endsWith('::')));
   const rawByUid={};for(const p of salesmen)rawByUid[p.uid]=dataMap.get(p.uid)||{};
@@ -18610,7 +18693,7 @@ async function rebuildMasterAggregateV12(options={}){
     for(const a of aa){if(!a?.area||a.dayEnabled?.[dayName]===false||!Array.isArray(a.days?.[dayName]))continue;const wanted=new Set(a.days[dayName].map(nameKey));for(const st of stores){if(nameKey(st.area)!==nameKey(a.area)||!wanted.has(nameKey(st.territory)))continue;const row={key:String(st.code||st.name||'')+'::'+nameKey(st.area)+'::'+nameKey(st.territory),code:st.code,name:st.name,store:st.name,area:st.area,territory:st.territory,status:'Planned',date:today,visitedBy:p.name,uid:p.uid};const k=[p.uid,nameKey(row.area),nameKey(row.territory),nameKey(row.store)].join('::');if(!plannedMap.has(k))plannedMap.set(k,row);}}
   }
   const plannedToday=[...plannedMap.values()];
-  const cache={salesmen,visits,plannedToday,rawByUid,schedules:cloudSched,stores,sourceCounts:{salesmen:salesmen.length,userData:uRows.length,visitDays:diagnostics.partitionDocs,partitionEntries:diagnostics.partitionEntries},at:iso(),visitTransport:'single-core:all-user_data/visit_days+legacy+local-cache',stats:{today:todayVisits.length,week:weekVisits.length,month:monthVisits.length,uniqueStores:uniqueStores.size},dateRange:{today,weekStart,weekEnd,month}};
+  const cache={salesmen,visits,plannedToday,rawByUid,schedules:cloudSched,stores,sourceCounts:{salesmen:salesmen.length,userData:uRows.length,visitDays:diagnostics.partitionDocs,partitionEntries:diagnostics.partitionEntries},at:iso(),visitTransport:'single-core:all-user_data/visit_days+legacy+local-cache',dashboardCleared:!!(Number.isFinite(clearMs)&&clearMs>0),clearStateAt:clearMarker?.clearedAt||'',stats:{today:todayVisits.length,week:weekVisits.length,month:monthVisits.length,uniqueStores:uniqueStores.size},dateRange:{today,weekStart,weekEnd,month}};
   window.__shadabMasterVisitReadDiagnostics=diagnostics;window.__spMasterAggregateCache=cache;window.__shadabMasterRows=window.masterRows; 
   try{await window.__shadabHydrateMasterDashboardPhotos?.()}catch(e){}
   const root=document.getElementById('spAddedMasterDashboard');
@@ -20406,8 +20489,14 @@ html[data-shadab-theme="light"] #shadabBottomNav .sbn-label,body:not(.dark) #sha
   function restore(){
     var saved=readSaved();if(!saved||stoppedByUser)return false;
     var identity=currentIdentity();
-    /* Do not apply one salesman's route to another account. */
-    if(identity&&norm(identity)!==norm(saved.salesman))return false;
+    /* On the Master device, visitedBy may temporarily contain the first option
+       while async Firebase/catalog hydration is still running. That is not a
+       user choice and must not block restoring the saved route. For a signed-in
+       salesman account, keep the identity guard so another salesman's route is
+       never applied. Trusted manual changes already stop boot restoration. */
+    var authSession=null;try{authSession=window.shadabRestCurrentSession&&window.shadabRestCurrentSession()}catch(_){}
+    var isMasterSession=String(authSession&&authSession.email||'').trim().toLowerCase()==='master@shadabpharmacy.com';
+    if(!isMasterSession&&authSession&&authSession.uid&&identity&&norm(identity)!==norm(saved.salesman))return false;
     var salesman=document.getElementById('visitedBy');
     if(salesman&&!salesman.value&&Array.from(salesman.options||[]).some(function(o){return norm(o.value)===norm(saved.salesman)}))salesman.value=saved.salesman;
     var area=document.getElementById('area');if(!area)return false;
