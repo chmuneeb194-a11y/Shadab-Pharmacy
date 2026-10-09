@@ -1641,7 +1641,7 @@ body.section-modal-field #todayReportAnchor,body.section-modal-today #fieldVisit
 <div class="field"><label>Person Name</label><input id="personName" placeholder="Person met at the store"/></div>
 <div class="field"><label>Phone (optional)</label><input id="personPhone" inputmode="tel" placeholder="03XXXXXXXXX"/></div>
 <div class="field"><label>Visit Status</label><select id="visitStatus"><option>Completed</option><option>Order Received</option><option>Order Done</option><option>No Order</option><option>Follow-up Required</option><option>Pending</option><option>Follow-up Done</option></select></div>
-<div class="field full"><label>Order / Business Notes</label><div class="voice-row"><textarea id="notes" placeholder="e.g. X Medical Store ne order diya / nahi diya..."></textarea><button class="voice-btn" id="voiceBtn" onclick="toggleVoiceNote()" title="Record voice note" type="button">🎙️<span>Mic</span></button></div><div class="voice-tools"><select id="voiceLanguage" title="Speech language"><option value="ur-PK">Urdu + English</option><option value="en-PK">English</option><option value="ur-IN">Urdu</option><option value="en-US">English (US)</option></select><span class="voice-hint">🎙️ Speech will also be written into Notes when your browser supports speech recognition.</span></div><div class="voice-state" id="voiceState">Voice note optional • audio is saved on this device</div><audio controls="" hidden="" id="voicePlayer"></audio></div>
+<div class="field full"><label>Order / Business Notes</label><div class="voice-row"><textarea id="notes" placeholder="e.g. X Medical Store ne order diya / nahi diya..."></textarea><button class="voice-btn" id="voiceBtn" onclick="toggleVoiceNote()" title="Record voice note" type="button">🎙️<span>Mic</span></button></div><div class="voice-tools"><select id="voiceLanguage" title="Speech language"><option value="en-PK" selected>Roman Urdu + English (recommended)</option><option value="ur-PK">Urdu recognition (may return Urdu script)</option><option value="en-US">English (US)</option></select><span class="voice-hint">🎙️ Roman Urdu + English speech-to-text • maximum 30 seconds per note.</span></div><div class="voice-state" id="voiceState">Voice note optional • audio is saved on this device</div><audio controls="" hidden="" id="voicePlayer"></audio></div>
 </div>
 <div style="margin-top:17px">
 <label style="font-size:12px;font-weight:700;color:#55565b;margin-left:4px">On-site Photo</label>
@@ -3663,11 +3663,11 @@ function setupSpeechRecognition(){
  voiceSpeechSupported=!!SR;
  if(!voiceSpeechSupported)return null;
  const r=new SR(); r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
- r.lang=document.getElementById("voiceLanguage")?.value||"ur-PK";
+ r.lang=document.getElementById("voiceLanguage")?.value||"en-PK";
  r.onstart=()=>{const s=document.getElementById("voiceState");if(s){s.classList.add("live");s.textContent="Recording + converting speech to Notes…"}};
  r.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0]?.transcript||"";if(e.results[i].isFinal)voiceFinalText+=(voiceFinalText?" ":"")+t.trim();else interim+=(interim?" ":"")+t.trim()}const ta=document.getElementById("notes");if(ta){const join=voiceFinalText?" ":"";ta.value=(voiceTranscriptBase+(voiceFinalText?join+voiceFinalText:"" )+(interim?(voiceFinalText?" ":"")+interim:"" )).trim();ta.dispatchEvent(new Event("input",{bubbles:true}))}};
  r.onerror=e=>{if(e.error!=="no-speech"&&e.error!=="aborted"){const s=document.getElementById("voiceState");if(s)s.textContent="Audio is still recording; speech-to-text is unavailable right now."}};
- r.onend=()=>{if(voiceRecording){try{r.lang=document.getElementById("voiceLanguage")?.value||"ur-PK";r.start()}catch(e){}}};
+ r.onend=()=>{if(voiceRecording){try{r.lang=document.getElementById("voiceLanguage")?.value||"en-PK";r.start()}catch(e){}}};
  return r;
 }
 async function toggleVoiceNote(){if(voiceRecording){stopVoiceNote();return}startVoiceNote()}
@@ -13487,7 +13487,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
       const r=baseSetup.apply(this,arguments);
       if(!r)return r;
       try{
-        r.lang=document.getElementById('voiceLanguage')?.value||'ur-PK';
+        r.lang=document.getElementById('voiceLanguage')?.value||'en-PK';
         const prevResult=r.onresult;
         r.onresult=function(e){
           try{if(typeof prevResult==='function')prevResult.call(this,e)}catch(_e){}
@@ -15856,7 +15856,7 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
   let timer=null;
   let restartTimer=null;
   const SR=()=>window.SpeechRecognition||window.webkitSpeechRecognition;
-  const getLang=()=>String(document.getElementById('voiceLanguage')?.value||'ur-PK');
+  const getLang=()=>String(document.getElementById('voiceLanguage')?.value||'en-PK');
   function state(msg,live){
     const s=document.getElementById('voiceState');
     if(s){s.classList.toggle('live',!!live);if(msg)s.textContent=msg;}
@@ -15921,7 +15921,7 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
       recognition=makeRecognition();voiceRecognition=recognition;
       if(!recognition)throw new Error('SPEECH_RECOGNITION_UNAVAILABLE');
       recognition.start();
-      timer=setTimeout(()=>{if(active)stop()},60000);
+      timer=setTimeout(()=>{if(active){state('30-second note limit reached. Finishing transcription…',true);stop()}},30000);
     }catch(e){cleanup('Could not start speech recognition. Check Chrome mic permission and try again.');}
   }
   function stop(){
