@@ -11732,6 +11732,11 @@ async function refreshCityCatalog(){if(cityCatalogBusy)return cityCatalog;cityCa
 function filteredVisits(vs){let out=Array.isArray(vs)?vs.slice():[];if(selectedCity!=='ALL'){const q=selectedCity.toLowerCase();out=out.filter(v=>cityOfVisit(v).toLowerCase()===q)}if(selectedDate!=='ALL')out=out.filter(v=>String(v?.date||'')===selectedDate);return out}
 function renderCityOptions(root){const sel=$('spLiveCityFilter');if(!sel)return;sel.innerHTML='<option value="ALL">All Cities</option>'+cityCatalog.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');sel.value=selectedCity;const st=$('spLiveCityStatus');if(st)st.textContent=selectedCity==='ALL'?'All Cities • Showing all visits':'Selected City: '+selectedCity;sel.onchange=()=>{selectedCity=sel.value||'ALL';renderTab()}}
 function renderTab(){
+  window.__spLiveSalesmanControlV15={
+    getSelected:()=>({uid:String(selectedUid||''),profile:selectedProfile?{...selectedProfile}:null,data:selectedData?{...selectedData}:null}),
+    refresh:async()=>{await fetchProfiles();if(selectedUid&&profiles.some(p=>p.uid===selectedUid))await select(selectedUid,true);renderList();renderTab();return profiles.length;}
+  };
+  window.refreshSpAddedSalesmanLive=async()=>window.__spLiveSalesmanControlV15.refresh();
   renderTabs();
   const c=ensureContent();
   if(!selectedProfile){c.innerHTML='<div class="sp-live-card"><div class="sp-live-empty">Select a salesman from the Firebase list.</div></div>';return}
@@ -21430,6 +21435,364 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
  window.__SHADAB_V13_SALESMAN_DELETE_READY=true;
 })();
 </script>
+<script id="shadab-v17-one-tap-delete-draft-hotfix">
+/* SHADAB PHARMACY live hotfix v17: Master-only one-tap salesman deletion and Visit-only draft recovery. */
+(function () {
+  'use strict';
+  if (window.__spOneTapDeleteV17) return;
+  window.__spOneTapDeleteV17 = true;
+  const ADMIN = 'master@shadabpharmacy.com';
+  const DRAFT_KEY = 'shadab_pharmacy_draft_v5';
+  let busy = false, activeButton = null, originalButtonHTML = '', busyTimer = 0, bannerTimer = 0;
+  const session = () => { try { return window.shadabRestCurrentSession?.() || null; } catch (_) { return null; } };
+  const isMaster = () => String(session()?.email || '').trim().toLowerCase() === ADMIN;
+  const txt = v => String(v == null ? '' : v);
+  const styles = document.createElement('style');
+  styles.textContent = [
+    '#spLiveDeleteAccount.sp-v17-deleting{opacity:.9!important;filter:saturate(.7)!important;cursor:progress!important;box-shadow:0 0 0 2px rgba(255,100,125,.25),0 0 24px rgba(255,70,100,.45)!important}',
+    '.sp-v17-spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;vertical-align:-3px;margin-right:8px;animation:spV17Spin .7s linear infinite}',
+    '.sp-v17-banner{position:fixed;left:12px;right:12px;bottom:94px;z-index:2147483000;display:flex;gap:10px;padding:14px 16px;border-radius:16px;border:1px solid rgba(70,190,255,.65);background:rgba(3,24,40,.98);color:#f1faff;box-shadow:0 12px 42px rgba(0,0,0,.48);font:500 13px/1.5 system-ui,-apple-system,sans-serif;max-height:34vh;overflow:auto}',
+    '.sp-v17-banner.success{border-color:rgba(0,220,150,.72);background:rgba(4,47,38,.98)}',
+    '.sp-v17-banner.warning,.sp-v17-banner.error{border-color:rgba(255,80,110,.82);background:rgba(54,14,26,.98)}',
+    '.sp-v17-banner .mark{font-size:18px;line-height:1.2;flex:0 0 auto}',
+    '.sp-v17-restore{display:block;width:100%;box-sizing:border-box;margin:8px 0 12px;padding:11px 14px;border:1px solid rgba(0,170,255,.65);border-radius:13px;background:linear-gradient(130deg,#087de5,#04a3d4);color:#fff;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(0,100,210,.22)}',
+    '@keyframes spV17Spin{to{transform:rotate(360deg)}}',
+    '@media(prefers-reduced-motion:reduce){.sp-v17-spinner{animation:none}}'
+  ].join('\n');
+  document.head.appendChild(styles);
+
+  function banner(message, kind) {
+    let box = document.getElementById('spV17DeleteBanner');
+    if (!box) { box = document.createElement('div'); box.id = 'spV17DeleteBanner'; document.body.appendChild(box); }
+    box.className = 'sp-v17-banner ' + (kind || 'progress');
+    box.replaceChildren();
+    const mark = document.createElement('span'); mark.className = 'mark';
+    mark.textContent = kind === 'success' ? '✓' : kind === 'error' ? '✕' : kind === 'warning' ? '⚠' : '⏳';
+    const body = document.createElement('span'); body.textContent = txt(message); box.append(mark, body);
+    clearTimeout(bannerTimer);
+    if (kind !== 'progress') bannerTimer = setTimeout(() => box.isConnected && box.remove(), kind === 'success' ? 8000 : 18000);
+  }
+  function resetButton() {
+    if (activeButton?.isConnected) {
+      activeButton.classList.remove('sp-v17-deleting'); activeButton.removeAttribute('aria-busy');
+      activeButton.disabled = false; activeButton.innerHTML = originalButtonHTML || '🗑 Delete Salesman Account';
+    }
+    activeButton = null; originalButtonHTML = ''; busy = false; clearTimeout(busyTimer);
+  }
+
+  // Never interrupt the Home page with the old draft dialog. Keep a saved draft recoverable inside Visit.
+  const realConfirm = window.confirm.bind(window);
+  window.confirm = function (message) {
+    if (/^Restore your unsaved visit draft\?$/i.test(txt(message).trim())) return false;
+    return realConfirm(message);
+  };
+  function updateDraftButton() {
+    const field = document.getElementById('storeName')?.closest('.field');
+    if (!field?.parentElement) return;
+    let draft = null;
+    try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (_) {}
+    const hasDraft = !!(draft && (draft.store || draft.person || draft.notes));
+    let button = document.getElementById('spV17RestoreDraft');
+    if (!hasDraft) { button?.remove(); return; }
+    if (button) return;
+    button = document.createElement('button'); button.type = 'button'; button.id = 'spV17RestoreDraft';
+    button.className = 'sp-v17-restore'; button.textContent = '↩ Restore Saved Visit Draft';
+    button.addEventListener('click', () => {
+      let d; try { d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (_) {}
+      if (!d) { button.remove(); return; }
+      const set = (id, value) => {
+        const el = document.getElementById(id); if (!el) return;
+        if (el.type === 'checkbox') el.checked = !!value; else el.value = value == null ? '' : String(value);
+        try { el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+      };
+      set('visitedBy', d.visitedBy || ''); set('area', d.area || 'Sahiwal');
+      try { if (typeof window.refreshTerritories === 'function') window.refreshTerritories(d.territory || ''); } catch (_) {}
+      set('storeName', d.store || ''); set('personName', d.person || ''); set('personPhone', d.phone || '');
+      set('notes', d.notes || ''); set('visitStatus', d.status || 'Completed'); set('gpsEnabled', !!d.gps);
+      try { (window.toast35 || window.toast)?.('Saved visit draft restored in the Visit form.'); } catch (_) {}
+      button.remove();
+    });
+    field.parentElement.insertBefore(button, field);
+  }
+  function initDraft() {
+    updateDraftButton();
+    const root = document.getElementById('storeName')?.parentElement?.parentElement;
+    if (root) new MutationObserver(updateDraftButton).observe(root, { childList: true, subtree: true });
+    window.addEventListener('pageshow', updateDraftButton); window.addEventListener('focus', updateDraftButton);
+    let count = 0; const retry = setInterval(() => { updateDraftButton(); if (++count >= 30 || document.getElementById('spV17RestoreDraft')) clearInterval(retry); }, 300);
+  }
+
+  // The destructive operation remains protected by the engine's Master session check; only the UI confirm boxes are removed.
+  document.addEventListener('click', async function (event) {
+    const button = event.target?.closest?.('#spLiveDeleteAccount');
+    if (!button) return;
+    if (busy) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+    if (!isMaster()) return;
+    event.preventDefault(); event.stopPropagation(); event.stopImmediatePropagation();
+    if (!navigator.onLine) { banner('Internet is offline. Reconnect before deleting; no account was changed.', 'error'); return; }
+    const selected = window.__spLiveSalesmanControlV15?.getSelected?.();
+    const uid = txt(selected?.uid || selected?.profile?.uid).trim();
+    const profile = selected?.profile || {};
+    const name = txt(profile.fullName || profile.displayName || profile.salesmanName || profile.name || 'Salesman');
+    const email = txt(profile.email || '').trim();
+    if (!uid) { banner('Delete failed: the selected profile UID could not be read. No deletion was attempted.', 'error'); return; }
+    if (uid === txt(session()?.uid) || email.toLowerCase() === ADMIN) { banner('The Master account cannot be deleted.', 'error'); return; }
+    busy = true; activeButton = button; originalButtonHTML = button.innerHTML;
+    button.classList.add('sp-v17-deleting'); button.setAttribute('aria-busy', 'true');
+    button.innerHTML = '<span class="sp-v17-spinner" aria-hidden="true"></span>Deleting…';
+    banner('Deleting ' + name + '… saving and verifying the permanent Firebase marker.', 'progress');
+    busyTimer = setTimeout(resetButton, 90000);
+    try {
+      const engine = window.shadabDeleteSalesmanAccountV13;
+      if (typeof engine !== 'function') throw new Error('The Firebase deletion engine is missing from this app version.');
+      const result = await engine({ uid, name, email, deletedBy: txt(session()?.email || ADMIN) });
+      if (!result || result.verified !== true) throw new Error('Firebase did not verify the permanent deletion marker.');
+      let refreshFailure = '';
+      try { await window.refreshSpAddedSalesmanLive?.(); } catch (e) { refreshFailure = 'Salesman list refresh failed: ' + txt(e?.message || e); }
+      const warnings = Array.isArray(result.warnings) ? result.warnings.filter(Boolean) : [];
+      if (refreshFailure) warnings.push(refreshFailure);
+      if (!result.profilePhysicallyDeleted && !result.profileHidden) warnings.push('Firestore profile removal is not verified; check Firebase permissions.');
+      if (warnings.length) {
+        banner(name + ' was excluded by the permanent marker, but cleanup needs review. ' +
+          (result.profilePhysicallyDeleted ? 'Firestore profile physically deleted. ' : result.profileHidden ? 'Firestore profile is marked Deleted; physical deletion may be blocked by Firebase Rules. ' : '') + warnings.join(' '), 'warning');
+      } else banner(name + ' deleted from the active Salesman list. Firebase deletion marker and profile removal are verified.', 'success');
+      // Leave the deleted profile details cleared instead of showing a stale selected account.
+      try { window.dispatchEvent(new CustomEvent('sp-salesman-delete-v17-result', { detail: { uid, name, result } })); } catch (_) {}
+    } catch (error) {
+      const message = txt(error?.message || error);
+      banner('DELETE FAILED: ' + message, 'error');
+      const status = document.getElementById('spLiveAccountStatus');
+      if (status) { status.textContent = '✕ Delete failed: ' + message; status.className = 'sp-live-status err'; }
+      try { window.dispatchEvent(new CustomEvent('sp-salesman-delete-v17-error', { detail: { uid, name, message } })); } catch (_) {}
+    } finally {
+      setTimeout(resetButton, 500);
+    }
+  }, true);
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDraft, { once: true }); else initDraft();
+  window.__spOneTapDeleteV17Ready = true;
+})();
+
+</script>
+<!-- SHADAB PHARMACY LIVE HOTFIX V17: one-tap delete + Visit-only draft restore -->
+<script id="shadab-v18-delete-permission-forensic-fix">
+/*
+ SHADAB PHARMACY V18 — forensic fix for Firestore permission-denied during salesman deletion.
+ Root cause in V13/V17: deletion hard-failed on the first write to the new
+ app_settings/salesmanDeletionLedger document. Existing Firestore Rules do not
+ permit that write. This version uses the already-existing masterData/profile
+ documents and never claims Auth-user deletion from browser-only code.
+*/
+(function(){
+  'use strict';
+  if(window.__SHADAB_V18_DELETE_FORENSIC__)return;
+  window.__SHADAB_V18_DELETE_FORENSIC__=true;
+  const ADMIN='master@shadabpharmacy.com';
+  const MASTER='app_settings/masterData';
+  const SEPARATE='app_settings/salesmanDeletionLedger';
+  const EMBEDDED='salesmanDeletionLedgerV1';
+  const baseReadDoc=window.shadabRestReadDoc;
+  const baseWriteDoc=window.shadabRestWriteDoc;
+  const baseReadCollection=window.shadabRestReadCollection;
+  const baseDeleteDoc=window.shadabRestDeleteDoc;
+  const norm=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const now=()=>new Date().toISOString();
+  const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(_){return null}};
+  const masterSession=()=>norm(session()?.email)===ADMIN;
+  const decode=v=>{try{return decodeURIComponent(String(v||''))}catch(_){return String(v||'')}};
+  const uidAt=path=>{const p=String(path||'').split('?')[0].replace(/^\/+|\/+$/g,'').split('/').map(decode);return (p[0]==='salesmen'||p[0]==='user_data')&&p[1]?p[1]:''};
+  const isDeletedProfile=p=>!!(p&&(p.isDeleted===true||p.deleted===true||norm(p.status)==='deleted'||norm(p.status)==='removed'));
+  if(typeof baseReadDoc!=='function'||typeof baseWriteDoc!=='function'||typeof baseReadCollection!=='function'||typeof baseDeleteDoc!=='function'){
+    console.error('[SHADAB V18] REST layer unavailable; deletion patch not installed.');return;
+  }
+  let mapCache=null,mapCacheAt=0,mapReadError='';
+
+  async function readEntryMap(force){
+    if(!force&&mapCache&&Date.now()-mapCacheAt<1800)return mapCache;
+    let separate=null,master=null;
+    try{separate=await baseReadDoc(SEPARATE)}catch(e){mapReadError=String(e?.message||e)}
+    try{master=await baseReadDoc(MASTER)}catch(e){mapReadError=String(e?.message||e)}
+    const a=separate?.entries&&typeof separate.entries==='object'?separate.entries:{};
+    const b=master?.[EMBEDDED]&&typeof master[EMBEDDED]==='object'?master[EMBEDDED]:{};
+    mapCache={...a,...b};mapCacheAt=Date.now();return mapCache;
+  }
+  async function entryExists(uid){if(!uid)return false;return !!(await readEntryMap(false))[String(uid)]}
+  async function readProfileRaw(uid){
+    try{return await baseReadDoc('salesmen/'+encodeURIComponent(String(uid)))}catch(_){return null}
+  }
+  async function deletedAnywhere(uid){
+    if(!uid)return false;
+    if(await entryExists(uid))return true;
+    const p=await readProfileRaw(uid);
+    return isDeletedProfile(p);
+  }
+  function explain(e){
+    const raw=String(e?.message||e||'Unknown error');
+    if(/missing or insufficient permissions|permission.denied|PERMISSION_DENIED/i.test(raw))
+      return 'Firestore Rules rejected this operation (Missing or insufficient permissions). The V18 flow will use the existing Master Data/profile documents where permitted; no Firebase Rules were changed.';
+    return raw.slice(0,500);
+  }
+
+  // Preserve tombstones whenever any existing feature rewrites the whole masterData document.
+  window.shadabRestWriteDoc=async function(path,obj,opts){
+    const uid=uidAt(path);
+    const allowedTombstone=!!(uid&&/^salesmen\/[^/]+$/.test(String(path))&&isDeletedProfile(obj));
+    if(uid&&!allowedTombstone){
+      const blockedByLedger=await entryExists(uid);
+      const blockedByProfile=blockedByLedger?false:isDeletedProfile(await readProfileRaw(uid));
+      if(blockedByLedger||blockedByProfile){const e=new Error('This salesman was permanently removed by Master. Firebase sync write blocked for UID '+uid+'.');e.code='SHADAB_SALESMAN_DELETED';throw e;}
+    }
+    let payload=obj;
+    if(path===MASTER){
+      let current=null;try{current=await baseReadDoc(MASTER)}catch(_){}
+      const oldMap=current?.[EMBEDDED]&&typeof current[EMBEDDED]==='object'?current[EMBEDDED]:{};
+      const incoming=obj?.[EMBEDDED]&&typeof obj[EMBEDDED]==='object'?obj[EMBEDDED]:{};
+      payload={...(obj&&typeof obj==='object'?obj:{}),[EMBEDDED]:{...oldMap,...incoming}};
+    }
+    return baseWriteDoc(path,payload,opts);
+  };
+
+  // Filter deleted identities from list/profile views and make the profile tombstone usable after a reload.
+  window.shadabRestReadDoc=async function(path){
+    const uid=uidAt(path);
+    if(uid){
+      if(await deletedAnywhere(uid))return null;
+      return baseReadDoc(path);
+    }
+    return baseReadDoc(path);
+  };
+  window.shadabRestReadCollection=async function(path){
+    const rows=await baseReadCollection(path);
+    const entries=await readEntryMap(false);
+    if(path==='salesmen')return (rows||[]).filter(r=>{
+      const d=typeof r?.data==='function'?(r.data()||{}):(r?.data||{});const uid=String(r?.id||d.uid||'');
+      return uid&&!entries[uid]&&!isDeletedProfile(d);
+    });
+    if(path==='user_data'){
+      const checked=await Promise.all((rows||[]).map(async r=>{const d=typeof r?.data==='function'?(r.data()||{}):(r?.data||{});const uid=String(r?.id||d.uid||'');if(!uid||entries[uid])return {r,keep:false};const profile=await readProfileRaw(uid);return {r,keep:!isDeletedProfile(profile)}}));
+      return checked.filter(x=>x.keep).map(x=>x.r);
+    }
+    const m=String(path||'').match(/^salesmen\/([^/]+)\/supply_summaries$/);
+    if(m&&entries[decode(m[1])])return [];
+    return rows;
+  };
+
+  window.shadabDeleteSalesmanAccountV13=async function(input){
+    if(!masterSession())throw new Error('Master login is required.');
+    if(!navigator.onLine)throw new Error('Internet connection is required. Reconnect and try again.');
+    const uid=String(input?.uid||'').trim(),name=String(input?.name||'').trim()||'Salesman',email=String(input?.email||'').trim();
+    const sess=session();
+    if(!uid)throw new Error('Selected salesman UID is missing; no deletion was attempted.');
+    if(uid===String(sess?.uid||'')||norm(email)===ADMIN)throw new Error('The Master account cannot be deleted.');
+    const at=now(), record={uid,name,email,deletedAt:at,deletedBy:String(input?.deletedBy||ADMIN),kind:'salesman-account-removal',schemaVersion:2,source:'SHADAB_PHARMACY_V18'};
+    let markerSaved=false,markerError='',profileSaved=false,profileDelete=false;
+    const warnings=[];
+
+    // 1) First choice: store a permanent tombstone inside app_settings/masterData,
+    // a pre-existing document normally written by the current Master application.
+    try{
+      const m=await baseReadDoc(MASTER);
+      if(!m||typeof m!=='object')throw new Error('Master Data document is not readable; embedded marker cannot be stored.');
+      const entries={...(m[EMBEDDED]&&typeof m[EMBEDDED]==='object'?m[EMBEDDED]:{}),[uid]:record};
+      await window.shadabRestWriteDoc(MASTER,{...m,[EMBEDDED]:entries,updatedAt:at,updatedBy:String(input?.deletedBy||ADMIN),reason:'master-salesman-delete-v18'});
+      const verify=await baseReadDoc(MASTER);
+      if(!verify?.[EMBEDDED]?.[uid]?.deletedAt)throw new Error('Master Data tombstone did not read back after write.');
+      markerSaved=true;mapCache={...(verify[EMBEDDED]||{})};mapCacheAt=Date.now();
+    }catch(e){markerError=explain(e);warnings.push('Master Data deletion marker was not saved: '+markerError)}
+
+    // 2) If Master Data marker writes are denied by the project Rules, persist an explicit Deleted
+    // status in the existing salesman profile. Do NOT physically delete unless a central tombstone exists.
+    if(!markerSaved){
+      try{
+        const old=await baseReadDoc('salesmen/'+encodeURIComponent(uid));
+        if(!old||typeof old!=='object')throw new Error('Salesman profile is not readable; cannot apply the profile-level tombstone.');
+        const marked={...old,uid:old.uid||uid,status:'Disabled',isDeleted:true,deleted:true,deletedAt:at,deletedBy:String(input?.deletedBy||ADMIN),deletionReason:'Master removed this salesman',updatedAt:at,updatedBy:String(input?.deletedBy||ADMIN)};
+        await window.shadabRestWriteDoc('salesmen/'+encodeURIComponent(uid),marked);
+        const verify=await baseReadDoc('salesmen/'+encodeURIComponent(uid));
+        if(!isDeletedProfile(verify))throw new Error('Profile-level Deleted marker did not read back.');
+        profileSaved=true;mapCache={...(mapCache||{}),[uid]:record};mapCacheAt=Date.now();
+      }catch(e){throw new Error('DELETE COULD NOT BE COMMITTED. Firestore denied both the Master Data tombstone and the existing salesman-profile update. '+markerError+' Profile fallback: '+explain(e));}
+      warnings.push('Permanent profile-level Deleted marker verified. Physical document deletion was skipped because the central marker write was denied; the account is hidden by the current app and will not be treated as Active by V18.');
+    }
+
+    // 3) Delete child assignment docs where the existing Rules allow it. Never delete visit history.
+    try{
+      const child='salesmen/'+encodeURIComponent(uid)+'/supply_summaries';
+      const rows=await baseReadCollection(child);
+      for(const row of rows||[]){const id=String(row?.id||'').trim();if(id)try{await baseDeleteDoc(child+'/'+encodeURIComponent(id))}catch(e){warnings.push('Summary assignment '+id+' remains: '+explain(e))}}
+    }catch(e){warnings.push('Could not list Summary assignments: '+explain(e))}
+
+    // 4) Physical Firestore profile deletion is attempted only after a durable central tombstone exists.
+    // If Rules reject DELETE, keep/verify the profile-level soft-delete marker instead.
+    if(markerSaved){
+      try{
+        await baseDeleteDoc('salesmen/'+encodeURIComponent(uid));
+        const after=await baseReadDoc('salesmen/'+encodeURIComponent(uid));
+        if(after)throw new Error('Firestore DELETE returned but the profile is still readable.');
+        profileDelete=true;
+      }catch(e){
+        const deleteErr=explain(e);
+        warnings.push('Physical Firestore profile deletion was denied or could not be verified: '+deleteErr);
+        try{
+          const old=await baseReadDoc('salesmen/'+encodeURIComponent(uid))||{};
+          const marked={...old,uid:old.uid||uid,status:'Disabled',isDeleted:true,deleted:true,deletedAt:at,deletedBy:String(input?.deletedBy||ADMIN),deletionReason:'Master removed this salesman',updatedAt:at,updatedBy:String(input?.deletedBy||ADMIN)};
+          await window.shadabRestWriteDoc('salesmen/'+encodeURIComponent(uid),marked);
+          const verify=await baseReadDoc('salesmen/'+encodeURIComponent(uid));
+          if(!isDeletedProfile(verify))throw new Error('Profile tombstone read-back failed.');
+          profileSaved=true;
+          warnings.push('Existing profile now carries a verified Deleted status and is excluded from the active app list.');
+        }catch(fallbackErr){warnings.push('Could not write profile-level fallback marker: '+explain(fallbackErr));}
+      }
+    }
+
+    // 5) Remove stale display-name references without removing a name used by another live UID.
+    try{
+      const rows=await baseReadCollection('salesmen');
+      const stillUsed=(rows||[]).some(r=>{const d=typeof r?.data==='function'?(r.data()||{}):(r?.data||{});return String(r?.id||d.uid||'')!==uid&&!isDeletedProfile(d)&&norm(d.fullName||d.displayName||d.salesmanName||d.name)===norm(name)});
+      if(!stillUsed){
+        const md=await baseReadDoc(MASTER);
+        if(md&&typeof md==='object'){
+          const out={...md};
+          ['customSalesmen','salesmen','salesmanNames','salesmanList'].forEach(k=>{if(Array.isArray(out[k]))out[k]=out[k].filter(v=>norm(typeof v==='string'?v:(v?.fullName||v?.displayName||v?.salesmanName||v?.name||v?.salesman||v?.label||v?.value))!==norm(name))});
+          await window.shadabRestWriteDoc(MASTER,out);
+        }
+        try{const list=JSON.parse(localStorage.getItem('shadab_custom_salesmen_v1')||'[]');if(Array.isArray(list))localStorage.setItem('shadab_custom_salesmen_v1',JSON.stringify(list.filter(v=>norm(typeof v==='string'?v:(v?.fullName||v?.displayName||v?.salesmanName||v?.name))!==norm(name))))}catch(_){}
+        try{document.querySelectorAll('#visitedBy option,#adminSalesman option').forEach(o=>{if(norm(o.value||o.textContent)===norm(name))o.remove()})}catch(_){}
+      }
+    }catch(e){warnings.push('Display-name/assignment cleanup needs review: '+explain(e))}
+
+    // 6) Final verify against the durable location which succeeded.
+    if(markerSaved){
+      const v=await baseReadDoc(MASTER);
+      if(!v?.[EMBEDDED]?.[uid]?.deletedAt)throw new Error('Deletion marker was missing during final read-back. Stop and inspect Firebase.');
+      mapCache={...(v[EMBEDDED]||{})};mapCacheAt=Date.now();
+    }else if(profileSaved){
+      const v=await baseReadDoc('salesmen/'+encodeURIComponent(uid));
+      if(!isDeletedProfile(v))throw new Error('Profile-level Deleted marker was missing during final read-back.');
+    }else throw new Error('No persistent deletion marker could be verified.');
+
+    return {uid,name,email,deletedAt:at,verified:true,profilePhysicallyDeleted:profileDelete,profileHidden:profileDelete||profileSaved,warnings,markerLocation:markerSaved?'app_settings/masterData.'+EMBEDDED:'salesmen/'+uid+'.status'};
+  };
+
+  // Make sign-in and sync paths honor the persistent marker even if the separate ledger collection is denied.
+  const oldSignIn=window.shadabRestSignIn;
+  if(typeof oldSignIn==='function'&&!oldSignIn.__spV18DeleteGuard){
+    const g=async function(){const result=await oldSignIn.apply(this,arguments);const s=session();if(s?.uid&&await deletedAnywhere(s.uid)){try{window.shadabRestClearSession?.()}catch(_){};try{await window.sp35Logout?.()}catch(_){};throw new Error('This salesman account was removed by Master. Login is blocked.')}return result};g.__spV18DeleteGuard=true;window.shadabRestSignIn=g;
+  }
+  const oldLogin=window.sp35Login;
+  if(typeof oldLogin==='function'&&!oldLogin.__spV18DeleteGuard){
+    const g=async function(){const result=await oldLogin.apply(this,arguments);const s=session();if(s?.uid&&await deletedAnywhere(s.uid)){try{await window.sp35Logout?.()}catch(_){};try{window.shadabRestClearSession?.()}catch(_){};return false}return result};g.__spV18DeleteGuard=true;window.sp35Login=g;
+  }
+  ['syncSalesmanDataAuto','sp35ManualServerRefresh','sp35ManualSyncFinal','sp35SyncNow','pollRemote','shadabSyncSalesmanNow','sp35SyncNew'].forEach(key=>{
+    const old=window[key];if(typeof old!=='function'||old.__spV18DeleteGuard)return;
+    const g=async function(){const s=session();if(s?.uid&&norm(s.email)!==ADMIN&&await deletedAnywhere(s.uid)){try{await window.sp35Logout?.()}catch(_){};try{window.shadabRestClearSession?.()}catch(_){};return false}return old.apply(this,arguments)};g.__spV18DeleteGuard=true;window[key]=g;
+  });
+
+  window.__SHADAB_V18_DELETE_FORENSIC_READY=true;
+  console.info('[SHADAB V18] Deletion permission fallback and tombstone preservation ready. Firestore Rules were not changed.');
+})();
+</script>
+
 </body>
 </html>
 
