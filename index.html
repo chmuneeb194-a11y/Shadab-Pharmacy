@@ -15866,9 +15866,40 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
     b.classList.toggle('recording',!!recording);
     b.innerHTML=recording?'⏹️<span>Stop</span>':'🎙️<span>Mic</span>';
   }
+  // Speech services sometimes resend the same final phrase after Android
+  // Chrome restarts recognition. Normalize repeated words and remove overlap.
+  function cleanSpeech(text){
+    let s=String(text||'').replace(/[\u200B-\u200D\uFEFF]/g,' ').replace(/\s+/g,' ').trim();
+    if(!s)return '';
+    const words=s.split(' '), out=[];
+    for(const w of words){
+      const key=w.toLocaleLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,'');
+      const prev=out.length?out[out.length-1].toLocaleLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,''):'';
+      if(key && key===prev)continue;
+      out.push(w);
+    }
+    return out.join(' ');
+  }
+  function appendFinal(text){
+    const next=cleanSpeech(text);if(!next)return;
+    const prev=cleanSpeech(finalParts.join(' '));
+    if(!prev){finalParts=[next];return;}
+    const a=prev.split(' '), b=next.split(' ');
+    const norm=x=>x.toLocaleLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,'');
+    // Ignore exact repeats; otherwise strip a repeated suffix/prefix overlap.
+    if(norm(prev)===norm(next))return;
+    let overlap=0;
+    for(let n=Math.min(a.length,b.length);n>0;n--){
+      let ok=true;for(let j=0;j<n;j++){if(norm(a[a.length-n+j])!==norm(b[j])){ok=false;break;}}
+      if(ok){overlap=n;break;}
+    }
+    const remainder=b.slice(overlap).join(' ');
+    if(remainder)finalParts=[prev+' '+remainder];
+    else if(!overlap)finalParts=[prev+' '+next];
+  }
   function writeNotes(interim){
     const ta=document.getElementById('notes');if(!ta)return;
-    const spoken=(finalParts.filter(Boolean).join(' ')+(interim?' '+interim:'')).trim();
+    const spoken=cleanSpeech(finalParts.join(' ')+(interim?' '+cleanSpeech(interim):''));
     ta.value=(baseline+(baseline&&spoken?' ':'')+spoken).trim();
     ta.dispatchEvent(new Event('input',{bubbles:true}));
   }
@@ -15889,7 +15920,7 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
       let interim='';
       for(let i=e.resultIndex;i<e.results.length;i++){
         const t=String(e.results[i][0]?.transcript||'').trim();if(!t)continue;
-        if(e.results[i].isFinal){if(!finalParts.length||finalParts[finalParts.length-1]!==t)finalParts.push(t)}
+        if(e.results[i].isFinal){appendFinal(t)}
         else interim+=(interim?' ':'')+t;
       }
       writeNotes(interim);
