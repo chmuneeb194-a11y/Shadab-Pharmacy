@@ -3208,7 +3208,16 @@ function editVisit(id){
  window.scrollTo({top:0,behavior:"smooth"});toast("Edit mode enabled");
 }
 function deleteVisit(id){if(confirm("Delete this visit? This cannot be undone.")){visits=visits.filter(v=>v.id!==id);saveData();renderRecords();updateStats();updatePremiumDashboard();toast("Visit deleted")}}
-function resetForm(){editingId=null;pendingVoiceBlob=null;stopVoiceNote();["storeName","personName","personPhone","notes"].forEach(id=>document.getElementById(id).value="");if(document.getElementById("visitStatus"))document.getElementById("visitStatus").value="Completed";capturedData=null;document.getElementById("photoPreview").classList.remove("show");const vp=document.getElementById("voicePlayer");if(vp){vp.hidden=true;vp.removeAttribute("src")}const salesman=localStorage.getItem("shadab_current_salesman_v1")||document.getElementById("visitedBy")?.value||"";if(document.getElementById("visitedBy"))document.getElementById("visitedBy").value=salesman;const d=adminSchedules[salesman];const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();const keepArea=d?.area||saved?.area||localStorage.getItem("shadab_current_area_v1")||"Sahiwal";document.getElementById("area").value=keepArea;refreshTerritories(d?((()=>{const day=new Date().toLocaleDateString("en-US",{weekday:"long"});return Array.isArray(d.days?.[day])?d.days[day]:[]})()):(saved?.salesman===salesman?saved.territories||[]:[]));stopCamera()}
+function resetForm(){
+ editingId=null;pendingVoiceBlob=null;stopVoiceNote();
+ ["storeName","personName","personPhone","notes"].forEach(id=>{const x=document.getElementById(id);if(x)x.value=""});
+ if(document.getElementById("visitStatus"))document.getElementById("visitStatus").value="Completed";
+ capturedData=null;document.getElementById("photoPreview")?.classList.remove("show");
+ const vp=document.getElementById("voicePlayer");if(vp){vp.hidden=true;vp.removeAttribute("src")}
+ stopCamera();
+ const salesman=String(document.getElementById("visitedBy")?.value||localStorage.getItem("shadab_current_salesman_v1")||"").trim();
+ if(salesman)try{window.shadabRestoreVisitContext?.(salesman)}catch(e){}
+}
 /* ===== END: VISIT CRUD FUNCTIONS ===== */
 
 /* ===== START: RECORD RENDERING & FILTERS ===== */
@@ -3824,34 +3833,28 @@ function applyScheduledTasksForSalesman(salesman,force=false){
  renderTodayTasks();updatePremiumDashboard();
 }
 function onSalesmanChanged(){
- const salesman=document.getElementById("visitedBy")?.value||"";
- localStorage.setItem("shadab_current_salesman_v1",salesman);
+ const salesman=String(document.getElementById("visitedBy")?.value||"").trim();
+ if(!salesman)return;
+ try{localStorage.setItem("shadab_current_salesman_v1",salesman)}catch(e){}
  ensureSalesmanOptions();
- const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();
- const hasSavedContext=!!(saved&&saved.salesman===salesman&&saved.area);
- const d=adminSchedules[salesman];
- if(d){
-   const normalized=normalizeAdminSchedule(salesman),day=new Date().toLocaleDateString("en-US",{weekday:"long"}),active=normalized.assignments.filter(a=>a.dayEnabled?.[day]!==false&&Array.isArray(a.days?.[day])&&a.days[day].length);
-   const first=active[0]||normalized.assignments[0];
-   const area=hasSavedContext?saved.area:(first?.area||"Sahiwal");
-   const territories=hasSavedContext?(Array.isArray(saved.territories)?saved.territories:[]):(first?.days?.[day]||[]);
-   document.getElementById("area").value=area;
-   refreshTerritories(territories);
-   setSelectedTerritories(territories);
-   localStorage.setItem("shadab_current_territories_v1",JSON.stringify({salesman,area,territories}));
-   localStorage.setItem("shadab_current_area_v1",area);
-   applyScheduledTasksForSalesman(salesman,true);
-   showStoreSuggestions();
- }else{
-   const area=hasSavedContext?saved.area:(localStorage.getItem("shadab_current_area_v1")||"Sahiwal");
-   const territories=hasSavedContext?(Array.isArray(saved.territories)?saved.territories:[]):[];
-   document.getElementById("area").value=area;
-   refreshTerritories(territories);
-   setSelectedTerritories(territories);
-   const rs=document.getElementById("routeAssignedSummary");if(rs)rs.innerHTML='<span class="field-manager-badge">No Field Manager assignment for this salesman</span>';
-   showStoreSuggestions();renderTodayTasks();updatePremiumDashboard();
+ let loaded=false;
+ try{loaded=!!window.shadabActivateVisitContext?.(salesman)}catch(e){}
+ if(!loaded){
+   const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();
+   if(saved&&String(saved.salesman||"").trim().toLowerCase()===salesman.toLowerCase()&&saved.area){
+     const a=document.getElementById("area");if(a)a.value=saved.area;refreshTerritories(saved.territories||[]);
+   }else{
+     const d=adminSchedules[salesman],day=new Date().toLocaleDateString("en-US",{weekday:"long"});
+     const assigned=Array.isArray(d?.days?.[day])?d.days[day]:[];
+     if(d?.area&&document.getElementById("area"))document.getElementById("area").value=d.area;
+     refreshTerritories(assigned);
+   }
  }
+ try{if(adminSchedules[salesman])applyScheduledTasksForSalesman(salesman,true)}catch(e){}
+ try{showStoreSuggestions();renderTodayTasks();updatePremiumDashboard()}catch(e){}
 }
+
+/* ===== START: SMART ADMIN LIVE EDIT HOOKS ===== */
 
 /* ===== START: SMART ADMIN LIVE EDIT HOOKS ===== */
 document.addEventListener("change",e=>{
@@ -4081,7 +4084,7 @@ function closeTaskNames(){document.getElementById("taskNamesModal").classList.re
 /* ===== START: APP INITIALIZATION ===== */
 loadTheme(); document.getElementById("filterDate").value=todayISO(); updateDbCount();
 (function(){ensureSalesmanOptions();const s=document.getElementById("visitedBy"),k="shadab_current_salesman_v1";if(s){const old=localStorage.getItem(k);if(old&&[...s.options].some(o=>o.value===old))s.value=old;s.addEventListener("change",onSalesmanChanged)}})();
-(function(){const s=document.getElementById("visitedBy"),salesman=s?.value||"";if(salesman&&adminSchedules[salesman])onSalesmanChanged();else{const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();if(saved&&saved.salesman===salesman&&saved.area){document.getElementById("area").value=saved.area;refreshTerritories(saved.territories||[])}else refreshTerritories()}})();renderRecords();updateStats();(function(){const s=document.getElementById("visitedBy")?.value;if(s&&adminSchedules[s])applyScheduledTasksForSalesman(s,false)})();updatePremiumDashboard();renderTodayTasks();showStoreSuggestions();
+/* Initial route is restored by the canonical visit-context controller after all handlers load. */renderRecords();updateStats();(function(){const s=document.getElementById("visitedBy")?.value;if(s&&adminSchedules[s])applyScheduledTasksForSalesman(s,false)})();updatePremiumDashboard();renderTodayTasks();showStoreSuggestions();
 window.addEventListener("beforeunload",stopCamera);
 /* ===== END: APP INITIALIZATION ===== */
 </script><script id="shadab-lock-summary-and-restore-original-sync">
@@ -4090,33 +4093,7 @@ window.addEventListener("beforeunload",stopCamera);
   /* SUMMARY DETAIL: intentionally frozen. No new handlers or data mutations are added here. */
   window.shadabSummaryDetailLocked = true;
 
-  /* FIELD VISIT TERRITORY: one true native dropdown for mobile. */
-  window.selectedTerritories=function(){
-    const sel=document.getElementById('territory');
-    const v=String(sel?.value||'').trim();
-    return v?[v]:[];
-  };
-  window.setSelectedTerritories=function(values){
-    const sel=document.getElementById('territory'); if(!sel)return;
-    const arr=Array.isArray(values)?values:String(values||'').split(',');
-    const wanted=arr.map(x=>String(x).trim().toLowerCase()).filter(Boolean);
-    const hit=[...sel.options].find(o=>wanted.includes(String(o.value).trim().toLowerCase()));
-    sel.value=hit?hit.value:'';
-  };
-  window.refreshTerritories=function(preserve){
-    const area=String(document.getElementById('area')?.value||'Sahiwal');
-    const sel=document.getElementById('territory'); if(!sel)return [];
-    const old=Array.isArray(preserve)?preserve:(preserve?String(preserve).split(','):[]);
-    const list=Array.isArray(window.territories?.[area])?window.territories[area]:[];
-    sel.innerHTML='<option value="">Select Territory</option>'+list.map(t=>{
-      const v=String(t), e=(typeof esc4==='function'?esc4(v):v.replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m])));
-      return '<option value="'+e+'">'+e+'</option>';
-    }).join('');
-    window.setSelectedTerritories(old);
-    try{localStorage.setItem('shadab_current_area_v1',area)}catch(e){}
-    return list;
-  };
-  /* Canonical REST sync engine owns manualSync; no legacy override here. */
+  /* Territory selection is owned by the single canonical visit-context controller. */
 })();
 </script><script id="shadab-section-modal-js">
 function closeSectionModal(){
@@ -4619,8 +4596,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="shadab-final-visit-salesman-fix">
 /* ===== FINAL VISIT FORM + SALESMAN SESSION FIX ===== */
 (function(){
-  const SALESMAN_CTX_KEY='shadab_salesman_context_v2';
-  const SALESMAN_CTX_TTL=24*60*60*1000;
   const legacyIds=['visitIdPreview','visitType','followupDate'];
   function removeLegacyVisitFields(){
     legacyIds.forEach(id=>{
@@ -4637,29 +4612,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
     return localStorage.getItem('shadab_current_salesman_v1')||'';
   }
-  function saveContext(){
-    const salesman=loggedSalesmanName()||document.getElementById('visitedBy')?.value||'';
-    const area=document.getElementById('area')?.value||'';
-    const territories=typeof selectedTerritories==='function'?selectedTerritories():[];
-    if(!salesman)return;
-    const data={salesman,area,territories,updatedAt:Date.now()};
-    localStorage.setItem(SALESMAN_CTX_KEY,JSON.stringify(data));
-    localStorage.setItem('shadab_current_salesman_v1',salesman);
-    localStorage.setItem('shadab_current_area_v1',area);
-    localStorage.setItem('shadab_current_territories_v1',JSON.stringify({salesman,area,territories}));
-  }
-  function restoreContext(){
-    let data=null; try{data=JSON.parse(localStorage.getItem(SALESMAN_CTX_KEY)||'null')}catch(e){}
-    if(data && data.updatedAt && Date.now()-Number(data.updatedAt)<SALESMAN_CTX_TTL){
-      const s=document.getElementById('visitedBy');
-      if(s && data.salesman){ensureSalesmanOptions?.();s.value=data.salesman;}
-      if(document.getElementById('area') && data.area)document.getElementById('area').value=data.area;
-      if(typeof refreshTerritories==='function')refreshTerritories(data.territories||[]);
-      return true;
-    }
-    if(data) localStorage.removeItem(SALESMAN_CTX_KEY);
-    return false;
-  }
   function lockSalesmanToLogin(){
     const s=document.getElementById('visitedBy'); if(!s)return;
     const name=loggedSalesmanName();
@@ -4671,6 +4623,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const label=s.closest('.field')?.querySelector('label');
     if(label)label.textContent='Salesman (Logged-in Account)';
     localStorage.setItem('shadab_current_salesman_v1',name);
+    try{window.shadabRestoreVisitContext?.(name)}catch(e){}
   }
   function unlockSalesmanForAdmin(){
     const s=document.getElementById('visitedBy'); if(!s)return;
@@ -4683,19 +4636,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   /* Keep salesman identity attached to the Firebase login, not to a manual dropdown choice. */
   window.enforceLoggedInSalesman=lockSalesmanToLogin;
-  window.restoreSalesmanContext24h=restoreContext;
+  window.restoreSalesmanContext24h=()=>window.shadabRestoreVisitContext?.();
 
   const oldSave=window.saveVisit;
   window.saveVisit=async function(){
     lockSalesmanToLogin();
-    saveContext();
     if(oldSave) return oldSave.apply(this,arguments);
   };
 
   const oldReset=window.resetForm;
   window.resetForm=function(){
     if(oldReset) oldReset.apply(this,arguments);
-    restoreContext();
     lockSalesmanToLogin();
   };
 
@@ -4704,14 +4655,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const u=currentAuthUser();
     if(u){lockSalesmanToLogin();}
     if(oldOnSalesmanChanged)oldOnSalesmanChanged.apply(this,arguments);
-    saveContext();
     lockSalesmanToLogin();
   };
 
-  /* Territory/city selection stays visible after refresh for 24 hours. */
-  document.addEventListener('change',e=>{
-    if(['area','territory','visitedBy'].includes(e.target?.id)){setTimeout(()=>{saveContext();lockSalesmanToLogin()},30)}
-  });
+  /* Territory/city persistence belongs to the canonical visit-context controller. */
 
   /* Stronger speech-to-text: spoken words are appended to manually typed Notes. */
   const oldStart=window.startVoiceNote;
@@ -4739,7 +4686,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   function bootSession(){
     removeLegacyVisitFields();
-    const restored=restoreContext();
+    const restored=!!window.shadabRestoreVisitContext?.(document.getElementById('visitedBy')?.value||localStorage.getItem('shadab_current_salesman_v1')||'');
     const u=currentAuthUser();
     if(u){
       /* Firebase assignment loader is authoritative for a logged-in salesman. */
@@ -6886,9 +6833,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
     }).join(''):'<div class="empty-state">No salesman found.</div>';
   };
 
-  /* FIELD VISIT: keep the existing Area -> Territory behavior, only refresh after salesman selection. */
-  const oldChange=window.onSalesmanChanged;
-  window.onSalesmanChanged=function(){const r=oldChange?.apply(this,arguments);try{const v=document.getElementById('visitedBy')?.value;if(v)localStorage.setItem('shadab_current_salesman_v1',v)}catch(e){};return r};
+  /* Selected salesman persistence is already handled by the core onSalesmanChanged function. */
 
   /* PDF + WhatsApp: actual PDF share when Android/browser supports file sharing; otherwise save PDF and open WhatsApp. */
   window.shareSummaryDetailPDFWhatsApp=async function(){
@@ -7141,73 +7086,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
   const esc4=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const toast4=m=>{try{window.toast35?.(m);window.toast?.(m)}catch(e){}};
 
-  /* FIELD VISIT TERRITORY ENGINE: the old file references these functions but
-     they are absent in the current build. Recreate the canonical Area -> Territory
-     multiselect without changing Admin assignment data. */
-  window.selectedTerritories=function(){
-    const sel=document.getElementById('territory');
-    return sel?[...sel.selectedOptions].map(o=>o.value).filter(Boolean):[];
-  };
-  window.setSelectedTerritories=function(values){
-    const wanted=new Set((Array.isArray(values)?values:String(values||'').split(',')).map(x=>String(x).trim()).filter(Boolean).map(x=>x.toLowerCase()));
-    const sel=document.getElementById('territory');
-    if(!sel)return;
-    [...sel.options].forEach(o=>o.selected=wanted.has(String(o.value).toLowerCase()));
-  };
-  window.refreshTerritories=function(preserve){
-    const area=String(document.getElementById('area')?.value||'Sahiwal');
-    const sel=document.getElementById('territory');
-    if(!sel)return;
-    const old=Array.isArray(preserve)?preserve:(preserve?String(preserve).split(','):window.selectedTerritories?.()||[]);
-    const list=Array.isArray(window.territories?.[area])?window.territories[area]:[];
-    sel.innerHTML=list.map(t=>`<option value="${esc4(t)}">${esc4(t)}</option>`).join('');
-    sel.size=1;
-    window.setSelectedTerritories(old);
-    try{localStorage.setItem('shadab_current_area_v1',area)}catch(e){}
-    return list;
-  };
-  function loadAssignedTerritoryForSalesman(name){
-    const d=window.adminSchedules?.[name];
-    const day=new Date().toLocaleDateString('en-US',{weekday:'long'});
-    if(d && typeof normalizeAdminSchedule==='function'){
-      const n=normalizeAdminSchedule(name);
-      const active=(n.assignments||[]).filter(a=>a?.dayEnabled?.[day]!==false && Array.isArray(a?.days?.[day]) && a.days[day].length);
-      const all=(active.length?active:n.assignments||[]);
-      const first=all[0];
-      if(first){
-        const area=first.area||'Sahiwal', assigned=first.days?.[day]||[];
-        const a=document.getElementById('area');if(a)a.value=area;
-        window.refreshTerritories(assigned);
-        try{localStorage.setItem('shadab_current_territories_v1',JSON.stringify({salesman:name,area,territories:assigned}))}catch(e){}
-        const rs=document.getElementById('routeAssignedSummary');
-        if(rs)rs.innerHTML=`<b>${esc4(name)}</b><div class="admin-assignment-meta"><span>📍 ${esc4(area)}</span><span>🧭 ${assigned.length} territories today</span><span>🏪 Assigned stores load from these territories</span></div>`;
-        try{window.applyScheduledTasksForSalesman?.(name,true)}catch(e){}
-        try{window.showStoreSuggestions?.()}catch(e){}
-        try{window.renderTodayTasks?.();window.updatePremiumDashboard?.()}catch(e){}
-        return true;
-      }
-    }
-    return false;
-  }
-  window.onSalesmanChanged=function(){
-    const sel=document.getElementById('visitedBy'),name=String(sel?.value||'').trim();
-    try{localStorage.setItem('shadab_current_salesman_v1',name)}catch(e){}
-    if(!name)return;
-    if(!loadAssignedTerritoryForSalesman(name)){
-      const saved=(()=>{try{return JSON.parse(localStorage.getItem('shadab_current_territories_v1')||'null')}catch(e){return null}})();
-      const area=(saved?.salesman===name&&saved.area)||'Sahiwal';const a=document.getElementById('area');if(a)a.value=area;
-      window.refreshTerritories(saved?.salesman===name?saved.territories||[]:[]);
-      try{window.showStoreSuggestions?.();window.renderTodayTasks?.();window.updatePremiumDashboard?.()}catch(e){}
-    }
-  };
-  window.selectComingNextSalesman=function(name){
-    const n=String(name||'').trim();if(!n)return;
-    const sel=document.getElementById('visitedBy');if(!sel)return;
-    if(![...sel.options].some(o=>o.value===n)){const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)}
-    sel.value=n;window.onSalesmanChanged();
-    try{localStorage.setItem('shadab_current_salesman_v1',n)}catch(e){}
-    try{window.closeComingNextSalesman?.();window.openFieldVisitManager?.();toast4(`${n} selected — assigned city & territory loaded`)}catch(e){}
-  };
+  /* Visit route selection is handled by the canonical route controller. */
 
   /* SAVE + WHATSAPP: ONLY the existing Save button. Share the exact PDF file.
      If Web Share with files is unavailable, download the same PDF; a browser
@@ -7293,134 +7172,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
 <script id="shadab-final-territory-admin-source-and-sync-fix">
 (function(){
   'use strict';
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const dayName=()=>new Date().toLocaleDateString('en-US',{weekday:'long'});
-
-  /* ===== FIELD VISIT: ADMIN CITY -> TERRITORY SOURCE =====
-     Admin assignment data is the first source. The master territory list is
-     only a fallback. This prevents an empty Territory dropdown when the
-     territory exists in Admin's salesman/city assignment but is not present
-     in the generic territory master.
-  ===== */
-  function adminTerritoriesForArea(area){
-    area=String(area||'').trim();
-    if(!area)return [];
-    const out=[]; const seen=new Set();
-    const add=t=>{const v=String(t||'').trim();if(v&&!seen.has(v.toLowerCase())){seen.add(v.toLowerCase());out.push(v)}};
-    const salesman=String(document.getElementById('visitedBy')?.value||localStorage.getItem('shadab_current_salesman_v1')||'').trim();
-    const schedules=window.adminSchedules||{};
-    const names=salesman&&schedules[salesman]?[salesman]:Object.keys(schedules);
-    const today=dayName();
-    const readCfg=name=>{
-      try{return typeof window.normalizeAdminSchedule==='function'?window.normalizeAdminSchedule(name):(schedules[name]||null)}catch(e){return schedules[name]||null}
-    };
-    for(const name of names){
-      const cfg=readCfg(name); if(!cfg)continue;
-      const assignments=Array.isArray(cfg.assignments)?cfg.assignments:[];
-      // Prefer today's assignment, then include the same city from the full
-      // Admin plan so the dropdown remains useful when today's list is empty.
-      const todayRows=assignments.filter(a=>String(a?.area||'').trim().toLowerCase()===area.toLowerCase() && Array.isArray(a?.days?.[today]) && a.days[today].length);
-      const rows=todayRows.length?todayRows:assignments.filter(a=>String(a?.area||'').trim().toLowerCase()===area.toLowerCase());
-      rows.forEach(a=>{
-        (Array.isArray(a?.days?.[today])?a.days[today]:[]).forEach(add);
-        if(!Array.isArray(a?.days?.[today]))Object.values(a?.days||{}).flatMap(x=>Array.isArray(x)?x:[]).forEach(add);
-        if(Array.isArray(a?.territories))a.territories.forEach(add);
-      });
-    }
-    return out;
-  }
-
-  function sourceTerritories(area){
-    const fromAdmin=adminTerritoriesForArea(area);
-    if(fromAdmin.length)return fromAdmin;
-    const master=Array.isArray(window.territories?.[area])?window.territories[area]:[];
-    return master.map(x=>String(x||'').trim()).filter(Boolean);
-  }
-
-  window.selectedTerritories=function(){
-    const sel=document.getElementById('territory');
-    return sel?[...sel.options].filter(o=>o.value&&o.selected).map(o=>o.value):[];
-  };
-  window.setSelectedTerritories=function(values){
-    const arr=Array.isArray(values)?values:String(values||'').split(',');
-    const wanted=new Set(arr.map(x=>String(x).trim().toLowerCase()).filter(Boolean));
-    const sel=document.getElementById('territory'); if(!sel)return;
-    [...sel.options].forEach(o=>{o.selected=!!o.value&&wanted.has(String(o.value).trim().toLowerCase());});
-    updateTerritoryLabels(sel);
-  };
-  function updateTerritoryLabels(sel){
-    if(!sel)return;
-    [...sel.options].forEach(o=>{if(o.value)o.textContent=(o.selected?'☑ ':'☐ ')+o.value;});
-    const chosen=window.selectedTerritories();
-    sel.setAttribute('aria-label',chosen.length?chosen.join(', '):'Select one or more territories');
-  }
-  window.refreshTerritories=function(preserve){
-    const area=String(document.getElementById('area')?.value||'').trim()||'Sahiwal';
-    const sel=document.getElementById('territory'); if(!sel)return [];
-    const old=Array.isArray(preserve)?preserve:(preserve?String(preserve).split(','):window.selectedTerritories());
-    const list=sourceTerritories(area);
-    sel.multiple=true; sel.size=1;
-    sel.innerHTML='<option value="">Select Territory</option>'+list.map(t=>`<option value="${esc(t)}">☐ ${esc(t)}</option>`).join('');
-    window.setSelectedTerritories(old);
-    try{localStorage.setItem('shadab_current_area_v1',area)}catch(e){}
-    return list;
-  };
-
-  document.addEventListener('change',function(e){
-    if(e.target?.id==='territory'){
-      updateTerritoryLabels(e.target);
-      try{window.showStoreSuggestions?.()}catch(_){ }
-    }
-    if(e.target?.id==='area'){
-      window.refreshTerritories([]);
-      try{window.showStoreSuggestions?.()}catch(_){ }
-    }
-    if(e.target?.id==='visitedBy'){
-      setTimeout(()=>window.refreshTerritories(window.selectedTerritories()),0);
-    }
-  },true);
-
-  function loadAssignedTerritoryForSalesman(name){
-    const n=String(name||'').trim();
-    const schedules=window.adminSchedules||{};
-    const cfg= n ? (typeof window.normalizeAdminSchedule==='function'?window.normalizeAdminSchedule(n):(schedules[n]||null)) : null;
-    if(!cfg)return false;
-    const assignments=Array.isArray(cfg.assignments)?cfg.assignments:[];
-    const today=dayName();
-    const active=assignments.filter(a=>a?.area && Array.isArray(a?.days?.[today]) && a.days[today].length);
-    const rows=active.length?active:assignments.filter(a=>a?.area);
-    const first=rows[0];
-    if(!first)return false;
-    const area=String(first.area||'Sahiwal');
-    const assigned=[];
-    rows.filter(a=>String(a.area||'').toLowerCase()===area.toLowerCase()).forEach(a=>{
-      const ts=Array.isArray(a?.days?.[today])&&a.days[today].length?a.days[today]:Object.values(a?.days||{}).flatMap(x=>Array.isArray(x)?x:[]);
-      ts.forEach(t=>{if(!assigned.some(x=>String(x).toLowerCase()===String(t).toLowerCase()))assigned.push(t)});
-      if(Array.isArray(a?.territories))a.territories.forEach(t=>{if(!assigned.some(x=>String(x).toLowerCase()===String(t).toLowerCase()))assigned.push(t)});
-    });
-    const a=document.getElementById('area');if(a)a.value=area;
-    window.refreshTerritories(assigned);
-    try{localStorage.setItem('shadab_current_territories_v1',JSON.stringify({salesman:n,area,territories:assigned}))}catch(e){}
-    try{window.showStoreSuggestions?.();window.renderTodayTasks?.();window.updatePremiumDashboard?.()}catch(e){}
-    return true;
-  }
-  window.onSalesmanChanged=function(){
-    const sel=document.getElementById('visitedBy'),name=String(sel?.value||'').trim();
-    try{localStorage.setItem('shadab_current_salesman_v1',name)}catch(e){}
-    if(!name){window.refreshTerritories([]);return;}
-    if(loadAssignedTerritoryForSalesman(name))return;
-    const saved=(()=>{try{return JSON.parse(localStorage.getItem('shadab_current_territories_v1')||'null')}catch(e){return null}})();
-    const area=(saved?.salesman===name&&saved.area)||document.getElementById('area')?.value||'Sahiwal';
-    const a=document.getElementById('area');if(a)a.value=area;
-    window.refreshTerritories(saved?.salesman===name?saved.territories||[]:[]);
-  };
-  window.selectComingNextSalesman=function(name){
-    const n=String(name||'').trim();if(!n)return;
-    const sel=document.getElementById('visitedBy');if(!sel)return;
-    if(![...sel.options].some(o=>o.value===n)){const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o)}
-    sel.value=n;window.onSalesmanChanged();
-    try{localStorage.setItem('shadab_current_salesman_v1',n);window.closeComingNextSalesman?.();window.openFieldVisitManager?.();toast4(`${n} selected — assigned city & territory loaded`)}catch(e){}
-  };
+  'use strict';
 
   /* ===== TOP ↻ SYNC: restore visible animation + success message + 3.5s return ===== */
   window.sp35ManualServerRefresh=async function(){
@@ -7454,12 +7206,15 @@ window.saveAndWhatsAppSummaryDetail=async function(){
     }
   };
 
-  document.addEventListener('DOMContentLoaded',function(){
-    const sel=document.getElementById('territory');if(sel){sel.multiple=true;sel.size=1;}
-    const name=document.getElementById('visitedBy')?.value||localStorage.getItem('shadab_current_salesman_v1')||'';
-    if(name){const v=document.getElementById('visitedBy');if(v)v.value=name;window.onSalesmanChanged();}
-    else window.refreshTerritories([]);
-  });
+  /* Route entry bridge; selected route is always restored by the single context controller. */
+  window.selectComingNextSalesman=function(name){
+    const n=String(name||'').trim();if(!n)return;
+    const sel=document.getElementById('visitedBy');if(!sel)return;
+    let opt=[...sel.options].find(o=>String(o.value)===n||String(o.textContent).trim()===n);
+    if(!opt){opt=document.createElement('option');opt.value=n;opt.textContent=n;sel.appendChild(opt)}
+    sel.value=opt.value;try{localStorage.setItem('shadab_current_salesman_v1',opt.value)}catch(e){}
+    try{window.onSalesmanChanged?.();window.shadabActivateVisitContext?.(opt.value);window.closeComingNextSalesman?.();window.openFieldVisitManager?.();window.toast?.(opt.value+' selected — saved route restored')}catch(e){}
+  };
 })();
 </script>
 <style id="shadab-final-territory-checkbox-style">
@@ -7501,134 +7256,172 @@ body.dark .sp-route-lock .sp-terr-dropdown-trigger,body.dark .sp-route-lock .sp-
 <script id="sp-territory-route-lock-final-js">
 (function(){
   'use strict';
-  const KEY='shadab_current_territories_v1', AREA_KEY='shadab_current_area_v1', SALESMAN_KEY='shadab_current_salesman_v1';
+  /* Single owner for New Visit salesman/city/multi-territory state. */
+  const LEGACY_KEY='shadab_current_territories_v1';
+  const CONTEXTS_KEY='shadab_visit_contexts_v2';
+  const SALESMAN_KEY='shadab_current_salesman_v1';
+  const AREA_KEY='shadab_current_area_v1';
   let renderBusy=false, currentArea='', currentListKey='', outsideHandlerInstalled=false;
+  const norm=v=>String(v??'').trim().replace(/\s+/g,' ').toLocaleLowerCase();
   const escv=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const norm=v=>String(v??'').trim().toLowerCase();
-  function sel(){return document.getElementById('territory')}
-  function cityList(area){
-    try{
-      if(typeof territories!=='undefined' && territories && Array.isArray(territories[area]))
-        return [...new Set(territories[area].map(x=>String(x||'').trim()).filter(Boolean))];
-    }catch(e){}
-    return [];
-  }
-  function selected(){const s=sel();return s?[...s.options].filter(o=>o.value&&o.selected).map(o=>o.value):[]}
-  function setNative(vals){
-    const s=sel();if(!s)return;
-    const wanted=new Set((Array.isArray(vals)?vals:[]).map(norm).filter(Boolean));
-    [...s.options].forEach(o=>o.selected=!!o.value&&wanted.has(norm(o.value)));
-  }
-  function saveRoute(area,vals){
-    const salesman=document.getElementById('visitedBy')?.value||localStorage.getItem(SALESMAN_KEY)||'';
-    const clean=[...new Set((Array.isArray(vals)?vals:[]).map(String))];
-    try{localStorage.setItem(KEY,JSON.stringify({salesman,area,territories:clean}));localStorage.setItem(AREA_KEY,area)}catch(e){}
-  }
-  function ensureBox(){
-    const s=sel();if(!s)return null;
-    let box=document.getElementById('spVisitTerritoryChecks');
-    if(!box){box=document.createElement('div');box.id='spVisitTerritoryChecks';s.insertAdjacentElement('afterend',box)}
-    return box;
-  }
-  function syncUI(box){
-    const vals=selected(),set=new Set(vals.map(norm));
-    const label=box.querySelector('.sp-terr-dropdown-label');
-    if(label)label.textContent=vals.length?(vals.length===1?'1 Territory Selected':vals.length+' Territories Selected'):'Select Territory';
-    box.querySelectorAll('input[data-territory-value]').forEach(c=>{
-      const on=set.has(norm(c.dataset.territoryValue)); c.checked=on;
-      const item=c.closest('.sp-terr-check-item'); item?.classList.toggle('selected',on);
-      const mark=item?.querySelector('.sp-terr-check-mark'); if(mark)mark.textContent=on?'✓':'';
-    });
-  }
-  function render(preserve,force=false){
-    const s=sel();if(!s)return [];
-    const area=String(document.getElementById('area')?.value||'').trim()||'Sahiwal';
-    const list=cityList(area), listKey=area+'|'+list.map(norm).join('|');
-    let old=Array.isArray(preserve)?preserve:selected();
-    if(!Array.isArray(old))old=[];
-    if(!force && currentArea===area && currentListKey===listKey){setNative(old);const b=document.getElementById('spVisitTerritoryChecks');if(b)syncUI(b);return list}
-    currentArea=area;currentListKey=listKey;renderBusy=true;
-    s.multiple=true;s.size=1;
-    s.innerHTML='<option value="">Select Territory</option>'+list.map(t=>`<option value="${escv(t)}">${escv(t)}</option>`).join('');
-    const keep=old.filter(x=>list.some(t=>norm(t)===norm(x)));
-    setNative(keep);
-    const box=ensureBox();if(!box){renderBusy=false;return list}
-    box.className='sp-visit-territory-checks sp-route-lock';
-    box.innerHTML=`<button type="button" class="sp-terr-dropdown-trigger"><span class="sp-terr-dropdown-label">Select Territory</span><span class="sp-terr-dropdown-arrow">⌄</span></button><div class="sp-terr-dropdown-menu" hidden><div class="sp-terr-check-head"><b>${escv(area)}</b><span>${list.length} territories</span><button type="button" class="sp-terr-clear">Clear</button></div><div class="sp-terr-check-grid">${list.map(t=>`<label class="sp-terr-check-item"><input type="checkbox" data-territory-value="${escv(t)}"><span class="sp-terr-check-mark"></span><span class="sp-terr-check-name">${escv(t)}</span></label>`).join('')}</div><div class="sp-terr-route-lock-note">Selected City & Territory stay saved for this salesman until changed manually.</div></div>`;
-    const trigger=box.querySelector('.sp-terr-dropdown-trigger'),menu=box.querySelector('.sp-terr-dropdown-menu');
-    syncUI(box);
-    trigger?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();menu.hidden=!menu.hidden;box.classList.toggle('open',!menu.hidden)});
-    box.querySelectorAll('input[data-territory-value]').forEach(cb=>{
-      cb.addEventListener('click',e=>e.stopPropagation());
-      cb.addEventListener('change',e=>{
-        e.stopPropagation();
-        const now=selected(),v=String(cb.dataset.territoryValue||'');
-        const next=cb.checked?[...new Set([...now,v])]:now.filter(x=>norm(x)!==norm(v));
-        setNative(next);syncUI(box);saveRoute(area,next);
-        try{window.showStoreSuggestions?.()}catch(_){ }
-      });
-    });
-    box.querySelector('.sp-terr-clear')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setNative([]);syncUI(box);saveRoute(area,[])});
-    renderBusy=false;
-    saveRoute(area,selected());
-    if(!outsideHandlerInstalled){
-      document.addEventListener('click',e=>{const b=document.getElementById('spVisitTerritoryChecks'),m=b?.querySelector('.sp-terr-dropdown-menu');if(b&&m&&!b.contains(e.target)){m.hidden=true;b.classList.remove('open')}});outsideHandlerInstalled=true;
-    }
-    return list;
-  }
-  function lockedState(){
-    const salesman=document.getElementById('visitedBy')?.value||localStorage.getItem(SALESMAN_KEY)||'';
-    try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&x.salesman===salesman&&x.area)return {area:x.area,territories:Array.isArray(x.territories)?x.territories:[]}}catch(e){}
+  const unique=values=>{const out=[],seen=new Set();(Array.isArray(values)?values:[]).forEach(v=>{const x=String(v??'').trim(),k=norm(x);if(x&&k&&!seen.has(k)){seen.add(k);out.push(x)}});return out};
+  function el(id){return document.getElementById(id)}
+  function currentSalesman(){const s=el('visitedBy');return String(s?s.value:(localStorage.getItem(SALESMAN_KEY)||'')).trim()}
+  function selected(){const s=el('territory');return s?[...s.options].filter(o=>o.value&&o.selected).map(o=>o.value):[]}
+  function parse(key,fallback){try{const x=JSON.parse(localStorage.getItem(key)||'null');return x&&typeof x==='object'?x:fallback}catch(e){return fallback}}
+  function readContexts(){return parse(CONTEXTS_KEY,{})}
+  function contextKey(name){return norm(name)}
+  function getContext(name){
+    const n=String(name||currentSalesman()).trim();if(!n)return null;
+    const all=readContexts(),v=all[contextKey(n)];
+    if(v&&norm(v.salesman||n)===norm(n)&&String(v.area||'').trim())return {salesman:n,area:String(v.area).trim(),territories:unique(v.territories),updatedAt:v.updatedAt||0};
+    const legacy=parse(LEGACY_KEY,null);
+    if(legacy&&norm(legacy.salesman)===norm(n)&&String(legacy.area||'').trim()){const c={salesman:n,area:String(legacy.area).trim(),territories:unique(legacy.territories),updatedAt:legacy.updatedAt||0};saveRoute(c.area,c.territories,n);return c;}
+    const prior=parse('shadab_salesman_context_v2',null);
+    if(prior&&norm(prior.salesman)===norm(n)&&String(prior.area||'').trim()){const c={salesman:n,area:String(prior.area).trim(),territories:unique(prior.territories),updatedAt:prior.updatedAt||0};saveRoute(c.area,c.territories,n);return c;}
     return null;
   }
+  function saveRoute(area,values,name){
+    const salesman=String(name||currentSalesman()).trim();if(!salesman)return null;
+    const city=String(area||el('area')?.value||'').trim();
+    const record={salesman,area:city,territories:unique(values),updatedAt:Date.now()};
+    try{
+      const all=readContexts();all[contextKey(salesman)]=record;localStorage.setItem(CONTEXTS_KEY,JSON.stringify(all));
+      localStorage.setItem(LEGACY_KEY,JSON.stringify(record));
+      if(city)localStorage.setItem(AREA_KEY,city);
+      localStorage.setItem(SALESMAN_KEY,salesman);
+    }catch(e){}
+    return record;
+  }
+  function adminData(name){
+    try{if(typeof normalizeAdminSchedule==='function')return normalizeAdminSchedule(name)}catch(e){}
+    try{return (typeof adminSchedules!=='undefined'&&adminSchedules?.[name])||window.adminSchedules?.[name]||null}catch(e){return window.adminSchedules?.[name]||null}
+  }
+  function areaTerritories(area,name){
+    const city=String(area||'').trim();if(!city)return [];
+    const cfg=adminData(name||currentSalesman()),assignments=Array.isArray(cfg?.assignments)?cfg.assignments:[];
+    const matches=assignments.filter(a=>norm(a?.area)===norm(city));
+    if(matches.length){
+      const day=new Date().toLocaleDateString('en-US',{weekday:'long'});
+      const active=matches.filter(a=>Array.isArray(a?.days?.[day])&&a.days[day].length);
+      const rows=active.length?active:matches;const out=[];
+      rows.forEach(a=>{
+        const days=a?.days||{};
+        (Array.isArray(days[day])&&days[day].length?days[day]:Object.values(days).flatMap(x=>Array.isArray(x)?x:[])).forEach(x=>out.push(x));
+        if(Array.isArray(a?.territories))a.territories.forEach(x=>out.push(x));
+      });
+      const assigned=unique(out);if(assigned.length)return assigned;
+    }
+    let master=[];
+    try{if(typeof territories!=='undefined'&&territories&&Array.isArray(territories[city]))master=territories[city]}catch(e){}
+    if(!master.length&&window.territories&&Array.isArray(window.territories[city]))master=window.territories[city];
+    return unique(master);
+  }
+  function defaultContext(name){
+    const salesman=String(name||'').trim();
+    const cfg=adminData(salesman),assignments=Array.isArray(cfg?.assignments)?cfg.assignments:[];
+    const day=new Date().toLocaleDateString('en-US',{weekday:'long'});
+    const active=assignments.filter(a=>a?.area&&Array.isArray(a?.days?.[day])&&a.days[day].length);
+    const rows=active.length?active:assignments.filter(a=>a?.area);
+    if(rows.length){
+      const area=String(rows[0].area||'Sahiwal').trim();
+      const same=rows.filter(a=>norm(a.area)===norm(area));
+      const territoriesForDay=unique(same.flatMap(a=>Array.isArray(a?.days?.[day])&&a.days[day].length?a.days[day]:Object.values(a?.days||{}).flatMap(x=>Array.isArray(x)?x:[])).concat(same.flatMap(a=>Array.isArray(a?.territories)?a.territories:[])));
+      return {salesman,area,territories:territoriesForDay,updatedAt:Date.now()};
+    }
+    /* Backward-compatible older assignment shape. */
+    if(cfg?.area){const ts=Array.isArray(cfg?.days?.[day])?cfg.days[day]:[];return {salesman,area:String(cfg.area),territories:unique(ts),updatedAt:Date.now()}}
+    const area=String(el('area')?.value||localStorage.getItem(AREA_KEY)||'Sahiwal').trim()||'Sahiwal';
+    return {salesman,area,territories:[],updatedAt:Date.now()};
+  }
+  function setAreaValue(area){
+    const a=el('area');if(!a||!area)return;
+    let opt=[...a.options].find(o=>norm(o.value)===norm(area));
+    if(!opt){opt=document.createElement('option');opt.value=area;opt.textContent=area;a.appendChild(opt)}
+    a.value=opt.value;
+  }
+  function ensureBox(){const s=el('territory');if(!s)return null;let box=el('spVisitTerritoryChecks');if(!box){box=document.createElement('div');box.id='spVisitTerritoryChecks';s.insertAdjacentElement('afterend',box)}return box}
+  function setNative(values){const s=el('territory');if(!s)return;const wanted=new Set(unique(values).map(norm));[...s.options].forEach(o=>{o.selected=!!o.value&&wanted.has(norm(o.value))})}
+  function syncUI(box){
+    if(!box)return;const vals=selected(),set=new Set(vals.map(norm));
+    const label=box.querySelector('.sp-terr-dropdown-label');if(label)label.textContent=vals.length?(vals.length===1?'1 Territory Selected':vals.length+' Territories Selected'):'Select Territory';
+    box.querySelectorAll('input[data-territory-value]').forEach(c=>{const on=set.has(norm(c.dataset.territoryValue));c.checked=on;const item=c.closest('.sp-terr-check-item');item?.classList.toggle('selected',on);const mark=item?.querySelector('.sp-terr-check-mark');if(mark)mark.textContent=on?'✓':''});
+  }
+  function render(preserve,force){
+    const s=el('territory');if(!s)return [];
+    const salesman=currentSalesman();let area=String(el('area')?.value||'Sahiwal').trim()||'Sahiwal';
+    const hasPreserve=arguments.length>0&&preserve!==undefined;
+    const saved=getContext(salesman);
+    if(!hasPreserve&&saved&&saved.area&&norm(saved.area)!==norm(area)){setAreaValue(saved.area);area=saved.area}
+    const prior=selected();
+    let wanted=hasPreserve?(Array.isArray(preserve)?preserve:String(preserve||'').split(',') ):((saved&&norm(saved.area)===norm(area))?saved.territories:prior);
+    wanted=unique(wanted);
+    const list=unique([...areaTerritories(area,salesman),...wanted]);
+    const listKey=norm(area)+'|'+list.map(norm).join('|');
+    renderBusy=true;s.multiple=true;s.size=1;
+    if(force||currentArea!==area||currentListKey!==listKey){
+      currentArea=area;currentListKey=listKey;
+      s.innerHTML='<option value="">Select Territory</option>'+list.map(t=>`<option value="${escv(t)}">${escv(t)}</option>`).join('');
+      const box=ensureBox();
+      if(box){
+        box.className='sp-visit-territory-checks sp-route-lock';
+        box.innerHTML=`<button type="button" class="sp-terr-dropdown-trigger"><span class="sp-terr-dropdown-label">Select Territory</span><span class="sp-terr-dropdown-arrow">⌄</span></button><div class="sp-terr-dropdown-menu" hidden><div class="sp-terr-check-head"><b>${escv(area)}</b><span>${list.length} territories</span><button type="button" class="sp-terr-clear">Clear</button></div><div class="sp-terr-check-grid">${list.map(t=>`<label class="sp-terr-check-item"><input type="checkbox" data-territory-value="${escv(t)}"><span class="sp-terr-check-mark"></span><span class="sp-terr-check-name">${escv(t)}</span></label>`).join('')}</div><div class="sp-terr-route-lock-note">City &amp; selected territories stay saved for this salesman until manually changed.</div></div>`;
+      }
+    }
+    setNative(wanted);syncUI(el('spVisitTerritoryChecks'));renderBusy=false;
+    return list;
+  }
+  function activate(salesman){
+    const name=String(salesman||currentSalesman()).trim();if(!name)return false;
+    const s=el('visitedBy');if(s&&s.value!==name&&[...s.options].some(o=>norm(o.value)===norm(name)))s.value=[...s.options].find(o=>norm(o.value)===norm(name)).value;
+    try{localStorage.setItem(SALESMAN_KEY,name)}catch(e){}
+    let context=getContext(name);
+    if(!context){context=defaultContext(name);saveRoute(context.area,context.territories,name)}
+    setAreaValue(context.area);render(context.territories,true);setNative(context.territories);syncUI(el('spVisitTerritoryChecks'));
+    try{window.showStoreSuggestions?.()}catch(e){}
+    return true;
+  }
+  function restore(name){const n=String(name||currentSalesman()).trim();if(!n)return false;let c=getContext(n);if(!c){c=defaultContext(n);saveRoute(c.area,c.territories,n)}setAreaValue(c.area);render(c.territories,true);setNative(c.territories);syncUI(el('spVisitTerritoryChecks'));return true}
+
   window.selectedTerritories=selected;
-  window.setSelectedTerritories=function(vals){setNative(Array.isArray(vals)?vals:[]);const b=document.getElementById('spVisitTerritoryChecks');if(b)syncUI(b);const a=document.getElementById('area')?.value||currentArea;saveRoute(a,selected())};
-  window.refreshTerritories=function(preserve){return render(preserve,false)};
-  window.spRefreshTerritoriesHard=function(preserve){return render(preserve,true)};
+  window.setSelectedTerritories=function(values){const v=Array.isArray(values)?values:String(values||'').split(',');render(v,true);setNative(v);syncUI(el('spVisitTerritoryChecks'))};
+  window.refreshTerritories=function(preserve){return arguments.length?render(preserve,false):render(undefined,false)};
+  window.spRefreshTerritoriesHard=function(preserve){return arguments.length?render(preserve,true):render(undefined,true)};
+  window.shadabGetVisitContext=getContext;
+  window.shadabBuildInitialVisitContext=defaultContext;
+  window.shadabActivateVisitContext=activate;
+  window.shadabRestoreVisitContext=restore;
+  window.shadabPersistVisitTerritoryContext=function(){const s=currentSalesman(),a=String(el('area')?.value||'').trim();return saveRoute(a,selected(),s)};
+  window.restoreSalesmanContext24h=()=>restore(currentSalesman());
 
-  // Keep City + Territory stable across New Visit/reset. It changes only when salesman/city/territory is manually changed.
-  const oldReset=window.resetForm;
-  window.resetForm=function(){
-    const before=lockedState();
-    const r=typeof oldReset==='function'?oldReset.apply(this,arguments):undefined;
-    const keep=before||lockedState();
-    if(keep){
-      const a=document.getElementById('area');if(a)a.value=keep.area;
-      render(keep.territories,true);
-      setNative(keep.territories);syncUI(document.getElementById('spVisitTerritoryChecks'));
-      saveRoute(keep.area,selected());
-    }
-    return r;
-  };
-
-  // When salesman is manually changed, load his saved/assigned route once; subsequent entries do not replace it.
-  const oldSales=window.onSalesmanChanged;
-  window.onSalesmanChanged=function(){
-    const r=typeof oldSales==='function'?oldSales.apply(this,arguments):undefined;
-    setTimeout(()=>{
-      const s=document.getElementById('visitedBy')?.value||'';if(!s)return;
-      try{localStorage.setItem(SALESMAN_KEY,s)}catch(e){}
-      const st=lockedState();
-      if(st){const a=document.getElementById('area');if(a)a.value=st.area;render(st.territories,true)}
-    },0);
-    return r;
-  };
-
-  // City changes only when the user actually changes the City field.
+  /* One delegated handler survives territory-list re-renders without duplicate listeners. */
+  document.addEventListener('click',e=>{
+    const trigger=e.target.closest?.('#spVisitTerritoryChecks .sp-terr-dropdown-trigger');
+    if(trigger){e.preventDefault();e.stopPropagation();const box=trigger.closest('#spVisitTerritoryChecks'),menu=box?.querySelector('.sp-terr-dropdown-menu');if(menu){menu.hidden=!menu.hidden;box.classList.toggle('open',!menu.hidden)}return}
+    const clear=e.target.closest?.('#spVisitTerritoryChecks .sp-terr-clear');
+    if(clear){e.preventDefault();e.stopPropagation();setNative([]);syncUI(el('spVisitTerritoryChecks'));saveRoute(el('area')?.value,[],currentSalesman());try{window.showStoreSuggestions?.()}catch(_e){}return}
+    const box=el('spVisitTerritoryChecks'),menu=box?.querySelector('.sp-terr-dropdown-menu');if(box&&menu&&!box.contains(e.target)){menu.hidden=true;box.classList.remove('open')}
+  });
   document.addEventListener('change',e=>{
-    if(e.target?.id==='area' && !renderBusy){
-      const area=String(e.target.value||'').trim()||'Sahiwal';
-      render([],true);saveRoute(area,[]);
-      try{window.showStoreSuggestions?.()}catch(_){ }
+    if(e.target?.matches?.('#spVisitTerritoryChecks input[data-territory-value]')){
+      const box=e.target.closest('#spVisitTerritoryChecks');e.stopPropagation();
+      const now=selected(),value=String(e.target.dataset.territoryValue||'');
+      const next=e.target.checked?unique([...now,value]):now.filter(x=>norm(x)!==norm(value));
+      setNative(next);syncUI(box);saveRoute(el('area')?.value,next,currentSalesman());try{window.showStoreSuggestions?.()}catch(_e){}return;
     }
+    if(e.target?.id==='territory'&&!renderBusy&&e.isTrusted){saveRoute(el('area')?.value,selected(),currentSalesman())}
+  });
+  /* A real user city change deliberately clears only that city's territory selections. */
+  document.addEventListener('change',e=>{
+    if(e.target?.id!=='area'||renderBusy)return;
+    if(e.isTrusted){const area=String(e.target.value||'Sahiwal').trim()||'Sahiwal';render([],true);saveRoute(area,[],currentSalesman());try{window.showStoreSuggestions?.()}catch(_e){};return}
+    /* Programmatic refreshes must not replace the saved user route. */
+    const saved=getContext(currentSalesman());if(saved){setAreaValue(saved.area);render(saved.territories,true)}else render(undefined,true);
   },true);
 
   function init(){
-    const a=document.getElementById('area'),s=document.getElementById('visitedBy');
-    const st=lockedState();
-    if(st&&a){a.value=st.area;render(st.territories,true)}
-    else render([],true);
-    if(s&&s.value)try{localStorage.setItem(SALESMAN_KEY,s.value)}catch(e){}
+    const name=currentSalesman()||String(localStorage.getItem(SALESMAN_KEY)||'').trim();
+    if(name)activate(name);else render([],true);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
@@ -14969,11 +14762,7 @@ if(typeof oldSaveVisit==='function'&&!oldSaveVisit.__v29ImmediateVisitSync){
         if(String(session()?.email||'').toLowerCase()===ADMIN&&typeof window.syncMasterFieldDashboard==='function')await window.syncMasterFieldDashboard();
       }
     }catch(e){console.warn('V29 visit immediate sync',e)}
-    try{
-      if(beforeName){localStorage.setItem('shadab_current_salesman_v1',beforeName);window.onSalesmanChanged?.();}
-      const saved=JSON.parse(localStorage.getItem('shadab_current_territories_v1')||'null');
-      if(saved?.salesman===beforeName&&saved.area)window.refreshTerritories?.(saved.territories||[]);
-    }catch(e){}
+    try{if(beforeName){localStorage.setItem('shadab_current_salesman_v1',beforeName);window.shadabRestoreVisitContext?.(beforeName)}}catch(e){}
     return r;
   };
   wrapped.__v29ImmediateVisitSync=true;window.saveVisit=wrapped;
@@ -15007,11 +14796,8 @@ if(typeof oldOpenMaster==='function'&&!oldOpenMaster.__v29DashboardRefresh){
    pre-checked, while every territory in the selected city stays available. */
 function restoreVisitContext(){
   try{
-    const s=session();const name=String(s?.displayName||localStorage.getItem('shadab_current_salesman_v1')||'').trim();
-    if(!name)return;
-    const saved=JSON.parse(localStorage.getItem('shadab_current_territories_v1')||'null');
-    if(saved?.salesman===name&&saved.area){const a=document.getElementById('area');if(a)a.value=saved.area;window.refreshTerritories?.(saved.territories||[])}
-    else window.onSalesmanChanged?.();
+    const name=String(document.getElementById('visitedBy')?.value||localStorage.getItem('shadab_current_salesman_v1')||'').trim();
+    if(name)window.shadabRestoreVisitContext?.(name);
   }catch(e){}
 }
 window.addEventListener('shadab-field-visit-open',restoreVisitContext);
@@ -15628,148 +15414,7 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
 (function(){
 'use strict';
 
-/* =========================================================
-   1) FIELD VISIT TERRITORY PERSISTENCE
-   Keep the salesman + city + manually selected territories
-   stable across Save Visit / reset / reopen. Admin assignments
-   remain authoritative when they actually exist.
-   ========================================================= */
-(function(){
-  const KEY='shadab_current_territories_v1';
-  const SALESMAN='shadab_current_salesman_v1';
-
-  function norm(v){return String(v||'').trim().toLowerCase();}
-  function currentSalesman(){
-    return String(document.getElementById('visitedBy')?.value||localStorage.getItem(SALESMAN)||'').trim();
-  }
-  function currentTerritories(){
-    try{
-      if(typeof window.selectedTerritories==='function'){
-        const a=window.selectedTerritories();
-        if(Array.isArray(a))return [...new Set(a.map(String).map(x=>x.trim()).filter(Boolean))];
-      }
-    }catch(e){}
-    const sel=document.getElementById('territory');
-    return sel?[...sel.options].filter(o=>o.selected&&o.value).map(o=>o.value):[];
-  }
-  function persist(area,vals,salesman){
-    const a=String(area||document.getElementById('area')?.value||'').trim();
-    const s=String(salesman||currentSalesman()).trim();
-    const t=[...new Set((Array.isArray(vals)?vals:[]).map(String).map(x=>x.trim()).filter(Boolean))];
-    if(!s)return;
-    try{
-      localStorage.setItem(KEY,JSON.stringify({salesman:s,area:a,territories:t,updatedAt:Date.now()}));
-      localStorage.setItem('shadab_current_area_v1',a);
-      localStorage.setItem(SALESMAN,s);
-    }catch(e){}
-  }
-  function snapshot(){
-    return {
-      salesman:currentSalesman(),
-      area:String(document.getElementById('area')?.value||'').trim(),
-      territories:currentTerritories()
-    };
-  }
-  function restore(snap){
-    if(!snap?.salesman)return;
-    try{
-      const v=document.getElementById('visitedBy');
-      if(v && !v.value)v.value=snap.salesman;
-      const a=document.getElementById('area');
-      if(a && snap.area)a.value=snap.area;
-      if(typeof window.refreshTerritories==='function')window.refreshTerritories(snap.territories||[]);
-      if(typeof window.setSelectedTerritories==='function')window.setSelectedTerritories(snap.territories||[]);
-      persist(snap.area,snap.territories,snap.salesman);
-      try{window.showStoreSuggestions?.()}catch(e){}
-    }catch(e){}
-  }
-
-  /* Save the exact visible selection before the existing save chain runs. */
-  const oldSave=window.saveVisit;
-  if(typeof oldSave==='function'&&!oldSave.__spTerritoryMicPersistenceV1){
-    const wrapped=async function(){
-      const snap=snapshot();
-      persist(snap.area,snap.territories,snap.salesman);
-      const result=await oldSave.apply(this,arguments);
-      if(result!==false){
-        /* Existing reset/sync wrappers may have changed the controls.
-           Restore the user's last manual selection immediately. */
-        restore(snap);
-      }
-      return result;
-    };
-    wrapped.__spTerritoryMicPersistenceV1=true;
-    wrapped.__spTerritoryMicOriginal=oldSave;
-    window.saveVisit=wrapped;
-  }
-
-  /* Make reset/reopen use the same saved context for unassigned salesmen. */
-  const oldReset=window.resetForm;
-  if(typeof oldReset==='function'&&!oldReset.__spTerritoryContextV1){
-    const wrapped=function(){
-      const snap=snapshot();
-      const result=oldReset.apply(this,arguments);
-      const saved=(()=>{
-        try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}
-      })();
-      /* If this salesman has a real Admin assignment, existing logic keeps it.
-         Otherwise restore the manually selected context. */
-      const name=currentSalesman();
-      const hasAssignment=!!(window.adminSchedules && window.adminSchedules[name]);
-      if(!hasAssignment && saved?.salesman===name && saved.area){
-        restore(saved);
-      }else if(!hasAssignment && snap.salesman===name && snap.area){
-        restore(snap);
-      }
-      return result;
-    };
-    wrapped.__spTerritoryContextV1=true;
-    wrapped.__spTerritoryResetOriginal=oldReset;
-    window.resetForm=wrapped;
-  }
-
-  /* When salesman changes, keep his saved manual context if no Admin assignment exists. */
-  const oldSales=window.onSalesmanChanged;
-  if(typeof oldSales==='function'&&!oldSales.__spTerritoryContextV1){
-    const wrapped=function(){
-      const result=oldSales.apply(this,arguments);
-      setTimeout(()=>{
-        const name=currentSalesman();
-        const hasAssignment=!!(window.adminSchedules && window.adminSchedules[name]);
-        if(hasAssignment)return;
-        try{
-          const saved=JSON.parse(localStorage.getItem(KEY)||'null');
-          if(saved?.salesman===name&&saved.area)restore(saved);
-        }catch(e){}
-      },20);
-      return result;
-    };
-    wrapped.__spTerritoryContextV1=true;
-    wrapped.__spTerritorySalesOriginal=oldSales;
-    window.onSalesmanChanged=wrapped;
-  }
-
-  /* Manual territory/city changes update the persistent context immediately. */
-  document.addEventListener('change',function(e){
-    if(e.target?.id==='territory'){
-      setTimeout(()=>persist(
-        document.getElementById('area')?.value||'',
-        currentTerritories(),
-        currentSalesman()
-      ),0);
-    }
-    if(e.target?.id==='area'){
-      /* City is a deliberate user change, so its territory selection starts empty. */
-      setTimeout(()=>persist(
-        document.getElementById('area')?.value||'',
-        currentTerritories(),
-        currentSalesman()
-      ),0);
-    }
-  },true);
-
-  window.shadabPersistVisitTerritoryContext=()=>{const s=snapshot();persist(s.area,s.territories,s.salesman);return s};
-})();
+/* Route state is managed only by the canonical visit-context controller. */
 
 /* =========================================================
    2) MIC -> ORDER / BUSINESS NOTES
@@ -19121,8 +18766,9 @@ function sumscan(){try{if(typeof window.openSummaryScanner==='function')return w
 function whatsapp(){try{if(typeof window.shareAllToday==='function')return window.shareAllToday()}catch(e){} }
 function account(){try{if(typeof window.sp35OpenAuth==='function')return window.sp35OpenAuth('login')}catch(e){}}
 const actions={home,visit,sumscan,whatsapp,account};
-document.addEventListener('click',function(e){const b=e.target.closest?.('#shadabBottomNav .sbn-btn');if(!b)return;document.querySelectorAll('#shadabBottomNav .sbn-btn').forEach(x=>x.classList.toggle('active',x===b));actions[b.dataset.sbn]?.()});
-document.addEventListener('keydown',function(e){const b=e.target.closest?.('#shadabBottomNav .sbn-btn');if(!b||!['Enter',' '].includes(e.key))return;e.preventDefault();e.stopPropagation();document.querySelectorAll('#shadabBottomNav .sbn-btn').forEach(x=>x.classList.toggle('active',x===b));actions[b.dataset.sbn]?.()});
+function tapFX(b){if(!b)return;b.classList.remove('tap-anim');void b.offsetWidth;b.classList.add('tap-anim');clearTimeout(b._sbnTapTimer);b._sbnTapTimer=setTimeout(()=>b.classList.remove('tap-anim'),760)}
+document.addEventListener('click',function(e){const b=e.target.closest?.('#shadabBottomNav .sbn-btn');if(!b)return;document.querySelectorAll('#shadabBottomNav .sbn-btn').forEach(x=>x.classList.toggle('active',x===b));tapFX(b);actions[b.dataset.sbn]?.()});
+document.addEventListener('keydown',function(e){const b=e.target.closest?.('#shadabBottomNav .sbn-btn');if(!b||!['Enter',' '].includes(e.key))return;e.preventDefault();e.stopPropagation();document.querySelectorAll('#shadabBottomNav .sbn-btn').forEach(x=>x.classList.toggle('active',x===b));tapFX(b);actions[b.dataset.sbn]?.()});
 })();
 </script>
 <!-- ===== END SHADAB BOTTOM NAVIGATION ===== -->
@@ -20347,6 +19993,17 @@ html[data-shadab-theme="light"] #shadabBottomNav,body:not(.dark) #shadabBottomNa
 html[data-shadab-theme="light"] #shadabBottomNav .sbn-btn,body:not(.dark) #shadabBottomNav .sbn-btn{color:#12364a;text-shadow:none}
 html[data-shadab-theme="light"] #shadabBottomNav .sbn-label,body:not(.dark) #shadabBottomNav .sbn-label{color:#12364a!important;text-shadow:none}
 @media(max-width:420px){#shadabBottomNav .sbn-btn{min-height:54px!important;border-radius:13px!important}#shadabBottomNav .sbn-icon{width:29px!important;height:29px!important;border-radius:9px!important}}
+
+/* Icon glyphs float directly on the glass navigation: remove the individual mini tiles. */
+#shadabBottomNav .sbn-icon{width:36px!important;height:34px!important;min-width:36px!important;display:grid!important;place-items:center!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;transform:none!important;}
+#shadabBottomNav .sbn-icon:before{display:none!important;content:none!important;}
+#shadabBottomNav .sbn-icon svg{width:29px!important;height:29px!important;overflow:visible!important;filter:drop-shadow(0 1px 0 rgba(255,255,255,.34)) drop-shadow(0 3px 4px rgba(0,0,0,.56)) drop-shadow(0 0 5px currentColor)!important;transform-origin:50% 55%;transition:filter .18s ease,color .18s ease;}
+#shadabBottomNav .sbn-btn.active .sbn-icon{background:transparent!important;border:0!important;box-shadow:none!important;}
+#shadabBottomNav .sbn-btn.tap-anim{animation:sbnTapGlass .68s cubic-bezier(.2,.75,.25,1);}
+#shadabBottomNav .sbn-btn.tap-anim .sbn-icon svg{animation:sbnGlyph4D .68s cubic-bezier(.18,.82,.25,1);}
+@keyframes sbnTapGlass{0%{filter:brightness(1);box-shadow:inset 0 0 0 rgba(72,211,248,0)}32%{filter:brightness(1.2);box-shadow:inset 0 0 0 1px rgba(142,238,255,.28),0 0 16px rgba(47,188,229,.24)}68%{filter:brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 9px rgba(47,188,229,.16)}100%{filter:brightness(1);}}
+@keyframes sbnGlyph4D{0%{transform:translateY(0) scale(1) rotate(0)}34%{transform:translateY(-4px) scale(1.16) rotate(-4deg);filter:drop-shadow(0 0 8px currentColor) drop-shadow(0 5px 5px rgba(0,0,0,.5))}62%{transform:translateY(1px) scale(.96) rotate(2deg)}82%{transform:translateY(-1px) scale(1.04) rotate(0)}100%{transform:translateY(0) scale(1) rotate(0)}}
+@media(prefers-reduced-motion:reduce){#shadabBottomNav .sbn-btn.tap-anim,#shadabBottomNav .sbn-btn.tap-anim .sbn-icon svg{animation-duration:.01ms!important;}}
 </style>
 </body>
 </html>
