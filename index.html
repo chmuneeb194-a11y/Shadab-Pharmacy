@@ -1466,78 +1466,6 @@ html[data-shadab-theme="dark"] .topbar{
 @media(prefers-reduced-motion:reduce){#topActionIcons>.top-action-icon,#topActionIcons>.top-action-icon .tai-icon,#dashboardCard #taskDashboardGrid .follow-stat{transition:none!important}}
 </style>
 
-<script id="SHADAB_QUOTA_ANALYZER_V2">
-/* SHADAB Firestore Quota Analyzer V2 — passive, local-only request telemetry.
-   Tracks actual Firestore REST network calls. Never stores request/response bodies or auth headers. */
-(function(){
- 'use strict';
- if(window.__SHADAB_QUOTA_ANALYZER_V2__)return;
- const KEY='shadab_quota_analyzer_v2';
- const MAX=5000;
- const startedAt=new Date().toISOString();
- let state={version:2,startedAt,updatedAt:startedAt,requests:[],localBlocked:0,exportCount:0};
- try{const old=JSON.parse(localStorage.getItem(KEY)||'null');if(old&&old.version===2){state=old;state.requests=Array.isArray(old.requests)?old.requests.slice(-MAX):[];}}catch(_){}
- function persist(){try{state.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(state));}catch(_){}}
- function classify(path){
-   const raw=String(path||'').replace(/^\/+/, '').toLowerCase();
-   const p='/'+raw;
-   if(p.includes('/app_settings/masterdata'))return 'Master Data';
-   if(p.includes('/app_settings/adminschedules'))return 'Admin Schedules';
-   if(p.includes('/app_settings/'))return 'App Settings';
-   if(p.includes('/user_data/')&&p.includes('/visit_days/'))return 'Visit Days';
-   if(p.includes('/user_data'))return 'User Data / Financial';
-   if(p.includes('/salesmen'))return 'Salesmen';
-   if(p.includes('/visit'))return 'Visits';
-   if(p.includes('/orders'))return 'Orders';
-   return 'Other Firestore';
- }
- // Reclassify earlier stored events after the V2 path-normalization fix.
- state.requests=state.requests.map(r=>({...r,group:classify(r.path)}));
- function cleanPath(url){try{const u=new URL(url,location.href);let p=u.pathname;const marker='/documents/';const i=p.indexOf(marker);if(i>=0)p=p.slice(i+marker.length);return decodeURIComponent(p).replace(/\?.*$/,'')||'(root)';}catch(_){return String(url).split('?')[0].slice(-220)}}
- function sourceHint(){try{return (new Error()).stack.split('\n').slice(2,7).map(x=>x.trim().replace(/https?:\/\/[^/\s)]+/g,'[app]')).join(' | ').slice(0,650)}catch(_){return ''}}
- function record(entry){state.requests.push(entry);if(state.requests.length>MAX)state.requests=state.requests.slice(-MAX);persist();try{window.dispatchEvent(new CustomEvent('shadab-quota-log-update'))}catch(_){}}
- const originalFetch=window.fetch.bind(window);
- window.fetch=function(input,init){
-   let url='';try{url=typeof input==='string'?input:(input&&input.url)||''}catch(_){}
-   if(!/firestore\.googleapis\.com\/v1\/projects\/shadab-pharmacy\/databases\/\(default\)\/documents\//i.test(url))return originalFetch(input,init);
-   const started=Date.now(),method=String((init&&init.method)||(input&&input.method)||'GET').toUpperCase(),path=cleanPath(url),source=sourceHint();
-   return originalFetch(input,init).then(function(response){
-     record({time:new Date().toISOString(),method,path,group:classify(path),status:Number(response.status)||0,ok:!!response.ok,durationMs:Date.now()-started,source});
-     return response;
-   }).catch(function(error){
-     record({time:new Date().toISOString(),method,path,group:classify(path),status:0,ok:false,durationMs:Date.now()-started,error:String(error&&error.name||'NetworkError'),source});
-     throw error;
-   });
- };
- window.__SHADAB_QUOTA_ANALYZER_V2__={getState:()=>JSON.parse(JSON.stringify(state)),recordLocalBlocked:function(path,method){state.localBlocked++;record({time:new Date().toISOString(),method:method||'GET',path:String(path||'(unknown)'),group:classify(path),status:429,ok:false,localOnly:true,durationMs:0,source:'App quota guard blocked before network'});},reset:function(){state={version:2,startedAt:new Date().toISOString(),updatedAt:new Date().toISOString(),requests:[],localBlocked:0,exportCount:0};persist();}};
- function summarize(){const all=state.requests,req=all.filter(r=>!r.localOnly),byGroup={},byStatus={},byPath={};let reads=0,writes=0,deletes=0,errors=0,server429=0;
-  req.forEach(r=>{const g=r.group||'Other';byGroup[g]=(byGroup[g]||0)+1;const sk=String(r.status);byStatus[sk]=(byStatus[sk]||0)+1;const pk=r.method+' '+r.path;byPath[pk]=(byPath[pk]||0)+1;
-   if(r.method==='GET')reads++;else if(r.method==='DELETE')deletes++;else writes++;if(!r.ok)errors++;if(r.status===429)server429++;
-  });
-  const topPaths=Object.entries(byPath).sort((a,b)=>b[1]-a[1]).slice(0,30).map(([path,count])=>({path,count}));
-  return {sessionStartedAt:state.startedAt,lastUpdatedAt:state.updatedAt,trackedActualNetworkRequests:req.length,retainedRequestLimit:MAX,reads,writes,deletes,errors,server429,localBlocked:state.localBlocked||0,localBlockedEvents:all.filter(r=>r.localOnly),byFeatureGroup:byGroup,byHttpStatus:byStatus,topPaths,requests:req};
- }
- function download(){const report={tool:'SHADAB PHARMACY Firestore Quota Analyzer',version:2,generatedAt:new Date().toISOString(),projectId:'shadab-pharmacy',measurementNote:'Client-side actual Firestore REST network requests observed by this browser only. Not the whole project total and not Google billed-operation totals. Local coalesced requests are not counted as network requests. Request/response bodies and auth headers are excluded.',...summarize()};const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SHADAB_FIRESTORE_QUOTA_REPORT_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);state.exportCount=(state.exportCount||0)+1;persist();}
- function el(tag,attrs,text){const n=document.createElement(tag);Object.entries(attrs||{}).forEach(([k,v])=>n.setAttribute(k,v));if(text!==undefined)n.textContent=text;return n;}
- function openPanel(){let old=document.getElementById('shadabQuotaAnalyzerPanel');if(old){old.style.display='flex';render();return;}const panel=el('div',{id:'shadabQuotaAnalyzerPanel','role':'dialog','aria-modal':'true'});panel.style.cssText='position:fixed;inset:0;z-index:2147483646;background:rgba(7,18,38,.78);display:flex;align-items:center;justify-content:center;padding:12px;font:14px system-ui,sans-serif;color:#17243a;';
- const card=el('div');card.style.cssText='width:min(900px,100%);max-height:92dvh;overflow:auto;background:#fff;border-radius:18px;padding:16px;box-shadow:0 20px 70px #0008;';
- const head=el('div');head.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;';const title=el('strong',{},'Firestore Quota Forensic Analyzer');title.style.cssText='font-size:18px';const close=el('button',{},'Close');close.style.cssText='padding:9px 13px;border:0;border-radius:10px;background:#e8edf5;font-weight:700';close.onclick=()=>panel.style.display='none';head.append(title,close);
- const note=el('p',{},'Counts actual Firestore REST network requests from this browser only. It does not expose tokens or document contents. Use one device at a time, then export JSON. Google Console usage is needed to compare project-wide/billed totals.');note.style.cssText='line-height:1.45;color:#45556b;font-size:13px';
- const stats=el('div',{id:'shadabQuotaStats'});stats.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:8px;margin:12px 0;';
- const groups=el('pre',{id:'shadabQuotaGroups'});groups.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6fb;border-radius:12px;padding:12px;font:12px ui-monospace,monospace;max-height:36vh;overflow:auto;';
- const actions=el('div');actions.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin:10px 0';
- const btn=(label,fn,color='#1457b8')=>{const b=el('button',{},label);b.style.cssText='padding:10px 13px;border:0;border-radius:10px;background:'+color+';color:white;font-weight:700';b.onclick=fn;actions.appendChild(b);return b;};
- btn('Download JSON Report',download);btn('Refresh Report',render,'#40536c');btn('Reset Counters',()=>{if(confirm('Clear local analyzer counters for this device?')){window.__SHADAB_QUOTA_ANALYZER_V2__.reset();render()}},'#9b3434');
- card.append(head,note,stats,actions,groups);panel.appendChild(card);panel.addEventListener('click',e=>{if(e.target===panel)panel.style.display='none'});document.body.appendChild(panel);render();
- }
- function render(){const stats=document.getElementById('shadabQuotaStats'),groups=document.getElementById('shadabQuotaGroups');if(!stats||!groups)return;const x=summarize();stats.replaceChildren();[['Network Requests',x.trackedActualNetworkRequests],['GET Reads',x.reads],['Writes',x.writes],['Deletes',x.deletes],['Errors',x.errors],['HTTP 429',x.server429],['Local 429',x.localBlocked]].forEach(([label,value])=>{const box=el('div');box.style.cssText='padding:10px;border-radius:11px;background:#eef3fa;';const v=el('div',{},String(value));v.style.cssText='font-size:22px;font-weight:800';const l=el('div',{},label);l.style.cssText='font-size:11px;color:#4a5a70';box.append(v,l);stats.appendChild(box)});groups.textContent='Session started: '+x.sessionStartedAt+'\nLast updated: '+x.lastUpdatedAt+'\n\nBY FEATURE GROUP\n'+JSON.stringify(x.byFeatureGroup,null,2)+'\n\nBY HTTP STATUS\n'+JSON.stringify(x.byHttpStatus,null,2)+'\n\nTOP REQUEST PATHS (method + path)\n'+JSON.stringify(x.topPaths,null,2)+'\n\nLatest 30 request events\n'+JSON.stringify(x.requests.slice(-30).map(({time,method,path,group,status,durationMs,localOnly,error,source})=>({time,method,path,group,status,durationMs,localOnly:!!localOnly,error,source})),null,2);}
- function mountButton(){if(!document.body||document.getElementById('shadabQuotaAnalyzerButton'))return;const b=el('button',{id:'shadabQuotaAnalyzerButton','aria-label':'Open Firestore quota analyzer'},'Quota Report');b.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2147483647;border:2px solid #ffffff;border-radius:18px;background:#103c75;color:white;padding:18px 28px;font:800 18px system-ui,sans-serif;box-shadow:0 8px 30px #001d3b88;min-width:220px;min-height:64px;';b.onclick=openPanel;document.body.appendChild(b);}
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mountButton,{once:true});else mountButton();
- window.addEventListener('shadab-quota-log-update',()=>{if(document.getElementById('shadabQuotaAnalyzerPanel')?.style.display!=='none')render()});
- persist();
-})();
-</script>
-
 </head>
 <body>
 <script id="shadab-global-jsonclone-fix">
@@ -3388,7 +3316,6 @@ function printHTML(title,data){
 </style>
 
 
-<!-- SHADAB FIRESTORE QUOTA GUARD V1: GET single-flight, 429 circuit breaker, duplicate aggregate refresh removed; sync cadence remains 900000ms. -->
 </body>
 </html>`;
   let frame=null,done=false;
@@ -5256,33 +5183,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return (await refreshREST()).idToken;
   }
 
-  // QUOTA FORENSIC GUARD: coalesce simultaneous GETs and stop retry storms after 429.
-  // This does not change the authoritative 15-minute sync cadence.
-  const __fsGetInFlight=new Map();
-  let __fsQuotaBlockedUntil=0, __fsQuotaBackoffMs=60000;
-  function __fsSynthetic429(){return new Response(JSON.stringify({error:{code:429,status:'RESOURCE_EXHAUSTED',message:'Firestore requests paused locally after a 429 quota response; wait for quota recovery.'}}),{status:429,headers:{'Content-Type':'application/json'}})}
   async function fsFetch(path,options={},retry=true){
-    const method=String(options?.method||'GET').toUpperCase();
-    const key=method==='GET'?String(path):'';
-    if(method==='GET'&&Date.now()<__fsQuotaBlockedUntil){try{window.__SHADAB_QUOTA_ANALYZER_V2__?.recordLocalBlocked(path,method)}catch(_){}return __fsSynthetic429();}
-    if(key&&__fsGetInFlight.has(key)){
-      const shared=await __fsGetInFlight.get(key);
-      return shared.clone();
-    }
-    const task=(async()=>{
-      const token=await ensureToken();
-      const headers=Object.assign({'Authorization':'Bearer '+token,'Content-Type':'application/json'},options.headers||{});
-      const r=await fetch(FS_BASE+path,Object.assign({},options,{headers,cache:'no-store'}));
-      if(r.status===401 && retry){await refreshREST();return fsFetch(path,options,false)}
-      if(r.status===429){
-        __fsQuotaBlockedUntil=Date.now()+__fsQuotaBackoffMs;
-        __fsQuotaBackoffMs=Math.min(__fsQuotaBackoffMs*2,900000);
-        console.warn('[Firestore quota guard] HTTP 429; pausing new GETs for',Math.round((__fsQuotaBlockedUntil-Date.now())/1000),'seconds.');
-      }else if(r.ok && method==='GET'){__fsQuotaBackoffMs=60000;__fsQuotaBlockedUntil=0;}
-      return r;
-    })();
-    if(key)__fsGetInFlight.set(key,task);
-    try{const r=await task;return r.clone()}finally{if(key&&__fsGetInFlight.get(key)===task)__fsGetInFlight.delete(key)}
+    const token=await ensureToken();
+    const headers=Object.assign({'Authorization':'Bearer '+token,'Content-Type':'application/json'},options.headers||{});
+    const r=await fetch(FS_BASE+path,Object.assign({},options,{headers,cache:'no-store'}));
+    if(r.status===401 && retry){await refreshREST();return fsFetch(path,options,false)}
+    return r;
   }
 
   function toValue(v){
@@ -12751,7 +12657,7 @@ async function heartbeat(){
   presenceBusy=true;
   try{
     const path='salesmen/'+encodeURIComponent(s.uid);
-    const old=await read(path)||{}; // A 429/network read failure must abort heartbeat; never write an empty fallback profile.
+    const old=await read(path).catch(()=>null)||{};
     const now=new Date().toISOString();
     const isAdmin=String(s.email||'').toLowerCase()===ADMIN;
     const profile={
@@ -14615,7 +14521,7 @@ async function startPermissionWatch(){
       const p=await readDoc(permissionUid);
       if(p) setRuntimeFlags(permissionUid,p);
     }catch(e){}
-  },900000);
+  },1000);
 }
 
 function ensurePermissionWatch(){
@@ -14660,7 +14566,7 @@ function ensurePresence(){
     clearInterval(presenceTimer);
     presenceUid=uid;
     presenceTick().catch(()=>{});
-    presenceTimer=setInterval(()=>presenceTick().catch(()=>{}),60000);
+    presenceTimer=setInterval(()=>presenceTick().catch(()=>{}),20000);
   }
 }
 
@@ -15179,8 +15085,12 @@ function hookMasterPoll(){
   if(masterPollHooked)return;masterPollHooked=true;
   const original=window.pollRemote;
   if(typeof original!=='function')return;
-  /* Keep the original 15-minute poll unchanged. Avoid triggering a second full aggregate read after each poll. */
-  window.pollRemote=async function(){ return await original.apply(this,arguments); };
+  /* Do not replace the poll interval. We only add the dashboard refresh after it. */
+  window.pollRemote=async function(){
+    const r=await original.apply(this,arguments);
+    try{if(String(session()?.email||'').toLowerCase()===ADMIN&&typeof window.rebuildMasterAggregate==='function')await window.rebuildMasterAggregate()}catch(e){console.warn('V29 dashboard aggregate poll',e)}
+    return r;
+  };
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hookMasterPoll,{once:true});else setTimeout(hookMasterPoll,0);
 
@@ -15225,8 +15135,13 @@ window.addEventListener('shadab-field-visit-open',restoreVisitContext);
   setTimeout(filterOwnTasks,1800);
 })();
 
-/* Quota guard: do not run a second independent 15-minute aggregate timer.
-   Dashboard refreshes remain available on dashboard open and explicit manual sync. */
+/* Dashboard aggregate refresh at the same 15-minute cadence as the locked app
+   sync. This does not alter POLL_MS; it only re-reads the current cloud rows. */
+(function(){
+  const run=()=>{try{if(norm(session()?.email)===ADMIN&&typeof window.rebuildMasterAggregate==='function')window.rebuildMasterAggregate().catch(()=>{})}catch(e){}};
+  setTimeout(run,3500);
+  setInterval(run,900000);
+})();
 
 window.shadabV29Ready=true;
 })();
@@ -18930,12 +18845,7 @@ async function rebuildMasterAggregateV12(options={}){
   try{window.__renderSpMasterDashboard?.(cache)}catch(e){}
   return cache;
 }
-let __spAggregateInFlight=null;
-window.rebuildMasterAggregate=function(options){
-  if(__spAggregateInFlight)return __spAggregateInFlight;
-  __spAggregateInFlight=Promise.resolve().then(()=>rebuildMasterAggregateV12(options)).finally(()=>{__spAggregateInFlight=null});
-  return __spAggregateInFlight;
-};
+window.rebuildMasterAggregate=rebuildMasterAggregateV12;
 window.fetchAllSalesmanData=()=>window.rebuildMasterAggregate();
 window.syncMasterFieldDashboard=async function(){
   const b=document.getElementById('spMasterDashboardSyncBtn'),st=document.getElementById('spMasterDashboardSyncStatus');if(b){b.disabled=true;b.classList.add('is-syncing')};if(st)st.textContent='Reading and verifying salesman visits + photos…';
