@@ -19437,11 +19437,11 @@ async function rebuildMasterAggregateV12Core(options={}){
   const allUids=[...new Set([...profileMap.keys(),...dataMap.keys(),masterUid].filter(Boolean))];
   const profileFor=uid=>{
     const p=profileMap.get(uid)||{},d=dataMap.get(uid)||{};
-    const name=String(p.fullName||p.displayName||p.salesmanName||p.name||d.fullName||d.displayName||d.salesmanName||d.name||(uid===masterUid?'Master':'Salesman '+uid.slice(0,6))).trim();
+    const name=String(p.fullName||p.displayName||p.salesmanName||p.name||d.fullName||d.displayName||d.salesmanName||d.name||(uid===masterUid?'Master':'')).trim();
     return {uid,name,salesman:name,email:String(p.email||d.email||''),status:String(p.status||d.status||'Active'),lastSeen:p.lastSeen||d.lastSeen||p.lastActivityAt||d.lastActivityAt||'',updatedAt:p.updatedAt||d.updatedAt||'',featureFlags:p.featureFlags||{}};
   };
   const allAccounts=allUids.map(profileFor);
-  const salesmen=allAccounts.filter(p=>p.uid!==masterUid&&String(p.email||'').trim().toLowerCase()!==adminEmail&&String(p.name||'').trim().toLowerCase()!=='master').sort((a,b)=>a.name.localeCompare(b.name));
+  const salesmen=allAccounts.filter(p=>p.uid!==masterUid&&String(p.email||'').trim().toLowerCase()!==adminEmail&&String(p.name||'').trim().toLowerCase()!=='master'&&!!String(p.name||'').trim()&&!/^Salesman\s+[A-Za-z0-9]{6}$/i.test(String(p.name||'').trim())).sort((a,b)=>a.name.localeCompare(b.name));
   const salesmanUids=new Set(salesmen.map(p=>p.uid));
   const nameKey=v=>String(v??'').trim().replace(/\s+/g,' ').toLowerCase();
   const aliasMap=new Map();
@@ -22617,8 +22617,7 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
   async function readEntryMap(force){
     if(!force&&mapCache&&Date.now()-mapCacheAt<300000)return mapCache;
     let separate=null,master=null;
-    /* Existing deployed Rules deny this legacy ledger path. Avoid a guaranteed-denied GET on every operation; use the embedded Master Data marker and profile fallback already supported below. */
-    separate=null;
+    try{separate=await baseReadDoc(SEPARATE)}catch(e){mapReadError=String(e?.message||e)}
     try{master=await baseReadDoc(MASTER)}catch(e){mapReadError=String(e?.message||e)}
     const a=separate?.entries&&typeof separate.entries==='object'?separate.entries:{};
     const b=master?.[EMBEDDED]&&typeof master[EMBEDDED]==='object'?master[EMBEDDED]:{};
@@ -22998,62 +22997,3 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
 })();
 </script>
 
-
-
-<script id="shadab-master-live-dashboard-engine-v13">
-/*
- SHADAB PHARMACY — MASTER LIVE DASHBOARD ENGINE V13
- One authoritative refresh entry point. Manual Sync bypasses Firestore GET caches,
- drops the in-memory aggregate cache, waits for any previous aggregate to finish,
- and then invokes the existing visit_days + legacy + local reconciliation core.
- Background auto-sync cadence remains exactly one hour. Firebase Rules are unchanged.
-*/
-(function(){
-  'use strict';
-  if(window.__SHADAB_MASTER_LIVE_DASHBOARD_V13__) return;
-  const engine=window.shadabFirebaseSyncEngine;
-  const sync=window.syncMasterFieldDashboard;
-  if(typeof sync!=='function'||!engine||typeof engine.beginManualSync!=='function'){
-    console.error('[Master Live Dashboard V13] Required existing Firebase/dashboard engine missing; no fallback data was fabricated.');
-    return;
-  }
-  const wrapped=async function(){
-    const release=engine.beginManualSync();
-    const button=document.getElementById('spMasterDashboardSyncBtn');
-    const status=document.getElementById('spMasterDashboardSyncStatus');
-    try{
-      if(button){button.disabled=true;button.classList.add('is-syncing')}
-      if(status)status.textContent='Fresh Firebase read • reconciling salesman visits…';
-      /* Drop only volatile in-memory aggregate state. Persistent visit data is untouched. */
-      try{if(typeof masterAggregateV12InFlight!=='undefined'&&masterAggregateV12InFlight)await masterAggregateV12InFlight}catch(_){ }
-      try{if(typeof masterAggregateV12LastResult!=='undefined')masterAggregateV12LastResult=null}catch(_){ }
-      try{if(typeof masterAggregateV12LastAt!=='undefined')masterAggregateV12LastAt=0}catch(_){ }
-      const result=await sync.apply(this,arguments);
-      const d=window.__shadabMasterVisitReadDiagnostics||{};
-      const c=window.__spMasterAggregateCache||{};
-      window.__shadabMasterLiveDashboardV13Diagnostics={
-        at:new Date().toISOString(),ok:!d.readFailures?.length,
-        salesmen:c.salesmen?.length||0,visits:c.visits?.length||0,
-        visitDays:d.partitionDocs||0,partitionEntries:d.partitionEntries||0,
-        readFailures:d.readFailures||[],localPublishError:d.localPublishError||'',
-        autoSyncMs:engine.status().autoSyncMs,source:'Firestore visit_days + legacy arrays + local rows',
-        firebaseEndToEndVerified:false
-      };
-      return result;
-    } catch(e){
-      window.__shadabMasterLiveDashboardV13Diagnostics={at:new Date().toISOString(),ok:false,error:String(e?.message||e),autoSyncMs:engine.status().autoSyncMs,firebaseEndToEndVerified:false};
-      throw e;
-    } finally {
-      release();
-      if(button){button.disabled=false;button.classList.remove('is-syncing')}
-    }
-  };
-  wrapped.__shadabMasterLiveDashboardV13=true;
-  wrapped.__shadabMasterLiveDashboardOriginal=sync;
-  window.syncMasterFieldDashboard=wrapped;
-  window.refreshSpAddedMaster=wrapped;
-  window.__SHADAB_MASTER_LIVE_DASHBOARD_V13__=true;
-  window.shadabMasterLiveDashboardDiagnostics=()=>window.__shadabMasterLiveDashboardV13Diagnostics||{installed:true,ran:false,autoSyncMs:engine.status().autoSyncMs,firebaseEndToEndVerified:false};
-  console.info('[Master Live Dashboard V13] active; manual refresh bypasses stale GET cache and re-runs the existing authoritative aggregate.');
-})();
-</script>
