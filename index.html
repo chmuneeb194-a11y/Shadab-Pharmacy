@@ -18962,7 +18962,8 @@ body:not(.dark) #spAddedMasterDashboard .sp-master-dashboard-sync{color:#fff!imp
 'use strict';
 const ADMIN_EMAIL='master@shadabpharmacy.com';
 const V12='v12';
-const PHOTO_TTL_MS=24*60*60*1000;
+/* PHOTO RETENTION FIX: visit photos must not expire after 24 hours. */
+const PHOTO_TTL_MS=0;
 const PHOTO_DB='shadab_visit_media_v12';
 const PHOTO_STORE='photos';
 const META_KEY='shadab_v12_visit_sync_meta';
@@ -19009,7 +19010,7 @@ async function photoPut(id,data,date,expiresAt){
     const db=await photoDb();
     return await new Promise((resolve,reject)=>{
       const tx=db.transaction(PHOTO_STORE,'readwrite');
-      tx.objectStore(PHOTO_STORE).put({id:String(id),data:String(data||''),date:String(date||todayISOv12()),createdAt:now(),expiresAt:Number(expiresAt||now()+PHOTO_TTL_MS)});
+      tx.objectStore(PHOTO_STORE).put({id:String(id),data:String(data||''),date:String(date||todayISOv12()),createdAt:now(),expiresAt:0});
       tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error||new Error('Photo cache write failed'));
     });
   }catch(e){console.warn('V12 photo cache write:',e);return false}
@@ -19047,7 +19048,7 @@ async function migrateLegacyLocalPhotos(){
   let changed=false;
   for(const v of list){
     if(v?.photo&&String(v.photo).startsWith('data:image/')){
-      const ok=await photoPut(v.id,v.photo,photoDate(v),now()+PHOTO_TTL_MS);
+      const ok=await photoPut(v.id,v.photo,photoDate(v),0);
       if(ok){v.photoPending=true;delete v.photo;changed=true}
     }
   }
@@ -19060,15 +19061,15 @@ async function hydrateLocalPhotoCache(){
     if(v?.photo||!v?.id)continue;
     const p=await photoGet(v.id);
     if(p){
-      if(Number(p.expiresAt||0)<=now()){await photoDelete(v.id);continue}
+      /* Retain cached visit photos indefinitely; only explicit visit deletion may remove them. */
       if(String(p.data||'').startsWith('data:image/')){v.photo=p.data;changed=true}
     }
   }
   if(changed){try{window.renderRecords?.();window.updateStats?.();window.updatePremiumDashboard?.();window.renderTodayTasks?.()}catch(e){}}
 }
 async function purgeExpiredLocalPhotos(){
-  const rows=await photoListAll(),t=now();
-  for(const p of rows)if(Number(p.expiresAt||0)>0&&Number(p.expiresAt)<=t)await photoDelete(p.id);
+  /* Automatic TTL deletion disabled: report/PDF photos must persist beyond 24 hours. */
+  return 0;
 }
 
 /* ---------- Local visits persistence without Base64 photos ---------- */
@@ -19134,7 +19135,7 @@ async function cacheRuntimeVisitPhotos(){
   for(const v of localVisitList()){
     if(v?.photo&&String(v.photo).startsWith('data:image/')){
       const p=await compressVisitImageV12(v.photo).catch(()=>v.photo);
-      await photoPut(v.id,p,photoDate(v),now()+PHOTO_TTL_MS);
+      await photoPut(v.id,p,photoDate(v),0);
       v.photo=p;
     }
   }
@@ -19146,7 +19147,7 @@ async function uploadVisitPhotoV12(uid,v){
   if(!source||!String(source).startsWith('data:image/')){
     try{
       const cached=await photoGet(v?.id);
-      if(cached?.data&&(!cached.expiresAt||Number(cached.expiresAt)>now()))source=cached.data;
+      if(cached?.data)source=cached.data;
     }catch(e){}
   }
   if(!source||!String(source).startsWith('data:image/'))return v?.photoRef||null;
@@ -19156,7 +19157,7 @@ async function uploadVisitPhotoV12(uid,v){
   const mime=(compressed.match(/^data:([^;]+);/)||[])[1]||'image/webp';
   const capturedAt=v.photoCapturedAt||iso();
   v.photoCapturedAt=capturedAt;
-  const expiresAt=new Date(new Date(capturedAt).getTime()+PHOTO_TTL_MS).getTime();
+  const expiresAt=null; /* no automatic expiry; retain visit photos until explicit visit deletion */
   if(body.length>420000)throw new Error('Compressed visit photo exceeds safe Firestore payload size');
   const path='user_data/'+encodeURIComponent(uid)+'/visit_media/'+safeId(v.id);
   await writeDoc(path,{visitId:String(v.id),mime,size:Math.floor(body.length*0.75),encoding:'base64',data:compressed,capturedAt,expiresAt,updatedAt:iso(),version:V12});
@@ -19170,40 +19171,15 @@ async function deleteCloudVisitPhoto(v){
 }
 let lastPhotoCleanup=0;
 async function cleanupExpiredCloudPhotos(uid,force){
-  /* V15: never scan the entire visit_media collection during routine sync.
-     Expired cloud photos are deleted only when their visit is locally known. */
-  const cutoff=now();
-  try{
-    const list=localVisitList();
-    for(const v of list){
-      if(!v?.photoRef)continue;
-      const capturedAt=v.photoCapturedAt?new Date(v.photoCapturedAt).getTime():0;
-      if(!capturedAt || capturedAt+PHOTO_TTL_MS>cutoff)continue;
-      try{await deleteDoc(String(v.photoRef))}catch(e){}
-      try{await photoDelete(String(v.id))}catch(e){}
-      delete v.photo;v.photoPurgedAt=iso();v.photoRef='';v.photoUrl='';
-    }
-    saveLocalVisitsNoPhotos();
-  }catch(e){console.warn('V15 local-known photo cleanup:',e)}
+  /* SAFETY FIX: never auto-delete cloud visit photos by age. Photos are removed only by explicit visit deletion. */
+  return 0;
 }
 
 /* Delete a photo early ONLY when PDF was handled and Today was explicitly cleared.
    Otherwise retain it until the 24-hour TTL window expires. */
 async function cleanupHandledTodayPhotos(){
-  const uid=session()?.uid;if(!uid||isAdmin())return;
-  const day=todayISOv12();
-  const list=localVisitList().filter(v=>String(v.date||'').slice(0,10)===day&&v.photoRef&&v.pdfHandledAt);
-  for(const v of list){
-    const handledAt=new Date(v.pdfHandledAt).getTime()||0;
-    if(handledAt && now()-handledAt<PHOTO_TTL_MS){
-      /* Early delete is allowed only after the PDF has been handled and Today is cleared. */
-      await deleteCloudVisitPhoto(v);
-      await photoDelete(v.id);
-      delete v.photo;v.photoRef='';v.photoUrl='';v.photoPurgedAt=iso();
-    }
-  }
-  saveLocalVisitsNoPhotos();
-  try{window.renderRecords?.();window.updatePremiumDashboard?.()}catch(e){}
+  /* SAFETY FIX: generating/sharing a PDF must not delete its photo from local or cloud storage. */
+  return 0;
 }
 
 /* ---------- Recover all cloud day records, not stale parent visits[] ---------- */
@@ -19490,6 +19466,40 @@ async function syncSalesmanFirebaseV12(reason){
   syncBusyV12=(async()=>{
     const uid=String(s.uid);
     let observedClearAt='';
+    /* TRUE INCREMENTAL SYNC: after a verified first hydration, compare local day hashes
+       before touching Firestore. If no day, photo, or queued cleanup changed, this run
+       is a true no-op: zero Firestore reads and zero writes. */
+    try{
+      const earlyMeta=getMeta(uid);
+      if(earlyMeta.incrementalSyncEngineV1===1 && earlyMeta.bootHydrated===true && earlyMeta.bootHydrationVerified===true && earlyMeta.migrated===true){
+        const earlyRows=localVisitList();
+        const earlyGroups=new Map();
+        earlyRows.forEach(v=>{if(!v?.id)return;const d=dayOf(v);if(!earlyGroups.has(d))earlyGroups.set(d,[]);const x=clone(v)||{};delete x.photo;delete x.image;earlyGroups.get(d).push(x)});
+        let changed=Object.keys(earlyMeta.dirtyDays||{}).length>0;
+        /* Master-owned visit edits/deletions use a separate durable pending marker. */
+        try{if(localStorage.getItem('shadab_visit_sync_pending_v1_'+uid))changed=true}catch(e){}
+        for(const [day,rows] of earlyGroups){
+          rows.sort((a,b)=>String(b.time||'').localeCompare(String(a.time||''))||String(b.id).localeCompare(String(a.id)));
+          const sig=hash(JSON.stringify(rows));
+          let old='';try{old=localStorage.getItem('shadab_v12_synced_day_hash_v1_'+uid+'_'+day)||''}catch(e){}
+          if(sig!==old){changed=true;break;}
+        }
+        if(!changed){
+          for(const day of Object.keys(earlyMeta.dirtyDays||{})){
+            if(earlyGroups.has(day))continue;
+            let old='';try{old=localStorage.getItem('shadab_v12_synced_day_hash_v1_'+uid+'_'+day)||''}catch(e){}
+            if(hash('[]')!==old){changed=true;break;}
+          }
+        }
+        const photoPending=earlyRows.some(v=>!v?.photoRef&&(v?.photoPending||(v?.photo&&String(v.photo).startsWith('data:image/'))));
+        const cleanupKey='shadab_v12_cloud_photo_cleanup_at_v1_'+uid;
+        let cleanupDue=true;try{cleanupDue=Date.now()-Number(localStorage.getItem(cleanupKey)||0)>=24*60*60*1000}catch(e){}
+        if(!changed&&!photoPending&&!cleanupDue){
+          try{window.__shadabLastFirebaseSync={at:iso(),ok:true,skipped:true,reason:'no-local-changes',firestoreReads:0,firestoreWrites:0}}catch(e){}
+          return {ok:true,skipped:true,reason:'no-local-changes'};
+        }
+      }
+    }catch(noopCheckError){console.warn('Incremental no-op check fell back to safe sync:',noopCheckError)}
     // Verify global clear state before any photo/visit write; do not resurrect stale local visits.
     try{
       const clearDoc=await readDoc('app_settings/masterData');
@@ -19511,7 +19521,12 @@ async function syncSalesmanFirebaseV12(reason){
     }
     try{
       await purgeExpiredLocalPhotos();
-      await cleanupExpiredCloudPhotos(uid,false);
+      const cleanupKey='shadab_v12_cloud_photo_cleanup_at_v1_'+uid;
+      let cleanupDue=true;try{cleanupDue=Date.now()-Number(localStorage.getItem(cleanupKey)||0)>=24*60*60*1000}catch(e){}
+      if(cleanupDue){
+        await cleanupExpiredCloudPhotos(uid,false);
+        try{localStorage.setItem(cleanupKey,String(Date.now()))}catch(e){}
+      }
       await migrateLegacyLocalPhotos();
 
       const meta=getMeta(uid);
@@ -19567,8 +19582,9 @@ async function syncSalesmanFirebaseV12(reason){
       const groups=new Map();
       current.forEach(v=>{if(!v?.id)return;const d=dayOf(v);if(!groups.has(d))groups.set(d,[]);const x=clone(v)||{};delete x.photo;delete x.image;if(v.photoRef)x.photoRef=v.photoRef;if(v.pdfHandledAt)x.pdfHandledAt=v.pdfHandledAt;groups.get(d).push(x);});
       const writeDates=new Set(Object.keys(dirtyDays));
-      writeDates.add(todayISOv12());
-      if(!meta.migrated)for(const d of groups.keys())writeDates.add(d);
+      /* Candidate local days are compared against last-successful fingerprints below.
+         No unconditional 'today' write: unchanged day documents are never rewritten. */
+      for(const d of groups.keys())writeDates.add(d);
 
       for(const v of current){
         if(!v?.photoRef&&(v?.photoPending||v?.photo&&String(v.photo).startsWith('data:image/'))){
@@ -19578,39 +19594,50 @@ async function syncSalesmanFirebaseV12(reason){
       /* Rebuild groups after photo refs have been attached. */
       groups.clear();
       current.forEach(v=>{if(!v?.id)return;const d=dayOf(v);if(!groups.has(d))groups.set(d,[]);const x=clone(v)||{};delete x.photo;delete x.image;groups.get(d).push(x)});
+      let changedDayWrites=0;
       for(const date of writeDates){
         const rows=groups.get(date)||[];
         if(!rows.length && !meta.migrated)continue;
         rows.sort((a,b)=>String(b.time||'').localeCompare(String(a.time||''))||String(b.id).localeCompare(String(a.id)));
+        const daySig=hash(JSON.stringify(rows));
+        const dayHashKey='shadab_v12_synced_day_hash_v1_'+uid+'_'+date;
+        let previousDaySig='';try{previousDaySig=localStorage.getItem(dayHashKey)||''}catch(e){}
+        if(daySig===previousDaySig){delete dirtyDays[date];continue;}
         await writeDoc('user_data/'+encodeURIComponent(uid)+'/visit_days/'+date,{uid,date,visits:rows,count:rows.length,updatedAt:iso(),version:V12});
+        try{localStorage.setItem(dayHashKey,daySig)}catch(e){}
+        changedDayWrites++;
         delete dirtyDays[date];
       }
 
-      /* Keep the parent document lean: NO visits[] field. */
-      let parent={};
-      try{parent=await readDoc('user_data/'+encodeURIComponent(uid))||{}}catch(e){}
-      delete parent.visits;
-      parent.uid=uid;
-      parent.updatedAt=iso();
-      parent.syncSchemaVersion=V12;
-      parent.visitStore={version:V12,mode:'visit_days'};
+      /* Keep the parent document lean: NO visits[] field. Use a field-scoped PATCH
+         instead of reading and rewriting the entire parent document on every sync. */
+      const parent={uid,syncSchemaVersion:V12,visitStore:{version:V12,mode:'visit_days'}};
       const byDate={},storesByMonth={};
       current.forEach(v=>{const d=dayOf(v);byDate[d]=(byDate[d]||0)+1;const m=d.slice(0,7);if(!storesByMonth[m])storesByMonth[m]=[];const k=String(v.code||'')+'::'+String(v.area||'')+'::'+norm(v.store||v.name);if(!storesByMonth[m].includes(k))storesByMonth[m].push(k)});
       const dates=Object.keys(byDate).sort();if(dates.length>730){const keep=new Set(dates.slice(-730));for(const k of Object.keys(byDate))if(!keep.has(k))delete byDate[k];}
       const mons=Object.keys(storesByMonth).sort();if(mons.length>18){const keep=new Set(mons.slice(-18));for(const k of Object.keys(storesByMonth))if(!keep.has(k))delete storesByMonth[k];}
       parent.visitStats={version:V12,byDate,storesByMonth,updatedAt:iso()};
       parent.visitCounts={today:current.filter(v=>dayOf(v)===todayISOv12()).length,week:current.filter(v=>{const d=new Date(todayISOv12()+'T00:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));const ws=d.toISOString().slice(0,10);const e=new Date(d);e.setDate(e.getDate()+7);return dayOf(v)>=ws&&dayOf(v)<e.toISOString().slice(0,10)}).length,month:current.filter(v=>dayOf(v).slice(0,7)===todayISOv12().slice(0,7)).length};
-      await writeDoc('user_data/'+encodeURIComponent(uid),parent);
+      const stableParent=JSON.parse(JSON.stringify(parent));
+      const stripVolatile=(v)=>{if(Array.isArray(v))return v.map(stripVolatile);if(v&&typeof v==='object'){const o={};Object.keys(v).sort().forEach(k=>{if(k!=='updatedAt'&&k!=='reason'&&k!=='lastSyncAt')o[k]=stripVolatile(v[k])});return o}return v};
+      const parentSig=hash(JSON.stringify(stripVolatile(stableParent)));
+      const parentHashKey='shadab_v12_parent_hash_v1_'+uid;
+      let oldParentSig='';try{oldParentSig=localStorage.getItem(parentHashKey)||''}catch(e){}
+      let parentWriteCount=0;
+      if(parentSig!==oldParentSig){
+        const parentPath='user_data/'+encodeURIComponent(uid);
+        if(typeof window.shadabRestWriteFields==='function')await window.shadabRestWriteFields(parentPath,parent);
+        else await writeDoc(parentPath,parent);
+        try{localStorage.setItem(parentHashKey,parentSig)}catch(e){}
+        parentWriteCount=1;
+      }
 
-      /* Read-back verification catches the exact failure mode we are fixing. */
-      const td=await readDoc('user_data/'+encodeURIComponent(uid)+'/visit_days/'+todayISOv12())||{};
-      const cloudCount=Array.isArray(td.visits)?td.visits.length:0;
+      /* Successful REST writes are the confirmation; do not spend another read on
+         same-day read-back after every sync. Boot hydration remains the read-back guard. */
       const localToday=current.filter(v=>dayOf(v)===todayISOv12()).length;
-      if(cloudCount!==localToday)throw new Error('Firebase verification mismatch: local Today '+localToday+' vs cloud '+cloudCount);
-
-      setMeta(uid,{...meta,migrated:true,lastSyncAt:iso(),lastReason:reason||'sync',dirtyDays});
+      setMeta(uid,{...meta,migrated:true,incrementalSyncEngineV1:1,lastSyncAt:iso(),lastReason:reason||'sync',dirtyDays});
       saveLocalVisitsNoPhotos();
-      try{window.__shadabLastFirebaseSync={at:iso(),ok:true,uid,visitDaysChanged:writeDates.size,photoMode:'indexeddb-local+24h-firestore',verified:true,cloudToday:cloudCount,localToday:localToday};window.shadabFirebaseOnlySyncStatus={uid,at:iso(),visitDaysChanged:writeDates.size,photos:current.filter(v=>v.photoRef).length,verified:true,cloudToday:cloudCount,localToday:localToday}}catch(e){}
+      try{window.__shadabLastFirebaseSync={at:iso(),ok:true,uid,visitDaysChanged:changedDayWrites,parentChanged:parentWriteCount,photoMode:'persistent-indexeddb+firestore-no-auto-expiry',verified:'firestore-write-ack',cloudToday:null,localToday};window.shadabFirebaseOnlySyncStatus={uid,at:iso(),visitDaysChanged:changedDayWrites,parentChanged:parentWriteCount,photos:current.filter(v=>v.photoRef).length,verified:'firestore-write-ack',localToday}}catch(e){}
       try{window.updateStats?.();window.updatePremiumDashboard?.();window.renderRecords?.();window.renderTodayTasks?.()}catch(e){}
       return {ok:true,cloudToday:cloudCount,localToday:localToday};
     }finally{syncBusyV12=null}
@@ -19636,8 +19663,7 @@ if(typeof oldSaveVisitV12==='function'&&!oldSaveVisitV12.__v12Authoritative){
   wrapped.__v12Authoritative=true;wrapped.__v12Original=oldSaveVisitV12;window.saveVisit=wrapped;
 }
 
-/* Delete visit: delete cloud day photo only when the normal delete occurs AND the
-   visit's photo was explicitly handled; otherwise leave the 24h cloud TTL intact. */
+/* Delete visit: photo deletion is allowed only as part of an explicit user delete action. */
 const oldDeleteVisitV12=window.deleteVisit;
 if(typeof oldDeleteVisitV12==='function'&&!oldDeleteVisitV12.__v12Authoritative){
   window.deleteVisit=function(id){
@@ -19656,12 +19682,12 @@ async function hydrateDatePhotosV12(date){
     if(v?.photo)continue;
     if(v?.photoRef){
       const cached=await photoGet(v.id);
-      if(cached?.data&&Number(cached.expiresAt||0)>now()){v.photo=cached.data;continue}
+      if(cached?.data){v.photo=cached.data;continue}
       try{
         const d=await readDoc(v.photoRef);
         const data=String(d?.data||'');
         const exp=Number(d?.expiresAt||0);
-        if(data&&(!exp||exp>now())){v.photo=data;await photoPut(v.id,data,date,exp||now()+PHOTO_TTL_MS)}
+        if(data){v.photo=data;await photoPut(v.id,data,date,0)}
       }catch(e){}
     }
   }
@@ -22607,3 +22633,74 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
   console.info('[Shadab Firebase Sync Engine] active: 55-minute GET cache; writes invalidate affected paths; manual sync bypasses cache; hourly interval preserved.');
 })();
 </script>
+
+
+<script id="shadab-true-incremental-write-dedupe-v1">
+(function(){
+  'use strict';
+  if(window.__shadabTrueIncrementalWriteDedupeV1)return;
+  window.__shadabTrueIncrementalWriteDedupeV1=true;
+  const volatile=new Set(['updatedAt','updatedBy','reason','lastSyncAt','syncAt','lastSyncedAt']);
+  const protectedMaster=new Set(['customerContacts','customers','customerContactsUpdatedAt','customerContactsUpdatedBy','customerContactsReason','customerContactsSchemaVersion']);
+  const contactFields=['customerContacts','customerContactsUpdatedAt','customerContactsUpdatedBy','customerContactsReason','customerContactsSchemaVersion'];
+  const normPath=p=>String(p||'').split('?')[0].replace(/^\/+|\/+$/g,'');
+  const session=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+  function stable(v,path,isContacts){
+    if(Array.isArray(v))return v.map(x=>stable(x,path,isContacts));
+    if(v&&typeof v==='object'){
+      const out={};
+      Object.keys(v).sort().forEach(k=>{
+        if(volatile.has(k))return;
+        if(path==='app_settings/masterData'&&isContacts&&!contactFields.includes(k))return;
+        if(path==='app_settings/masterData'&&!isContacts&&protectedMaster.has(k))return;
+        out[k]=stable(v[k],path,isContacts);
+      });
+      return out;
+    }
+    return v;
+  }
+  function hashText(str){
+    let a=2166136261>>>0,b=2246822519>>>0;
+    for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);a=Math.imul(a^c,16777619)>>>0;b=Math.imul(b^(c+i),3266489917)>>>0;}
+    return str.length.toString(36)+'-'+a.toString(16)+'-'+b.toString(16);
+  }
+  function signature(path,obj,opts,writerName){
+    const p=normPath(path),contacts=opts?.allowCustomerContactsWrite===true;
+    return hashText(JSON.stringify({writer:String(writerName||''),path:p,payload:stable(obj,p,contacts)}));
+  }
+  function keyFor(path,writerName){
+    const s=session();const uid=String(s?.uid||'anonymous');
+    return 'shadab_incremental_write_hash_v1_'+hashText(uid+'|'+String(writerName||'')+'|'+normPath(path));
+  }
+  const stats={writesSent:0,writesSkipped:0,readsNotTouched:true,lastSkipPath:'',lastWritePath:'',lastWriteAt:0};
+  function wrap(name){
+    const original=window[name];
+    if(typeof original!=='function'||original.__shadabIncrementalWriteDedupe)return;
+    const wrapped=async function(path,obj,options){
+      const p=normPath(path),opts=options||{};
+      /* Deletions and empty writes are never inferred or suppressed here. */
+      if(!p||!obj||typeof obj!=='object'||Array.isArray(obj))return original.apply(this,arguments);
+      let sig='';try{sig=signature(p,obj,opts,name)}catch(e){return original.apply(this,arguments)}
+      const k=keyFor(p,name);let prior='';try{prior=localStorage.getItem(k)||''}catch(e){}
+      if(sig&&prior===sig&&opts?.forceIncrementalSync!==true){
+        stats.writesSkipped++;stats.lastSkipPath=p;
+        try{window.__shadabIncrementalSyncStats=stats}catch(e){}
+        return {ok:true,skipped:true,incremental:true,path:p};
+      }
+      const result=await original.apply(this,arguments);
+      if(result===false||result?.ok===false||result?.error)throw result?.error||new Error('Firebase write was not confirmed for '+p);
+      try{localStorage.setItem(k,sig)}catch(e){console.warn('Incremental write hash could not be persisted:',e)}
+      stats.writesSent++;stats.lastWritePath=p;stats.lastWriteAt=Date.now();
+      try{window.__shadabIncrementalSyncStats=stats}catch(e){}
+      return result;
+    };
+    wrapped.__shadabIncrementalWriteDedupe=true;wrapped.__shadabIncrementalWriteOriginal=original;
+    window[name]=wrapped;
+  }
+  wrap('shadabRestWriteDoc');
+  wrap('shadabRestWriteFields');
+  window.shadabIncrementalSyncDiagnostics=()=>({version:1,...stats,autoSyncMs:3600000,hashStorage:'localStorage',samePayloadWritesSkipped:true,liveFirebaseVerified:false});
+  console.info('[Shadab Incremental Sync V1] active: unchanged REST payload writes are skipped; visit-day fingerprints and no-change no-op are enabled.');
+})();
+</script>
+
