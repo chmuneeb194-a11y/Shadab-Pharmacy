@@ -3765,10 +3765,38 @@ const ADMIN_DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday",
 const SALESMAN_KEY="shadab_pharmacy_custom_salesmen_v1";
 let adminSchedules=JSON.parse(localStorage.getItem(ADMIN_SCHEDULE_KEY)||localStorage.getItem("shadab_pharmacy_fixed_salesman_schedule_v1")||"{}");
 let adminLoggedIn=false;
-function customSalesmanNames(){try{const a=JSON.parse(localStorage.getItem(SALESMAN_KEY)||"[]");return Array.isArray(a)?a.filter(Boolean):[]}catch(e){return []}}
-function saveCustomSalesmanNames(list){localStorage.setItem(SALESMAN_KEY,JSON.stringify([...new Set((list||[]).map(x=>String(x).trim()).filter(Boolean))]))}
-function adminSalesmanNames(){const base=[...document.querySelectorAll("#visitedBy option")].map(o=>o.value).filter(Boolean);return [...new Set([...base,...customSalesmanNames()])]}
-function ensureSalesmanOptions(){const sel=document.getElementById("visitedBy");if(!sel)return;const current=sel.value||localStorage.getItem("shadab_current_salesman_v1")||"";const existing=new Set([...sel.options].map(o=>o.value));customSalesmanNames().forEach(n=>{if(!existing.has(n)){const o=document.createElement("option");o.value=n;o.textContent=n;sel.appendChild(o)}});if(current)sel.value=current}
+const SHADAB_BASE_SALESMAN_NAMES_V1=["Chaudhry Asad","Chaudhry Wasim","Atif","Usman","Saad","Waqas"];
+function customSalesmanNames(){
+ const out=[],seen=new Set();
+ const add=v=>{const n=String(typeof v==="string"?v:(v?.fullName||v?.displayName||v?.salesmanName||v?.name||v?.label)||"").trim();if(!n)return;const k=n.toLowerCase();if(!seen.has(k)){seen.add(k);out.push(n)}};
+ for(const key of [SALESMAN_KEY,"shadab_custom_salesmen_v1"]){try{const a=JSON.parse(localStorage.getItem(key)||"[]");if(Array.isArray(a))a.forEach(add)}catch(e){}}
+ return out;
+}
+function saveCustomSalesmanNames(list){
+ const seen=new Set(),clean=[];(list||[]).forEach(x=>{const n=String(typeof x==="string"?x:(x?.fullName||x?.displayName||x?.salesmanName||x?.name)||"").trim(),k=n.toLowerCase();if(n&&!seen.has(k)){seen.add(k);clean.push(n)}});
+ localStorage.setItem(SALESMAN_KEY,JSON.stringify(clean));
+}
+/* Operational roster = Master-added names + the six original seed names.
+   Registered Firebase Auth profiles are intentionally NOT used as roster entries. */
+function adminSalesmanNames(){
+ const registered=new Set();
+ try{const a=JSON.parse(localStorage.getItem("shadab_admin_profiles_v1")||"[]");if(Array.isArray(a))a.forEach(v=>{[v?.fullName,v?.displayName,v?.salesmanName,v?.name,v?.email,v?.id,v?.uid].forEach(x=>{const n=String(x||"").trim().toLowerCase();if(n)registered.add(n)})})}catch(e){}
+ const scheduled=[];
+ try{if(adminSchedules&&typeof adminSchedules==="object")Object.keys(adminSchedules).forEach(n=>{const name=String(n||"").trim();if(name&&!name.includes("@")&&!registered.has(name.toLowerCase()))scheduled.push(name)})}catch(e){}
+ const seen=new Set(),out=[];
+ [...SHADAB_BASE_SALESMAN_NAMES_V1,...customSalesmanNames(),...scheduled].forEach(v=>{const n=String(v||"").trim(),k=n.toLowerCase();if(n&&!seen.has(k)){seen.add(k);out.push(n)}});
+ return out;
+}
+function ensureSalesmanOptions(){
+ const sel=document.getElementById("visitedBy");if(!sel)return;
+ const current=String(sel.value||localStorage.getItem("shadab_current_salesman_v1")||"").trim();
+ const names=adminSalesmanNames();
+ const matched=names.find(n=>n.toLowerCase()===current.toLowerCase())||"";
+ sel.innerHTML='<option value="">Select Visited By</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
+ sel.value=matched;
+ /* A prior mixed-in account/email is only a stale selector, not roster data. */
+ if(current&&!matched){try{localStorage.removeItem("shadab_current_salesman_v1")}catch(e){}}
+}
 function ensureAdminSalesmanOptions(){const sel=document.getElementById("adminSalesman");if(!sel)return;const current=sel.value;sel.innerHTML=adminSalesmanNames().map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");if(current&&adminSalesmanNames().includes(current))sel.value=current}
 function addSalesman(name){name=String(name||"").trim();if(!name)return false;if(adminSalesmanNames().some(n=>n.toLowerCase()===name.toLowerCase()))return false;const names=customSalesmanNames();names.push(name);saveCustomSalesmanNames(names);ensureSalesmanOptions();ensureAdminSalesmanOptions();/* One later directory writer persists this explicit Master action; this legacy API stays local/synchronous to prevent duplicate writes. */return true}
 function openComingNextSalesman(){ensureSalesmanOptions();renderComingNextSalesmanList();document.getElementById("comingNextSalesmanModal")?.classList.add("show")}
@@ -5509,6 +5537,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const token=await ensureToken();
       const headers=Object.assign({'Authorization':'Bearer '+token,'Content-Type':'application/json'},options.headers||{});
       const r=await fetch(FS_BASE+path,Object.assign({},options,{headers,cache:'no-store'}));
+      if(r.status===403){
+        let detail='';try{const body=await r.clone().json();detail=String(body?.error?.message||body?.error?.status||body?.message||'')}catch(_){}
+        const deny={at:new Date().toISOString(),method,path:basePath,status:403,email:String((typeof window.shadabRestCurrentSession==='function'?(window.shadabRestCurrentSession()?.email||''):'')||''),detail};
+        try{const key='shadab_firestore_rule_denials_v1';const rows=JSON.parse(localStorage.getItem(key)||'[]');rows.push(deny);localStorage.setItem(key,JSON.stringify(rows.slice(-100)));window.__shadabLastFirestoreRuleDenial=deny}catch(_){}
+        console.warn('[Firestore RULE DENY] method='+method+' path='+basePath+' email='+deny.email+' detail='+detail);
+        try{const nowMs=Date.now();if(nowMs-Number(window.__shadabRuleDenyToastAt||0)>15000){window.__shadabRuleDenyToastAt=nowMs;const msg='Firestore Rules denied: '+method+' '+basePath;if(typeof window.toast35==='function')window.toast35(msg);else if(typeof window.toast==='function')window.toast(msg)}}catch(_){}
+      }
       if(r.status===401 && retry){if(getKey)firestoreGetInflight.delete(getKey);await refreshREST();return await fsFetch(path,options,false)}
       if(r.status===429){
         let retryAfter=0,detail='';
@@ -6037,6 +6072,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.shadabRestAuthStatus=()=>({signedIn:!!session,email:session?.email||null,uid:session?.uid||null,mode:'Firebase REST + Firestore REST',localFile:true,pollMs:POLL_MS,quotaCooldownUntil:firestoreQuotaUntil||0,quotaBackoffMs:firestoreQuotaBackoff||0,lastQuota:window.__shadabLastFirestoreQuota||null});
   window.shadabGetAdminFinancialRecords=()=>{try{return JSON.parse(localStorage.getItem('shadab_admin_financial_records_v1')||'{}')}catch(e){return {}}};
   // Expose the REST layer to the Admin Sync buttons. This downloaded HTML uses REST only for Firestore.
+  window.shadabGetFirestoreRuleDenials=()=>{try{return JSON.parse(localStorage.getItem('shadab_firestore_rule_denials_v1')||'[]')}catch(e){return []}};
+  window.shadabExportFirestoreRuleDenials=()=>{
+    try{const blob=new Blob([JSON.stringify(window.shadabGetFirestoreRuleDenials(),null,2)],{type:'application/json'});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download='SHADAB_FIRESTORE_RULE_DENIALS.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);return true}catch(e){console.warn('Could not export Firestore denial log',e);return false}
+  };
   window.shadabRestReadDoc=readDoc;
   window.shadabRestWriteDoc=writeDoc;
   window.shadabRestWriteFields=writeDocFields;
@@ -7109,12 +7148,13 @@ window.saveAndWhatsAppSummaryDetail=async function(){
   }
   function allSalesmen(){
     const base=[];
-    try{document.querySelectorAll('#visitedBy option').forEach(o=>{if(o.value)base.push(o.value)})}catch(e){}
     try{if(typeof adminSalesmanNames==='function')base.push(...adminSalesmanNames())}catch(e){}
+    try{document.querySelectorAll('#visitedBy option').forEach(o=>{if(o.value)base.push(o.value)})}catch(e){}
     base.push('Chaudhry Asad','Chaudhry Wasim','Atif','Usman','Saad','Waqas');
     base.push(...getCustom());
-    const cur=String(localStorage.getItem('shadab_current_salesman_v1')||'').trim();if(cur)base.push(cur);
-    return [...new Set(base.map(x=>String(x||'').trim()).filter(Boolean))];
+    /* Do not append shadab_current_salesman_v1 blindly: older versions could
+       leave an Auth email/name there, which polluted every operational picker. */
+    const seen=new Set();return base.map(x=>String(x||'').trim()).filter(n=>{const k=n.toLowerCase();if(!n||seen.has(k))return false;seen.add(k);return true});
   }
   function esc2(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
   function refreshSalesmanDropdowns(){
@@ -20329,12 +20369,16 @@ body.section-modal-records main>.card#visitRecordsCard,
   }
   function localSalesmen(){
     const out=[];
-    const add=v=>{if(typeof v==='string'){if(v.trim())out.push(v.trim());return}if(v&&typeof v==='object'){const n=v.fullName||v.displayName||v.salesmanName||v.name||v.label;if(n&&String(n).trim())out.push(String(n).trim())}};
+    const add=v=>{const n=String(typeof v==='string'?v:(v?.fullName||v?.displayName||v?.salesmanName||v?.name||v?.label)||'').trim();if(n)out.push(n)};
+    /* Only explicit Master-managed roster keys belong in these selectors.
+       shadab_admin_profiles_v1 and the Firestore salesmen collection are
+       registered Auth accounts and must remain in the account-management list. */
     try{if(typeof window.adminSalesmanNames==='function')(window.adminSalesmanNames()||[]).forEach(add)}catch(_){}
-    try{const a=JSON.parse(localStorage.getItem('shadab_pharmacy_custom_salesmen_v1')||'[]');if(Array.isArray(a))a.forEach(add)}catch(_){}
-    try{const a=JSON.parse(localStorage.getItem('shadab_custom_salesmen_v1')||'[]');if(Array.isArray(a))a.forEach(add)}catch(_){}
-    try{const a=JSON.parse(localStorage.getItem('shadab_admin_profiles_v1')||'[]');if(Array.isArray(a))a.forEach(v=>{const st=String(v?.status||'Active').toLowerCase();if(!['deleted','disabled','inactive'].includes(st))add(v)})}catch(_){}
-    try{const sc=window.adminSchedules;if(sc&&typeof sc==='object')Object.keys(sc).forEach(add)}catch(_){}
+    for(const key of ['shadab_pharmacy_custom_salesmen_v1','shadab_custom_salesmen_v1']){
+      try{const a=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(a))a.forEach(add)}catch(_){}
+    }
+    /* Legacy schedule-only names remain available unless cached as registered Auth identities. */
+    try{const blocked=new Set();const a=JSON.parse(localStorage.getItem('shadab_admin_profiles_v1')||'[]');if(Array.isArray(a))a.forEach(v=>[v?.fullName,v?.displayName,v?.salesmanName,v?.name,v?.email,v?.id,v?.uid].forEach(x=>{if(String(x||'').trim())blocked.add(String(x).trim().toLowerCase())}));const sc=window.adminSchedules;if(sc&&typeof sc==='object')Object.keys(sc).forEach(n=>{const x=String(n||'').trim();if(x&&!x.includes('@')&&!blocked.has(x.toLowerCase()))out.push(x)})}catch(_){}
     return uniq(out);
   }
   function classifySelect(sel){
@@ -20410,7 +20454,7 @@ body.section-modal-records main>.card#visitRecordsCard,
   }
   function repaint(){
     const cities=activeCities();
-    const sales=uniq([...remoteSalesmen,...localSalesmen()]);
+    const sales=localSalesmen();
     ensureLocalCityKeys(uniq([...remoteCities,...localCityNames()]));
     document.querySelectorAll('select').forEach(sel=>{
       /* Never replace option nodes under a focused native SELECT: Android closes the
@@ -20439,23 +20483,12 @@ body.section-modal-records main>.card#visitRecordsCard,
     try{window.sp35RenderCityListNew?.()}catch(_){}
   }
   async function readDirectory(force=false){
-    /* Only Master may LIST the global salesmen collection under the published Rules.
-       Salesman screens use the already-hydrated master catalog + assigned names and
-       must not send a known-denied query on startup, focus, or UI mutation. */
+    /* The dropdown directory is a local, Master-managed roster. Do not issue a
+       Firestore LIST of /salesmen here: that collection is for registered Auth
+       accounts and its results must not be mixed into roster/registration fields.
+       Registered accounts are loaded only by their dedicated Control Center. */
     remoteCities=uniq([...remoteCities,...localCityNames()]);
-    remoteSalesmen=uniq([...remoteSalesmen,...localSalesmen()]);
-    if(!isMaster()){lastRefresh=Date.now();return;}
-    const hour=3600000;
-    if(!force&&lastRefresh&&Date.now()-lastRefresh<hour)return;
-    if(Date.now()<Number(window.__shadabFirestoreQuotaUntil||0))return;
-    if(typeof window.shadabRestReadCollection==='function'){
-      try{
-        const rows=await window.shadabRestReadCollection('salesmen');
-        const names=[];
-        (Array.isArray(rows)?rows:[]).forEach(r=>{const d=typeof r?.data==='function'?(r.data()||{}):(r?.data||{});const st=String(d.status||'Active').toLowerCase();if(['deleted','disabled','inactive'].includes(st))return;const n=String(d.fullName||d.displayName||d.salesmanName||d.name||d.label||'').trim();if(n)names.push(n)});
-        remoteSalesmen=uniq([...remoteSalesmen,...names]);
-      }catch(e){console.warn('Salesman directory refresh:',e)}
-    }
+    remoteSalesmen=[];
     lastRefresh=Date.now();
   }
   async function doRefresh(force=false){
@@ -20508,7 +20541,7 @@ body.section-modal-records main>.card#visitRecordsCard,
   try{observer.observe(document.body,{subtree:true,childList:true})}catch(_){}
 
   window.shadabGetMasterCities=()=>activeCities().slice();
-  window.shadabGetMasterSalesmen=()=>uniq([...remoteSalesmen,...localSalesmen()]);
+  window.shadabGetMasterSalesmen=()=>localSalesmen();
   window.shadabRefreshMasterDirectory=function(force=false){
     bindDirectoryWriters();
     return doRefresh(!!force);
