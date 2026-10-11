@@ -2442,7 +2442,7 @@ function closeTodayTaskPicker(){document.getElementById("todayTaskModal").classL
 function currentTodayTasks(){
  const day=todayISO(),salesman=currentSalesman(),bucket=taskBucketKey(salesman,day),saved=routeTasks[bucket];
  if(saved&&Array.isArray(saved.stores)&&saved.stores.length)return saved;
- const cfg=(typeof adminSchedules!=="undefined")?adminSchedules[salesman]:null;
+ const cfg=(typeof shadabAdminScheduleData==='function')?shadabAdminScheduleData(salesman):((typeof adminSchedules!=="undefined")?adminSchedules[salesman]:null);
  if(cfg){
   const area=cfg.area||"Sahiwal",dayName=new Date().toLocaleDateString("en-US",{weekday:"long"});
   const trs=Array.isArray(cfg.days?.[dayName])?cfg.days[dayName]:[];
@@ -3787,6 +3787,15 @@ function adminSalesmanNames(){
  [...SHADAB_BASE_SALESMAN_NAMES_V1,...customSalesmanNames(),...scheduled].forEach(v=>{const n=String(v||"").trim(),k=n.toLowerCase();if(n&&!seen.has(k)){seen.add(k);out.push(n)}});
  return out;
 }
+/* A saved schedule key can be 'SAAD' while the canonical roster option is 'Saad'.
+   Resolve by exact key first, then case-insensitively, without renaming/deleting data. */
+function shadabAdminScheduleKey(salesman){
+ const wanted=String(salesman||'').trim();if(!wanted||!adminSchedules||typeof adminSchedules!=='object')return '';
+ const keys=Object.keys(adminSchedules);
+ return keys.find(k=>k===wanted)||keys.find(k=>String(k||'').trim().toLowerCase()===wanted.toLowerCase())||'';
+}
+function shadabAdminScheduleData(salesman){const key=shadabAdminScheduleKey(salesman);return key?adminSchedules[key]:null;}
+window.shadabAdminScheduleKey=shadabAdminScheduleKey;window.shadabAdminScheduleData=shadabAdminScheduleData;
 function ensureSalesmanOptions(){
  const sel=document.getElementById("visitedBy");if(!sel)return;
  const current=String(sel.value||localStorage.getItem("shadab_current_salesman_v1")||"").trim();
@@ -3803,8 +3812,8 @@ function openComingNextSalesman(){ensureSalesmanOptions();renderComingNextSalesm
 function closeComingNextSalesman(){document.getElementById("comingNextSalesmanModal")?.classList.remove("show")}
 function renderComingNextSalesmanList(){
  ensureSalesmanOptions();const box=document.getElementById("comingNextSalesmanList"),current=document.getElementById("visitedBy")?.value||localStorage.getItem("shadab_current_salesman_v1")||"";const currentBox=document.getElementById("comingNextCurrent");
- if(currentBox){const d=adminSchedules[current]?normalizeAdminSchedule(current):null,day=new Date().toLocaleDateString("en-US",{weekday:"long"}),active=d?.assignments?.filter(a=>(a.days?.[day]||[]).length)||[],trs=active.flatMap(a=>a.days?.[day]||[]);currentBox.innerHTML=current?`<b>Selected: ${esc(current)}</b>${d?`<div class="admin-assignment-meta">${d.assignments.map(a=>`<span>📍 ${esc(a.area)}</span>`).join("")}<span>🧭 ${trs.length} today territor${trs.length===1?"y":"ies"}</span><span>🏪 ${active.reduce((n,a)=>n+(a.days?.[day]||[]).reduce((m,t)=>m+territoryStoreCount(a.area,t),0),0)} stores</span></div>`:`<div class="admin-assignment-meta"><span>No Admin assignment saved yet</span></div>`}`:"No salesman selected."}
- const names=adminSalesmanNames();box.innerHTML=names.length?names.map(n=>{const initials=n.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase(),d=adminSchedules[n]?normalizeAdminSchedule(n):null,areas=d?d.assignments.map(a=>a.area).join(" • "):"",stats=d?adminTotalStats(n):null;return `<button type="button" class="salesman-picker-row" onclick='selectComingNextSalesman(${JSON.stringify(n)})'><span class="salesman-picker-avatar">${esc(initials)}</span><span><b>${esc(n)}</b><small>${d?`${esc(areas)} • ${stats.territories} territories • ${stats.stores} stores`:'No Admin assignment yet'}</small></span></button>`}).join(""):"<div class='empty-state'>No salesman found.</div>"
+ if(currentBox){const d=shadabAdminScheduleData(current)?normalizeAdminSchedule(current):null,day=new Date().toLocaleDateString("en-US",{weekday:"long"}),active=d?.assignments?.filter(a=>(a.days?.[day]||[]).length)||[],trs=active.flatMap(a=>a.days?.[day]||[]);currentBox.innerHTML=current?`<b>Selected: ${esc(current)}</b>${d?`<div class="admin-assignment-meta">${d.assignments.map(a=>`<span>📍 ${esc(a.area)}</span>`).join("")}<span>🧭 ${trs.length} today territor${trs.length===1?"y":"ies"}</span><span>🏪 ${active.reduce((n,a)=>n+(a.days?.[day]||[]).reduce((m,t)=>m+territoryStoreCount(a.area,t),0),0)} stores</span></div>`:`<div class="admin-assignment-meta"><span>No Admin assignment saved yet</span></div>`}`:"No salesman selected."}
+ const names=adminSalesmanNames();box.innerHTML=names.length?names.map(n=>{const initials=n.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase(),d=shadabAdminScheduleData(n)?normalizeAdminSchedule(n):null,areas=d?d.assignments.map(a=>a.area).join(" • "):"",stats=d?adminTotalStats(n):null;return `<button type="button" class="salesman-picker-row" onclick='selectComingNextSalesman(${JSON.stringify(n)})'><span class="salesman-picker-avatar">${esc(initials)}</span><span><b>${esc(n)}</b><small>${d?`${esc(areas)} • ${stats.territories} territories • ${stats.stores} stores`:'No Admin assignment yet'}</small></span></button>`}).join(""):"<div class='empty-state'>No salesman found.</div>"
 }
 function selectComingNextSalesman(name){ensureSalesmanOptions();const sel=document.getElementById("visitedBy");if(!sel)return;sel.value=name;onSalesmanChanged();localStorage.setItem("shadab_current_salesman_v1",name);closeComingNextSalesman();openFieldVisitManager();toast(`${name} selected — Field Manager assignment loaded`)}
 function addSalesmanFromComingNext(){const input=document.getElementById("comingNextNewSalesman"),name=input?.value.trim()||"";if(!name)return toast("Enter salesman name");if(!addSalesman(name))return toast("Salesman already exists");input.value="";const sel=document.getElementById("visitedBy");if(sel)sel.value=name;onSalesmanChanged();renderComingNextSalesmanList();toast(`${name} added and selected`)}
@@ -3866,11 +3875,11 @@ async function adminLogin(){
 }
 async function logoutAdmin(){try{const a=auth();if(a&&a.currentUser?.email===ADMIN_FIREBASE_EMAIL)await a.signOut()}catch(e){}adminLoggedIn=false;showAdminLogin();toast("Master logged out")}
 function normalizeAdminSchedule(salesman){
- let d=adminSchedules[salesman];
+ const foundKey=shadabAdminScheduleKey(salesman);let d=foundKey?adminSchedules[foundKey]:null;
  if(!d){d={assignments:[{area:"Sahiwal",town:"",days:{},dayEnabled:{Monday:true,Tuesday:true,Wednesday:true,Thursday:true,Friday:false,Saturday:true,Sunday:true}}]};adminSchedules[salesman]=d;}
  if(!Array.isArray(d.assignments)){
    d={assignments:[{area:d.area||"Sahiwal",town:d.town||d.route||"",days:d.days||{},dayEnabled:d.dayEnabled||{}}]};
-   adminSchedules[salesman]=d;
+   adminSchedules[foundKey||salesman]=d;
  }
  d.assignments=d.assignments.map(a=>{
    const enabled=Object.assign({Monday:true,Tuesday:true,Wednesday:true,Thursday:true,Friday:false,Saturday:true,Sunday:true},a.dayEnabled||{});
@@ -4037,14 +4046,23 @@ function toggleAdminDayEnabled(day){
 function saveAdminSchedule(){
  const salesman=document.getElementById("adminSalesman").value;if(!salesman)return toast("Select a salesman");const data=normalizeAdminSchedule(salesman);updateCurrentAdminAreaFromUI();
  ADMIN_DAYS.forEach(day=>data.assignments[adminActiveAssignment].days[day]=[...document.querySelectorAll(`.admin-day-territory[data-day="${day}"]:checked`)].map(x=>x.value));
- adminSchedules[salesman]=data;saveAdminSchedules();if(document.getElementById("visitedBy")?.value===salesman)onSalesmanChanged();renderAdminUnified();markAdminSaved();toast(`${salesman} weekly plan saved`);
+ const scheduleKey=shadabAdminScheduleKey(salesman)||salesman;adminSchedules[scheduleKey]=data;saveAdminSchedules();if(document.getElementById("visitedBy")?.value?.trim().toLowerCase()===salesman.trim().toLowerCase())onSalesmanChanged();renderAdminUnified();markAdminSaved();toast(`${salesman} weekly plan saved`);
 }
 function renderAdminSavedSchedules(){const box=document.getElementById("adminSavedSchedules");if(!box)return;const names=Object.keys(adminSchedules);box.classList.add("admin-saved-modern");box.innerHTML=names.length?names.map(n=>{const d=normalizeAdminSchedule(n),stats=adminTotalStats(n),areas=d.assignments.map(a=>a.area).join(" • ");return `<div class="admin-saved-row"><div><b>${esc(n)}</b><small>${esc(areas||"No area")} • ${stats.areas} areas • ${stats.territories} territories • ${stats.stores} stores</small></div><div class="sp-saved-plan-actions"><button class="mini" onclick="editAdminSchedule('${esc(n)}')">Open</button><button class="mini danger" type="button" onclick="deleteSalesmanAssignment('${esc(n)}')">🗑 Delete Assignment</button></div></div>`}).join(""):"<div class=\"empty-state\">No saved salesman assignments yet.</div>"}
-function editAdminSchedule(name){const d=normalizeAdminSchedule(name);document.getElementById("adminSalesman").value=name;adminActiveAssignment=0;renderAdminUnified();}
+function editAdminSchedule(name){
+ const sel=document.getElementById("adminSalesman");
+ const requested=String(name||'').trim();
+ const option=sel?[...sel.options].find(o=>String(o.value||'').trim().toLowerCase()===requested.toLowerCase()):null;
+ const canonical=option?.value||requested;
+ normalizeAdminSchedule(canonical);
+ if(sel)sel.value=canonical;
+ adminActiveAssignment=0;renderAdminUnified();
+ try{document.getElementById('adminSalesman')?.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}
+}
 function promptAddSalesmanAdmin(){const name=prompt("Enter new salesman name:");if(!name)return;if(!addSalesman(name))return toast("Salesman already exists");const sel=document.getElementById("adminSalesman");sel.value=name;normalizeAdminSchedule(name);adminActiveAssignment=0;renderAdminUnified();toast(`${name} added`)}
 
 function applyScheduledTasksForSalesman(salesman,force=false){
- const data=adminSchedules[salesman];if(!data)return;const normalized=normalizeAdminSchedule(salesman),dayName=new Date().toLocaleDateString("en-US",{weekday:"long"});
+ const data=shadabAdminScheduleData(salesman);if(!data)return;const normalized=normalizeAdminSchedule(salesman),dayName=new Date().toLocaleDateString("en-US",{weekday:"long"});
  const activeAssignments=normalized.assignments.filter(a=>a.dayEnabled?.[dayName]!==false&&Array.isArray(a.days?.[dayName])&&a.days[dayName].length);const allTerritories=activeAssignments.flatMap(a=>a.days[dayName].map(t=>({area:a.area,territory:t,town:a.town||""})));const scheduled=storeDatabase.filter(s=>allTerritories.some(x=>x.area===s.area&&x.territory===s.territory));
  const key=taskBucketKey(salesman,todayISO()),old=routeTasks[key]||{stores:[]},oldByKey=new Map((old.stores||[]).map(x=>[x.key,x]));
  routeTasks[key]={area:activeAssignments[0]?.area||normalized.assignments[0]?.area||"",town:activeAssignments[0]?.town||normalized.assignments[0]?.town||"",territories:allTerritories.map(x=>x.territory),assignments:activeAssignments.map(a=>({area:a.area,town:a.town||"",territories:a.days[dayName]||[]})),stores:scheduled.map(s=>{const k=todayTaskStoreKey(s),prev=oldByKey.get(k);const aa=activeAssignments.find(a=>a.area===s.area);return {key:k,code:s.code,name:s.name,area:s.area,territory:s.territory,town:s.town||aa?.town||"",status:prev?.status||"Planned",visitId:prev?.visitId||"",person:prev?.person||"",time:prev?.time||"",followup:prev?.followup||"",notes:prev?.notes||""}}),salesman};saveRouteTasks();
@@ -4163,7 +4181,7 @@ function onSalesmanChanged(){
  ensureSalesmanOptions();
  const saved=shadabReadVisitRoute(salesman);
  const hasSavedContext=!!(saved&&String(saved.salesman||'').trim().toLowerCase()===String(salesman).trim().toLowerCase()&&saved.area);
- const d=adminSchedules[salesman];
+ const d=shadabAdminScheduleData(salesman);
  if(d){
    const normalized=normalizeAdminSchedule(salesman),day=new Date().toLocaleDateString("en-US",{weekday:"long"}),active=normalized.assignments.filter(a=>a.dayEnabled?.[day]!==false&&Array.isArray(a.days?.[day])&&a.days[day].length);
    const first=active[0]||normalized.assignments[0];
@@ -4216,7 +4234,7 @@ window.addEventListener("storage",e=>{
  if([ADMIN_SCHEDULE_KEY,TASK_KEY,"shadab_pharmacy_visits_v1"].includes(e.key)){
   try{adminSchedules=JSON.parse(localStorage.getItem(ADMIN_SCHEDULE_KEY)||"{}")}catch(_){}
   try{routeTasks=JSON.parse(localStorage.getItem(TASK_KEY)||"{}")}catch(_){}
-  const s=document.getElementById("visitedBy")?.value||"";if(s&&adminSchedules[s]){applyScheduledTasksForSalesman(s,false)}else{renderTodayTasks();updatePremiumDashboard()}
+  const s=document.getElementById("visitedBy")?.value||"";if(s&&shadabAdminScheduleData(s)){applyScheduledTasksForSalesman(s,false)}else{renderTodayTasks();updatePremiumDashboard()}
  }
 });
 /* ===== END: FIELD MANAGER AUTO-SYNC ===== */
@@ -4418,7 +4436,7 @@ function closeTaskNames(){document.getElementById("taskNamesModal").classList.re
 /* ===== START: APP INITIALIZATION ===== */
 loadTheme(); document.getElementById("filterDate").value=todayISO(); updateDbCount();
 (function(){ensureSalesmanOptions();const s=document.getElementById("visitedBy"),k="shadab_current_salesman_v1";if(s){const old=localStorage.getItem(k);if(old&&[...s.options].some(o=>o.value===old))s.value=old;s.addEventListener("change",onSalesmanChanged)}})();
-(function(){const s=document.getElementById("visitedBy"),salesman=s?.value||"";if(salesman&&adminSchedules[salesman])onSalesmanChanged();else{const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();if(saved&&saved.salesman===salesman&&saved.area){document.getElementById("area").value=saved.area;refreshTerritories(saved.territories||[])}else refreshTerritories()}})();renderRecords();updateStats();(function(){const s=document.getElementById("visitedBy")?.value;if(s&&adminSchedules[s])applyScheduledTasksForSalesman(s,false)})();updatePremiumDashboard();renderTodayTasks();showStoreSuggestions();
+(function(){const s=document.getElementById("visitedBy"),salesman=s?.value||"";if(salesman&&shadabAdminScheduleData(salesman))onSalesmanChanged();else{const saved=(()=>{try{return JSON.parse(localStorage.getItem("shadab_current_territories_v1")||"null")}catch(e){return null}})();if(saved&&saved.salesman===salesman&&saved.area){document.getElementById("area").value=saved.area;refreshTerritories(saved.territories||[])}else refreshTerritories()}})();renderRecords();updateStats();(function(){const s=document.getElementById("visitedBy")?.value;if(s&&shadabAdminScheduleData(s))applyScheduledTasksForSalesman(s,false)})();updatePremiumDashboard();renderTodayTasks();showStoreSuggestions();
 window.addEventListener("beforeunload",stopCamera);
 /* ===== END: APP INITIALIZATION ===== */
 </script><script id="shadab-lock-summary-and-restore-original-sync">
@@ -5425,6 +5443,39 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   let polling = false;
   let lastReadOnlyHydrationAt = 0;
   let applyingRemote = false;
+  /* A browser may have many tabs open for the same account. Share a per-UID
+     lease and cadence marker so every tab does not perform the same hourly REST pass. */
+  const SHADAB_POLL_TAB_ID = 'tab-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  const SHADAB_POLL_LEASE_MS = 5 * 60 * 1000;
+  function shadabPollIdentity(){ return encodeURIComponent(String(session?.uid || session?.email || 'anonymous').trim().toLowerCase()); }
+  function shadabReadTimestamp(key){ try { return Number(localStorage.getItem(key) || 0) || 0; } catch(e) { return 0; } }
+  function shadabAcquirePollLease(allowPendingUpload){
+    const now = Date.now(), ident = shadabPollIdentity();
+    const leaseKey = 'shadab_rest_poll_lease_v1_' + ident;
+    const autoKey = 'shadab_rest_last_auto_poll_at_v1_' + ident;
+    const readOnlyKey = 'shadab_rest_last_readonly_hydration_at_v1_' + ident;
+    if(allowPendingUpload){
+      const lastAuto = shadabReadTimestamp(autoKey);
+      /* 5-second tolerance accounts for timers firing slightly early. */
+      if(lastAuto && now - lastAuto < POLL_MS - 5000) return null;
+    }
+    try{
+      const existing = JSON.parse(localStorage.getItem(leaseKey) || 'null');
+      if(existing && Number(existing.expiresAt || 0) > now && existing.owner !== SHADAB_POLL_TAB_ID) return null;
+      localStorage.setItem(leaseKey, JSON.stringify({owner:SHADAB_POLL_TAB_ID, expiresAt:now + SHADAB_POLL_LEASE_MS}));
+      const check = JSON.parse(localStorage.getItem(leaseKey) || 'null');
+      if(check?.owner !== SHADAB_POLL_TAB_ID) return null;
+      /* Cadence markers are written only after a successful poll, not merely on attempt. */
+      return {key:leaseKey, owner:SHADAB_POLL_TAB_ID, autoKey, readOnlyKey, allowPendingUpload};
+    }catch(e){
+      /* Storage-blocked browsers keep the original single-tab behavior. */
+      return {key:'', owner:SHADAB_POLL_TAB_ID, autoKey:'', readOnlyKey:'', allowPendingUpload};
+    }
+  }
+  function shadabReleasePollLease(lease){
+    if(!lease?.key)return;
+    try{const existing=JSON.parse(localStorage.getItem(lease.key)||'null');if(existing?.owner===lease.owner)localStorage.removeItem(lease.key)}catch(e){}
+  }
 
   const safeToast = (m)=>{try{typeof toast==='function'?toast(m):console.log(m)}catch(e){console.log(m)}};
   const stamp = ()=>new Date().toISOString();
@@ -5508,9 +5559,43 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const firestoreResponseCache = new Map();
   let manualNetworkDepth=0;
   function normalizedFirestorePath(path){return String(path||'').split('#')[0].split('?')[0].replace(/^\/+|\/+$/g,'')}
+  /* Share read-only response cache across page reloads/tabs without consuming localStorage quota.
+     The 55-minute TTL remains shorter than the unchanged 60-minute automatic sync interval. */
+  const SHADAB_GET_CACHE_DB='shadab_firestore_get_cache_v1',SHADAB_GET_CACHE_STORE='responses',SHADAB_GET_CACHE_MAX_BODY=8*1024*1024;
+  let shadabGetCacheDbPromise=null;
+  const shadabGetCacheInvalidating=new Set();
+  function shadabOpenGetCacheDb(){
+    if(!('indexedDB' in window))return Promise.resolve(null);
+    if(!shadabGetCacheDbPromise)shadabGetCacheDbPromise=new Promise(resolve=>{
+      try{const req=indexedDB.open(SHADAB_GET_CACHE_DB,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(SHADAB_GET_CACHE_STORE))req.result.createObjectStore(SHADAB_GET_CACHE_STORE,{keyPath:'key'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null);req.onblocked=()=>resolve(null)}catch(e){resolve(null)}
+    });
+    return shadabGetCacheDbPromise;
+  }
+  function shadabPathInvalidating(path){const p=normalizedFirestorePath(path);return [...shadabGetCacheInvalidating].some(x=>x===p||x.startsWith(p+'/')||p.startsWith(x+'/'))}
+  async function shadabReadPersistentGet(key,path){
+    if(shadabPathInvalidating(path))return null;
+    const db=await shadabOpenGetCacheDb();if(!db)return null;
+    try{return await new Promise(resolve=>{const tx=db.transaction(SHADAB_GET_CACHE_STORE,'readonly'),req=tx.objectStore(SHADAB_GET_CACHE_STORE).get(key);req.onsuccess=()=>{const r=req.result;if(!r||Date.now()-Number(r.at||0)>=FIRESTORE_READ_CACHE_MS){if(r)shadabDeletePersistentGet(key).catch(()=>{});resolve(null)}else resolve(r)};req.onerror=()=>resolve(null)})}catch(e){return null}
+  }
+  async function shadabWritePersistentGet(rec){
+    if(!rec||!rec.key||typeof rec.body!=='string'||rec.body.length>SHADAB_GET_CACHE_MAX_BODY)return;
+    const db=await shadabOpenGetCacheDb();if(!db)return;
+    try{await new Promise(resolve=>{const tx=db.transaction(SHADAB_GET_CACHE_STORE,'readwrite');tx.objectStore(SHADAB_GET_CACHE_STORE).put(rec);tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve})}catch(e){}
+  }
+  async function shadabDeletePersistentGet(key){
+    const db=await shadabOpenGetCacheDb();if(!db)return;
+    try{await new Promise(resolve=>{const tx=db.transaction(SHADAB_GET_CACHE_STORE,'readwrite');tx.objectStore(SHADAB_GET_CACHE_STORE).delete(key);tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve})}catch(e){}
+  }
+  async function shadabInvalidatePersistentGets(path){
+    const changed=normalizedFirestorePath(path);if(changed)shadabGetCacheInvalidating.add(changed);
+    const db=await shadabOpenGetCacheDb();if(!db){if(changed)shadabGetCacheInvalidating.delete(changed);return}
+    try{await new Promise(resolve=>{const tx=db.transaction(SHADAB_GET_CACHE_STORE,'readwrite'),store=tx.objectStore(SHADAB_GET_CACHE_STORE),req=store.openCursor();req.onsuccess=()=>{const cur=req.result;if(!cur)return;const rec=cur.value||{},cached=normalizedFirestorePath(rec.path||'');if(!changed||cached===changed||cached.startsWith(changed+'/')||changed.startsWith(cached+'/'))cur.delete();cur.continue()};tx.oncomplete=resolve;tx.onerror=resolve;tx.onabort=resolve})}catch(e){}finally{if(changed)shadabGetCacheInvalidating.delete(changed)}
+  }
+  function clearPersistentFirestoreGetCache(){shadabInvalidatePersistentGets('').catch(()=>{})}
   function invalidateFirestoreReadCache(path){
     const changed=normalizedFirestorePath(path);
-    if(!changed){firestoreResponseCache.clear();catalogReadCache.clear();return}
+    if(!changed){firestoreResponseCache.clear();catalogReadCache.clear();clearPersistentFirestoreGetCache();return}
+    shadabInvalidatePersistentGets(changed).catch(()=>{});
     for(const key of firestoreResponseCache.keys()){
       const cachedPath=normalizedFirestorePath(key.slice(key.indexOf('|')+1));
       if(cachedPath===changed||cachedPath.startsWith(changed+'/')||changed.startsWith(cachedPath+'/'))firestoreResponseCache.delete(key);
@@ -5520,27 +5605,60 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function refreshQuotaStateFromStorage(){
     try{const q=JSON.parse(localStorage.getItem(FIRESTORE_QUOTA_STATE_KEY)||'null');if(q&&Number(q.until)>firestoreQuotaUntil){firestoreQuotaUntil=Number(q.until);firestoreQuotaBackoff=Math.max(firestoreQuotaBackoff,Number(q.backoff)||30000)}}catch(e){}
   }
+  /* Path-level network telemetry for the next forensic pass. This records only the Firestore
+     REST path/method/status/returned document count, never customer or visit payloads. */
+  const SHADAB_FS_REQUEST_LOG_KEY='shadab_firestore_request_forensics_v1';
+  function shadabRecordFsNetworkRequest(row){
+    try{
+      const rows=JSON.parse(localStorage.getItem(SHADAB_FS_REQUEST_LOG_KEY)||'[]');
+      const i=rows.findIndex(x=>x&&x.requestId===row.requestId);
+      if(i>=0)rows[i]=Object.assign({},rows[i],row);else rows.push(row);
+      const capped=rows.slice(-300);localStorage.setItem(SHADAB_FS_REQUEST_LOG_KEY,JSON.stringify(capped));
+      window.__shadabFirestoreRequestEvents=capped;
+    }catch(e){}
+  }
+  function shadabGetFirestoreRequestForensics(){
+    let rows=[];try{rows=JSON.parse(localStorage.getItem(SHADAB_FS_REQUEST_LOG_KEY)||'[]')}catch(e){}
+    const groups={};let readDocs=0,readRequests=0,writeRequests=0,denied=0,failed=0;
+    for(const r of rows){const k=String(r.method||'?')+' '+String(r.path||'?');const g=groups[k]||(groups[k]={method:r.method,path:r.path,networkRequests:0,successfulRequests:0,documentsReturned:0,knownDocumentResponses:0,denied:0,failed:0,lastAt:''});g.networkRequests++;if(Number(r.status)>=200&&Number(r.status)<300)g.successfulRequests++;if(Number(r.status)===403){g.denied++;denied++}if((r.method||'GET')==='GET'){readRequests++;if(r.documentsReturned!==null&&r.documentsReturned!==undefined&&Number.isFinite(Number(r.documentsReturned))){g.documentsReturned+=Number(r.documentsReturned);g.knownDocumentResponses++;readDocs+=Number(r.documentsReturned)}}else writeRequests++;if((Number(r.status)>=400)||String(r.status||'').includes('ERROR')){g.failed++;failed++}g.lastAt=String(r.at||g.lastAt)}
+    return {loggedRequests:rows.length,readNetworkRequests:readRequests,writeNetworkRequests:writeRequests,estimatedReturnedDocuments:readDocs,deniedRequests:denied,failedRequests:failed,byPath:Object.values(groups).sort((a,b)=>b.networkRequests-a.networkRequests),events:rows};
+  }
   async function fsFetch(path,options={},retry=true){
     const method=String(options?.method||'GET').toUpperCase();
     const rawPath=String(path||'');
     const basePath=normalizedFirestorePath(rawPath);
     const getKey=method==='GET' ? String(session?.uid||'')+'|'+rawPath : '';
+    const forceRead=options?.__shadabForce===true;
+    const fetchOptions=Object.assign({},options);delete fetchOptions.__shadabForce;
     refreshQuotaStateFromStorage();
-    if(getKey&&manualNetworkDepth===0){
+    if(getKey&&manualNetworkDepth===0&&!forceRead){
       const cached=firestoreResponseCache.get(getKey);
       if(cached&&Date.now()-cached.at<FIRESTORE_READ_CACHE_MS)return cached.response.clone();
       if(cached)firestoreResponseCache.delete(getKey);
+      if(firestoreGetInflight.has(getKey))return (await firestoreGetInflight.get(getKey)).clone();
+      const persisted=await shadabReadPersistentGet(getKey,basePath);
+      if(persisted){
+        try{const hit=new Response(persisted.body,{status:Number(persisted.status||200),headers:{'Content-Type':'application/json'}});firestoreResponseCache.set(getKey,{at:Number(persisted.at||Date.now()),response:hit.clone()});return hit}catch(e){}
+      }
       if(firestoreGetInflight.has(getKey))return (await firestoreGetInflight.get(getKey)).clone();
     }else if(getKey&&firestoreGetInflight.has(getKey))return (await firestoreGetInflight.get(getKey)).clone();
     if(Date.now()<firestoreQuotaUntil)throw quotaError();
     const request=(async()=>{
       const token=await ensureToken();
       const headers=Object.assign({'Authorization':'Bearer '+token,'Content-Type':'application/json'},options.headers||{});
-      const r=await fetch(FS_BASE+path,Object.assign({},options,{headers,cache:'no-store'}));
+      const requestStartedAt=Date.now();
+      const requestId=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9);
+      const requestEvent={requestId,at:new Date(requestStartedAt).toISOString(),method,path:basePath,email:String(session?.email||''),uid:String(session?.uid||''),status:'PENDING',durationMs:0,documentsReturned:null,responseChars:null};
+      const recordRequest=(extra={})=>{Object.assign(requestEvent,extra);shadabRecordFsNetworkRequest(requestEvent)};
+      let r;
+      try{r=await fetch(FS_BASE+path,Object.assign({},fetchOptions,{headers,cache:'no-store'}))}
+      catch(fetchError){recordRequest({status:'NETWORK_ERROR',durationMs:Date.now()-requestStartedAt,detail:String(fetchError?.message||fetchError)});throw fetchError}
+      recordRequest({status:r.status,durationMs:Date.now()-requestStartedAt,documentsReturned:r.status===404||r.status===403?0:null});
       if(r.status===403){
         let detail='';try{const body=await r.clone().json();detail=String(body?.error?.message||body?.error?.status||body?.message||'')}catch(_){}
         const deny={at:new Date().toISOString(),method,path:basePath,status:403,email:String((typeof window.shadabRestCurrentSession==='function'?(window.shadabRestCurrentSession()?.email||''):'')||''),detail};
         try{const key='shadab_firestore_rule_denials_v1';const rows=JSON.parse(localStorage.getItem(key)||'[]');rows.push(deny);localStorage.setItem(key,JSON.stringify(rows.slice(-100)));window.__shadabLastFirestoreRuleDenial=deny}catch(_){}
+        recordRequest({detail:String(detail||'')});
         console.warn('[Firestore RULE DENY] method='+method+' path='+basePath+' email='+deny.email+' detail='+detail);
         try{const nowMs=Date.now();if(nowMs-Number(window.__shadabRuleDenyToastAt||0)>15000){window.__shadabRuleDenyToastAt=nowMs;const msg='Firestore Rules denied: '+method+' '+basePath;if(typeof window.toast35==='function')window.toast35(msg);else if(typeof window.toast==='function')window.toast(msg)}}catch(_){}
       }
@@ -5556,12 +5674,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         try{window.__shadabFirestoreQuotaUntil=firestoreQuotaUntil}catch(_){}
         lastQuotaMessageAt=now;saveFirestoreQuotaState(detail);
         try{window.__shadabLastFirestoreQuota={status:429,detail,until:firestoreQuotaUntil,at:lastQuotaMessageAt,path:basePath}}catch(_){ }
+        recordRequest({detail:String(detail||'')});
         console.error('Firestore HTTP 429 detail:',detail||'(response body did not contain a message)','path:',basePath);
         const err=new Error('Firebase quota/rate limit exceeded (HTTP 429)'+(detail?': '+detail:'')+'. Background requests paused.');err.httpStatus=429;err.code='firestore/quota-exceeded';err.quotaCooldown=true;err.quotaDetail=detail;throw err;
       }
       if(method!=='GET'&&r.ok)invalidateFirestoreReadCache(basePath);
       if((r.ok||r.status===404)&&method==='GET'&&getKey&&manualNetworkDepth===0){
         try{firestoreResponseCache.set(getKey,{at:Date.now(),response:r.clone()})}catch(e){}
+      }
+      /* Keep a small IndexedDB response cache even for forced/manual reads so other tabs reuse
+         the fresh result; large collection responses stay memory-only. This creates no requests. */
+      if(r.ok&&method==='GET'){
+        try{
+          const body=await r.clone().text();let documentsReturned=null;
+          try{const parsed=JSON.parse(body);if(Array.isArray(parsed?.documents))documentsReturned=parsed.documents.length;else if(typeof parsed?.name==='string'&&parsed.name.includes('/documents/'))documentsReturned=1}catch(e){}
+          recordRequest({documentsReturned,responseChars:body.length});
+          if(getKey&&body.length<=SHADAB_GET_CACHE_MAX_BODY)await shadabWritePersistentGet({key:getKey,path:basePath,at:Date.now(),status:r.status,body});
+        }catch(e){}
       }
       if(r.ok && Date.now()>=firestoreQuotaUntil){firestoreQuotaBackoff=30000;firestoreQuotaUntil=0;try{window.__shadabFirestoreQuotaUntil=0}catch(_){};saveFirestoreQuotaState('')}
       return r;
@@ -5620,7 +5749,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const cacheable=CATALOG_PATHS.has(key),force=readOptions===true||readOptions?.force===true;
     if(cacheable&&!force){const hit=catalogReadCache.get(key);if(hit&&Date.now()-hit.at<CATALOG_CACHE_MS)return cloneReadValue(hit.value);const pending=catalogReadInflight.get(key);if(pending)return cloneReadValue(await pending)}
     const request=(async()=>{
-      const r=await fsFetch(key,{method:'GET'});
+      const r=await fsFetch(key,{method:'GET',__shadabForce:force});
       if(r.status===404){if(cacheable)catalogReadCache.set(key,{at:Date.now(),value:null});return null}
       const x=await parseResponse(r),value=objectFromDoc(x);
       if(cacheable)catalogReadCache.set(key,{at:Date.now(),value:cloneReadValue(value)});
@@ -5816,8 +5945,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
          called by the hourly poll, so auto and manual sync now share
          exactly one path. */
       if(typeof window.shadabSyncSalesmanNow==='function'){
-        const ok=await window.shadabSyncSalesmanNow();
-        return {ok:!!ok,mode:ok?'upload':'error'};
+        const result=await window.shadabSyncSalesmanNow('hourly-auto');
+        const ok=result===true || result?.ok===true;
+        return {ok,mode:ok?'upload':'error',...(ok?{}:{error:result?.error||new Error('Salesman cloud sync was not confirmed.')})};
       }
       throw new Error('Salesman sync engine is not loaded yet.');
     }catch(e){console.warn('Salesman auto sync:',e);return {ok:false,error:e};}
@@ -5826,7 +5956,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   async function pollRemote(options={}){
     /* Read-only hydration during login/reconnect; pending business data uploads hourly or via Manual Sync. */
     const allowPendingUpload=options?.allowPendingUpload!==false;
-    if(polling||!session)return; polling=true;
+    if(polling||!session)return {skipped:true, reason:'same-tab-poll-in-progress'};
+    const sharedLease=shadabAcquirePollLease(allowPendingUpload);
+    if(!sharedLease)return {skipped:true, reason:'another-tab-or-hourly-cadence'};
+    polling=true;
+    let pollSucceeded=false,pollError='';
     try{
       const masterSession=String(session.email||'').trim().toLowerCase()===ADMIN_EMAIL;
       /* The hourly pass is the only background business-data flush. Reconnect/startup
@@ -5847,7 +5981,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           const queued=await window.spV7FlushPending();if(queued===false||queued?.ok===false)throw new Error('Queued Admin changes are still pending.');
         }
       }
-      const [m,s]=await Promise.all([readDoc(MASTER_PATH,{force:true}),readDoc(SCHEDULE_PATH,{force:true})]);
+      /* First-load/reconnect hydration may reuse a still-valid persisted response; only the actual scheduled hourly pass forces fresh documents. Manual Sync bypasses the cache through manualNetworkDepth. */
+      const [m,s]=await Promise.all([readDoc(MASTER_PATH,{force:allowPendingUpload}),readDoc(SCHEDULE_PATH,{force:allowPendingUpload})]);
       let pendingMasterAfterRead=false,pendingScheduleAfterRead=false;
       try{pendingMasterAfterRead=masterSession&&!!JSON.parse(localStorage.getItem('shadab_pending_master_sync_v2')||'null')?.pending}catch(e){}
       try{pendingScheduleAfterRead=masterSession&&!!JSON.parse(localStorage.getItem('shadab_pending_schedule_sync_v2')||'null')?.pending}catch(e){}
@@ -5891,20 +6026,39 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(!salesmanSyncResult || salesmanSyncResult.ok!==false){
         if(Date.now()>=Number(window.__shadabFirestoreQuotaUntil||0))setStatus('firebase-connected','Cloud sync connected • auto sync every 1 hour');
       }
+      pollSucceeded=true;
     }catch(e){
+      pollError=String(e?.message||e||'Firebase poll failed');
       console.warn('REST sync',e);
       if(String(e?.message||'').includes('401')){clearSession();}
       if(Number(e?.httpStatus)===429 || String(e?.code||'').includes('quota-exceeded'))setStatus('firebase-error','Firebase quota exceeded (HTTP 429) • background requests paused');
       else if(Number(e?.httpStatus)===403)setStatus('firebase-error','Firebase permission denied (HTTP 403) • local data is safe');
       else setStatus('firebase-error','Cloud sync error • local data is safe');
-    }finally{polling=false}
+      return {ok:false,error:pollError};
+    }finally{
+      polling=false;
+      if(pollSucceeded){
+        const now=Date.now();lastReadOnlyHydrationAt=now;
+        try{if(sharedLease?.readOnlyKey)localStorage.setItem(sharedLease.readOnlyKey,String(now));if(sharedLease?.allowPendingUpload&&sharedLease?.autoKey)localStorage.setItem(sharedLease.autoKey,String(now))}catch(e){}
+      }
+      shadabReleasePollLease(sharedLease)
+    }
+    return {ok:pollSucceeded,error:pollError};
   }
   function startPolling(){
-    /* Multiple login/reconnect handlers must not restart the hourly timer or upload data immediately. */
+    /* Preserve the 3,600,000 ms hourly interval, but share startup hydration timing
+       across tabs/reloads; in-memory timestamps alone reset on every page refresh. */
     if(!pollTimer)pollTimer=setInterval(()=>pollRemote({allowPendingUpload:true}),POLL_MS);
-    if(Date.now()-lastReadOnlyHydrationAt>=3600000){lastReadOnlyHydrationAt=Date.now();pollRemote({allowPendingUpload:false})}
+    const ident=shadabPollIdentity();
+    const readOnlyKey='shadab_rest_last_readonly_hydration_at_v1_'+ident;
+    const persisted=shadabReadTimestamp(readOnlyKey);
+    const last=Math.max(lastReadOnlyHydrationAt,persisted);
+    if(Date.now()-last>=POLL_MS){
+      /* A failed/offline attempt must not suppress the next legitimate retry for an hour. */
+      pollRemote({allowPendingUpload:false});
+    }else lastReadOnlyHydrationAt=last;
   }
-  function stopPolling(){if(pollTimer){clearInterval(pollTimer);pollTimer=null}lastReadOnlyHydrationAt=0}
+  function stopPolling(){if(pollTimer){clearInterval(pollTimer);clearTimeout(pollTimer);pollTimer=null}lastReadOnlyHydrationAt=0}
   function setStatus(cls,msg){
     try{const dot=document.querySelector('#offlineBar .offline-dot'),tx=get('syncText');dot?.classList.remove('firebase-checking','firebase-connected','firebase-error');dot?.classList.add(cls);if(tx)tx.textContent=msg}catch(e){}
   }
@@ -6079,11 +6233,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.shadabRestReadDoc=readDoc;
   window.shadabRestWriteDoc=writeDoc;
   window.shadabRestWriteFields=writeDocFields;
+    window.shadabGetFirestoreRequestForensics=shadabGetFirestoreRequestForensics;
+  window.shadabDownloadFirestoreRequestForensics=()=>{try{const blob=new Blob([JSON.stringify(shadabGetFirestoreRequestForensics(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='shadab-firestore-request-forensics.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);return true}catch(e){console.warn('Could not export Firestore request forensics:',e);return false}};
   window.shadabFirebaseSyncEngine={
-    version:'hourly-manual-read-cache-v1',
+     version:'hourly-manual-read-cache-forensics-v2',
     autoSyncMs:POLL_MS,
     readCacheMs:FIRESTORE_READ_CACHE_MS,
-    clearReadCache:()=>{firestoreResponseCache.clear();catalogReadCache.clear()},
+    clearReadCache:()=>{firestoreResponseCache.clear();catalogReadCache.clear();clearPersistentFirestoreGetCache()},
     beginManualSync:()=>{manualNetworkDepth++;firestoreResponseCache.clear();catalogReadCache.clear();let ended=false;return ()=>{if(!ended){ended=true;manualNetworkDepth=Math.max(0,manualNetworkDepth-1)}}},
     status:()=>({autoSyncMs:POLL_MS,readCacheEntries:firestoreResponseCache.size,catalogCacheEntries:catalogReadCache.size,manualNetworkDepth,quotaUntil:firestoreQuotaUntil,quotaBackoffMs:firestoreQuotaBackoff})
   };
@@ -7453,7 +7609,7 @@ window.saveAndWhatsAppSummaryDetail=async function(){
       const initials=String(n).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
       let sub='No Admin assignment yet';
       try{
-        const d=adminSchedules[n]?normalizeAdminSchedule(n):null;
+        const d=shadabAdminScheduleData(n)?normalizeAdminSchedule(n):null;
         const areas=d?d.assignments.map(a=>a.area).join(' • '):'';
         const stats=d?adminTotalStats(n):null;
         if(d&&stats)sub=`${salesmanEsc(areas)} • ${stats.territories} territories • ${stats.stores} stores`;
@@ -9762,7 +9918,11 @@ body.dark .topbar{
     const id=kind==='salesman'?'spAddedSalesmanDashboard':'spAddedMasterDashboard';
     document.querySelectorAll('.sp-added-dash-view').forEach(v=>{v.classList.remove('show');v.setAttribute('aria-hidden','true')});
     const target=el(id);if(!target)return;target.classList.add('show');target.setAttribute('aria-hidden','false');target.scrollTop=0;window.scrollTo(0,0);
-    if(kind==='salesman'){renderSalesmen();renderFeatures();selectSpAddedSalesman(currentSales);setTimeout(()=>window.refreshSpAddedSalesmanLive?.(),80)} else {refreshSpAddedMaster();setTimeout(()=>window.fetchAllSalesmanData?.(),50);setTimeout(()=>window.syncMasterFieldDashboard?.(),80);}
+    if(kind==='salesman'){renderSalesmen();renderFeatures();selectSpAddedSalesman(currentSales);setTimeout(()=>window.refreshSpAddedSalesmanLive?.(),80)} else {
+      /* Opening the panel must not launch three full Firestore aggregate scans.
+         The dedicated Sync button below is the deliberate refresh action. */
+      try{const cached=window.__spMasterAggregateCache;if(cached&&typeof window.__renderSpMasterDashboard==='function')window.__renderSpMasterDashboard(cached)}catch(e){}
+    }
   };
   window.closeSpAddedDashboard=function(){closeSpAddedAction();document.querySelectorAll('.sp-added-dash-view').forEach(v=>{v.classList.remove('show');v.setAttribute('aria-hidden','true')})};
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSpAddedAction();closeSpAddedDashboard()}});
@@ -11365,7 +11525,7 @@ function savePdf(x){return new Promise((ok,bad)=>{try{const u=URL.createObjectUR
 window.downloadMasterReportPDF=async k=>{try{const x=makePdf(k);await savePdf(x);toast(`✓ PDF downloaded • ${x.count} records`);return true}catch(e){toast(`✕ PDF download failed • ${e?.message||e}`);return false}};
 window.shareMasterReportWhatsApp=async k=>{try{const x=makePdf(k);if(typeof navigator.share==='function'){let can=true;try{can=typeof navigator.canShare==='function'?navigator.canShare({files:[x.file]}):true}catch(_e){can=false}if(can){await navigator.share({title:'SHADAB PHARMACY',files:[x.file]});toast('✓ PDF shared — select WhatsApp');return true}}await savePdf(x);window.location.href='https://wa.me/'+WA+'?text='+encodeURIComponent('SHADAB PHARMACY • '+(meta[k]||'Report')+'\\nPDF downloaded: '+x.name+'\\nPlease attach the PDF.');toast('✓ PDF downloaded — WhatsApp opened');return true}catch(e){if(e?.name==='AbortError')return false;toast(`✕ WhatsApp/PDF failed • ${e?.message||e}`);return false}};
 const oldMetric=window.openMasterFieldMetric;if(typeof oldMetric==='function'&&!oldMetric.__premiumV2){const om=function(k){const r=oldMetric.apply(this,arguments);setTimeout(()=>{const w=document.querySelector('#spAddedActionBody .sp-master-report-btn.wa .i'),p=document.querySelector('#spAddedActionBody .sp-master-report-btn.pdf .i');if(w)w.innerHTML=I.whatsapp;if(p)p.innerHTML=I.pdf},30);return r};om.__premiumV2=true;window.openMasterFieldMetric=om;window.openSpAddedMasterAction=k=>window.openMasterFieldMetric(k==='report'?'quick-report':k==='route'?'quick-route':'quick-details')}
-icons();window.addEventListener('load',()=>setTimeout(icons,150));window.addEventListener('online',()=>setTimeout(()=>{if(root()?.classList.contains('show'))window.syncMasterFieldDashboard?.()},700),{passive:true});
+icons();window.addEventListener('load',()=>setTimeout(icons,150));/* Remote dashboard scans happen on scheduled/manual sync, not each network-online event. */
 })();
 </script>
 <!-- ===== END MASTER FIELD DASHBOARD — SINGLE CLEAN PREMIUM CONTROLLER V2 ===== -->
@@ -15631,18 +15791,15 @@ function hookMasterPoll(){
   /* Do not replace the poll interval. We only add the dashboard refresh after it. */
   window.pollRemote=async function(){
     const r=await original.apply(this,arguments);
-    try{if(String(session()?.email||'').toLowerCase()===ADMIN&&typeof window.rebuildMasterAggregate==='function')await window.rebuildMasterAggregate()}catch(e){console.warn('V29 dashboard aggregate poll',e)}
+    if(!r?.ok)return r;
+    try{if(String(session()?.email||'').toLowerCase()===ADMIN&&typeof window.rebuildMasterAggregate==='function')await window.rebuildMasterAggregate({force:true})}catch(e){console.warn('V29 dashboard aggregate poll',e)}
     return r;
   };
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',hookMasterPoll,{once:true});else setTimeout(hookMasterPoll,0);
 
-/* On Master opening the dashboard, always read current Firebase rows. */
-const oldOpenMaster=window.openSpAddedMasterDashboard;
-if(typeof oldOpenMaster==='function'&&!oldOpenMaster.__v29DashboardRefresh){
-  const wrapped=function(){const r=oldOpenMaster.apply(this,arguments);setTimeout(()=>{if(typeof window.rebuildMasterAggregate==='function')window.rebuildMasterAggregate().catch(()=>{})},120);return r};
-  wrapped.__v29DashboardRefresh=true;window.openSpAddedMasterDashboard=wrapped;
-}
+/* Master dashboard opening is deliberately read-silent. Refresh happens on the hourly
+   poll or the user-triggered Sync button, not on overlay transitions. */
 
 /* 5) Re-apply the selected salesman territory context whenever New Visit opens.
    The existing multi-select remains unrestricted: assigned territories are
@@ -15679,10 +15836,8 @@ window.addEventListener('shadab-field-visit-open',restoreVisitContext);
 })();
 
 /* Dashboard aggregate refresh follows the coordinated hourly cloud sync cadence. */
-(function(){
-  const run=()=>{try{if(norm(session()?.email)===ADMIN&&typeof window.rebuildMasterAggregate==='function')window.rebuildMasterAggregate().catch(()=>{})}catch(e){}};
-  setTimeout(run,3500);
-})();
+/* Removed the unconditional startup aggregate read. The REST hourly coordinator
+   already performs startup hydration once; its poll hook is the sole background aggregate trigger. */
 
 window.shadabV29Ready=true;
 })();
@@ -16355,7 +16510,7 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
       /* If this salesman has a real Admin assignment, existing logic keeps it.
          Otherwise restore the manually selected context. */
       const name=currentSalesman();
-      const hasAssignment=!!(window.adminSchedules && window.adminSchedules[name]);
+      const hasAssignment=!!(typeof window.shadabAdminScheduleData==='function'?window.shadabAdminScheduleData(name):(window.adminSchedules && window.adminSchedules[name]));
       if(!hasAssignment && saved?.salesman===name && saved.area){
         restore(saved);
       }else if(!hasAssignment && snap.salesman===name && snap.area){
@@ -16375,7 +16530,7 @@ console.info('SHADAB V37: four Master Today Task PDFs locked to main-dashboard T
       const result=oldSales.apply(this,arguments);
       setTimeout(()=>{
         const name=currentSalesman();
-        const hasAssignment=!!(window.adminSchedules && window.adminSchedules[name]);
+        const hasAssignment=!!(typeof window.shadabAdminScheduleData==='function'?window.shadabAdminScheduleData(name):(window.adminSchedules && window.adminSchedules[name]));
         if(hasAssignment)return;
         try{
           const saved=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -19264,7 +19419,7 @@ async function hydrateSalesmanVisitsFromCloudV12(uid){
 /* SINGLE MASTER DASHBOARD DATA CORE — REWRITTEN IN PLACE; NO DASHBOARD OWNER PATCHES
    Reads every visit_days partition + legacy visits, deduplicates by visit identity,
    and derives dashboard cards, Today's Tasks and reports from the same detailed rows. */
-async function rebuildMasterAggregateV12(options={}){
+async function rebuildMasterAggregateV12Core(options={}){
   const s=session();
   if(!s?.uid||!isAdmin())throw new Error('Master Firebase login is required to read all salesman visits.');
   if(!online())throw new Error('Offline: cannot verify live salesman visits.');
@@ -19316,6 +19471,7 @@ async function rebuildMasterAggregateV12(options={}){
     const m2=str.match(/^(\d{1,2})[-\s]([A-Za-z]{3,9})[-\s](\d{4})/);if(m2){const mon={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12}[m2[2].slice(0,3).toLowerCase()];if(mon)return m2[3]+'-'+String(mon).padStart(2,'0')+'-'+String(m2[1]).padStart(2,'0')}
     const n=Number(str);if(n>1e12)return pkISO(new Date(n));if(n>1e9)return pkISO(new Date(n*1000));
     const parsed=Date.parse(str);if(Number.isFinite(parsed)&&/[T ]/.test(str))return pkISO(new Date(parsed));
+    if(fallback && String(fallback).trim()!==str)return dateOf({date:fallback});
     return '';
   };
   const today=pkISO(new Date()),month=today.slice(0,7);
@@ -19374,7 +19530,7 @@ async function rebuildMasterAggregateV12(options={}){
     }catch(e){diagnostics.localPublishError=String(e?.message||e||'Local visit publish failed');console.warn('Master local visit publish:',e)}
   }
   const visitRows=new Map();
-  const keyOf=(v,uid)=>{const id=String(v?.id||v?.visitId||'').trim();return id?'id::'+id:'fallback::'+String(uid)+'::'+[dateOf(v),v?.time||v?.visitedAt||'',v?.visitedBy||v?.salesman||v?.salesmanName||'',v?.area||'',v?.territory||'',v?.store||v?.name||v?.storeName||'',v?.person||v?.contactPerson||''].join('|')};
+  const keyOf=(v,uid)=>{const id=String(v?.id||v?.visitId||'').trim();return id?'id::'+String(uid||'')+'::'+id:'fallback::'+String(uid)+'::'+[dateOf(v),v?.time||v?.visitedAt||'',v?.visitedBy||v?.salesman||v?.salesmanName||'',v?.area||'',v?.territory||'',v?.store||v?.name||v?.storeName||'',v?.person||v?.contactPerson||''].join('|')};
   const addVisit=(v,sourceUid,sourceKind,docDate='')=>{
     if(!v||typeof v!=='object')return;
     const date=dateOf(v,docDate);if(!date)return;
@@ -19398,8 +19554,14 @@ async function rebuildMasterAggregateV12(options={}){
     if(!merged.photoUrl&&other.photoUrl)merged.photoUrl=other.photoUrl;
     visitRows.set(key,{row:merged,priority:Math.max(priority,prior.priority)});
   };
-  // Read legacy arrays from every account, including Master; keep source compatibility.
-  for(const p of allAccounts){const d=dataMap.get(p.uid)||{};for(const v of Array.isArray(d.visits)?d.visits:[]){addVisit(v,p.uid,'legacy');diagnostics.legacyRows++;}}
+  // Read legacy arrays from each existing account document. All these rows come
+  // from the two collections already listed above; no additional Firestore read is added.
+  for(const p of allAccounts){
+    const d=dataMap.get(p.uid)||{};
+    for(const v of Array.isArray(d.visits)?d.visits:[]){addVisit(v,p.uid,'legacy');diagnostics.legacyRows++;}
+    const profile=profileMap.get(p.uid)||{};
+    for(const v of Array.isArray(profile.visits)?profile.visits:[]){addVisit(v,p.uid,'profile-legacy');diagnostics.profileLegacyRows=(diagnostics.profileLegacyRows||0)+1;}
+  }
   // Read every visit_days collection, including the Master session's own partition.
   const partitionResults=await Promise.all(allAccounts.map(async p=>{
     const path='user_data/'+encodeURIComponent(p.uid)+'/visit_days';
@@ -19455,10 +19617,15 @@ async function rebuildMasterAggregateV12(options={}){
   const localStores=typeof storeDatabase!=='undefined'&&Array.isArray(storeDatabase)?storeDatabase:[];
   const stores=localStores.length?localStores:cloudStores;
   const plannedMap=new Map();
+  const findCloudSchedule=p=>{
+    const wanted=[p?.name,p?.email,p?.uid].map(nameKey).filter(Boolean);
+    const key=Object.keys(cloudSched||{}).find(k=>wanted.includes(nameKey(k)));
+    return key?cloudSched[key]:{};
+  };
   for(const p of salesmen){
     const d=dataMap.get(p.uid)||{};const rt=d.routeTasks&&typeof d.routeTasks==='object'?d.routeTasks:{};
     Object.entries(rt).forEach(([bucket,day])=>{if(!day||!Array.isArray(day.stores))return;const parts=String(bucket).split('::');const bd=/^\d{4}-\d{2}-\d{2}$/.test(String(bucket))?String(bucket):String(parts[1]||day.date||'');if(bd!==today)return;day.stores.forEach(v=>{if(!v||typeof v!=='object')return;const row={...v,uid:p.uid,date:today,store:v.store||v.name||v.storeName||'—',visitedBy:String(v.visitedBy||v.salesman||day.salesman||p.name),status:String(v.status||'Planned')};const k=[p.uid,nameKey(row.area),nameKey(row.territory),nameKey(row.store)].join('::');plannedMap.set(k,row);});});
-    const cfg=cloudSched[p.name]||cloudSched[p.email]||{};const aa=Array.isArray(cfg.assignments)?cfg.assignments:((cfg.area||cfg.days)?[cfg]:[]);const dayName=new Date(today+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
+    const cfg=findCloudSchedule(p);const aa=Array.isArray(cfg.assignments)?cfg.assignments:((cfg.area||cfg.days)?[cfg]:[]);const dayName=new Date(today+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
     for(const a of aa){if(!a?.area||a.dayEnabled?.[dayName]===false||!Array.isArray(a.days?.[dayName]))continue;const wanted=new Set(a.days[dayName].map(nameKey));for(const st of stores){if(nameKey(st.area)!==nameKey(a.area)||!wanted.has(nameKey(st.territory)))continue;const row={key:String(st.code||st.name||'')+'::'+nameKey(st.area)+'::'+nameKey(st.territory),code:st.code,name:st.name,store:st.name,area:st.area,territory:st.territory,status:'Planned',date:today,visitedBy:p.name,uid:p.uid};const k=[p.uid,nameKey(row.area),nameKey(row.territory),nameKey(row.store)].join('::');if(!plannedMap.has(k))plannedMap.set(k,row);}}
   }
   const plannedToday=[...plannedMap.values()];
@@ -19472,20 +19639,38 @@ async function rebuildMasterAggregateV12(options={}){
   const selected=salesmen.find(p=>String(p.uid)===String(sel?.value))||salesmen.find(p=>nameKey(p.name)===nameKey(document.getElementById('adminSalesman')?.value))||salesmen[0];
   const taskVisits=todayVisits.filter(v=>!selected||String(v.uid)===String(selected.uid));
   const done=v=>!['planned','assigned','pending'].includes(nameKey(v.status||v.result));
-  const visited=taskVisits.filter(done),orders=visited.filter(v=>['order','order received','order done','order taken','with order','order_received','order_done'].includes(nameKey(v.status||v.orderStatus))||[v.order,v.orderReceived,v.orderTaken,v.hasOrder,v.isOrder,v.orderStatus].some(x=>x===true||['yes','true','received','done','order'].includes(nameKey(x))));
+  const isOrderVisit=v=>[v?.status,v?.result,v?.orderStatus,v?.orderResult,v?.orderType].some(x=>['order','order received','order done','order taken','with order','order_received','order_done'].includes(nameKey(x)))||[v?.order,v?.orderReceived,v?.orderTaken,v?.hasOrder,v?.isOrder,v?.orderStatus].some(x=>x===true||['yes','true','received','done','order'].includes(nameKey(x)));
+  const visited=taskVisits.filter(done),orders=visited.filter(isOrderVisit);
   const selectedPlans=plannedToday.filter(v=>!selected||String(v.uid)===String(selected.uid));const seen=new Set(visited.map(v=>nameKey(v.area)+'::'+nameKey(v.store||v.name||v.storeName)));const remaining=selectedPlans.filter(v=>!seen.has(nameKey(v.area)+'::'+nameKey(v.store||v.name||v.storeName)));
   const taskEls=root?.querySelectorAll('.sp-added-taskgrid .num');[selectedPlans.length,visited.length,orders.length,remaining.length].forEach((n,i)=>{if(taskEls?.[i])taskEls[i].textContent=String(n)});
-  if(sel&&!sel.dataset.spCanonicalTaskReader){sel.dataset.spCanonicalTaskReader='1';sel.addEventListener('change',()=>{const p=salesmen.find(x=>String(x.uid)===String(sel.value));if(!p)return;const tv=todayVisits.filter(v=>String(v.uid)===p.uid),doneRows=tv.filter(done),ord=doneRows.filter(v=>['order','order received','order done','order taken','with order','order_received','order_done'].includes(nameKey(v.status||v.orderStatus))||[v.order,v.orderReceived,v.orderTaken,v.hasOrder,v.isOrder,v.orderStatus].some(x=>x===true||['yes','true','received','done','order'].includes(nameKey(x))));const pl=plannedToday.filter(v=>String(v.uid)===p.uid),seenRows=new Set(doneRows.map(v=>nameKey(v.area)+'::'+nameKey(v.store||v.name||v.storeName))),rem=pl.filter(v=>!seenRows.has(nameKey(v.area)+'::'+nameKey(v.store||v.name||v.storeName)));const els=document.querySelectorAll('#spAddedMasterDashboard .sp-added-taskgrid .num');[pl.length,doneRows.length,ord.length,rem.length].forEach((n,i)=>{if(els[i])els[i].textContent=String(n)});try{localStorage.setItem('sp_v32_master_task_salesman',p.name)}catch(e){};});}
+  if(sel&&!sel.dataset.spCanonicalTaskReader){sel.dataset.spCanonicalTaskReader='1';sel.addEventListener('change',()=>{const p=salesmen.find(x=>String(x.uid)===String(sel.value));if(!p)return;const tv=todayVisits.filter(v=>String(v.uid)===p.uid),doneRows=tv.filter(done),ord=doneRows.filter(isOrderVisit);const pl=plannedToday.filter(v=>String(v.uid)===p.uid),seenRows=new Set(doneRows.map(v=>nameKey(v.area)+'::'+nameKey(v.store||v.name||v.storeName))),rem=pl.filter(v=>!seenRows.has(nameKey(v.area)+'::'+nameKey(v.store||v.name||v.storeName)));const els=document.querySelectorAll('#spAddedMasterDashboard .sp-added-taskgrid .num');[pl.length,doneRows.length,ord.length,rem.length].forEach((n,i)=>{if(els[i])els[i].textContent=String(n)});try{localStorage.setItem('sp_v32_master_task_salesman',p.name)}catch(e){};});}
   try{window.__renderSpMasterDashboard?.(cache)}catch(e){}
   return cache;
+}
+/* One aggregate read may list salesmen/user_data and each visit_days subcollection.
+   Coalesce concurrent callers and cache background callers for 55 minutes. Explicit
+   dashboard Sync passes publishLocal:true and always bypasses this cache. */
+let masterAggregateV12InFlight=null,masterAggregateV12LastResult=null,masterAggregateV12LastAt=0;
+async function rebuildMasterAggregateV12(options={}){
+  const force=options?.force===true||options?.publishLocal===true;
+  if(masterAggregateV12InFlight)return masterAggregateV12InFlight;
+  if(!force&&masterAggregateV12LastResult&&Date.now()-masterAggregateV12LastAt<55*60*1000)return masterAggregateV12LastResult;
+  const work=rebuildMasterAggregateV12Core(options);
+  masterAggregateV12InFlight=work;
+  try{
+    const result=await work;
+    masterAggregateV12LastResult=result;masterAggregateV12LastAt=Date.now();
+    return result;
+  }finally{if(masterAggregateV12InFlight===work)masterAggregateV12InFlight=null;}
 }
 window.rebuildMasterAggregate=rebuildMasterAggregateV12;
 window.fetchAllSalesmanData=()=>window.rebuildMasterAggregate();
 window.syncMasterFieldDashboard=async function(){
+  const releaseFreshRead=window.shadabFirebaseSyncEngine?.beginManualSync?.();
   const b=document.getElementById('spMasterDashboardSyncBtn'),st=document.getElementById('spMasterDashboardSyncStatus');if(b){b.disabled=true;b.classList.add('is-syncing')};if(st)st.textContent='Reading and verifying salesman visits + photos…';
-  try{const c=await rebuildMasterAggregateV12({publishLocal:true});const d=window.__shadabMasterVisitReadDiagnostics||{};if(st){if(d.localPublishError)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • local publish failed: '+d.localPublishError;else if(d.readFailures?.length)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+d.readFailures.length+' read errors';else if(d.localUnmapped||d.localWithoutId)st.textContent='PARTIAL SYNC • '+c.visits.length+' visits • '+(d.localPublished||0)+' local published • '+(d.localUnmapped||0)+' unassigned local • '+(d.localWithoutId||0)+' without ID';else st.textContent='Synced '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+(d.partitionDocs||0)+' day docs • local published '+(d.localPublished||0);}return c}
+  try{if(masterAggregateV12InFlight){try{await masterAggregateV12InFlight}catch(_){}}masterAggregateV12LastResult=null;masterAggregateV12LastAt=0;const c=await rebuildMasterAggregateV12({publishLocal:true,force:true});const d=window.__shadabMasterVisitReadDiagnostics||{};if(st){if(d.localPublishError)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • local publish failed: '+d.localPublishError;else if(d.readFailures?.length)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+d.readFailures.length+' read errors';else if(d.localUnmapped||d.localWithoutId)st.textContent='PARTIAL SYNC • '+c.visits.length+' visits • '+(d.localPublished||0)+' local published • '+(d.localUnmapped||0)+' unassigned local • '+(d.localWithoutId||0)+' without ID';else st.textContent='Synced '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+(d.partitionDocs||0)+' day docs • local published '+(d.localPublished||0);}return c}
   catch(e){if(st)st.textContent='SYNC FAILED • '+String(e?.message||e);console.error('Master Dashboard single-core sync failed:',e);try{window.toast35?.('✕ Master sync failed — '+(e?.message||e))}catch(_){};throw e}
-  finally{if(b){b.disabled=false;b.classList.remove('is-syncing')}}
+  finally{try{if(typeof releaseFreshRead==='function')releaseFreshRead()}catch(_){};if(b){b.disabled=false;b.classList.remove('is-syncing')}}
 };
 window.refreshSpAddedMaster=window.syncMasterFieldDashboard;
 
@@ -19505,7 +19690,9 @@ async function syncSalesmanFirebaseV12(reason){
   if(syncBusyV12)return syncBusyV12;
   syncBusyV12=(async()=>{
     const uid=String(s.uid);
+    const manualReconcile=/manual|reconcile|repair/i.test(String(reason||'manual-sync')) && !/hourly|auto|timer|poll/i.test(String(reason||''));
     let observedClearAt='';
+    let observedClearState=null;
     /* TRUE INCREMENTAL SYNC: after a verified first hydration, compare local day hashes
        before touching Firestore. If no day, photo, or queued cleanup changed, this run
        is a true no-op: zero Firestore reads and zero writes. */
@@ -19534,7 +19721,7 @@ async function syncSalesmanFirebaseV12(reason){
         const photoPending=earlyRows.some(v=>!v?.photoRef&&(v?.photoPending||(v?.photo&&String(v.photo).startsWith('data:image/'))));
         const cleanupKey='shadab_v12_cloud_photo_cleanup_at_v1_'+uid;
         let cleanupDue=true;try{cleanupDue=Date.now()-Number(localStorage.getItem(cleanupKey)||0)>=24*60*60*1000}catch(e){}
-        if(!changed&&!photoPending&&!cleanupDue){
+        if(!changed&&!photoPending&&!cleanupDue&&!manualReconcile){
           try{window.__shadabLastFirebaseSync={at:iso(),ok:true,skipped:true,reason:'no-local-changes',firestoreReads:0,firestoreWrites:0}}catch(e){}
           return {ok:true,skipped:true,reason:'no-local-changes'};
         }
@@ -19545,6 +19732,7 @@ async function syncSalesmanFirebaseV12(reason){
       const clearDoc=await readDoc('app_settings/masterData');
       const clearState=clearDoc?.masterDashboardClearState||clearDoc?.masterDashboardState||clearDoc?.dashboardClearState||null;
       observedClearAt=String(clearState?.clearedAt||'');
+      observedClearState=clearState;
       if(clearState?.clearedAt){
         const applyClear=window.__shadabApplyClearMarkerLocallyV12;
         if(typeof applyClear!=='function')throw new Error('Clear marker guard is not available');
@@ -19607,6 +19795,7 @@ async function syncSalesmanFirebaseV12(reason){
           visits=current;
           saveLocalVisitsNoPhotos();
           observedClearAt=latestClearAt;
+          observedClearState=latestClear;
           const newerMeta=getMeta(uid);
           if(newerMeta.dirtyDays&&typeof newerMeta.dirtyDays==='object'){
             const clearDay=latestClearAt.slice(0,10);
@@ -19634,6 +19823,75 @@ async function syncSalesmanFirebaseV12(reason){
       /* Rebuild groups after photo refs have been attached. */
       groups.clear();
       current.forEach(v=>{if(!v?.id)return;const d=dayOf(v);if(!groups.has(d))groups.set(d,[]);const x=clone(v)||{};delete x.photo;delete x.image;groups.get(d).push(x)});
+      const forceWriteDates=new Set();
+      const cloudAlreadyCompleteDates=new Set();
+      if(manualReconcile){
+        Object.keys(dirtyDays).forEach(d=>forceWriteDates.add(d));
+        const hashPrefix='shadab_v12_synced_day_hash_v1_'+uid+'_';
+        const knownHashDates=new Set();
+        try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)||'';if(!k.startsWith(hashPrefix))continue;const d=k.slice(hashPrefix.length);if(/^\d{4}-\d{2}-\d{2}$/.test(d))knownHashDates.add(d)}}catch(e){}
+        const auditDates=new Set([...groups.keys(),...knownHashDates,...Object.keys(dirtyDays)]);
+        const idOf=v=>String(v?.id||v?.visitId||'').trim();
+        let recoveredRows=false;
+        for(const date of auditDates){
+          /* A locally dirty day represents an intentional edit/delete. Do not merge
+             its cloud-only rows back into it; force its pending local state to upload. */
+          if(dirtyDays[date])continue;
+          const localRows=(groups.get(date)||[]).slice().sort((a,b)=>String(b.time||'').localeCompare(String(a.time||''))||String(b.id).localeCompare(String(a.id)));
+          if(!localRows.length&&!knownHashDates.has(date))continue;
+          const dayHashKey=hashPrefix+date;
+          let previousDaySig='';try{previousDaySig=localStorage.getItem(dayHashKey)||''}catch(e){}
+          const localSig=hash(JSON.stringify(localRows));
+          const localChanged=localRows.length>0 && localSig!==previousDaySig;
+          /* A changed local day is already queued for the normal upload below. Audit only
+             stable fingerprints (plus known hashes with a missing local day) to avoid a
+             full collection re-read for every edited day. */
+          if(localChanged)continue;
+          const path='user_data/'+encodeURIComponent(uid)+'/visit_days/'+date;
+          let cloudDoc;
+          try{cloudDoc=await readDoc(path)||{}}catch(e){throw new Error('Manual reconciliation could not verify cloud visit day '+date+'; upload paused to protect existing data: '+String(e?.message||e))}
+          let cloudRows=(Array.isArray(cloudDoc.visits)?cloudDoc.visits:[]).filter(v=>idOf(v));
+          if(observedClearState?.clearedAt && typeof window.__shadabKeepVisitAfterClearV12==='function'){
+            cloudRows=cloudRows.filter(v=>window.__shadabKeepVisitAfterClearV12(v,observedClearState));
+          }
+          const localMap=new Map(localRows.map(v=>[idOf(v),v]).filter(([id])=>id));
+          const cloudMap=new Map(cloudRows.map(v=>[idOf(v),v]).filter(([id])=>id));
+          const localIds=new Set(localMap.keys()),cloudIds=new Set(cloudMap.keys());
+          const sameIds=localIds.size===cloudIds.size && [...localIds].every(id=>cloudIds.has(id));
+          if(sameIds)continue;
+          const localMissingFromCloud=[...localIds].some(id=>!cloudIds.has(id));
+          const mergedMap=new Map();
+          for(const [id,v] of cloudMap)mergedMap.set(id,{...v,date:v?.date||date,uid:v?.uid||uid});
+          for(const [id,local] of localMap){
+            const cloud=cloudMap.get(id);
+            if(!cloud){mergedMap.set(id,{...local,date:local?.date||date,uid:local?.uid||uid});continue;}
+            const merged=localChanged?{...cloud,...local}:{...local,...cloud};
+            if(local?.photo)merged.photo=local.photo;
+            if(local?.photoRef&&!merged.photoRef)merged.photoRef=local.photoRef;
+            if(local?.pdfHandledAt&&!merged.pdfHandledAt)merged.pdfHandledAt=local.pdfHandledAt;
+            mergedMap.set(id,merged);
+          }
+          const mergedRows=[...mergedMap.values()];
+          const withoutDate=current.filter(v=>dayOf(v)!==date);
+          const nextCurrent=withoutDate.concat(mergedRows);
+          current.length=0;for(const restored of nextCurrent)current.push(restored);
+          visits=current;
+          recoveredRows=true;
+          if(localMissingFromCloud || localChanged)forceWriteDates.add(date);
+          else cloudAlreadyCompleteDates.add(date);
+        }
+        if(recoveredRows){
+          saveLocalVisitsNoPhotos();
+          groups.clear();
+          current.forEach(v=>{if(!v?.id)return;const d=dayOf(v);if(!groups.has(d))groups.set(d,[]);const x=clone(v)||{};delete x.photo;delete x.image;groups.get(d).push(x)});
+          /* Cloud already contains these merged days; align only the local fingerprint.
+             The regular writer below will still write any locally missing/changed IDs. */
+          for(const date of cloudAlreadyCompleteDates){
+            const rows=(groups.get(date)||[]).slice().sort((a,b)=>String(b.time||'').localeCompare(String(a.time||''))||String(b.id).localeCompare(String(a.id)));
+            try{localStorage.setItem(hashPrefix+date,hash(JSON.stringify(rows)))}catch(e){}
+          }
+        }
+      }
       let changedDayWrites=0;
       for(const date of writeDates){
         const rows=groups.get(date)||[];
@@ -19642,7 +19900,7 @@ async function syncSalesmanFirebaseV12(reason){
         const daySig=hash(JSON.stringify(rows));
         const dayHashKey='shadab_v12_synced_day_hash_v1_'+uid+'_'+date;
         let previousDaySig='';try{previousDaySig=localStorage.getItem(dayHashKey)||''}catch(e){}
-        if(daySig===previousDaySig){delete dirtyDays[date];continue;}
+        if(daySig===previousDaySig&&!forceWriteDates.has(date)){delete dirtyDays[date];continue;}
         await writeDoc('user_data/'+encodeURIComponent(uid)+'/visit_days/'+date,{uid,date,visits:rows,count:rows.length,updatedAt:iso(),version:V12});
         try{localStorage.setItem(dayHashKey,daySig)}catch(e){}
         changedDayWrites++;
@@ -19652,6 +19910,7 @@ async function syncSalesmanFirebaseV12(reason){
       /* Keep the parent document lean: NO visits[] field. Use a field-scoped PATCH
          instead of reading and rewriting the entire parent document on every sync. */
       const parent={uid,syncSchemaVersion:V12,visitStore:{version:V12,mode:'visit_days'}};
+      parent.routeTasks=typeof routeTasks!=='undefined'?clone(routeTasks)||{}:{};
       const byDate={},storesByMonth={};
       current.forEach(v=>{const d=dayOf(v);byDate[d]=(byDate[d]||0)+1;const m=d.slice(0,7);if(!storesByMonth[m])storesByMonth[m]=[];const k=String(v.code||'')+'::'+String(v.area||'')+'::'+norm(v.store||v.name);if(!storesByMonth[m].includes(k))storesByMonth[m].push(k)});
       const dates=Object.keys(byDate).sort();if(dates.length>730){const keep=new Set(dates.slice(-730));for(const k of Object.keys(byDate))if(!keep.has(k))delete byDate[k];}
@@ -19679,7 +19938,7 @@ async function syncSalesmanFirebaseV12(reason){
       saveLocalVisitsNoPhotos();
       try{window.__shadabLastFirebaseSync={at:iso(),ok:true,uid,visitDaysChanged:changedDayWrites,parentChanged:parentWriteCount,photoMode:'persistent-indexeddb+firestore-no-auto-expiry',verified:'firestore-write-ack',cloudToday:null,localToday};window.shadabFirebaseOnlySyncStatus={uid,at:iso(),visitDaysChanged:changedDayWrites,parentChanged:parentWriteCount,photos:current.filter(v=>v.photoRef).length,verified:'firestore-write-ack',localToday}}catch(e){}
       try{window.updateStats?.();window.updatePremiumDashboard?.();window.renderRecords?.();window.renderTodayTasks?.()}catch(e){}
-      return {ok:true,cloudToday:cloudCount,localToday:localToday};
+      return {ok:true,localToday:localToday};
     }finally{syncBusyV12=null}
   })();
   return syncBusyV12;
@@ -19801,10 +20060,11 @@ window.addEventListener('load',()=>setTimeout(()=>bootV12().catch(()=>{}),900));
 /* Final public sync owner. Manual Sync and the existing immediate-after-visit wrapper now
    use this single authoritative transport. */
 window.__v12PreviousSync=window.shadabSyncSalesmanNow;
-window.shadabSyncSalesmanNow=syncSalesmanFirebaseV12;
-window.sp35SyncNow=syncSalesmanFirebaseV12;
-window.sp35SyncNew=syncSalesmanFirebaseV12;
-window.sp35ManualServerRefresh=syncSalesmanFirebaseV12;
+const callV12ManualSync=(reason)=>syncSalesmanFirebaseV12(typeof reason==='string'&&reason.trim()?reason:'manual-sync');
+window.shadabSyncSalesmanNow=callV12ManualSync;
+window.sp35SyncNow=callV12ManualSync;
+window.sp35SyncNew=callV12ManualSync;
+window.sp35ManualServerRefresh=callV12ManualSync;
 
 /* Export a forensic/transport status object for QA without changing UI. */
 window.__shadabVisitTransportV12={
@@ -22357,7 +22617,8 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
   async function readEntryMap(force){
     if(!force&&mapCache&&Date.now()-mapCacheAt<300000)return mapCache;
     let separate=null,master=null;
-    try{separate=await baseReadDoc(SEPARATE)}catch(e){mapReadError=String(e?.message||e)}
+    /* Existing deployed Rules deny this legacy ledger path. Avoid a guaranteed-denied GET on every operation; use the embedded Master Data marker and profile fallback already supported below. */
+    separate=null;
     try{master=await baseReadDoc(MASTER)}catch(e){mapReadError=String(e?.message||e)}
     const a=separate?.entries&&typeof separate.entries==='object'?separate.entries:{};
     const b=master?.[EMBEDDED]&&typeof master[EMBEDDED]==='object'?master[EMBEDDED]:{};
@@ -22661,7 +22922,7 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
   }
   /* These are user-click/manual entry points only. Automatic hourly sync functions
      remain unchanged and continue using the shared read cache. */
-  ['manualSync','sp35ManualSyncFinal','sp35ManualSync','shadabManualSyncNow'].forEach(wrapManual);
+  ['manualSync','sp35ManualSyncFinal','sp35ManualSync','shadabManualSyncNow','sp35ManualServerRefresh','shadabSyncSalesmanNow','syncMasterFieldDashboard'].forEach(wrapManual);
   window.shadabFirebaseSyncEngine.status().manualWrappedFunctions=Array.from(wrappedNames);
   console.info('[Shadab Firebase Sync Engine] active: 55-minute GET cache; writes invalidate affected paths; manual sync bypasses cache; hourly interval preserved.');
 })();
@@ -22737,3 +22998,62 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
 })();
 </script>
 
+
+
+<script id="shadab-master-live-dashboard-engine-v13">
+/*
+ SHADAB PHARMACY — MASTER LIVE DASHBOARD ENGINE V13
+ One authoritative refresh entry point. Manual Sync bypasses Firestore GET caches,
+ drops the in-memory aggregate cache, waits for any previous aggregate to finish,
+ and then invokes the existing visit_days + legacy + local reconciliation core.
+ Background auto-sync cadence remains exactly one hour. Firebase Rules are unchanged.
+*/
+(function(){
+  'use strict';
+  if(window.__SHADAB_MASTER_LIVE_DASHBOARD_V13__) return;
+  const engine=window.shadabFirebaseSyncEngine;
+  const sync=window.syncMasterFieldDashboard;
+  if(typeof sync!=='function'||!engine||typeof engine.beginManualSync!=='function'){
+    console.error('[Master Live Dashboard V13] Required existing Firebase/dashboard engine missing; no fallback data was fabricated.');
+    return;
+  }
+  const wrapped=async function(){
+    const release=engine.beginManualSync();
+    const button=document.getElementById('spMasterDashboardSyncBtn');
+    const status=document.getElementById('spMasterDashboardSyncStatus');
+    try{
+      if(button){button.disabled=true;button.classList.add('is-syncing')}
+      if(status)status.textContent='Fresh Firebase read • reconciling salesman visits…';
+      /* Drop only volatile in-memory aggregate state. Persistent visit data is untouched. */
+      try{if(typeof masterAggregateV12InFlight!=='undefined'&&masterAggregateV12InFlight)await masterAggregateV12InFlight}catch(_){ }
+      try{if(typeof masterAggregateV12LastResult!=='undefined')masterAggregateV12LastResult=null}catch(_){ }
+      try{if(typeof masterAggregateV12LastAt!=='undefined')masterAggregateV12LastAt=0}catch(_){ }
+      const result=await sync.apply(this,arguments);
+      const d=window.__shadabMasterVisitReadDiagnostics||{};
+      const c=window.__spMasterAggregateCache||{};
+      window.__shadabMasterLiveDashboardV13Diagnostics={
+        at:new Date().toISOString(),ok:!d.readFailures?.length,
+        salesmen:c.salesmen?.length||0,visits:c.visits?.length||0,
+        visitDays:d.partitionDocs||0,partitionEntries:d.partitionEntries||0,
+        readFailures:d.readFailures||[],localPublishError:d.localPublishError||'',
+        autoSyncMs:engine.status().autoSyncMs,source:'Firestore visit_days + legacy arrays + local rows',
+        firebaseEndToEndVerified:false
+      };
+      return result;
+    } catch(e){
+      window.__shadabMasterLiveDashboardV13Diagnostics={at:new Date().toISOString(),ok:false,error:String(e?.message||e),autoSyncMs:engine.status().autoSyncMs,firebaseEndToEndVerified:false};
+      throw e;
+    } finally {
+      release();
+      if(button){button.disabled=false;button.classList.remove('is-syncing')}
+    }
+  };
+  wrapped.__shadabMasterLiveDashboardV13=true;
+  wrapped.__shadabMasterLiveDashboardOriginal=sync;
+  window.syncMasterFieldDashboard=wrapped;
+  window.refreshSpAddedMaster=wrapped;
+  window.__SHADAB_MASTER_LIVE_DASHBOARD_V13__=true;
+  window.shadabMasterLiveDashboardDiagnostics=()=>window.__shadabMasterLiveDashboardV13Diagnostics||{installed:true,ran:false,autoSyncMs:engine.status().autoSyncMs,firebaseEndToEndVerified:false};
+  console.info('[Master Live Dashboard V13] active; manual refresh bypasses stale GET cache and re-runs the existing authoritative aggregate.');
+})();
+</script>
