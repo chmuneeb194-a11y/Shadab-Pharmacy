@@ -5467,26 +5467,43 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
 
   const FIRESTORE_QUOTA_STATE_KEY='shadab_firestore_quota_state_v1';
-  function loadFirestoreQuotaState(){try{const q=JSON.parse(localStorage.getItem(FIRESTORE_QUOTA_STATE_KEY)||'null');return q&&Number(q.until)>Date.now()?q:{until:0,backoff:900000,lastMessage:''}}catch(e){return {until:0,backoff:900000,lastMessage:''}}}
+  function loadFirestoreQuotaState(){try{const q=JSON.parse(localStorage.getItem(FIRESTORE_QUOTA_STATE_KEY)||'null');return q&&Number(q.until)>Date.now()?q:{until:0,backoff:30000,lastMessage:''}}catch(e){return {until:0,backoff:30000,lastMessage:''}}}
   const initialFirestoreQuotaState=loadFirestoreQuotaState();
-  let firestoreQuotaUntil=Number(initialFirestoreQuotaState.until)||0,firestoreQuotaBackoff=Math.max(900000,Number(initialFirestoreQuotaState.backoff)||900000),lastQuotaMessageAt=0;
+  let firestoreQuotaUntil=Number(initialFirestoreQuotaState.until)||0,firestoreQuotaBackoff=Math.max(30000,Number(initialFirestoreQuotaState.backoff)||30000),lastQuotaMessageAt=0;
   function saveFirestoreQuotaState(detail){try{localStorage.setItem(FIRESTORE_QUOTA_STATE_KEY,JSON.stringify({until:firestoreQuotaUntil,backoff:firestoreQuotaBackoff,lastMessage:String(detail||'').slice(0,500),savedAt:Date.now()}))}catch(e){}}
-  /* All tabs running this version consult the same persisted cooldown before a request. */
-  function syncFirestoreQuotaStateFromStorage(){try{const q=JSON.parse(localStorage.getItem(FIRESTORE_QUOTA_STATE_KEY)||'null');if(q&&Number(q.until)>firestoreQuotaUntil){firestoreQuotaUntil=Number(q.until);firestoreQuotaBackoff=Math.max(900000,Number(q.backoff)||900000);}}catch(e){}}
-  try{window.addEventListener('storage',function(ev){if(ev&&ev.key===FIRESTORE_QUOTA_STATE_KEY)syncFirestoreQuotaStateFromStorage()})}catch(e){}
-  function quotaError(){syncFirestoreQuotaStateFromStorage();const wait=Math.max(1,Math.ceil((firestoreQuotaUntil-Date.now())/1000));const e=new Error('Firebase quota cooldown active (HTTP 429). Background requests paused for '+wait+' seconds; stored cooldown survives reload and is shared across tabs.');e.httpStatus=429;e.code='firestore/quota-exceeded';e.quotaCooldown=true;return e;}
-  /* Coalesce only simultaneous GETs to the same document/query. This prevents duplicate
-     startup hydrators from issuing the exact same billable read at once, while keeping
-     later/manual reads fresh and leaving all writes untouched. */
+  function quotaError(){const wait=Math.max(1,Math.ceil((firestoreQuotaUntil-Date.now())/1000));const e=new Error('Firebase quota cooldown active (HTTP 429). Background requests paused for '+wait+' seconds; stored cooldown survives reload.');e.httpStatus=429;e.code='firestore/quota-exceeded';e.quotaCooldown=true;return e;}
+  /* Central Firestore read budget: cache successful GET responses for 55 minutes,
+     coalesce simultaneous reads, and invalidate affected paths after successful writes.
+     Manual Sync explicitly bypasses this cache so the user can request a fresh round-trip. */
+  const FIRESTORE_READ_CACHE_MS=55*60*1000;
   const firestoreGetInflight = new Map();
-  async function fsFetch(path,options={},retry=true){
-    syncFirestoreQuotaStateFromStorage();
-    const method=String(options?.method||'GET').toUpperCase();
-    const getKey=method==='GET' ? String(session?.uid||'')+'|'+String(path) : '';
-    if(getKey && firestoreGetInflight.has(getKey)){
-      const shared=await firestoreGetInflight.get(getKey);
-      return shared.clone();
+  const firestoreResponseCache = new Map();
+  let manualNetworkDepth=0;
+  function normalizedFirestorePath(path){return String(path||'').split('#')[0].split('?')[0].replace(/^\/+|\/+$/g,'')}
+  function invalidateFirestoreReadCache(path){
+    const changed=normalizedFirestorePath(path);
+    if(!changed){firestoreResponseCache.clear();catalogReadCache.clear();return}
+    for(const key of firestoreResponseCache.keys()){
+      const cachedPath=normalizedFirestorePath(key.slice(key.indexOf('|')+1));
+      if(cachedPath===changed||cachedPath.startsWith(changed+'/')||changed.startsWith(cachedPath+'/'))firestoreResponseCache.delete(key);
     }
+    for(const key of catalogReadCache.keys())if(key===changed||key.startsWith(changed+'/')||changed.startsWith(key+'/'))catalogReadCache.delete(key);
+  }
+  function refreshQuotaStateFromStorage(){
+    try{const q=JSON.parse(localStorage.getItem(FIRESTORE_QUOTA_STATE_KEY)||'null');if(q&&Number(q.until)>firestoreQuotaUntil){firestoreQuotaUntil=Number(q.until);firestoreQuotaBackoff=Math.max(firestoreQuotaBackoff,Number(q.backoff)||30000)}}catch(e){}
+  }
+  async function fsFetch(path,options={},retry=true){
+    const method=String(options?.method||'GET').toUpperCase();
+    const rawPath=String(path||'');
+    const basePath=normalizedFirestorePath(rawPath);
+    const getKey=method==='GET' ? String(session?.uid||'')+'|'+rawPath : '';
+    refreshQuotaStateFromStorage();
+    if(getKey&&manualNetworkDepth===0){
+      const cached=firestoreResponseCache.get(getKey);
+      if(cached&&Date.now()-cached.at<FIRESTORE_READ_CACHE_MS)return cached.response.clone();
+      if(cached)firestoreResponseCache.delete(getKey);
+      if(firestoreGetInflight.has(getKey))return (await firestoreGetInflight.get(getKey)).clone();
+    }else if(getKey&&firestoreGetInflight.has(getKey))return (await firestoreGetInflight.get(getKey)).clone();
     if(Date.now()<firestoreQuotaUntil)throw quotaError();
     const request=(async()=>{
       const token=await ensureToken();
@@ -5497,20 +5514,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         let retryAfter=0,detail='';
         try{retryAfter=Number(r.headers?.get?.('Retry-After')||0)*1000}catch(e){}
         try{const body=await r.clone().json();detail=String(body?.error?.message||body?.error?.status||body?.message||'')}catch(e){}
-        /* Concurrent requests may all return 429. Only the first response starts the
-           cooldown; later responses must not reset the timer back to 900 seconds. */
-        syncFirestoreQuotaStateFromStorage();
-        const quotaNow=Date.now();
-        if(!(firestoreQuotaUntil>quotaNow)){
-          firestoreQuotaUntil=quotaNow+Math.max(retryAfter,900000);
-          firestoreQuotaBackoff=900000;
-          saveFirestoreQuotaState(detail);
-        }
+        const now=Date.now(),wasAlreadyCooling=firestoreQuotaUntil>now;
+        /* Concurrent 429s must not keep resetting/lengthening the same cooldown. */
+        if(!wasAlreadyCooling){firestoreQuotaUntil=now+Math.max(retryAfter,firestoreQuotaBackoff);firestoreQuotaBackoff=Math.min(Math.max(firestoreQuotaBackoff*2,30000),900000)}
+        else if(retryAfter>firestoreQuotaUntil-now)firestoreQuotaUntil=now+retryAfter;
         try{window.__shadabFirestoreQuotaUntil=firestoreQuotaUntil}catch(_){}
-        lastQuotaMessageAt=quotaNow;
-        try{window.__shadabLastFirestoreQuota={status:429,detail,until:firestoreQuotaUntil,at:lastQuotaMessageAt,path:String(path).split('?')[0]}}catch(_){ }
-        console.error('Firestore HTTP 429 detail:',detail||'(response body did not contain a message)','path:',String(path).split('?')[0]);
+        lastQuotaMessageAt=now;saveFirestoreQuotaState(detail);
+        try{window.__shadabLastFirestoreQuota={status:429,detail,until:firestoreQuotaUntil,at:lastQuotaMessageAt,path:basePath}}catch(_){ }
+        console.error('Firestore HTTP 429 detail:',detail||'(response body did not contain a message)','path:',basePath);
         const err=new Error('Firebase quota/rate limit exceeded (HTTP 429)'+(detail?': '+detail:'')+'. Background requests paused.');err.httpStatus=429;err.code='firestore/quota-exceeded';err.quotaCooldown=true;err.quotaDetail=detail;throw err;
+      }
+      if(method!=='GET'&&r.ok)invalidateFirestoreReadCache(basePath);
+      if((r.ok||r.status===404)&&method==='GET'&&getKey&&manualNetworkDepth===0){
+        try{firestoreResponseCache.set(getKey,{at:Date.now(),response:r.clone()})}catch(e){}
       }
       if(r.ok && Date.now()>=firestoreQuotaUntil){firestoreQuotaBackoff=30000;firestoreQuotaUntil=0;try{window.__shadabFirestoreQuotaUntil=0}catch(_){};saveFirestoreQuotaState('')}
       return r;
@@ -6024,6 +6040,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.shadabRestReadDoc=readDoc;
   window.shadabRestWriteDoc=writeDoc;
   window.shadabRestWriteFields=writeDocFields;
+  window.shadabFirebaseSyncEngine={
+    version:'hourly-manual-read-cache-v1',
+    autoSyncMs:POLL_MS,
+    readCacheMs:FIRESTORE_READ_CACHE_MS,
+    clearReadCache:()=>{firestoreResponseCache.clear();catalogReadCache.clear()},
+    beginManualSync:()=>{manualNetworkDepth++;firestoreResponseCache.clear();catalogReadCache.clear();let ended=false;return ()=>{if(!ended){ended=true;manualNetworkDepth=Math.max(0,manualNetworkDepth-1)}}},
+    status:()=>({autoSyncMs:POLL_MS,readCacheEntries:firestoreResponseCache.size,catalogCacheEntries:catalogReadCache.size,manualNetworkDepth,quotaUntil:firestoreQuotaUntil,quotaBackoffMs:firestoreQuotaBackoff})
+  };
    window.shadabRestDeleteDoc=async function(path){ const r=await fsFetch(path,{method:'DELETE'}); if(r.status===404)return true; return parseResponse(r); };
   window.shadabRestReadCollection=async function(path){
     const collectionPath=String(path||'').replace(/^\/+|\/+$/g,'').split('?')[0];
@@ -20735,6 +20759,9 @@ const DEFAULT_COMPANIES=[
   'SEMOS PHARMACEUTICALS'
 ];
 let contacts=[];
+/* Fail-closed vault guard: never let a new HTML build or a temporary Firebase
+   read/quota failure replace the existing cloud contact list with local defaults. */
+let companyContactsCloudReady=false;
 let mode='main';
 let editor={type:'',companyId:'',contactId:''};
 const $=id=>document.getElementById(id);
@@ -20774,13 +20801,29 @@ async function readRemote(){
 }
 async function writeRemote(next,reason){
   const s=await ensureAdminSession();
+  if(!companyContactsCloudReady){
+    throw new Error('Cloud contacts have not been read successfully. Saving is paused to protect existing contacts; restore Firebase reads and refresh before editing.');
+  }
   const payload={companies:normalizeData(next),updatedAt:new Date().toISOString(),updatedBy:String(s.email||ADMIN),reason:String(reason||'company-contact-change'),schemaVersion:2};
-  await window.shadabRestWriteDoc(PATH,payload);return payload.companies;
+  await window.shadabRestWriteDoc(PATH,payload);
+  return payload.companies;
 }
 function setStatus(msg,ok=false){const x=$('spCompanyContactsStatus');if(x)x.innerHTML=ok?esc(msg)+' <span class="sp-cc-sync-pill"><span class="sp-cc-sync-dot"></span>Firebase synced</span>':esc(msg)}
 async function loadRemote(showError=true){
-  try{const remote=await readRemote();contacts=withDefaultCompanies(remote);localSave();render();setStatus('Company contacts loaded from Firebase.',true);return contacts}
-  catch(e){contacts=withDefaultCompanies(localLoad());render();setStatus('Firebase read unavailable — local saved contacts shown.');if(showError)console.warn('Company Contacts Firebase read:',e);return contacts}
+  /* A failed refresh must close the write gate. Never push a default/local-only
+     list over the durable Firebase document just because a read hit HTTP 429. */
+  companyContactsCloudReady=false;
+  try{
+    const remote=await readRemote();
+    companyContactsCloudReady=true;
+    contacts=withDefaultCompanies(remote);localSave();render();
+    setStatus('Company contacts loaded from Firebase.',true);return contacts;
+  }catch(e){
+    contacts=withDefaultCompanies(localLoad());render();
+    setStatus('Firebase read unavailable — local saved contacts shown. Cloud saving paused to protect existing contacts.');
+    if(showError)console.warn('Company Contacts Firebase read:',e);
+    return contacts;
+  }
 }
 function buildModal(){
   if($('spCompanyContactsModal'))return;
@@ -21112,7 +21155,33 @@ function render(){
 function renderActivityPanel(){const panel=$('spCustomerActivityPanel');if(!panel)return;if(mode!=='admin'){panel.innerHTML='';return}const rows=activityRows.filter(a=>a.action==='reminder'||a.action==='status').slice(0,100);panel.innerHTML='<div class="sp-customer-activity-head"><b>Salesman Reminder Activity</b><small>Live Firebase activity</small></div>'+(rows.length?'<div class="sp-customer-activity-list">'+rows.map(a=>'<div class="sp-customer-activity-row"><div><b>'+esc(a.customerName||'Customer')+'</b><small>'+esc(a.salesmanName||'Salesman')+' • '+esc(a.city||'')+'</small></div><div class="sp-customer-activity-meta"><span>'+esc(a.action==='status'?'Status: '+(a.status||'—'):'WhatsApp Reminder')+'</span><small>'+esc(a.at?new Date(a.at).toLocaleString('en-PK'):'—')+'</small></div></div>').join('')+'</div>':'<div class="sp-customer-activity-empty">No salesman reminder activity yet.</div>');}
 function waUrl(c){const p=waPhone(c.phone);return p?'https://wa.me/'+p+'?text='+encodeURIComponent(reminderText):''}
 function waMessengerIntent(c){const p=waPhone(c.phone);if(!p)return '';return 'intent://send?phone='+encodeURIComponent(p)+'&text='+encodeURIComponent(reminderText)+'#Intent;scheme=whatsapp;package=com.whatsapp;end'}
-function openWhatsAppMessenger(c){const p=waPhone(c.phone);if(!p){toast('Invalid customer phone number.');return false}const text=encodeURIComponent(reminderText);const isAndroid=/Android/i.test(navigator.userAgent||'');const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');try{if(isAndroid){const intent='intent://send?phone='+encodeURIComponent(p)+'&text='+text+'#Intent;scheme=whatsapp;package=com.whatsapp;end';window.location.href=intent;setTimeout(()=>{if(document.visibilityState==='visible'){try{window.location.href='https://wa.me/'+p+'?text='+text}catch(e){}}},1200)}else if(isMobile){window.location.href='https://wa.me/'+p+'?text='+text}else{const webUrl='https://web.whatsapp.com/send?phone='+encodeURIComponent(p)+'&text='+text;const opened=window.open(webUrl,'_blank');if(!opened){toast('Popup blocked. Allow pop-ups for this site, then tap WhatsApp Reminder again.');return false}}logReminder(c);return true}catch(e){try{window.location.href=waUrl(c);logReminder(c);return true}catch(_e){toast('WhatsApp could not be opened: '+(e?.message||e));return false}}}
+function openWhatsAppMessenger(c){
+  const p=waPhone(c.phone);
+  if(!p){toast('Invalid customer phone number.');return false}
+  const text=encodeURIComponent(reminderText);
+  const isAndroid=/Android/i.test(navigator.userAgent||'');
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+  try{
+    if(isAndroid){
+      const intent='intent://send?phone='+encodeURIComponent(p)+'&text='+text+'#Intent;scheme=whatsapp;package=com.whatsapp;end';
+      window.location.href=intent;
+      setTimeout(()=>{if(document.visibilityState==='visible'){try{window.location.href='https://wa.me/'+p+'?text='+text}catch(e){}}},1200);
+    }else if(isMobile){
+      window.location.href='https://wa.me/'+p+'?text='+text;
+    }else{
+      /* Windows desktop: hand off through the OS WhatsApp protocol so the
+         Microsoft Store WhatsApp app can open. Do NOT auto-fallback to Chrome
+         Web WhatsApp; that was overriding the user's installed desktop app. */
+      const appUrl='whatsapp://send?phone='+encodeURIComponent(p)+'&text='+text;
+      window.location.href=appUrl;
+      toast('Opening WhatsApp Desktop… If Chrome still opens, set WhatsApp as the default app for the WHATSAPP link type in Windows Settings.');
+    }
+    logReminder(c);return true;
+  }catch(e){
+    toast('WhatsApp app could not be opened. Check the Windows WHATSAPP protocol association. '+(e?.message||''));
+    return false;
+  }
+}
 const REMINDER_LOG='shadab_customer_reminder_log_v1';
 const REMINDER_COOLDOWN_MS=1*60*60*1000;
 const REMINDER_COOLDOWN_LOCAL='shadab_customer_reminder_cooldown_v1';
@@ -22509,3 +22578,32 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
 </body>
 </html>
 
+
+
+<script id="shadab-firebase-hourly-manual-engine-final">
+(function(){
+  'use strict';
+  const engine=window.shadabFirebaseSyncEngine;
+  if(!engine||engine.__manualWrappersInstalled)return;
+  engine.__manualWrappersInstalled=true;
+  const wrappedNames=new Set();
+  function wrapManual(name){
+    const original=window[name];
+    if(typeof original!=='function'||original.__shadabManualCacheWrapper)return;
+    const wrapped=function(){
+      const end=engine.beginManualSync();
+      let result;
+      try{result=original.apply(this,arguments)}catch(e){end();throw e}
+      if(result&&typeof result.then==='function')return result.finally(end);
+      end();return result;
+    };
+    wrapped.__shadabManualCacheWrapper=true;wrapped.__shadabManualCacheOriginal=original;
+    try{window[name]=wrapped;wrappedNames.add(name)}catch(e){}
+  }
+  /* These are user-click/manual entry points only. Automatic hourly sync functions
+     remain unchanged and continue using the shared read cache. */
+  ['manualSync','sp35ManualSyncFinal','sp35ManualSync','shadabManualSyncNow'].forEach(wrapManual);
+  window.shadabFirebaseSyncEngine.status().manualWrappedFunctions=Array.from(wrappedNames);
+  console.info('[Shadab Firebase Sync Engine] active: 55-minute GET cache; writes invalidate affected paths; manual sync bypasses cache; hourly interval preserved.');
+})();
+</script>
