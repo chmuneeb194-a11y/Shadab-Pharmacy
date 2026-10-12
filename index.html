@@ -6099,11 +6099,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       try{showAdminDashboard()}catch(e){}
       safeToast('Admin login successful');
       startPolling();
+      /* Update the existing Control Center profile only; never create a Master salesman record. */
+      try{await window.shadabUpdateControlProfileStatus?.('login')}catch(e){console.warn('Master profile presence update:',e)}
       /* pollRemote performs the single authoritative read of masterData and
          adminSchedules. Do not immediately repeat the same two reads in a second
          seed-check chain; if either document is absent, seed it from that poll's
          already-verified result instead. */
-    }else{
+    }else{ 
       try{localStorage.setItem('shadab_current_salesman_email_v1',s.email||'')}catch(e){}
       try{localStorage.setItem('shadab_current_salesman_uid_v1',s.uid||'')}catch(e){}
       let salesmanName=String(s.displayName||'').trim();
@@ -6124,6 +6126,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       }catch(e){}
       safeToast('Salesman login successful');
       startPolling();
+      try{await window.shadabUpdateControlProfileStatus?.('login')}catch(e){console.warn('Salesman profile presence update:',e)}
     }
   }
   window.sp35Login=async function(){
@@ -6516,6 +6519,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       }catch(featureErr){
         console.warn('Feature permission refresh after manual sync:',featureErr);
       }
+      /* Sync business data and Control Center metadata are separate documents. Update
+         only the authenticated UID's existing salesman profile, using a field-mask PATCH. */
+      try{await window.shadabUpdateControlProfileStatus?.('sync')}catch(profileErr){console.warn('Control Center sync metadata update:',profileErr)}
       const t=now();
       try{if(typeof shadabFirebaseStatus==='function')shadabFirebaseStatus('firebase-connected','Firebase connected • Last sync '+t+' • auto sync every 1 hour')}catch(e){}
       result('🟢 <b>Sync successful</b> — Firebase updated at '+esc(t)+'.<br><small>Your local data is now uploaded to the cloud.</small>',true);
@@ -13354,7 +13360,7 @@ function onlineFor(p){
   if(String(p?.status||'Active').toLowerCase()==='disabled')return false;
   if(p?.online===false)return false;
   const t=Date.parse(p?.lastSeen||p?.lastActivityAt||'');
-  return !!t && (Date.now()-t)<4200000;
+  return !!t && (Date.now()-t)<3900000; // 65 minutes: safely covers the existing one-hour presence cadence.
 }
 async function heartbeat(){
   if(presenceBusy||navigator.onLine===false||typeof (window.shadabRestWriteFields||window.shadabRestWriteDoc)!=='function')return false;
@@ -13451,7 +13457,16 @@ async function refreshProfilesRealtime(force=false){
 }
 function startPresence(){
   clearInterval(presenceTimer);
-  const run=async()=>{try{const p=await heartbeat();if(p){refreshSelectedHeader();const current=getSession();if(String(current?.email||'').trim().toLowerCase()===ADMIN)refreshProfilesRealtime()}}catch(e){console.warn('Presence refresh:',e)}};
+  const run=async()=>{try{
+    const current=getSession();
+    if(String(current?.email||'').trim().toLowerCase()===ADMIN){
+      // Master has no synthetic heartbeat record: refresh only its already-existing profile.
+      const result=await window.shadabUpdateControlProfileStatus?.('presence');
+      if(result?.ok){refreshSelectedHeader();await refreshProfilesRealtime(true)}
+      return;
+    }
+    const p=await heartbeat();if(p)refreshSelectedHeader();
+  }catch(e){console.warn('Presence refresh:',e)}};
   setTimeout(run,700);
   presenceTimer=setInterval(run,PRESENCE_MS);
   window.addEventListener('online',()=>setTimeout(run,700),{passive:true});
@@ -23024,6 +23039,51 @@ if(typeof oldSync==='function'&&!oldSync.__v12ClearGuard){const f=async function
   },true);
 })();
 </script>
+
+<!-- ===== SHADAB CONTROL CENTER STATUS METADATA FIX — FIELD-SCOPED ===== -->
+<script id="shadab-control-center-status-metadata-fix">
+(function(){
+  'use strict';
+  const ADMIN='master@shadabpharmacy.com';
+  const getSession=()=>{try{return window.shadabRestCurrentSession?.()||null}catch(e){return null}};
+  const read=()=>window.shadabRestReadDoc;
+  const write=()=>window.shadabRestWriteFields;
+  let busy=false;
+  async function updateControlProfileStatus(reason){
+    const s=getSession();
+    if(busy||!s?.uid||navigator.onLine===false||typeof read()!=='function'||typeof write()!=='function')return {ok:false,reason:'unavailable'};
+    busy=true;
+    try{
+      const uid=String(s.uid),path='salesmen/'+encodeURIComponent(uid);
+      // Never create a profile for Master or any account from a status heartbeat.
+      const existing=await read()(path);
+      if(!existing||typeof existing!=='object')return {ok:false,reason:'profile-not-found'};
+      const stamp=new Date().toISOString();
+      const patch={lastSeen:stamp,lastActivityAt:stamp,online:true,presenceUpdatedAt:stamp};
+      if(reason==='login')patch.signedInAt=stamp;
+      if(reason==='sync')patch.lastSync=stamp;
+      // Field-scoped PATCH preserves all existing profile fields, assignments and permissions.
+      await write()(path,patch);
+      try{localStorage.setItem('shadab_admin_profile_'+uid,JSON.stringify({...existing,...patch}))}catch(e){}
+      try{
+        const api=window.__spLiveSalesmanControlV15,x=api?.getSelected?.();
+        if(x&&String(x.uid)===uid&&x.profile)Object.assign(x.profile,patch);
+        const row=document.querySelector('#spAddedSalesmenList .sp-added-person[data-uid="'+CSS.escape(uid)+'"]');
+        if(row){const badge=row.querySelector('.sp-added-status');if(badge){badge.textContent='● Online';badge.className='sp-added-status sp-added-ok sp-added-live-online'}}
+        window.shadabRealtimePresence?.refreshSelectedHeader?.();
+      }catch(uiErr){console.warn('Control Center status repaint:',uiErr)}
+      return {ok:true,updatedFields:Object.keys(patch)};
+    }catch(e){
+      console.warn('Control Center profile status write failed:',e);
+      return {ok:false,reason:String(e?.message||e)};
+    }finally{busy=false}
+  }
+  window.shadabUpdateControlProfileStatus=updateControlProfileStatus;
+  // Existing login and hourly presence hooks call this helper; no additional polling is added.
+})();
+</script>
+<!-- ===== END SHADAB CONTROL CENTER STATUS METADATA FIX ===== -->
+
 </body>
 </html>
 
