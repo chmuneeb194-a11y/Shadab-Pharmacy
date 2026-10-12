@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shadab Pharmacy — Catalogue Recovery Scanner</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#06111f;color:#eef6ff;padding:16px}
+main{max-width:900px;margin:auto;border:1px solid #24516c;border-radius:22px;overflow:hidden;background:linear-gradient(145deg,#0b1b32,#062b43)}
+header{padding:22px;background:#041322;border-bottom:1px solid #31536a}
+h1{font-size:22px;margin:0 0 8px}p{line-height:1.5;color:#b9d3e8;margin:8px 0}
+section{padding:18px;border-bottom:1px solid #24445b}
+button{width:100%;border:1px solid #26d9c3;border-radius:13px;padding:15px 12px;font-weight:800;font-size:16px;color:white;background:linear-gradient(110deg,#006df2,#008d9b);margin:8px 0}
+button.secondary{background:#102a41;border-color:#4e7998}
+.status{padding:12px;border-radius:12px;background:#10253a;border:1px solid #31516b;white-space:pre-wrap;overflow-wrap:anywhere}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}td,th{text-align:left;padding:8px;border-bottom:1px solid #28465d;overflow-wrap:anywhere}
+.good{color:#62f5b7}.warn{color:#ffd27a}.bad{color:#ff9ca7}
+.small{font-size:12px;color:#9dbbd2}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Shadab Pharmacy — Catalogue Recovery Scanner</h1>
+<p><b>READ-ONLY SCAN.</b> This tool does not delete, overwrite, sync, or modify your app data. It only reads catalogue-related browser storage and prepares a backup file.</p>
+</header>
+<section>
+<p class="warn">Important: Open this page from the same GitHub Pages address/origin as your app — not as a downloaded <code>content://</code> file. Do not press “Discard draft / Reload” or “Sync Products” during recovery.</p>
+<button id="scan">1. Scan saved catalogue data</button>
+<div id="status" class="status">Not scanned yet.</div>
+<div id="results"></div>
+<button id="download" class="secondary" disabled>2. Download catalogue recovery backup (JSON)</button>
+<p class="small">The backup can contain product names and image data. Keep it private and do not post it publicly.</p>
+</section>
+</main>
+<script>
+'use strict';
+const statusEl=document.getElementById('status'), resultsEl=document.getElementById('results'), downloadBtn=document.getElementById('download');
+let backup=null;
+const CATALOGUE_KEY_RE=/(catalogue|product.*draft|draft.*product|new_product_catalogue|catalogueDraftImage|newProductImage|product.*image.*cache)/i;
+function safeJson(s){try{return JSON.parse(s)}catch(_){return null}}
+function summarizeValue(v){
+  if(typeof v==='string'){
+    const j=safeJson(v);
+    if(j!==null)return summarizeValue(j);
+    return {type:'string',length:v.length,looksLikeImageData:/^data:image\//i.test(v),preview:v.slice(0,80)};
+  }
+  if(Array.isArray(v)){
+    const productish=v.filter(x=>x&&typeof x==='object'&&('name'in x||'productName'in x)&&('company'in x||'companyName'in x||'imageDocId'in x));
+    return {type:'array',length:v.length,productLikeRecords:productish.length,productNames:productish.slice(0,250).map(x=>({name:x.name||x.productName||'',company:x.company||x.companyName||'',id:x.id||'',hasPendingImage:typeof x.pendingImage==='string'&&x.pendingImage.startsWith('data:image/'),imageDocId:x.imageDocId||''}))};
+  }
+  if(v&&typeof v==='object'){
+    const out={type:'object',keys:Object.keys(v).slice(0,100)};
+    for(const k of ['draft','products','published','pendingDeletes','draftCompanies','companies','productNames','rates','version','updatedAt']){
+      if(k in v){
+        const x=v[k];
+        if(Array.isArray(x)){
+          out[k]={length:x.length};
+          if(k==='draft'||k==='products'||k==='published')out[k].sample=x.slice(0,250).map(p=>({name:p?.name||p?.productName||'',company:p?.company||p?.companyName||'',id:p?.id||'',imageDocId:p?.imageDocId||'',hasPendingImage:typeof p?.pendingImage==='string'&&p.pendingImage.startsWith('data:image/'),hasImage:!!(p?.image||p?.imageData||p?.pendingImage)}));
+        }else if(x&&typeof x==='object')out[k]={keys:Object.keys(x).length};
+        else out[k]=x;
+      }
+    }
+    return out;
+  }
+  return {type:typeof v,value:v};
+}
+function reqToPromise(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('IndexedDB request failed'))})}
+async function scanDb(name){
+  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open(name);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error||new Error('Could not open '+name));r.onblocked=()=>reject(new Error('Database is blocked: '+name))});
+  try{
+    const result={name,version:db.version,stores:{}};
+    for(const storeName of Array.from(db.objectStoreNames)){
+      const rows=await new Promise((resolve,reject)=>{
+        const tx=db.transaction(storeName,'readonly'),store=tx.objectStore(storeName),req=store.openCursor(),arr=[];
+        req.onsuccess=()=>{const c=req.result;if(c){arr.push({key:c.key,value:c.value});c.continue()}else resolve(arr)};
+        req.onerror=()=>reject(req.error||new Error('Could not read '+storeName));
+        tx.onerror=()=>reject(tx.error||new Error('Read transaction failed'));
+      });
+      result.stores[storeName]={count:rows.length,records:rows};
+    }
+    return result;
+  }finally{db.close()}
+}
+function htmlEscape(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderReport(){
+  const ls=backup.localStorage||{}, dbs=backup.indexedDB||[];
+  let html='<h3>Local storage scan</h3><table><tr><th>Key</th><th>Summary</th></tr>';
+  for(const [key,rec] of Object.entries(ls)){
+    html+='<tr><td>'+htmlEscape(key)+'</td><td>'+htmlEscape(JSON.stringify(rec.summary))+'</td></tr>';
+  }
+  html+='</table><h3>IndexedDB scan</h3><table><tr><th>Database / store</th><th>Records</th><th>Summary</th></tr>';
+  for(const db of dbs){
+    for(const [storeName,store] of Object.entries(db.stores||{})){
+      let imageCount=0, sampleNames=[];
+      for(const rec of store.records||[]){
+        const v=rec.value;
+        if(typeof v==='string'&&v.startsWith('data:image/'))imageCount++;
+        if(v&&typeof v==='object'){
+          if(v.name||v.productName)sampleNames.push(v.name||v.productName);
+          if(typeof v.data==='string'&&v.data.startsWith('data:image/'))imageCount++;
+        }
+      }
+      html+='<tr><td>'+htmlEscape(db.name+'/'+storeName)+'</td><td>'+store.count+'</td><td>'+htmlEscape('Image data records: '+imageCount+(sampleNames.length?' · names: '+sampleNames.slice(0,10).join(', '):''))+'</td></tr>';
+    }
+  }
+  html+='</table>';
+  resultsEl.innerHTML=html;
+}
+document.getElementById('scan').addEventListener('click',async()=>{
+  downloadBtn.disabled=true;backup=null;resultsEl.innerHTML='';statusEl.textContent='Scanning… read-only. Keep this page open.';
+  try{
+    const localStorageData={};
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);if(!key||!CATALOGUE_KEY_RE.test(key))continue;
+      const raw=localStorage.getItem(key);
+      localStorageData[key]={raw,summary:summarizeValue(raw)};
+    }
+    let names=[];
+    if(indexedDB.databases)names=(await indexedDB.databases()).map(x=>x.name).filter(Boolean);
+    else throw new Error('This Chrome version does not support read-only IndexedDB database enumeration. No database was opened. Please use updated Chrome and retry.');
+    names=names.filter(n=>/product.*image.*cache|catalogue.*(draft|cache|image)|new.*product.*catalogue/i.test(n));
+    const indexedDBData=[];
+    for(const name of [...new Set(names)]){
+      try{indexedDBData.push(await scanDb(name))}catch(e){indexedDBData.push({name,error:String(e?.message||e),stores:{}})}
+    }
+    backup={tool:'Shadab Pharmacy Catalogue Recovery Scanner',createdAt:new Date().toISOString(),origin:location.origin,warning:'Read-only scan. This backup may contain private product and image data.',localStorage:localStorageData,indexedDB:indexedDBData};
+    renderReport();
+    const foundDrafts=Object.entries(localStorageData).filter(([k,v])=>/shadab_new_product_catalogue_draft|catalogue.*draft/i.test(k));
+    const totalRows=indexedDBData.reduce((n,db)=>n+Object.values(db.stores||{}).reduce((m,st)=>m+(st.count||0),0),0);
+    statusEl.textContent='Scan complete.\nOrigin: '+location.origin+'\nCatalogue-related localStorage keys: '+Object.keys(localStorageData).length+'\nLikely catalogue draft keys: '+foundDrafts.length+'\nCatalogue IndexedDB databases scanned: '+indexedDBData.length+'\nIndexedDB records scanned: '+totalRows+'\nNo data was changed.';
+    if(foundDrafts.length===0)statusEl.textContent+='\nWARNING: No matching draft key found in localStorage. The scan may still find product images/snapshots in IndexedDB.';
+    downloadBtn.disabled=false;
+  }catch(e){statusEl.textContent='Scan failed: '+String(e?.message||e)+'\nNo data was intentionally changed.'}
+});
+downloadBtn.addEventListener('click',()=>{
+  if(!backup)return;
+  const blob=new Blob([JSON.stringify(backup)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='SHADAB_CATALOGUE_RECOVERY_BACKUP_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+});
+</script>
+</body></html>
