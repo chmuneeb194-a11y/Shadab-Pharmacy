@@ -4897,14 +4897,15 @@ const ITEMS=[
 ['📜','Territory PDF','Upload/manage territory PDF'],
 ['🏪','Store Database','Medical store database'],
 ['📜','SHADAB PHARMACY License Directory','License upload / preview / delete'],
-['🏙️','Add City','Add a new city to the master city list']
+['🏙️','Add City','Add a new city to the master city list'],
+['🧾','Update & Activity Audit','App updates • Firebase activity • sync errors • daily history']
 ];
 /* Only the visible Admin Control Center inventory is changed here.
    Original global functions remain available anywhere else in the app. */
 const handlerMap={
   1:19,2:33,3:1,4:8,5:9,6:21,7:25,8:26,9:3,10:7,
   11:17,12:18,13:20,14:22,15:24,16:27,17:28,18:29,19:30,20:31,
-  21:32,22:34,23:35,24:23,30:42
+  21:32,22:34,23:35,24:23,30:42,31:43
 };
 const CHILD_TARGETS={25:'order',26:'supply',27:'territory',28:'stores',29:'license'};
 const CHILD_IDS=['sharedDocModal','uploadTerritoryModal','storeDatabaseModal','spLicenseAdminModal'];
@@ -4921,7 +4922,7 @@ function modal(){
 }
 function render(){
  const g=$('spAdminCCGrid');if(!g)return;
- g.innerHTML=ITEMS.map((x,i)=>'<button class="sp-cc-card" type="button" data-n="'+(i+1)+'"><span class="ic">'+x[0]+'</span><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span></button>').join('');
+ g.innerHTML=ITEMS.map((x,i)=>({x,i})).filter(o=>o.x[1]!=='Update & Activity Audit').map(({x,i})=>'<button class="sp-cc-card" type="button" data-n="'+(i+1)+'"><span class="ic">'+x[0]+'</span><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span></button>').join('');
  g.querySelectorAll('.sp-cc-card').forEach(b=>{
    const n=Number(b.dataset.n);
    b.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();if(n===42&&typeof window.sp35OpenAddCity==='function')return window.sp35OpenAddCity();return openControl(n);};
@@ -5025,7 +5026,7 @@ function setupMainDashboardButtons(){
 }
 document.addEventListener('click',function(e){const child=e.target?.closest?.('#sharedDocModal .close,#sharedDocModal .shared-doc-actions button:last-child,#uploadTerritoryModal .close,#uploadTerritoryModal .actions .secondary:first-child,#storeDatabaseModal .close,#spLicenseAdminModal .close');if(!child||!childReturn)return;setTimeout(restoreAdminAfterChild,60)},true);
 function removeDuplicateMenu(){document.querySelectorAll('.shadab-menu-item').forEach(el=>{if(/Admin Control Center/i.test(el.textContent||''))el.remove()})}
-window.openAdminControlCenter=show;window.spAdminExact41Open=show;window.spAdminExact41OpenControl=openControl;window.spAdminExact41Close=closeAll;window.sp35OpenControl=openControl;window.sp35BackToControls=show;window.sp35CloseAll=closeAll;
+window.openAdminControlCenter=show;window.spAdminExact41Open=show;window.spAdminExact41OpenControl=openControl;window.spAdminExact41Close=closeAll;window.sp35OpenControl=openControl;window.sp35BackToControls=show;window.sp35CloseAll=closeAll;window.sp35OpenAuditFromMaster=function(){show();return openControl(31)};
 function boot(){installLauncher();setupMainDashboardButtons();removeDuplicateMenu()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
@@ -8805,9 +8806,20 @@ async function hydrate(){
    }catch(e){console.warn('Shared document masterData hydrate (non-blocking)',e)}
    return;
  }
+ let masterFallback=null,masterFallbackTried=false;
  for(const t of ['orderForm','supplySchedule','license']){
-   try{const a=await readCloud(DOC_PATH[t]);if(a?.deleted)localAsset(t,null);else if(a?.data)localAsset(t,a)}
-   catch(e){console.warn('Shared document hydrate',t,e)}
+   try{
+     // Audit evidence shows permission-denied reads at app_settings/sharedDocuments/{type}.
+     // Use the observed permitted sharedDocuments path first; only one masterData fallback per hydrate.
+     let a=null;
+     try{a=await readCloud('sharedDocuments/'+t)}catch(_){a=null}
+     if(!a||a.deleted||(!a.data&&!a.chunked)){
+       if(!masterFallbackTried){masterFallbackTried=true;try{masterFallback=await readCloud('app_settings/masterData')}catch(_){masterFallback=null}}
+       a=masterFallback?.[t]||null;
+     }
+     if(a?.deleted)localAsset(t,null);else if(a?.data)localAsset(t,a);
+     if(a?.chunked&&Number(a.total)>0){let base='';for(let i=0;i<Number(a.total);i++){const c=await readCloud('sharedDocuments/'+t+'__chunk_'+i);if(!c?.data)throw new Error('Missing document chunk '+(i+1));base+=c.data}a={...a,data:'data:'+(a.type||'application/pdf')+';base64,'+base};localAsset(t,a)}
+   }catch(e){console.warn('Shared document hydrate',t,e)}
  }
 }
 window.spV25HydrateSharedDocuments=hydrate;
@@ -10974,25 +10986,30 @@ async function hydrateAllSharedDocs(){
   try{
     if(!navigator.onLine)return;
     const s=window.shadabRestCurrentSession?.();
-    if(!s?.uid)return;
-    if(typeof window.shadabRestReadDoc!=='function')return;
+    if(!s?.uid||typeof window.shadabRestReadDoc!=='function')return;
     const types=['orderForm','supplySchedule','license'];
+    // This app's audit JSON shows repeated permission-denied reads against
+    // app_settings/sharedDocuments/{type}. Prefer the observed permitted
+    // sharedDocuments path; use canonical masterData as one fallback only.
+    let masterFallback=null,masterFallbackTried=false;
     for(const type of types){
       try{
-        let a=await window.shadabRestReadDoc('app_settings/sharedDocuments/'+type);
-        if(!a || a.deleted || (!a.data && !a.chunked)){
-          const master=await window.shadabRestReadDoc('app_settings/masterData');
-          a=master?.[type]||null;
+        let a=null;
+        try{a=await window.shadabRestReadDoc('sharedDocuments/'+type)}catch(readErr){a=null}
+        if(!a||a.deleted||(!a.data&&!a.chunked)){
+          if(!masterFallbackTried){masterFallbackTried=true;try{masterFallback=await window.shadabRestReadDoc('app_settings/masterData')}catch(_){masterFallback=null}}
+          a=masterFallback?.[type]||null;
         }
         if(a?.chunked&&Number(a.total)>0){
           let base='';
           for(let i=0;i<Number(a.total);i++){
-            const c=await window.shadabRestReadDoc('app_settings/sharedDocuments/'+type+'__chunk_'+i);
+            const c=await window.shadabRestReadDoc('sharedDocuments/'+type+'__chunk_'+i);
             if(!c?.data)throw new Error('missing chunk '+(i+1));
             base+=c.data;
           }
           a={...a,data:'data:'+(a.type||'application/pdf')+';base64,'+base};
         }
+        if(a?.deleted){continue}
         if(a?.data)window.shadabApplySharedAsset?.(type,a);
       }catch(e){console.warn('Final shared document hydrate:',type,e)}
     }
@@ -14908,7 +14925,7 @@ window.shadabV11SetupFingerprint=kind=>{openBioModal(kind,'setup')};window.shada
 async function applyAuthoritativeFlags(){const s=session();if(!s?.uid||String(s.email||'').toLowerCase()==='master@shadabpharmacy.com')return;let p=null;try{p=await window.shadabRestReadDoc?.('salesmen/'+encodeURIComponent(String(s.uid)))}catch(e){}if(!p)return;const src=p.featureFlags||p.features||{};const flags={...DEFAULTS};FEATURE_KEYS.forEach(k=>{if(Object.prototype.hasOwnProperty.call(src,k))flags[k]=!!src[k]});window.__shadabRuntimeFeatureState={uid:String(s.uid),name:String(p.fullName||p.displayName||p.salesmanName||p.name||s.displayName||s.email||'Salesman'),flags,controlled:true};try{localStorage.setItem('shadab_runtime_feature_flags_v3',JSON.stringify(window.__shadabRuntimeFeatureState))}catch(e){}window.shadabFeatureEnabled=key=>flags[String(key||'')]!==false;const guards={fieldVisit:['openFieldVisitManager'],todayReport:['openTodayReportPanel'],summaryDetail:['openSummaryDetail'],monthlyReport:['downloadSummaryDetailMonthlyPDF','shareSummaryDetailMonthlyPDF','downloadMonthlyReportPDF'],orderForm:[],supplySchedule:[],licensePDF:['spLockedLicensePreview','spLockedLicenseShare','spLockedLicenseDownload'],whatsappPDF:['shareAllToday','shareTaskPDFWhatsApp','shareSummaryDetailMonthlyPDF','shareSalesmanExpensePDF','shareSalesmanExpenseMonthlyPDF','shareVisit'],downloadExport:['downloadPDFForDate','downloadTaskPDF','exportCSV','downloadSinglePDF','downloadSummaryDetailPDF'],backupRestore:['exportBackup','restoreBackup'],cameraOpen:['openDeviceCamera','startCamera'],cameraCapture:['capturePhoto'],cameraUpload:['uploadPhoto','handleCameraFile']};Object.entries(guards).forEach(([key,names])=>names.forEach(name=>{const fn=window[name];if(typeof fn==='function'&&!fn.__v11AuthGuard){const w=function(){if(!window.shadabFeatureEnabled(key)){toast('This feature is disabled by Master.');return false}return fn.apply(this,arguments)};w.__v11AuthGuard=true;w.__v11Original=fn;window[name]=w}}));const shared=window.openSharedDocument;if(typeof shared==='function'&&!shared.__v11AuthGuard){const w=function(type){const key=type==='orderForm'?'orderForm':type==='supplySchedule'?'supplySchedule':'';if(key&&!window.shadabFeatureEnabled(key)){toast('This feature is disabled by Master.');return false}return shared.apply(this,arguments)};w.__v11AuthGuard=true;w.__v11Original=shared;window.openSharedDocument=w}document.querySelectorAll('[onclick]').forEach(el=>{const c=String(el.getAttribute('onclick')||'');for(const [key,names] of Object.entries(guards)){if(names.some(n=>c.includes(n))){const on=flags[key]!==false;el.style.opacity=on?'':'0.42';el.style.pointerEvents=on?'':'none';el.setAttribute('aria-disabled',on?'false':'true');break}}});window.dispatchEvent(new Event('shadab-feature-refresh'))}
 let installed=false;function installSyncFix(){const manual=window.sp35ManualServerRefresh;if(typeof manual==='function'&&!manual.__v11OffFix){const w=async function(){const r=await manual.apply(this,arguments);await applyAuthoritativeFlags();return r};w.__v11OffFix=true;w.__v11Original=manual;window.sp35ManualServerRefresh=w;installed=true}const sync=window.shadabSyncSalesmanNow;if(typeof sync==='function'&&!sync.__v11OffFix){const w=async function(){const r=await sync.apply(this,arguments);await applyAuthoritativeFlags();return r};w.__v11OffFix=true;w.__v11Original=sync;window.shadabSyncSalesmanNow=w;window.sp35SyncNow=w;window.sp35SyncNew=w;installed=true}return installed}
 function boot(){ensureEntry('master');ensureEntry('salesman');installSyncFix();setTimeout(installSyncFix,300);setTimeout(installSyncFix,1200)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',()=>{setTimeout(boot,500);setTimeout(installSyncFix,1500);setTimeout(hookExistingMasterSetFlags,1800)});document.addEventListener('input',e=>{if(e.target?.id==='sp35LoginEmail')boot()});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();window.addEventListener('load',()=>{setTimeout(boot,500);setTimeout(installSyncFix,1500);setTimeout(()=>{try{window.__spHookExistingMasterSetFlags?.()}catch(e){}},1800)});document.addEventListener('input',e=>{if(e.target?.id==='sp35LoginEmail')boot()});
 })();
 </script>
 <!-- ===== END V12 FINAL ===== -->
@@ -15251,6 +15268,8 @@ function hookExistingMasterSetFlags(){
   wrap.__v26Original=original;
   window.setSpAddedToggles=wrap;
 }
+
+window.__spHookExistingMasterSetFlags=hookExistingMasterSetFlags;
 
 function salesmanCapture(e){
   if(isMaster())return;
@@ -19530,6 +19549,7 @@ async function hydrateSalesmanVisitsFromCloudV12(uid){
    Reads every visit_days partition + legacy visits, deduplicates by visit identity,
    and derives dashboard cards, Today's Tasks and reports from the same detailed rows. */
 async function rebuildMasterAggregateV12Core(options={}){
+  const coreSyncGeneration=Number(window.__shadabMasterSyncGeneration)||0;
   const s=session();
   if(!s?.uid||!isAdmin())throw new Error('Master Firebase login is required to read all salesman visits.');
   if(!online())throw new Error('Offline: cannot verify live salesman visits.');
@@ -19741,7 +19761,10 @@ async function rebuildMasterAggregateV12Core(options={}){
   const plannedToday=[...plannedMap.values()];
   const cache={salesmen,visits,plannedToday,rawByUid,schedules:cloudSched,stores,sourceCounts:{salesmen:salesmen.length,userData:uRows.length,visitDays:diagnostics.partitionDocs,partitionEntries:diagnostics.partitionEntries},at:iso(),visitTransport:'single-core:all-user_data/visit_days+legacy+local-cache',dashboardCleared:!!(Number.isFinite(clearMs)&&clearMs>0),clearStateAt:clearMarker?.clearedAt||'',stats:{today:todayVisits.length,week:weekVisits.length,month:monthVisits.length,uniqueStores:uniqueStores.size},dateRange:{today,weekStart,weekEnd,month}};
   window.__shadabMasterVisitReadDiagnostics=diagnostics;window.__spMasterAggregateCache=cache;window.__shadabMasterRows=window.masterRows; 
-  try{await window.__shadabHydrateMasterDashboardPhotos?.()}catch(e){}
+  /* IMPORTANT: dashboard totals must not wait for every historical photo document.
+     Visit/photo payloads are fetched on demand by visit/report viewers; keeping this
+     bulk hydration out of the aggregate sync prevents a photo read from freezing Sync. */
+  if((options.manualRunId!=null && Number(window.__shadabMasterSyncGeneration)!==Number(options.manualRunId)) || (options.manualRunId==null && Number(window.__shadabMasterSyncGeneration)!==coreSyncGeneration))return cache;
   const root=document.getElementById('spAddedMasterDashboard');
   if(root){const nums=root.querySelectorAll('.sp-added-overview .num');[todayVisits.length,weekVisits.length,monthVisits.length,uniqueStores.size].forEach((n,i)=>{if(nums[i])nums[i].textContent=String(n)});}
   const sel=document.getElementById('spV32MasterTaskSalesman');
@@ -19776,11 +19799,42 @@ async function rebuildMasterAggregateV12(options={}){
 window.rebuildMasterAggregate=rebuildMasterAggregateV12;
 window.fetchAllSalesmanData=()=>window.rebuildMasterAggregate();
 window.syncMasterFieldDashboard=async function(){
+  const runId=(Number(window.__shadabMasterSyncGeneration)||0)+1;window.__shadabMasterSyncGeneration=runId;
   const releaseFreshRead=window.shadabFirebaseSyncEngine?.beginManualSync?.();
-  const b=document.getElementById('spMasterDashboardSyncBtn'),st=document.getElementById('spMasterDashboardSyncStatus');if(b){b.disabled=true;b.classList.add('is-syncing')};if(st)st.textContent='Reading and verifying salesman visits + photos…';
-  try{if(masterAggregateV12InFlight){try{await masterAggregateV12InFlight}catch(_){}}masterAggregateV12LastResult=null;masterAggregateV12LastAt=0;const c=await rebuildMasterAggregateV12({publishLocal:true,force:true});const d=window.__shadabMasterVisitReadDiagnostics||{};if(st){if(d.localPublishError)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • local publish failed: '+d.localPublishError;else if(d.readFailures?.length)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+d.readFailures.length+' read errors';else if(d.localUnmapped||d.localWithoutId)st.textContent='PARTIAL SYNC • '+c.visits.length+' visits • '+(d.localPublished||0)+' local published • '+(d.localUnmapped||0)+' unassigned local • '+(d.localWithoutId||0)+' without ID';else st.textContent='Synced '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+(d.partitionDocs||0)+' day docs • local published '+(d.localPublished||0);}return c}
-  catch(e){if(st)st.textContent='SYNC FAILED • '+String(e?.message||e);console.error('Master Dashboard single-core sync failed:',e);try{window.toast35?.('✕ Master sync failed — '+(e?.message||e))}catch(_){};throw e}
-  finally{try{if(typeof releaseFreshRead==='function')releaseFreshRead()}catch(_){};if(b){b.disabled=false;b.classList.remove('is-syncing')}}
+  const b=document.getElementById('spMasterDashboardSyncBtn'),st=document.getElementById('spMasterDashboardSyncStatus'),root=document.getElementById('spAddedMasterDashboard');
+  if(b){b.disabled=true;b.classList.add('is-syncing');b.setAttribute('aria-busy','true')};
+  if(st)st.textContent='Refreshing live salesman visits and task counts…';
+  /* Never leave old numbers looking current while a manual refresh is unresolved. */
+  root?.querySelectorAll('.sp-added-overview .num, .sp-added-taskgrid .num').forEach(n=>{n.textContent='…'});
+  const waitFor=(promise,ms,message)=>{let timer;return Promise.race([Promise.resolve(promise),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message)),ms)})]).finally(()=>clearTimeout(timer))};
+  try{
+    /* Do not start a second full Firestore read burst while the initial dashboard
+       hydration is still active. Bound the wait so the button can never spin forever. */
+    if(masterAggregateV12InFlight)await waitFor(masterAggregateV12InFlight,15000,'A previous dashboard read is still running after 15 seconds. Refresh the app once before retrying; no duplicate read burst was started.');
+    masterAggregateV12LastResult=null;masterAggregateV12LastAt=0;
+    /* An earlier boot read may have finished while we waited. Keep its snapshot hidden
+       until this forced/manual result has been verified. */
+    root?.querySelectorAll('.sp-added-overview .num, .sp-added-taskgrid .num').forEach(n=>{n.textContent='…'});
+    if(st)st.textContent='Reading latest Firebase records…';
+    const c=await waitFor(rebuildMasterAggregateV12({publishLocal:true,force:true,manualRunId:runId}),60000,'Master sync timed out after 60 seconds. Fresh data was not verified; counts remain hidden. Check the connection and retry.');
+    if(runId!==Number(window.__shadabMasterSyncGeneration))return c;
+    const d=window.__shadabMasterVisitReadDiagnostics||{};
+    if(st){if(d.localPublishError)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • local publish failed: '+d.localPublishError;else if(d.readFailures?.length)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+d.readFailures.length+' read errors';else if(d.localUnmapped||d.localWithoutId)st.textContent='PARTIAL SYNC • '+c.visits.length+' visits • '+(d.localPublished||0)+' local published • '+(d.localUnmapped||0)+' unassigned local • '+(d.localWithoutId||0)+' without ID';else st.textContent='Synced '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+(d.partitionDocs||0)+' day docs • local published '+(d.localPublished||0)+' • photos load when opened';}
+    return c;
+  }catch(e){
+    const msg=String(e?.message||e);
+    /* Invalidate late completion after a timeout so a timed-out request cannot
+       repaint the dashboard with an unverified snapshot later. */
+    if(/timed out|still running after 15 seconds/i.test(msg))window.__shadabMasterSyncGeneration=runId+1;
+    if(st)st.textContent='SYNC FAILED • '+msg;
+    root?.querySelectorAll('.sp-added-overview .num, .sp-added-taskgrid .num').forEach(n=>{n.textContent='—'});
+    console.error('Master Dashboard single-core sync failed:',e);
+    try{window.toast35?.('✕ Master sync failed — '+msg)}catch(_){}
+    throw e;
+  }finally{
+    try{if(typeof releaseFreshRead==='function')releaseFreshRead()}catch(_){}
+    if(b){b.disabled=false;b.classList.remove('is-syncing');b.removeAttribute('aria-busy')}
+  }
 };
 window.refreshSpAddedMaster=window.syncMasterFieldDashboard;
 
@@ -24065,3 +24119,217 @@ html[data-shadab-theme="dark"] #sp35LoginButton.sp35-name-glow-box {
 #spNpBody{flex:1 1 auto;min-height:0;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 @media(max-width:760px){#spNpPanel{height:calc(100dvh - 12px);max-height:calc(100dvh - 12px)}#spNpHead{padding:12px 60px 11px 12px!important;align-items:flex-start!important}#spNpHead .spnp-brand{min-width:0!important}#spNpHead .spnp-title-gem{width:30px;height:30px;flex-basis:30px;font-size:19px}#spNpHead #spNpStatus{margin-top:6px}#spNpBody .spnp-admin-grid{grid-template-columns:minmax(0,1fr)!important}}
 </style>
+
+
+<!-- SHADAB PHARMACY POINT 24: UPDATE & ACTIVITY AUDIT CENTER — BATCHED CLOUD AUDIT V2 -->
+<script id="sp-update-activity-audit-center-v2">
+(function(){
+'use strict';
+const STORE='sp_update_activity_audit_v2', VERSION='UPDATE & ACTIVITY AUDIT CENTER • 2026-10-13 • v5 PATH/PDF FORENSIC FIX';
+const MAX=500, CLOUD_MAX=100, FLUSH_MS=3600000; let hooked=false, busy=false, suppress=false, lastFlush=0, cloudState='Not synced yet', remoteRows=[];
+const readCache=new Map(),readInflight=new Map(),MASTER_CACHE_MS=30000;
+let captureOn=false,captureObserver=null,lastScreen='',remoteLoadedAt=0,screenStartedAt=performance.now(),scrollRaf=0,scrollFrames=0,scrollWindowStart=0,scrollActiveUntil=0;
+function screenName(){const visible=[...document.querySelectorAll('[id]')].filter(e=>{if(!e.id||!/(modal|panel|control|dashboard|screen|overlay|workbody)/i.test(e.id))return false;const r=e.getBoundingClientRect();return r.width>120&&r.height>80&&getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden'}).sort((a,b)=>{const ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();return (rb.width*rb.height)-(ra.width*ra.height)});return visible[0]?.id||'main app view'}
+function startScrollMonitor(){if(scrollRaf)return;scrollFrames=0;scrollWindowStart=performance.now();const tick=now=>{scrollRaf=0;if(!captureOn)return;if(now<scrollActiveUntil){scrollFrames++;if(now-scrollWindowStart>=1000){const fps=Math.round(scrollFrames*1000/(now-scrollWindowStart));add('Scroll frame-rate sample',{fps,classification:fps>=50?'SMOOTH':fps>=30?'ACCEPTABLE':'JANKY'},fps<30?'warning':'info');scrollFrames=0;scrollWindowStart=now;}scrollRaf=requestAnimationFrame(tick)}};scrollRaf=requestAnimationFrame(tick)}
+function onScroll(){if(!captureOn)return;scrollActiveUntil=performance.now()+1200;startScrollMonitor()}
+function recordNavigationTiming(){try{const n=performance.getEntriesByType('navigation')[0];if(n&&captureOn)add('App startup timing',{domContentLoadedMs:Math.round(n.domContentLoadedEventEnd),loadEventMs:Math.round(n.loadEventEnd),domInteractiveMs:Math.round(n.domInteractive),transferSize:n.transferSize||0},'info')}catch(_){}}
+function startCapture(){if(captureOn)return;captureOn=true;lastScreen=screenName();screenStartedAt=performance.now();recordNavigationTiming();add('Forensic capture started',{screen:lastScreen,mode:'passive; no destructive actions'},'success');if(captureObserver)captureObserver.disconnect();captureObserver=new MutationObserver(()=>{if(!captureOn)return;const now=screenName();if(now!==lastScreen){const ended=performance.now(),durationMs=Math.max(0,Math.round(ended-screenStartedAt));if(captureOn)add('Screen open/load timing',{screen:lastScreen,openDurationMs:durationMs,classification:durationMs<300?'FAST':durationMs<1000?'OK':durationMs<2500?'SLOW':'VERY SLOW'},durationMs>=2500?'error':durationMs>=1000?'warning':'success');lastScreen=now;screenStartedAt=ended;add('Screen state changed',{screen:now},'info')}});try{captureObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','aria-hidden']})}catch(_){}render()}
+function stopCapture(){if(!captureOn)return;if(captureOn){const durationMs=Math.max(0,Math.round(performance.now()-screenStartedAt));add('Screen open/load timing',{screen:lastScreen,openDurationMs:durationMs,classification:durationMs<300?'FAST':durationMs<1000?'OK':durationMs<2500?'SLOW':'VERY SLOW'},durationMs>=2500?'error':durationMs>=1000?'warning':'success')}captureOn=false;if(scrollRaf)cancelAnimationFrame(scrollRaf);scrollRaf=0;if(captureObserver)captureObserver.disconnect();captureObserver=null;add('Forensic capture stopped',{screen:screenName()},'success');render()}
+function read(){try{const x=JSON.parse(localStorage.getItem(STORE)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}}
+function write(a){try{localStorage.setItem(STORE,JSON.stringify(a.slice(0,MAX)))}catch(e){try{localStorage.setItem(STORE,JSON.stringify(a.slice(0,100)))}catch(_){}}}
+function queueRead(){try{return JSON.parse(localStorage.getItem(STORE+'_queue')||'[]')}catch(_){return []}}
+function queueWrite(a){try{localStorage.setItem(STORE+'_queue',JSON.stringify(a.slice(-200)))}catch(_){}}
+function who(){try{const s=window.shadabRestCurrentSession?.();return {email:s?.email||'unknown',uid:s?.uid||''}}catch(_){return {email:'unknown',uid:''}}}
+function add(type,detail={},status='info',opts={}){const u=who(),rec={id:(Date.now().toString(36)+Math.random().toString(36).slice(2,8)),at:new Date().toISOString(),type:String(type).slice(0,80),status,actor:u.email,uid:u.uid,detail};const a=read();a.unshift(rec);write(a);if(opts.cloud!==false){const q=queueRead();q.push(rec);queueWrite(q)}try{window.dispatchEvent(new CustomEvent('sp-audit-change',{detail:rec}))}catch(_){}return rec}
+function safe(v){try{return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}catch(_){return ''}}
+function fmt(iso){try{return new Date(iso).toLocaleString()}catch(_){return iso||'—'}}
+function counts(rows){const c={read:0,write:0,delete:0,error:0,activity:0};rows.forEach(r=>{const t=(r.type||'').toLowerCase();if(t.includes('read'))c.read++;if(t.includes('write')||t.includes('add')||t.includes('update')||t.includes('save'))c.write++;if(t.includes('delete'))c.delete++;if(r.status==='error'||r.status==='failed')c.error++;c.activity++});return c}
+function getSession(){try{return window.shadabRestCurrentSession?.()||{}}catch(_){return {}}}
+async function flush(force=false){if(busy||!navigator.onLine)return;const q=queueRead();if(!q.length)return;if(!force&&Date.now()-lastFlush<FLUSH_MS)return;const ses=getSession(),uid=String(ses.uid||'');if(!uid||typeof window.shadabRestReadDoc!=='function'||typeof window.shadabRestWriteFields!=='function'){cloudState='Waiting for signed-in Firebase session';return}
+ busy=true;lastFlush=Date.now();suppress=true;
+ try{const path='user_data/'+encodeURIComponent(uid);const doc=await window.shadabRestReadDoc(path)||{};const old=Array.isArray(doc.activityAudit)?doc.activityAudit:[];const merged=new Map();old.concat(q).forEach(r=>{if(r&&r.id)merged.set(r.id,r)});const events=Array.from(merged.values()).sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,CLOUD_MAX);await window.shadabRestWriteFields(path,{activityAudit:events,activityAuditUpdatedAt:new Date().toISOString()});const ids=new Set(q.map(r=>r.id));queueWrite(queueRead().filter(r=>!ids.has(r.id)));cloudState='Cloud sync OK • '+events.length+' recent events';add('Audit batch synced',{count:q.length,cloudDocument:path},'success',{cloud:false});
+ }catch(e){cloudState='Cloud sync failed: '+String(e?.message||e).slice(0,180);add('Audit cloud sync failed',{error:String(e?.message||e).slice(0,220)},'error',{cloud:false})}finally{suppress=false;busy=false;}
+}
+async function loadRemote(force=false){if(!force&&remoteLoadedAt&&Date.now()-remoteLoadedAt<300000)return;const ses=getSession();if(!ses.email||String(ses.email).toLowerCase()!=='master@shadabpharmacy.com'){remoteRows=[];return}if(typeof window.shadabRestReadCollection!=='function')return;const oldSuppress=suppress;suppress=true;try{const docs=await window.shadabRestReadCollection('user_data');remoteRows=[];(Array.isArray(docs)?docs:[]).forEach(d=>{const data=typeof d?.data==='function'?(d.data()||{}):(d?.data||d||{});if(Array.isArray(data.activityAudit))remoteRows.push(...data.activityAudit)});const m=new Map();remoteRows.forEach(r=>{if(r?.id)m.set(r.id,r)});remoteRows=Array.from(m.values()).sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,1000);remoteLoadedAt=Date.now();cloudState='Loaded shared activity from '+new Set(remoteRows.map(r=>r.uid).filter(Boolean)).size+' account(s)';}catch(e){cloudState='Shared log read failed: '+String(e?.message||e).slice(0,160)}finally{suppress=oldSuppress}}
+function render(){const b=document.getElementById('sp35WorkBody')||document.getElementById('sp35WorkBodyNew');if(!b)return;const local=read(),all=new Map();local.concat(remoteRows).forEach(r=>{if(r?.id)all.set(r.id,r)});const rows=Array.from(all.values()).sort((a,b)=>String(b.at).localeCompare(String(a.at))),c=counts(rows),today=new Date().toISOString().slice(0,10);
+ b.innerHTML=`<div class="sp35-notice-final"><b>Update & Activity Audit Center</b><br><small>${safe(VERSION)}</small><br><small>Cloud: ${safe(cloudState)} • Queued locally: ${queueRead().length} • Auto batch interval: 60 min when events exist • Recent cloud history per account: ${CLOUD_MAX} • Capture: ${captureOn?'ON':'OFF'}</small></div>
+ <div class="sp-cc-grid" style="margin:10px 0;grid-template-columns:repeat(2,minmax(0,1fr))"><div class="sp-cc-card"><span class="ic">📥</span><span><b>Tracked reads</b><small>${c.read}</small></span></div><div class="sp-cc-card"><span class="ic">📤</span><span><b>Tracked writes</b><small>${c.write}</small></span></div><div class="sp-cc-card"><span class="ic">🗑️</span><span><b>Tracked deletes</b><small>${c.delete}</small></span></div><div class="sp-cc-card"><span class="ic">⚠️</span><span><b>Tracked errors</b><small>${c.error}</small></span></div></div>
+ <div class="sp35-row-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="sp35-btn" id="spAuditToday">Today</button><button class="sp35-btn" id="spAuditAll">All dates</button><button class="sp35-btn" id="spAuditRefresh">Refresh shared logs</button><button class="sp35-btn" id="spAuditSync">Sync queued logs now</button><button class="sp35-btn" id="spAuditCapture">▶ Start Forensic Capture</button><button class="sp35-btn" id="spAuditExport">Export JSON</button></div><div class="notice"><b>App version/update</b><br>${safe(VERSION)}<br><small>Build label; not proof of the deployed version on every device. Events begin from this build; historical events are not retroactive.</small></div><div id="spAuditRows" style="display:grid;gap:8px;margin-top:10px"></div>`;
+ let filter='today';function list(){const out=document.getElementById('spAuditRows');if(!out)return;const selected=rows.filter(r=>filter!=='today'||String(r.at||'').slice(0,10)===today);out.innerHTML=selected.slice(0,300).map(r=>`<div class="notice"><b>${safe(fmt(r.at))}</b> · ${safe(r.status||'info')}<br><b>${safe(r.type)}</b><br><small>Actor: ${safe(r.actor)} ${r.uid?'• UID: '+safe(r.uid):''}</small><br><small>${safe(JSON.stringify(r.detail||{}))}</small></div>`).join('')||'<div class="sp35-emptyx">No events for this filter.</div>'}
+ document.getElementById('spAuditToday').onclick=()=>{filter='today';list()};document.getElementById('spAuditAll').onclick=()=>{filter='all';list()};document.getElementById('spAuditRefresh').onclick=async()=>{await loadRemote(true);render()};document.getElementById('spAuditSync').onclick=async()=>{await flush(true);await loadRemote(true);render()};document.getElementById('spAuditCapture').onclick=()=>{if(captureOn)stopCapture();else startCapture();};document.getElementById('spAuditCapture').textContent=captureOn?'■ Stop Forensic Capture':'▶ Start Forensic Capture';document.getElementById('spAuditExport').onclick=()=>{const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),cloudState,capture:{active:captureOn,screen:screenName(),mode:'passive'},local:read(),shared:remoteRows,queued:queueRead()},null,2)],{type:'application/json'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='shadab-pharmacy-audit-'+today+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};list();
+}
+window.sp35Point43=async function(){hook();await loadRemote();render();await flush(false)};
+function hook(){if(hooked)return;const names=[['shadabRestReadDoc','Firebase read document'],['shadabRestReadCollection','Firebase read collection'],['shadabRestWriteDoc','Firebase write document'],['shadabRestWriteFields','Firebase write fields'],['shadabRestDeleteDoc','Firebase delete document']];let any=false;names.forEach(([name,label])=>{const original=window[name];if(typeof original!=='function'||original.__spAuditWrapped)return;const wrapped=async function(...args){const path=String(args[0]||'').slice(0,180);if(suppress||/user_data\/[^/]+$/.test(path)&&(/activityAudit/.test(JSON.stringify(args[1]||{}))))return original.apply(this,args);const cacheable=name==='shadabRestReadDoc'&&path==='app_settings/masterData';if(cacheable){const hit=readCache.get(path);if(hit&&Date.now()-hit.at<MASTER_CACHE_MS){if(!suppress)add('Cache hit (no Firebase read)',{path,ttlMs:MASTER_CACHE_MS},'info',{cloud:true});return hit.value}if(readInflight.has(path))return readInflight.get(path)}try{const task=original.apply(this,args);if(cacheable)readInflight.set(path,task);const result=await task;if(cacheable)readCache.set(path,{at:Date.now(),value:result});if(name!=='shadabRestReadDoc'||path!=='app_settings/masterData'){}if(name==='shadabRestWriteDoc'||name==='shadabRestWriteFields'||name==='shadabRestDeleteDoc'){const changed=String(args[0]||'');if(changed==='app_settings/masterData')readCache.delete(changed)}if(!suppress&&!/activityAudit/.test(path))add(label,{path,method:name},'success');return result}catch(e){if(!suppress&&!/activityAudit/.test(path))add(label,{path,method:name,error:String(e?.message||e).slice(0,250)},'error');throw e}finally{if(cacheable)readInflight.delete(path)}};wrapped.__spAuditWrapped=true;wrapped.__spAuditOriginal=original;window[name]=wrapped;any=true});hooked=any}
+ // Hook once the existing REST layer is available; no rapid polling and no write per event.
+ hook();window.addEventListener('load',hook,{once:true});document.addEventListener('click',e=>{const el=e.target?.closest?.('button,[role=button],a,.sp-added-dashboard-card,.sp-cc-card,.sp-live-card,.financial-tool-card,.shared-doc-card');if(!el)return;const t=(el.innerText||el.getAttribute('aria-label')||el.title||el.id||'Interactive element').trim().replace(/\s+/g,' ').slice(0,100);if(/sync|save|assign|upload|delete|add city|territory|visit|order|route|contact|summary|dashboard|control|audit|report|planned|visited/i.test(t))add(captureOn?'Captured UI action':'UI action',{label:t,elementId:String(el.id||'').slice(0,80),screen:screenName()},'info');},true);
+ window.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',()=>{if(captureOn)add('Viewport resize',{width:innerWidth,height:innerHeight,devicePixelRatio:devicePixelRatio},'info')},{passive:true});window.addEventListener('error',e=>add('JavaScript error',{message:String(e.message||'Unknown error').slice(0,250),file:String(e.filename||'').slice(-100),line:e.lineno||0},'error'));window.addEventListener('unhandledrejection',e=>add('Unhandled promise rejection',{reason:String(e.reason?.message||e.reason||'Unknown rejection').slice(0,250)},'error'));window.addEventListener('error',e=>{if(e.target&&e.target!==window){add('Resource load error',{tag:String(e.target.tagName||''),source:String(e.target.src||e.target.href||'').slice(-160)},'error')}},true);window.addEventListener('online',()=>{add('Network online',{},'info');flush(false)});window.addEventListener('offline',()=>add('Network offline',{},'error'));
+ setTimeout(()=>{hook();flush(false)},8000);setInterval(()=>{hook();flush(false)},FLUSH_MS);
+ add('App build loaded',{version:VERSION,source:'local HTML startup'},'info');
+})();
+</script>
+<style id="sp24-master-audit-card-relocation-css">
+#spAuditMasterLauncher{grid-column:1/-1!important;grid-row:auto!important;width:100%!important;min-width:0!important;min-height:108px!important;box-sizing:border-box!important;position:relative!important;isolation:isolate!important;overflow:hidden!important;border:1px solid rgba(72,218,255,.72)!important;border-radius:22px!important;padding:13px 15px!important;gap:14px!important;background:linear-gradient(125deg,rgba(4,75,105,.98),rgba(3,31,54,.98) 57%,rgba(42,28,105,.95))!important;box-shadow:0 13px 32px rgba(0,145,255,.20),0 0 0 1px rgba(24,201,255,.12),inset 0 1px rgba(255,255,255,.18),inset 0 -12px 24px rgba(0,0,0,.18)!important;transition:transform .22s ease,box-shadow .22s ease,filter .22s ease!important;animation:spAuditCardBreathe 4s ease-in-out infinite}
+#spAuditMasterLauncher:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:linear-gradient(112deg,transparent 0%,rgba(255,255,255,.06) 40%,rgba(28,216,255,.11) 52%,transparent 67%);background-size:220% 100%;animation:spAuditGlassSweep 6s linear infinite}
+#spAuditMasterLauncher:active{transform:translateY(1px) scale(.992)!important;filter:brightness(1.08)}
+#spAuditMasterLauncher .sp-audit-3d-icon{position:relative!important;flex:0 0 62px!important;width:62px!important;height:62px!important;border-radius:19px!important;display:grid!important;place-items:center!important;overflow:hidden!important;isolation:isolate!important;background:linear-gradient(145deg,#39e5ff 0%,#087fe9 55%,#6646e8 100%)!important;border:1px solid rgba(255,255,255,.42)!important;box-shadow:inset 0 2px 4px rgba(255,255,255,.55),inset 0 -9px 13px rgba(0,0,0,.30),0 10px 23px rgba(0,137,255,.36),0 0 22px rgba(26,215,255,.25)!important;transform:perspective(120px) rotateY(-4deg);animation:spAuditIconFloat 3.5s ease-in-out infinite}
+#spAuditMasterLauncher .sp-audit-3d-icon:before{content:"";position:absolute;inset:3px;border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.38),rgba(255,255,255,.05) 38%,rgba(0,0,0,.12) 76%,rgba(255,255,255,.13));pointer-events:none}
+#spAuditMasterLauncher .sp-audit-3d-icon svg{width:39px!important;height:39px!important;fill:none;stroke:#fff;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));position:relative;z-index:1}
+#spAuditMasterLauncher .sp-added-dashboard-copy strong{font-size:17px!important;letter-spacing:.01em;color:#f4fbff!important}
+#spAuditMasterLauncher .sp-added-dashboard-copy small{font-size:12px!important;line-height:1.35!important;color:#b9d8ec!important}
+#spAuditMasterLauncher .sp-added-dashboard-copy em{font-size:10px!important;color:#4cc9ff!important;font-style:normal!important}
+#spAuditMasterLauncher .sp-added-dashboard-go{border-color:rgba(35,200,255,.72)!important;color:#dffaff!important;box-shadow:0 0 18px rgba(0,172,255,.16)!important;flex:0 0 36px!important}
+@keyframes spAuditIconFloat{0%,100%{transform:perspective(120px) rotateY(-4deg) translateY(0)}50%{transform:perspective(120px) rotateY(4deg) translateY(-2px)}}
+@keyframes spAuditCardBreathe{0%,100%{box-shadow:0 13px 32px rgba(0,145,255,.18),0 0 0 1px rgba(24,201,255,.10),inset 0 1px rgba(255,255,255,.18),inset 0 -12px 24px rgba(0,0,0,.18)}50%{box-shadow:0 15px 35px rgba(0,145,255,.27),0 0 22px rgba(24,201,255,.12),inset 0 1px rgba(255,255,255,.22),inset 0 -12px 24px rgba(0,0,0,.18)}}
+@keyframes spAuditGlassSweep{0%{background-position:130% 0}100%{background-position:-100% 0}}
+@media(max-width:700px){#spAuditMasterLauncher{min-height:96px!important;padding:11px!important;gap:10px!important;border-radius:18px!important}#spAuditMasterLauncher .sp-audit-3d-icon{width:54px!important;height:54px!important;flex-basis:54px!important;border-radius:16px!important}#spAuditMasterLauncher .sp-audit-3d-icon svg{width:34px!important;height:34px!important}#spAuditMasterLauncher .sp-added-dashboard-copy strong{font-size:15px!important}#spAuditMasterLauncher .sp-added-dashboard-copy small{font-size:10px!important}#spAuditMasterLauncher .sp-added-dashboard-copy em{font-size:9px!important}}
+@media(prefers-reduced-motion:reduce){#spAuditMasterLauncher,#spAuditMasterLauncher:before,#spAuditMasterLauncher .sp-audit-3d-icon{animation:none!important;transition:none!important}}
+</style>
+<script id="sp24-master-audit-card-relocation-js">
+(function(){
+ 'use strict';
+ const ROOT='spAddedDashboardShortcuts',ID='spAuditMasterLauncher';
+ let bodyObserver=null,rootObserver=null,activeRoot=null;
+ function mount(){
+  const root=document.getElementById(ROOT);if(!root)return false;
+  let tile=document.getElementById(ID);
+  if(!tile){
+   tile=document.createElement('button');tile.id=ID;tile.type='button';tile.className='sp-added-dashboard-card sp-audit-master-card';
+   tile.setAttribute('aria-label','Open Update & Activity Audit');
+   tile.innerHTML='<span aria-hidden="true" class="sp-added-dashboard-icon sp-audit-3d-icon"><svg viewBox="0 0 64 64"><path d="M18 8h23l8 8v40H18Z"/><path d="M41 8v10h8"/><path d="M25 28h17M25 35h17M25 42h10"/><circle cx="45" cy="46" r="11" fill="rgba(4,43,75,.95)" stroke="#fff" stroke-width="2.5"/><path d="m39 46 4 4 8-9"/></svg></span><span class="sp-added-dashboard-copy"><strong>Update &amp; Activity Audit</strong><small>Firebase reads/writes · all salesman activity · sync errors</small><em>Tap to open complete activity history</em></span><span aria-hidden="true" class="sp-added-dashboard-go">›</span>';
+   tile.addEventListener('click',function(ev){ev.preventDefault();ev.stopPropagation();const fn=window.sp35OpenAuditFromMaster;if(typeof fn==='function'){fn()}else{try{window.toast35?.('Audit screen is still loading. Please tap again.')}catch(_){} }});
+  }
+  tile.style.setProperty('grid-column','1 / -1','important');tile.style.setProperty('width','100%','important');tile.style.setProperty('box-sizing','border-box','important');
+  if(tile.parentElement!==root||tile!==root.lastElementChild)root.appendChild(tile);
+  if(activeRoot!==root){activeRoot=root;if(rootObserver)rootObserver.disconnect();rootObserver=new MutationObserver(()=>{if(tile.isConnected&&tile.parentElement===root&&tile!==root.lastElementChild)root.appendChild(tile);else if(!tile.isConnected)mount()});rootObserver.observe(root,{childList:true});}
+  return true;
+ }
+ function locate(){if(mount()&&bodyObserver){bodyObserver.disconnect();bodyObserver=null}}
+ if(document.body){bodyObserver=new MutationObserver(locate);bodyObserver.observe(document.body,{childList:true,subtree:true})}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',locate,{once:true});else locate();
+ window.addEventListener('load',locate,{once:true});
+})();
+</script>
+
+<style id="sp-final-pdf-confirm-repair-css">
+#spPdfConfirmOverlay{position:fixed;inset:0;z-index:2147483647;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(1,9,18,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-sizing:border-box}
+#spPdfConfirmOverlay.show{display:flex;animation:spPdfConfirmFade .16s ease-out}
+#spPdfConfirmPanel{width:min(100%,390px);box-sizing:border-box;padding:22px;border-radius:24px;border:1px solid rgba(85,219,255,.76);background:linear-gradient(145deg,#0b3451,#061d31 65%,#10264d);color:#f4fbff;box-shadow:0 20px 65px rgba(0,0,0,.62),0 0 30px rgba(0,180,255,.2),inset 0 1px 0 rgba(255,255,255,.18);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+#spPdfConfirmHead{display:flex;align-items:center;gap:13px;margin:0 0 11px}
+#spPdfConfirmIcon{width:54px;height:54px;flex:0 0 54px;border-radius:17px;display:grid;place-items:center;font-size:27px;background:linear-gradient(145deg,#58eaff,#0785f2 60%,#5c45e6);border:1px solid rgba(255,255,255,.48);box-shadow:inset 0 2px 3px rgba(255,255,255,.55),inset 0 -5px 9px rgba(0,0,0,.27),0 8px 18px rgba(0,150,255,.3)}
+#spPdfConfirmTitle{font-size:19px;line-height:1.2;font-weight:900;margin:0}#spPdfConfirmSubtitle{font-size:12px;line-height:1.45;color:#b8d7ea;margin:6px 0 18px;overflow-wrap:anywhere}
+#spPdfConfirmActions{display:grid;grid-template-columns:1fr;gap:10px}
+#spPdfConfirmActions button{width:100%;min-height:49px;padding:13px 15px;border-radius:14px;font-size:15px;font-weight:850;cursor:pointer;color:#fff}
+#spPdfConfirmDownload{border:1px solid #8cecff;background:linear-gradient(145deg,#129ce9,#0760b8);box-shadow:0 5px 0 #043f76,inset 0 1px 0 rgba(255,255,255,.35)}
+#spPdfConfirmCancel{border:1px solid rgba(167,213,234,.35);background:linear-gradient(145deg,#18384e,#0b2235);color:#c6dfed!important}
+@keyframes spPdfConfirmFade{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){#spPdfConfirmOverlay.show{animation:none}}
+</style>
+<script id="sp-final-audit-path-normalizer-pdf-confirm-v1">
+(function(){
+'use strict';
+/* Canonical document namespace from the existing final document authority. */
+const CACHE_TTL=60000,ERROR_TTL=15000;
+const docCache=new Map(),inflight=new Map(),errorCache=new Map(),lastHitLog=new Map();
+const AUDIT_STORE='sp_update_activity_audit_v2',AUDIT_QUEUE=AUDIT_STORE+'_queue';
+function normalizePath(value){
+  let p=String(value||'');
+  if(p.startsWith('app_settings/sharedDocuments/'))p='sharedDocuments/'+p.slice('app_settings/sharedDocuments/'.length);
+  // Older document versions used a single underscore before chunk indexes.
+  p=p.replace(/^(sharedDocuments\/(?:orderForm|supplySchedule|license))_chunk_(\d+)$/,'$1__chunk_$2');
+  return p;
+}
+function docFamily(path){const m=String(path).match(/^sharedDocuments\/(orderForm|supplySchedule|license)(?:__chunk_\d+)?$/);return m?m[1]:''}
+function invalidate(path){const p=normalizePath(path),family=docFamily(p);if(!family)return;for(const k of docCache.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))docCache.delete(k);for(const k of errorCache.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))errorCache.delete(k);for(const k of inflight.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))inflight.delete(k)}
+function addAudit(type,detail,status='info'){
+  try{
+    const ses=window.shadabRestCurrentSession?.()||{};
+    const r={id:Date.now().toString(36)+Math.random().toString(36).slice(2,8),at:new Date().toISOString(),type,status,actor:ses.email||'unknown',uid:ses.uid||'',detail};
+    const read=k=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}};
+    const local=read(AUDIT_STORE);local.unshift(r);try{localStorage.setItem(AUDIT_STORE,JSON.stringify(local.slice(0,500)))}catch(_){ }
+    const q=read(AUDIT_QUEUE);q.push(r);try{localStorage.setItem(AUDIT_QUEUE,JSON.stringify(q.slice(-200)))}catch(_){ }
+    window.dispatchEvent(new CustomEvent('sp-audit-change',{detail:r}));
+  }catch(_){ }
+}
+function logCacheHit(path){const now=Date.now(),last=lastHitLog.get(path)||0;if(now-last<10000)return;lastHitLog.set(path,now);if(String(path).startsWith('suppressed:'))addAudit('Repeated failed read suppressed',{path:String(path).slice(11),ttlMs:ERROR_TTL},'warning');else addAudit('Cache hit (no Firebase read)',{path,ttlMs:CACHE_TTL},'info')}
+function wrapRead(){
+ const name='shadabRestReadDoc',original=window[name];
+ if(typeof original!=='function'||original.__spFinalPathCache)return false;
+ const wrapped=async function(path,...args){
+   const p=normalizePath(path),family=docFamily(p);
+   if(!family)return original.call(this,p,...args);
+   const now=Date.now(),hit=docCache.get(p),failed=errorCache.get(p);
+   if(hit&&now-hit.at<CACHE_TTL){logCacheHit(p);return hit.value}
+   if(failed&&now-failed.at<ERROR_TTL){logCacheHit('suppressed:'+p);throw failed.error}
+   if(inflight.has(p))return inflight.get(p);
+   const task=Promise.resolve().then(()=>original.call(this,p,...args)).then(value=>{
+     errorCache.delete(p);docCache.set(p,{at:Date.now(),value});
+     return value;
+   }).catch(error=>{
+     // Briefly suppress repeated permission/network failures from older duplicate
+     // hydration handlers. Writes invalidate this negative cache immediately.
+     errorCache.set(p,{at:Date.now(),error});
+     throw error;
+   }).finally(()=>inflight.delete(p));
+   inflight.set(p,task);return task;
+ };
+ wrapped.__spFinalPathCache=true;wrapped.__spAuditWrapped=true;wrapped.__spFinalOriginal=original;window[name]=wrapped;return true;
+}
+function wrapMutation(name){
+ const original=window[name];if(typeof original!=='function'||original.__spFinalPathCache)return false;
+ const wrapped=async function(path,...args){
+   const p=normalizePath(path);invalidate(p);
+   try{return await original.call(this,p,...args)}finally{invalidate(p)}
+ };
+ wrapped.__spFinalPathCache=true;wrapped.__spAuditWrapped=true;wrapped.__spFinalOriginal=original;window[name]=wrapped;return true;
+}
+function install(){wrapRead();['shadabRestWriteDoc','shadabRestWriteFields','shadabRestDeleteDoc'].forEach(wrapMutation)}
+install();window.addEventListener('load',install,{once:true});
+
+/* App-level confirmation restores the old explicit Download / Cancel decision.
+   Chrome's own download prompt is controlled by browser settings, so this app
+   dialog makes the choice predictable on Android and content:// launches. */
+const labels={today:'Today',week:'This Week',month:'This Month',unique:'Unique Stores',planned:'Planned Stores',visited:'Visited Stores',orders:'Order Stores',remaining:'Remaining Stores'};
+let pending=false;
+function closeConfirm(){const o=document.getElementById('spPdfConfirmOverlay');if(o)o.remove();pending=false}
+function askPdf(kind,runner){
+ if(pending)return false;pending=true;
+ let o=document.getElementById('spPdfConfirmOverlay');if(o)o.remove();
+ o=document.createElement('div');o.id='spPdfConfirmOverlay';o.setAttribute('role','presentation');
+ const label=labels[String(kind||'today')]||'Master';
+ o.innerHTML='<section id="spPdfConfirmPanel" role="dialog" aria-modal="true" aria-labelledby="spPdfConfirmTitle"><div id="spPdfConfirmHead"><div id="spPdfConfirmIcon" aria-hidden="true">⇩</div><div><h3 id="spPdfConfirmTitle">Download PDF report?</h3><div style="font-size:12px;color:#5ee5ff;font-weight:800;margin-top:4px">SHADAB PHARMACY</div></div></div><p id="spPdfConfirmSubtitle">'+label.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+' report is ready to prepare. Choose Download PDF to continue, or Cancel to return without downloading.</p><div id="spPdfConfirmActions"><button id="spPdfConfirmDownload" type="button">⬇ Download PDF</button><button id="spPdfConfirmCancel" type="button">Cancel</button></div></section>';
+ document.body.appendChild(o);
+ o.addEventListener('click',e=>{if(e.target===o)closeConfirm()});
+ o.querySelector('#spPdfConfirmCancel').addEventListener('click',closeConfirm);
+ o.querySelector('#spPdfConfirmDownload').addEventListener('click',()=>{
+   const b=o.querySelector('#spPdfConfirmDownload');if(b){b.disabled=true;b.textContent='Preparing PDF…'}
+   closeConfirm();
+   try{const r=runner(kind);if(r&&typeof r.then==='function')r.catch(err=>{try{window.toast35?.('✕ PDF failed — '+(err?.message||err))}catch(_){}})}catch(err){try{window.toast35?.('✕ PDF failed — '+(err?.message||err))}catch(_){}}
+ });
+ const cancel=o.querySelector('#spPdfConfirmCancel');try{cancel.focus({preventScroll:true})}catch(_){ }
+ return true;
+}
+const originalReportDownload=typeof window.spFinalDownloadPdf==='function'?window.spFinalDownloadPdf:null;
+if(originalReportDownload&&!originalReportDownload.__spPdfConfirmWrapper){
+ const wrapped=function(kind){return askPdf(kind,k=>originalReportDownload.call(window,k))};
+ wrapped.__spPdfConfirmWrapper=true;wrapped.__spPdfConfirmOriginal=originalReportDownload;window.spFinalDownloadPdf=wrapped;window.downloadMasterReportPDF=wrapped;
+}
+const originalTaskDownload=typeof window.spV37MasterTodayTaskDownload==='function'?window.spV37MasterTodayTaskDownload:(typeof window.spV35MasterTodayTaskDownload==='function'?window.spV35MasterTodayTaskDownload:null);
+if(originalTaskDownload&&!originalTaskDownload.__spPdfConfirmWrapper){
+ const wrappedTask=function(kind){return askPdf(kind,k=>originalTaskDownload.call(window,k))};
+ wrappedTask.__spPdfConfirmWrapper=true;wrappedTask.__spPdfConfirmOriginal=originalTaskDownload;window.spV37MasterTodayTaskDownload=wrappedTask;window.spV35MasterTodayTaskDownload=wrappedTask;
+}
+/* Record better evidence when a browser suppresses details into generic Script error. */
+window.addEventListener('error',function(e){
+ if(String(e?.message||'').trim()!=='Script error.')return;
+ let scripts=[];try{scripts=performance.getEntriesByType('resource').filter(x=>/\.js(?:\?|$)/i.test(x.name)).slice(-8).map(x=>x.name.slice(-160))}catch(_){ }
+ addAudit('JavaScript error diagnostics',{message:'Browser reported a generic Script error and suppressed its origin/line details.',filename:String(e?.filename||''),line:Number(e?.lineno||0),screen:(document.querySelector('.sp-added-dash-view.show')?.id||document.querySelector('.modal.show')?.id||'main app'),recentScriptResources:scripts},'error');
+},true);
+window.spFinalDocumentReadRepair={normalizePath,cacheTTL:CACHE_TTL,errorBackoffMs:ERROR_TTL,manualInvalidate:path=>invalidate(path),version:'2026-10-13-v2'};
+addAudit('App update loaded',{version:'SHADAB PHARMACY • PATH NORMALIZATION + PDF CONFIRM • 2026-10-13',scope:'Legacy shared-document path repair, 60s manifest/chunk cache, 15s repeated failure suppression, explicit PDF Download/Cancel'},'success');
+})();
+</script>
+
+</body>
+</html>
+
+<!-- Point 24 v3: passive forensic capture controls, hourly batched audit sync, shared-document read path correction. Live Firebase cross-device verification remains required. -->
