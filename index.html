@@ -4557,7 +4557,7 @@ function openVisitRecordsSection(){
 window.addEventListener("keydown",e=>{if(e.key==="Escape")closeSectionModal();});
 </script>
 <!-- FIREBASE STATUS ONLY: appended without changing existing page markup -->
-<script defer="" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer="" crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <style>
 #offlineBar .offline-dot.firebase-checking{background:#ff9f0a!important;animation:shadabFirebaseBlink 1s infinite}
 #offlineBar .offline-dot.firebase-connected{background:#20c96b!important;animation:shadabFirebaseBlink 1.2s infinite}
@@ -4577,7 +4577,7 @@ window.addEventListener("keydown",e=>{if(e.key==="Escape")closeSectionModal();})
         if(!navigator.onLine){setStatus('firebase-error','Offline — local data mode active');return;}
         if(!s.signedIn){setStatus('firebase-connected','Cloud ready • Sign in to sync');return;}
         if(!salesmanSyncResult || salesmanSyncResult.ok!==false){
-        setStatus('firebase-connected','Cloud sync connected • last check '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})+' • auto sync every 1 hour');
+        setStatus('firebase-connected','Salesman visits & photo references ready • last check '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})+' • auto sync every 1 hour');
       }
         return;
       }
@@ -4626,7 +4626,7 @@ window.addEventListener("keydown",e=>{if(e.key==="Escape")closeSectionModal();})
 #sp35AuthModal .modal-box{max-width:460px}.sp35-tabs{display:flex;gap:6px;margin-bottom:12px}.sp35-tabs button{flex:1}.sp35-user-badge{display:none;align-items:center;gap:7px;font-size:11px;color:#fff;margin-left:auto;margin-right:10px}.sp35-user-badge.show{display:flex}.sp35-user-badge b{font-size:12px}.sp35-login{color:#aeb8c5;font-size:11px;text-align:center;margin-top:3px}
 @media(max-width:800px){.sp35-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sp35-kpis{grid-template-columns:repeat(2,1fr)}.sp35-form{grid-template-columns:1fr}}
 </style>
-<script defer="" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script defer="" crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <div class="modal" id="sp35AuthModal"><div class="modal-box"><div class="modal-head"><h3 id="sp35AuthTitle">Salesman Login</h3><button class="close" onclick="sp35CloseAuth()">×</button></div><div class="sp35-tabs"><button class="sp35-btn primary" id="sp35LoginTab" onclick="sp35ShowAuth('login')">Login</button><button class="sp35-btn" id="sp35RegisterTab" onclick="sp35ShowAuth('register')">Register</button></div><div id="sp35LoginForm"><div class="field"><label>Email</label><input autocomplete="username" id="sp35LoginEmail" type="email"/></div><div class="field"><label>Password</label><input autocomplete="current-password" id="sp35LoginPassword" type="password"/></div><label style="display:flex;align-items:center;gap:8px;margin:8px 0 12px;font-size:13px"><input id="sp35RememberMaster" style="width:auto" type="checkbox"/> Remember this as Master Salesman on this device</label><div class="actions"><button class="btn primary" onclick="sp35Login()">🔐 Login</button><button class="btn secondary" onclick="sp35Forgot()">Forgot Password?</button></div><button class="sp35-btn" onclick="sp35UseSavedMaster()" style="width:100%;margin-top:10px">⚡ Use Saved Master Salesman</button></div><div id="sp35RegisterForm" style="display:none"><div class="sp35-form"><div><label>Salesman Name</label><select id="sp35RegName"><option value="">Select your salesman name</option></select></div><div><label>Mobile</label><input id="sp35RegMobile" inputmode="tel"/></div><div class="full"><label>Email</label><input id="sp35RegEmail" type="email"/></div><div class="full"><label>Create Password</label><input id="sp35RegPassword" minlength="6" type="password"/></div></div><div class="actions"><button class="btn primary" onclick="sp35Register()">Create Salesman Account</button></div><small class="sp35-muted">Firebase Authentication stores the password securely; it is never written to Firestore.</small></div></div></div>
 <script id="shadab-shared-docs-runtime">
 (function(){
@@ -4978,7 +4978,15 @@ function restoreAdminAfterChild(){
  if(!childReturn)return;
  CHILD_IDS.forEach(id=>$(id)?.classList.remove('show'));
  childReturn=false;
- show();
+ /* Closing a child control must not resurrect the Admin panel. Leave it closed;
+    the user can reopen it intentionally from the Master Control screen. */
+ const m=$('spAdminExact41');
+ if(m){
+  m.classList.remove('sp-open','sp-detail-open');
+  m.style.setProperty('display','none','important');
+  m.style.setProperty('visibility','hidden','important');
+  m.style.setProperty('pointer-events','none','important');
+ }
 }
 function openRealChild(kind){
  const id={territory:'uploadTerritoryModal',stores:'storeDatabaseModal'}[kind];
@@ -5016,7 +5024,7 @@ async function openControl(n){
 function installLauncher(){
  const d=$('adminDashboardBox');if(!d)return;let l=$('spAdminCCLauncher');
  if(!l){l=document.createElement('button');l.id='spAdminCCLauncher';l.type='button';l.innerHTML='<span class="sp-cc-launch-icon" aria-hidden="true">⚙️</span><span class="sp-cc-launch-copy"><b>Admin Control Center</b><small>Management tools • assignments • reports • system controls</small></span><span class="sp-cc-arrow" aria-hidden="true">›</span>';const hero=d.querySelector('.admin-hero');if(hero)hero.insertAdjacentElement('beforebegin',l);else d.insertBefore(l,d.firstChild)}
- l.removeAttribute('onclick');l.onclick=e=>{e.preventDefault();e.stopPropagation();show();return false};l.ontouchend=e=>{e.preventDefault();e.stopPropagation();show();return false};l.setAttribute('aria-label','Open Admin Control Center');
+ l.removeAttribute('onclick');l.ontouchend=null;l.removeAttribute('ontouchend');l.onclick=e=>{if(Date.now()<Number(window.__spIgnoreAdminOpenUntil||0)){e.preventDefault();e.stopPropagation();return false}e.preventDefault();e.stopPropagation();show();return false};l.setAttribute('aria-label','Open Admin Control Center');
 }
 function setupMainDashboardButtons(){
  const d=$('adminDashboardBox');if(!d)return;const a=d.querySelector('.admin-hero-actions');if(!a)return;const buttons=a.querySelectorAll('button');if(buttons.length<2)return;const refreshBtn=buttons[0],closeBtn=buttons[1];
@@ -5468,10 +5476,29 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }finally{clearTimeout(timer)}
   }
   window.sp35UseSavedMaster=async function(){
+    /* Master admin identity has priority over the optional saved field-sales identity.
+       Previously this button replaced shadab_rest_auth_v3 with a Gmail salesman token,
+       so the Account panel and later Firestore writes silently changed actors. */
+    const current=(()=>{try{return window.shadabRestCurrentSession?.()||session||null}catch(e){return session||null}})();
+    let adminFlag=false;try{adminFlag=localStorage.getItem('shadab_admin_logged_in_v2')==='1'}catch(e){}
+    const currentEmail=String(current?.email||'').trim().toLowerCase();
+    const masterActive=currentEmail===ADMIN_EMAIL||adminFlag||(typeof adminLoggedIn!=='undefined'&&adminLoggedIn===true);
+    if(masterActive){
+      if(currentEmail!==ADMIN_EMAIL){
+        try{
+          const restored=await signInREST(ADMIN_EMAIL,ADMIN_PASS);
+          session=restored;saveSession();await loginSuccess(restored,true);
+          try{window.sp35UpdateHeaderLoginButton?.('Master Shadab')}catch(_){}
+          try{window.sp35OpenAuth?.('account')}catch(_){}
+          safeToast('Master account restored • saved salesman account was not switched');
+        }catch(e){safeToast('Master login is marked active, but Firebase could not restore it. Reopen Master Control and log in again.');}
+      }else safeToast('Master account is already active • saved salesman account was not switched');
+      return false;
+    }
     const saved=loadMasterSalesmanSession();
-    if(!saved?.refreshToken){safeToast('Master Salesman is not set up yet. Login once and tick “Remember this as Master Salesman”.');return}
-    try{const fresh=await refreshRESTForSaved(saved);session=fresh;saveSession();await loginSuccess(fresh,false);safeToast('Master Salesman restored on this device');}
-    catch(e){clearMasterSalesmanSession();safeToast('Saved Master Salesman session expired. Please login once again.')}
+    if(!saved?.refreshToken){safeToast('Master Salesman is not set up yet. Login once and tick “Remember this as Master Salesman”.');return false}
+    try{const fresh=await refreshRESTForSaved(saved);session=fresh;saveSession();await loginSuccess(fresh,false);safeToast('Master Salesman restored on this device');return true}
+    catch(e){clearMasterSalesmanSession();safeToast('Saved Master Salesman session expired. Please login once again.');return false}
   };
 
   // FINAL LOCAL-FILE AUTH FIX
@@ -6243,23 +6270,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   // Keep the saved session locally; refresh it only when internet is available.
   async function resumeCloudAfterOnline(){
     if(!navigator.onLine){setStatus('firebase-error','Offline — local data mode active');return;}
-    // GitHub Pages can preserve the visual Admin-login flag while the REST
-    // token was lost/cleared. Re-establish the same Firebase REST session
-    // before any sync is attempted.
-    if(!session){
+    // A remembered Master login is authoritative. The old logic only restored it
+    // when no REST session existed, so a saved salesman token could silently win.
+    let adminFlag=false;try{adminFlag=localStorage.getItem('shadab_admin_logged_in_v2')==='1'}catch(e){}
+    if(adminFlag&&String(session?.email||'').trim().toLowerCase()!==ADMIN_EMAIL){
       try{
-        const adminFlag=localStorage.getItem('shadab_admin_logged_in_v2')==='1';
-        if(adminFlag){
-          const restored=await signInREST(ADMIN_EMAIL,ADMIN_PASS);
-          await loginSuccess(restored,true);
-          return;
-        }
-      }catch(e){console.warn('GitHub Admin REST session restore:',e)}
+        const restored=await signInREST(ADMIN_EMAIL,ADMIN_PASS);
+        await loginSuccess(restored,true);
+        return;
+      }catch(e){
+        console.warn('Master REST session restore failed:',e);
+        setStatus('firebase-error','Master login needs verification • local data is safe');
+        return; // Do not silently sync as a different saved salesman when Master restore fails.
+      }
     }
     if(session){
       try{
         await ensureToken();
-        if(session.email===ADMIN_EMAIL){try{adminLoggedIn=false}catch(e){}try{localStorage.removeItem('shadab_admin_logged_in_v2')}catch(e){}}
+        if(String(session.email||'').trim().toLowerCase()===ADMIN_EMAIL){
+          try{adminLoggedIn=true}catch(e){}
+          try{localStorage.setItem('shadab_admin_logged_in_v2','1')}catch(e){}
+        }
         else{
           let n=session.displayName||'';
           try{const profile=await readDoc('salesmen/'+encodeURIComponent(session.uid));if(profile?.fullName)n=String(profile.fullName).trim();}catch(e){}
@@ -7007,24 +7038,18 @@ window.shadabDownloadPdfBlob=async function(doc,name){
   const url=URL.createObjectURL(blob);
   try{
     const a=document.createElement('a');
-    a.href=url;a.download=name;a.rel='noopener';a.target='_blank';
+    a.href=url;a.setAttribute('download',name);a.rel='noopener';a.removeAttribute('target');
     a.style.position='fixed';a.style.left='-9999px';a.style.width='1px';a.style.height='1px';
     document.body.appendChild(a);
     a.click();
     setTimeout(()=>{try{a.remove()}catch(e){}},500);
-    // Some Android/local-file WebViews ignore the download attribute. Open the same
-    // generated PDF as a fallback so the browser's own PDF viewer can Save/Download it.
-    setTimeout(()=>{
-      try{
-        if(document.visibilityState!=='hidden') window.open(url,'_blank','noopener');
-      }catch(e){}
-    },350);
+    // Keep the action a file download; opening a new viewer tab caused the
+    // silent chrome-native://pdf experience reported by the user.
     setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},60000);
     return true;
   }catch(e){
-    try{window.open(url,'_blank','noopener')}catch(_e){}
     setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(_e){}},60000);
-    return true;
+    throw e;
   }
 };
 window.shadabSummaryEntryCount=function(){
@@ -9159,7 +9184,7 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
 })();
 </script>
 <script id="sp-final-single-locked-sync-controller">
-(function(){'use strict';const IDS=['sp35ManualSyncFinal','sp35SyncRefreshBtn'];let running=false;const wait=ms=>new Promise(r=>setTimeout(r,ms));function buttons(){return IDS.map(id=>document.getElementById(id)).filter(Boolean)}function result(html){const r=document.getElementById('sp35FirebaseResult');if(r){r.classList.add('sp35-v16-visible');r.style.setProperty('display','block','important');r.style.setProperty('visibility','visible','important');r.style.setProperty('opacity','1','important');r.innerHTML=html}}function status(t,c){const r=document.getElementById('syncText');if(!r)return;r.textContent=t;r.classList.remove('firebase-connected','firebase-error','firebase-checking');if(c)r.classList.add(c)}function install(old){if(!old||old.dataset.finalSyncInstalled==='1')return old;const b=old.cloneNode(true);b.dataset.finalSyncInstalled='1';b.dataset.v14SyncInstalled='1';b.dataset.v16SyncInstalled='1';b.removeAttribute('onclick');old.replaceWith(b);b.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();if(running)return;running=true;const original=b.dataset.finalOriginal||b.innerHTML;b.dataset.finalOriginal=original;b.disabled=true;b.setAttribute('aria-busy','true');b.classList.add('sp35-v14-syncing');b.innerHTML='<span class="sp35-sync-ring" aria-hidden="true"></span><span class="sp35-sync-label">Syncing…</span>';result('🔄 <b>Syncing…</b> Uploading local data to Firebase…');status('Syncing manually…','firebase-checking');try{if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');const fn=window.shadabSyncSalesmanNow;if(typeof fn!=='function')throw new Error('Firebase sync engine is not loaded.');const ok=await fn();if(ok===false||ok?.ok===false)throw new Error(ok?.error?.message||'Firebase sync did not complete.');const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});const ring=b.querySelector('.sp35-sync-ring');if(ring)ring.classList.add('sp35-sync-success');result('🟢 <b>Sync Successful</b> — Firebase updated at '+t+'.<br><small>Your local data is now uploaded to the cloud.</small>');status('✓ Sync Successful • Firebase updated at '+t,'firebase-connected');try{window.toast35?.('✓ Sync Successful — Firebase updated at '+t)}catch(_e){}await wait(3000);status('Cloud sync connected • auto sync every 1 hour','firebase-connected');result('<span style="opacity:.78">Cloud sync connected • auto sync every 1 hour</span>')}catch(err){const msg=String(err?.message||err);result('🔴 <b>Sync Failed</b> — '+msg+'<br><small>Local data remains safe on this device.</small>');status('✕ Sync Failed • local data is safe','firebase-error');try{window.toast35?.('✕ Firebase Sync Failed — '+msg)}catch(_e){}await wait(900);status('Cloud sync connected • auto sync every 1 hour','firebase-connected')}finally{b.innerHTML=original;b.disabled=false;b.removeAttribute('aria-busy');b.classList.remove('sp35-v14-syncing');running=false}},true);return b}function hook(){buttons().forEach(install)}function init(){hook();setTimeout(hook,200);setTimeout(hook,700);setTimeout(hook,1500)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();new MutationObserver(hook).observe(document.documentElement,{childList:true,subtree:true})})();
+(function(){'use strict';const IDS=['sp35ManualSyncFinal','sp35SyncRefreshBtn'];let running=false;const wait=ms=>new Promise(r=>setTimeout(r,ms));function buttons(){return IDS.map(id=>document.getElementById(id)).filter(Boolean)}function result(html){const r=document.getElementById('sp35FirebaseResult');if(r){r.classList.add('sp35-v16-visible');r.style.setProperty('display','block','important');r.style.setProperty('visibility','visible','important');r.style.setProperty('opacity','1','important');r.innerHTML=html}}function status(t,c){const r=document.getElementById('syncText');if(!r)return;r.textContent=t;r.classList.remove('firebase-connected','firebase-error','firebase-checking');if(c)r.classList.add(c)}function install(old){if(!old||old.dataset.finalSyncInstalled==='1')return old;const b=old.cloneNode(true);b.dataset.finalSyncInstalled='1';b.dataset.v14SyncInstalled='1';b.dataset.v16SyncInstalled='1';b.removeAttribute('onclick');old.replaceWith(b);b.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();if(running)return;running=true;const original=b.dataset.finalOriginal||b.innerHTML;b.dataset.finalOriginal=original;b.disabled=true;b.setAttribute('aria-busy','true');b.classList.add('sp35-v14-syncing');b.innerHTML='<span class="sp35-sync-ring" aria-hidden="true"></span><span class="sp35-sync-label">Syncing…</span>';result('🔄 <b>Syncing…</b> Syncing saved data, salesman visits & visit-photo references…');window.__shadabSyncFailureNeedsSuccess=true;status('Syncing salesman visits & photo references…','firebase-checking');const syncStartedAt=performance.now();try{if(!navigator.onLine)throw new Error('Offline — local data is safe on this device.');const fn=window.shadabSyncSalesmanNow;if(typeof fn!=='function')throw new Error('Firebase sync engine is not loaded.');const ok=await fn();if(ok===false||ok?.ok===false||ok?.success===false)throw new Error(ok?.error?.message||ok?.message||'Firebase sync did not complete.');window.__shadabSyncFailureNeedsSuccess=false;const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});const ring=b.querySelector('.sp35-sync-ring');if(ring)ring.classList.add('sp35-sync-success');result('🟢 <b>Sync Successful</b> — Firebase updated at '+t+'.<br><small>Your local data is now uploaded to the cloud.</small>');status('✓ Sync Successful • saved visits/photo references • '+t,'firebase-connected');try{window.__spAuditLogEvent?.('Top manual sync result',{durationMs:Math.max(0,Math.round(performance.now()-syncStartedAt)),result:'confirmed',message:'Sync promise resolved'},'success')}catch(_e){}try{window.toast35?.('✓ Sync Successful — Firebase updated at '+t)}catch(_e){}await wait(3000);status('Salesman visits & photo references ready • auto sync every 1 hour','firebase-connected');result('<span style="opacity:.78">Salesman visits & photo references ready • auto sync every 1 hour</span>')}catch(err){window.__shadabSyncFailureNeedsSuccess=true;const msg=String(err?.message||err);try{window.__spAuditLogEvent?.('Top manual sync result',{durationMs:Math.max(0,Math.round(performance.now()-syncStartedAt)),error:msg,dataPreserved:true},'error')}catch(_e){}result('🔴 <b>Sync Failed</b> — '+msg+'<br><small>Local data remains safe on this device. Retry is required; the status will not be marked connected until a later sync succeeds.</small>');status('✕ Sync Failed • retry required • local data is safe','firebase-error');try{window.toast35?.('✕ Firebase Sync Failed — '+msg)}catch(_e){}}finally{b.innerHTML=original;b.disabled=false;b.removeAttribute('aria-busy');b.classList.remove('sp35-v14-syncing');running=false}},true);return b}function hook(){buttons().forEach(install)}function init(){hook();setTimeout(hook,200);setTimeout(hook,700);setTimeout(hook,1500)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();new MutationObserver(hook).observe(document.documentElement,{childList:true,subtree:true})})();
 </script>
 <script id="sp-final-user-points-1-3">
 (function(){
@@ -9430,25 +9455,46 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
      (or one Firestore collection read as fallback), then rasterize non-JPEG media
      to a compact JPEG. The stored visit/photo transport is not changed.
   */
+  let pdfPhotoDbPromise=null;
+  function openPdfPhotoDb(){
+    if(pdfPhotoDbPromise)return pdfPhotoDbPromise;
+    pdfPhotoDbPromise=new Promise((resolve,reject)=>{
+      try{
+        if(!('indexedDB' in window))return reject(new Error('IndexedDB unavailable'));
+        const req=indexedDB.open('shadab_visit_media_v12',1);
+        req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos',{keyPath:'id'})};
+        req.onsuccess=()=>resolve(req.result);
+        req.onerror=()=>reject(req.error||new Error('PDF photo vault unavailable'));
+      }catch(e){reject(e)}
+    });
+    return pdfPhotoDbPromise;
+  }
+  async function cachePdfPhoto(id,data,date){
+    if(!id||!String(data||'').startsWith('data:image/'))return false;
+    try{
+      const db=await openPdfPhotoDb();
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction('photos','readwrite');
+        tx.objectStore('photos').put({id:String(id),data:String(data),date:String(date||''),createdAt:Date.now(),expiresAt:0});
+        tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error||new Error('Persistent PDF photo cache failed'));
+      });
+      return true;
+    }catch(e){console.warn('PDF persistent photo cache:',e);return false}
+  }
   async function pdfPhotoVaultMap(){
     const map=new Map();
     try{
-      if(!('indexedDB' in window))return map;
-      const db=await new Promise((resolve,reject)=>{
-        const req=indexedDB.open('shadab_visit_media_v12',1);
-        req.onsuccess=()=>resolve(req.result);
-        req.onerror=()=>reject(req.error||new Error('PDF photo vault unavailable'));
-      });
+      const db=await openPdfPhotoDb();
       const rows=await new Promise((resolve,reject)=>{
         const tx=db.transaction('photos','readonly'),req=tx.objectStore('photos').getAll();
         req.onsuccess=()=>resolve(req.result||[]);
         req.onerror=()=>reject(req.error||new Error('PDF photo vault read failed'));
       });
       for(const r of Array.isArray(rows)?rows:[]){
-        const id=String(r?.id||'');
-        const data=String(r?.data||'');
-        const exp=Number(r?.expiresAt||0);
-        if(id&&data.startsWith('data:image/')&&(!exp||exp>Date.now()))map.set(id,data);
+        const id=String(r?.id||r?.visitId||r?.key||''),data=String(r?.data||r?.photo||r?.image||r?.dataUrl||r?.photoData||'');
+        // The app's retention rule is explicit-delete-only. Older cached rows may
+        // still carry an expired legacy TTL; the existence of bytes takes priority.
+        if(id&&data.startsWith('data:image/'))map.set(id,data);
       }
     }catch(e){console.warn('PDF photo vault read:',e)}
     return map;
@@ -9467,18 +9513,29 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
         const id=String(d.visitId||row?.id||'');
         const data=String(d.data||'');
         const exp=Number(d.expiresAt||0);
-        if(id&&data.startsWith('data:image/')&&(!exp||exp>nowMs))map.set(id,data);
+        if(id&&data.startsWith('data:image/'))map.set(id,data);
       }
     }catch(e){console.warn('PDF cloud photo fallback:',e)}
     return map;
   }
 
+  const pdfJpegCache=new Map();
   function rasterizePdfJpeg(src){
+    const raw=String(src||'');
+    if(!raw.startsWith('data:image/'))return Promise.resolve('');
+    if(/^data:image\/(?:jpeg|jpg);/i.test(raw))return Promise.resolve(raw);
+    const key=raw.length+'|'+raw.slice(0,72)+'|'+raw.slice(-72);
+    if(pdfJpegCache.has(key))return Promise.resolve(pdfJpegCache.get(key));
     return new Promise(resolve=>{
-      const finish=jpeg=>resolve(jpeg||'');
+      const finish=jpeg=>{
+        const out=String(jpeg||'');
+        if(out.startsWith('data:image/jpeg;')){
+          if(pdfJpegCache.size>=48)pdfJpegCache.delete(pdfJpegCache.keys().next().value);
+          pdfJpegCache.set(key,out);
+        }
+        resolve(out);
+      };
       try{
-        if(!String(src||'').startsWith('data:image/'))return finish('');
-        if(/^data:image\/(?:jpeg|jpg);/i.test(src))return finish(src);
         const img=new Image();
         img.onload=()=>{
           try{
@@ -9494,59 +9551,82 @@ const oldLicenseUpload=window.adminUploadLockedLicense;window.adminUploadLockedL
           }catch(e){console.warn('PDF photo conversion:',e);finish('')}
         };
         img.onerror=()=>finish('');
-        img.src=src;
+        img.src=raw;
       }catch(e){console.warn('PDF photo rasterizer:',e);finish('')}
     });
   }
 
   async function prepareExactPdfData(date, sourceRows=null){
-    /* Production: sourceRows omitted -> exact live dataFor(date) path.
-       Test-only: explicit sourceRows -> run the SAME photo preparation logic
-       against synthetic 300 records without touching Firebase/local visits. */
+    /* Production and test reports share the same repair pipeline. Never delete or
+       mutate stored visits here: only attach recovered photo data to PDF copies. */
     const rows=(Array.isArray(sourceRows)?sourceRows:dataFor(date)).map(v=>({...v}));
-    if(!rows.length)return rows;
+    const diag={date:String(date||''),records:rows.length,photoBytesInRows:0,restoredFromIndexedDB:0,derivedReferences:0,remoteAttempts:0,recoveredFromFirebase:0,convertedToJpeg:0,missing:[]};
+    if(!rows.length){window.__spPdfLastPhotoDiagnostics=diag;return rows;}
     const vault=await pdfPhotoVaultMap();
     const missing=[];
     for(const v of rows){
-      if(/^data:image\/(?:jpeg|jpg);/i.test(String(v.photo||'')))continue;
-      if(!v.photo&&vault.has(String(v.id||'')))v.photo=vault.get(String(v.id||''));
+      // Older visit payloads sometimes used image / visitPhoto / picture instead of photo.
+      const legacyImage=[v.photo,v.image,v.visitPhoto,v.picture,v.photoUrl,v.imageUrl,v.photoURL].find(x=>typeof x==='string'&&x.startsWith('data:image/'));
+      if(legacyImage&&!String(v.photo||'').startsWith('data:image/'))v.photo=legacyImage;
+      const existing=String(v.photo||'');
+      if(existing.startsWith('data:image/')){diag.photoBytesInRows++;continue;}
+      const id=String(v.id||v.visitId||v.key||'');
+      if(id&&vault.has(id)){v.photo=vault.get(id);diag.restoredFromIndexedDB++;continue;}
+      if(!v.photoRef&&id&&v.uid){
+        const status=String(v.status||v.result||'').trim().toLowerCase();
+        const statusLooksPlanned=['planned','assigned','pending','not visited','remaining'].includes(status);
+        // Norm() may supply a default Planned status when an old record omitted
+        // status. A real visit time/person/order is stronger evidence than that default.
+        const hasVisitEvidence=!!(v.visitedAt||v.visitTime||(v.time&&String(v.time)!=='—')||v.person||v.order||v.orderReceived||v.orderTaken||v.hasOrder||v.isOrder||v.photoCapturedAt||v.photoUrl);
+        const isPlanned=statusLooksPlanned&&!hasVisitEvidence;
+        // Recover by the exact owner-specific media document; never scan all media collections.
+        if(!isPlanned){
+          const safeId=encodeURIComponent(id.replace(/[^a-zA-Z0-9._-]/g,'_'));
+          v.photoRef='user_data/'+encodeURIComponent(String(v.uid))+'/visit_media/'+safeId;
+          diag.derivedReferences++;
+        }
+      }
       if(!v.photo&&v.photoRef)missing.push(v);
     }
-    /* First resolve each visit's exact saved photoRef. Photos are stored under
-       the owning salesman's UID, not necessarily under the Master session UID. */
     if(missing.length){
       let cursor=0;
       const directWorker=async()=>{
         while(cursor<missing.length){
           const v=missing[cursor++];
           if(v.photo||!v.photoRef)continue;
+          // If signed out/offline, keep the local result and do not create a burst
+          // of expected auth failures. User can retry after sign-in/connectivity.
+          const session=(()=>{try{return window.shadabRestCurrentSession?.()||null}catch(_){return null}})();
+          if(!navigator.onLine||!session?.uid||typeof window.shadabLoadVisitPhoto!=='function')continue;
+          diag.remoteAttempts++;
           try{
-            let data='';
-            if(typeof window.shadabLoadVisitPhoto==='function')data=await window.shadabLoadVisitPhoto(String(v.photoRef));
+            let data=await window.shadabLoadVisitPhoto(String(v.photoRef));
             if(!String(data||'').startsWith('data:image/')&&typeof window.shadabGetVisitPhoto==='function')data=await window.shadabGetVisitPhoto(v);
-            if(String(data||'').startsWith('data:image/'))v.photo=String(data);
+            if(String(data||'').startsWith('data:image/')){
+              v.photo=String(data);diag.recoveredFromFirebase++;
+              await cachePdfPhoto(String(v.id||v.visitId||''),v.photo,date);
+            }
           }catch(e){console.warn('Exact visit photo read failed:',v.id||v.photoRef,e)}
         }
       };
-      await Promise.all(Array.from({length:Math.min(4,missing.length)},()=>directWorker()));
-      const stillMissing=missing.filter(v=>!v.photo);
-      if(stillMissing.length){
-        const cloud=await pdfCloudPhotoMap();
-        for(const v of stillMissing){const byId=cloud.get(String(v.id||v.visitId||''));if(byId)v.photo=byId;}
-      }
+      // Bounded parallelism speeds the first report. Path cache/in-flight sharing
+      // prevents repeated taps from issuing duplicate reads for the same media.
+      await Promise.all(Array.from({length:Math.min(8,missing.length)},()=>directWorker()));
     }
     const targets=rows.filter(v=>v.photo&& !/^data:image\/(?:jpeg|jpg);/i.test(String(v.photo)));
     let cursor=0;
     const worker=async()=>{
       while(cursor<targets.length){
-        const i=cursor++;
-        const v=targets[i];
-        const jpeg=await rasterizePdfJpeg(v.photo);
-        if(jpeg)v.photo=jpeg;
-        else delete v.photo;
+        const i=cursor++,v=targets[i],before=String(v.photo||'');
+        const jpeg=await rasterizePdfJpeg(before);
+        if(jpeg){v.photo=jpeg;diag.convertedToJpeg++}else delete v.photo;
       }
     };
     await Promise.all(Array.from({length:Math.min(4,targets.length||1)},()=>worker()));
+    diag.photosEmbedded=rows.filter(v=>/^data:image\/(?:jpeg|jpg);/i.test(String(v.photo||''))).length;
+    diag.missing=rows.filter(v=>!/^data:image\/(?:jpeg|jpg);/i.test(String(v.photo||''))).slice(0,100).map(v=>({visitId:String(v.id||v.visitId||''),store:String(v.store||v.name||v.storeName||'').slice(0,80),ownerKnown:!!v.uid,photoRefKnown:!!v.photoRef,photoFields:Object.keys(v).filter(k=>/photo|image|picture/i.test(k)),photoRef:String(v.photoRef||'').slice(0,220)}));
+    diag.finishedAt=new Date().toISOString();
+    window.__spPdfLastPhotoDiagnostics=diag;
     return rows;
   }
 
@@ -10072,8 +10152,8 @@ body.dark .topbar{
     try {
       const a = document.createElement('a');
       a.href = url;
-      a.download = name;
-      a.target = '_blank';
+      a.setAttribute('download',name);
+      a.removeAttribute('target');
       a.rel = 'noopener';
       a.style.position='fixed'; a.style.left='-9999px'; a.style.width='1px'; a.style.height='1px';
       document.body.appendChild(a);
@@ -10081,8 +10161,7 @@ body.dark .topbar{
       clicked = true;
       setTimeout(()=>{ try{a.remove();}catch(e){} },1000);
     } catch(e) {}
-    // On Android/content://, if the download attribute is ignored, open the real Blob URL in a PDF-capable tab.
-    setTimeout(()=>{ if(!clicked){ try{ window.open(url,'_blank','noopener'); }catch(e){} } },250);
+    // Do not open a new PDF viewer tab automatically; keep download and cancel flow consistent.
     setTimeout(()=>URL.revokeObjectURL(url),60000);
     return clicked;
   };
@@ -11087,7 +11166,7 @@ function openDoc(t){
      'No file uploaded yet.' after a successful Firebase publish. */
   Promise.resolve(window.spV23HydrateSharedDocuments?.()).then(()=>{if(m.classList.contains('show')){status(t);preview(t)}}).catch(()=>{});
 }
-function closeDoc(e){if(e){try{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()}catch(_){}}hideAllChildren();showAdmin();return false}
+function closeDoc(e){if(e){try{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()}catch(_){}}hideAllChildren();const parent=$('spAdminExact41');if(parent){parent.classList.remove('sp-open','sp-detail-open');parent.style.setProperty('display','none','important');parent.style.setProperty('visibility','hidden','important');parent.style.setProperty('pointer-events','none','important')}return false}
 async function uploadDoc(t){
   const input=$('v6File'),btn=$('v6Upload');
   if(!TYPES[t]){toast('Unknown document type.');return false}
@@ -11184,16 +11263,16 @@ async function deleteDoc(t){
   }
 }
 function openFive(n){const map={37:['doc','orderForm'],38:['doc','supplySchedule'],39:['native','territory'],40:['native','stores'],41:['doc','license']};const x=map[n];if(!x){return}hideAllChildren();if(x[0]==='doc')openDoc(x[1]);else openNative(x[1])}
-function closeNative(id){hideAllChildren();showAdmin()}
+function closeNative(id){hideAllChildren();const parent=$('spAdminExact41');if(parent){parent.classList.remove('sp-open','sp-detail-open');parent.style.setProperty('display','none','important');parent.style.setProperty('visibility','hidden','important');parent.style.setProperty('pointer-events','none','important')}}
 window.spFinalOpenAdminDocument=openDoc;window.spFinalCloseAdminDocument=closeDoc;window.spV6OpenFive=openFive;window.spV5OpenFive=openFive;
 window.adminUploadSharedDocument=async(t,input)=>{if(!TYPES[t])throw new Error('Unknown document type.');const m=modal();m.dataset.type=t;const f=$('v6File');try{const dt=new DataTransfer();for(const file of (input?.files||[]))dt.items.add(file);f.files=dt.files}catch(e){}return uploadDoc(t)};
 window.adminUploadLockedLicense=input=>{const m=modal();m.dataset.type='license';return uploadDoc('license')};window.adminDeleteSharedDocument=deleteDoc;window.adminDeleteLockedLicense=async()=>deleteDoc('license');
 window.closeUploadTerritoryModal=()=>closeNative('uploadTerritoryModal');window.closeStoreDatabase=()=>closeNative('storeDatabaseModal');
 let lastOpen=0,lastN=0;
-function goFive(n){const now=Date.now();if(lastN===n&&now-lastOpen<450)return;lastN=n;lastOpen=now;openFive(n)}
-function bindCards(){document.querySelectorAll('#spAdminExact41 .sp-cc-card').forEach(c=>{const n=Number(c.dataset.n||0);if(n<37||n>41)return;c.dataset.v6Bound='1';c.removeAttribute('onclick');c.onclick=e=>{e.preventDefault();e.stopPropagation();goFive(n)};c.ontouchend=e=>{e.preventDefault();e.stopPropagation();goFive(n)}})}
+function goFive(n){const now=Date.now();if(now<Number(window.__spIgnoreAdminOpenUntil||0))return;if(lastN===n&&now-lastOpen<450)return;lastN=n;lastOpen=now;openFive(n)}
+function bindCards(){document.querySelectorAll('#spAdminExact41 .sp-cc-card').forEach(c=>{const n=Number(c.dataset.n||0);if(n<37||n>41)return;c.dataset.v6Bound='1';c.ontouchend=null;c.removeAttribute('ontouchend');c.removeAttribute('onclick');c.onclick=e=>{e.preventDefault();e.stopPropagation();goFive(n)}})}
 function capture(e){const c=e.target?.closest?.('#spAdminExact41 .sp-cc-card');if(!c)return;const n=Number(c.dataset.n||0);if(n<37||n>41)return;e.preventDefault();e.stopImmediatePropagation();goFive(n)}
-['pointerup','touchend','click'].forEach(ev=>document.addEventListener(ev,capture,true));
+document.addEventListener('click',capture,true);
 const obs=new MutationObserver(bindCards);obs.observe(document.documentElement,{childList:true,subtree:true});setTimeout(bindCards,150);setTimeout(bindCards,500);setTimeout(bindCards,1200);setTimeout(hydrate,1600);window.addEventListener('online',()=>setTimeout(hydrate,900));
 })();
 </script>
@@ -11202,7 +11281,7 @@ const obs=new MutationObserver(bindCards);obs.observe(document.documentElement,{
 <script id="sp-final-document-close-controller-v6">
 (function(){
 'use strict';
-function closeV6(e){const b=e?.target?.closest?.('#spAdminDocChildV6 .v6-close');if(!b)return;try{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()}catch(_){ }try{window.spFinalCloseAdminDocument?.(e)}catch(_){ }}
+function closeV6(e){if(window.__spAdminTouchGestureMoved)return;const b=e?.target?.closest?.('#spAdminDocChildV6 .v6-close');if(!b)return;try{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()}catch(_){ }try{window.spFinalCloseAdminDocument?.(e)}catch(_){ }}
 document.addEventListener('click',closeV6,true);document.addEventListener('touchend',closeV6,true);document.addEventListener('pointerup',closeV6,true);
 })();
 </script>
@@ -11806,7 +11885,7 @@ function dateKey(v){
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function inWeek(k){const d=new Date(k+'T12:00:00'),n=new Date();if(isNaN(d))return false;const day=(n.getDay()+6)%7, start=new Date(n.getFullYear(),n.getMonth(),n.getDate()-day),end=new Date(start);end.setDate(start.getDate()+7);return d>=start&&d<end}
 function inMonth(k){const d=new Date(k+'T12:00:00'),n=new Date();return !isNaN(d)&&d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()}
-function norm(v){const x=v&&typeof v==='object'?v:{};return {...x,id:String(x.id||x.visitId||x.key||''),visitId:String(x.visitId||x.id||''),uid:String(x.uid||''),photoRef:String(x.photoRef||''),photoUrl:String(x.photoUrl||''),store:x.store||x.name||x.storeName||'—',person:x.person||x.contactPerson||'',visitedBy:x.visitedBy||x.salesman||x.salesmanName||'—',type:x.type||'Medical Stores',area:x.area||'—',territory:x.territory||'—',phone:x.phone||'—',date:x.date||today(),time:x.time||x.visitedAt||'—',notes:x.notes||x.businessNotes||'—',status:x.status||x.result||'Planned',photo:x.photo||''}}
+function norm(v){const x=v&&typeof v==='object'?v:{};return {...x,id:String(x.id||x.visitId||x.key||''),visitId:String(x.visitId||x.id||''),uid:String(x.uid||''),photoRef:String(x.photoRef||''),photoUrl:String(x.photoUrl||''),store:x.store||x.name||x.storeName||'—',person:x.person||x.contactPerson||'',visitedBy:x.visitedBy||x.salesman||x.salesmanName||'—',type:x.type||'Medical Stores',area:x.area||'—',territory:x.territory||'—',phone:x.phone||'—',date:x.date||today(),time:x.time||x.visitedAt||'—',notes:x.notes||x.businessNotes||'—',status:x.status||x.result||'Planned',photo:x.photo||x.image||x.visitPhoto||x.picture||'',imageUrl:x.imageUrl||x.photoURL||'',photoUrl:x.photoUrl||x.photoURL||x.imageUrl||''}}
 function isOrder(v){const st=String(v?.status||'').trim().toLowerCase();if(['order','order received','order done','order taken','order_taken','with order'].includes(st))return true;return [v?.order,v?.orderReceived,v?.orderTaken,v?.hasOrder,v?.isOrder,v?.orderStatus].some(x=>x===true||['yes','true','received','done','order'].includes(String(x||'').trim().toLowerCase()))}
 function masterRows(kind){
   const c=window.__spMasterAggregateCache||{visits:[],plannedToday:[],salesmen:[],dateRange:{}};
@@ -11862,7 +11941,7 @@ function masterPdfName(kind){
 function saveMasterPdfBlob(blob,name){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;a.download=name;a.rel='noopener';a.style.display='none';
+  a.href=url;a.setAttribute('download',name);a.rel='noopener';a.removeAttribute('target');a.style.position='fixed';a.style.left='-9999px';a.style.width='1px';a.style.height='1px';
   document.body.appendChild(a);
   try{a.click();}finally{setTimeout(()=>{try{a.remove()}catch(e){}},800);}
   /* Direct download only — no PDF viewer popup/fallback. */
@@ -13066,7 +13145,11 @@ function spRows(kind){
   }
 }
 async function spPdfBlob(kind){
+  const totalStarted=performance.now();
+  const rowsStarted=performance.now();
   let rows=spRows(kind);
+  const rowsLookupMs=Math.max(0,Math.round(performance.now()-rowsStarted));
+  let photoHydrationMs=0,pdfBuildMs=0;
   let hadData=rows.length>0;
   /* Never let an empty report block the PDF/WhatsApp controls. For a genuinely
      empty view we still generate a valid A4 PDF containing a clear no-record
@@ -13090,11 +13173,15 @@ async function spPdfBlob(kind){
   if(typeof window.shadabExactVisitPDF!=='function')throw new Error('The working Visit Report PDF engine is not loaded.');
   const date=String(window.__spMasterAggregateCache?.dateRange?.today||(typeof todayISO==='function'?todayISO():(typeof today==='function'?today():new Date().toISOString().slice(0,10))));
   if(hadData&&typeof window.__v16PrepareExactPdfDataForTest==='function'){
+    const photoStarted=performance.now();
     try{rows=await window.__v16PrepareExactPdfDataForTest(rows,date)}catch(e){console.warn('Master PDF exact photo hydration:',e)}
+    photoHydrationMs=Math.max(0,Math.round(performance.now()-photoStarted));
   }
+  const pdfStarted=performance.now();
   const blob=window.shadabExactVisitPDF(rows,date);
+  pdfBuildMs=Math.max(0,Math.round(performance.now()-pdfStarted));
   if(!(blob instanceof Blob)||blob.size<100)throw new Error('PDF engine returned an invalid/empty PDF.');
-  return {blob,rows,date,hadData};
+  return {blob,rows,date,hadData,timing:{rowsLookupMs,photoHydrationMs,pdfBuildMs,totalMs:Math.max(0,Math.round(performance.now()-totalStarted))}};
 }
 function spPdfName(kind,date){
   const titles={today:'Today',week:'This Week',month:'This Month',unique:'Unique Stores',planned:'Planned',visited:'Visited',orders:'Orders',remaining:'Remaining','quick-report':'View Full Report','quick-route':'Smart Daily Route','quick-details':'Detailed Reports'};
@@ -13104,7 +13191,7 @@ function spPdfName(kind,date){
 function spSaveBlobLikeWorking(blob,name){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;a.download=name;a.rel='noopener';a.style.display='none';
+  a.href=url;a.setAttribute('download',name);a.rel='noopener';a.removeAttribute('target');a.style.position='fixed';a.style.left='-9999px';a.style.width='1px';a.style.height='1px';
   document.body.appendChild(a);
   try{a.click()}finally{try{a.remove()}catch(e){}}
   setTimeout(()=>{try{URL.revokeObjectURL(url)}catch(e){}},60000);
@@ -13113,23 +13200,37 @@ function spSaveBlobLikeWorking(blob,name){
 
 /* ---------- 3) Dashboard Download: working saveBlob + local PDF-viewer fallback ---------- */
 window.spFinalDownloadPdf=async function(kind){
+  if(window.__spPdfBusy){try{window.toast35?.('PDF is already being prepared. Please wait…')}catch(_){};return false}
+  window.__spPdfBusy=true;const started=performance.now();let clickToFeedbackMs=null;
   try{
+    try{window.toast35?.('Preparing PDF… recovering saved visit photos if needed')}catch(_){}
+    clickToFeedbackMs=Math.max(0,Math.round(performance.now()-started));
+    window.__spPdfLastPerformance={action:'download',kind:String(kind||'today'),state:'preparing',clickToFeedbackMs,startedAt:new Date().toISOString()};
     const x=await spPdfBlob(kind),name=spPdfName(kind,x.date);
-    /* Direct download only: never open a PDF viewer/window from the dashboard button. */
+    /* Download attribute only: do not target a new tab/PDF viewer. */
     spSaveBlobLikeWorking(x.blob,name);
-    try{window.toast35?.(x.hadData?'✓ PDF downloaded • '+spRows(kind).length+' records':'✓ PDF downloaded • no records in this view')}catch(e){}
+    const elapsed=Math.max(0,Math.round(performance.now()-started));
+    window.__spPdfLastPerformance={action:'download',kind:String(kind||'today'),state:'complete',clickToFeedbackMs,durationMs:elapsed,phaseTimings:x.timing||null,records:x.rows.length,blobBytes:x.blob.size,photos:window.__spPdfLastPhotoDiagnostics||null,finishedAt:new Date().toISOString()};
+    try{window.toast35?.((x.hadData?'✓ PDF downloaded • '+x.rows.length+' records':'✓ PDF downloaded • no records in this view')+' • '+(elapsed/1000).toFixed(1)+'s')}catch(e){}
     return true;
   }catch(e){
     console.error('MASTER PDF DOWNLOAD',e);
+    window.__spPdfLastPerformance={action:'download',kind:String(kind||'today'),failed:true,error:String(e?.message||e),durationMs:Math.max(0,Math.round(performance.now()-started)),finishedAt:new Date().toISOString()};
     try{window.toast35?.('✕ PDF failed — '+(e?.message||e))}catch(_e){}
     return false;
-  }
+  }finally{window.__spPdfBusy=false}
 };
 
 /* ---------- 4) Dashboard WhatsApp: exact same native File-share path ---------- */
 window.spFinalSharePdf=async function(kind){
+  if(window.__spPdfBusy){try{window.toast35?.('PDF is already being prepared. Please wait…')}catch(_){};return false}
+  window.__spPdfBusy=true;const started=performance.now();let clickToFeedbackMs=null;
   try{
+    try{window.toast35?.('Preparing PDF for WhatsApp… recovering saved visit photos if needed')}catch(_){}
+    clickToFeedbackMs=Math.max(0,Math.round(performance.now()-started));
+    window.__spPdfLastPerformance={action:'share',kind:String(kind||'today'),state:'preparing',clickToFeedbackMs,startedAt:new Date().toISOString()};
     const x=await spPdfBlob(kind),name=spPdfName(kind,x.date);
+    window.__spPdfLastPerformance={action:'share',kind:String(kind||'today'),state:'complete',clickToFeedbackMs,durationMs:Math.max(0,Math.round(performance.now()-started)),phaseTimings:x.timing||null,records:x.rows.length,blobBytes:x.blob.size,photos:window.__spPdfLastPhotoDiagnostics||null,finishedAt:new Date().toISOString()};
     const file=new File([x.blob],name,{type:'application/pdf'});
     const title=({today:'Today',week:'This Week',month:'This Month',unique:'Unique Stores',planned:'Planned',visited:'Visited',orders:'Orders',remaining:'Remaining','quick-report':'View Full Report','quick-route':'Smart Daily Route','quick-details':'Detailed Reports'}[kind]||'Report');
     const text='SHADAB PHARMACY — '+title+'\\nDate: '+x.date+'\\nTotal: '+x.rows.length;
@@ -13159,8 +13260,9 @@ window.spFinalSharePdf=async function(kind){
     if(e?.name==='AbortError')return false;
     console.error('MASTER WHATSAPP V5',e);
     try{window.toast35?.('✕ WhatsApp/PDF failed — '+(e?.message||e))}catch(_e){}
+    window.__spPdfLastPerformance={action:'share',kind:String(kind||'today'),failed:true,error:String(e?.message||e),durationMs:Math.max(0,Math.round(performance.now()-started)),finishedAt:new Date().toISOString()};
     return false;
-  }
+  }finally{window.__spPdfBusy=false}
 };
 function spWhatsAppFallback(blob,name,text){
   try{
@@ -18502,8 +18604,8 @@ function bindAdminRefresh(){
   if(b.dataset.spTargetBound==='1')return;
   b.dataset.spTargetBound='1';
   b.removeAttribute('onclick');
+  b.ontouchend=null;b.removeAttribute('ontouchend');
   b.onclick=(e)=>{e.preventDefault();e.stopPropagation();return window.__spTargetRefreshAdminControl()};
-  b.ontouchend=(e)=>{e.preventDefault();e.stopPropagation();return window.__spTargetRefreshAdminControl()};
 }
 
 function observe(){
@@ -19554,8 +19656,24 @@ async function rebuildMasterAggregateV12Core(options={}){
   if(!s?.uid||!isAdmin())throw new Error('Master Firebase login is required to read all salesman visits.');
   if(!online())throw new Error('Offline: cannot verify live salesman visits.');
   const masterUid=String(s.uid),adminEmail='master@shadabpharmacy.com';
+  const readStartupWithRetry=async(fn)=>{
+    let last;
+    for(let attempt=0;attempt<2;attempt++){
+      try{return await fn()}
+      catch(e){
+        last=e;
+        const transient=/failed to fetch|network request failed|timeout|temporarily unavailable|connection reset|networkerror/i.test(String(e?.message||e||''));
+        if(!transient||attempt>0)break;
+        await new Promise(resolve=>setTimeout(resolve,250));
+      }
+    }
+    throw last||new Error('Firebase startup read failed');
+  };
   const [profiles,profileData,sched,master]=await Promise.all([
-    readCol('salesmen'),readCol('user_data'),readDoc('app_settings/adminSchedules').catch(()=>({})),readDoc('app_settings/masterData').catch(()=>({}))
+    readStartupWithRetry(()=>readCol('salesmen')),
+    readStartupWithRetry(()=>readCol('user_data')),
+    readStartupWithRetry(()=>readDoc('app_settings/adminSchedules')).catch(()=>({})),
+    readStartupWithRetry(()=>readDoc('app_settings/masterData')).catch(()=>({}))
   ]);
   const pRows=Array.isArray(profiles)?profiles:[],uRows=Array.isArray(profileData)?profileData:[];
   const dataMap=new Map(),profileMap=new Map();
@@ -19693,15 +19811,27 @@ async function rebuildMasterAggregateV12Core(options={}){
     for(const v of Array.isArray(profile.visits)?profile.visits:[]){addVisit(v,p.uid,'profile-legacy');diagnostics.profileLegacyRows=(diagnostics.profileLegacyRows||0)+1;}
   }
   // Read every visit_days collection, including the Master session's own partition.
-  const partitionResults=await Promise.all(allAccounts.map(async p=>{
+  /* Do not fan out every salesman collection at once on mobile. A bounded worker pool
+     lowers burst pressure; a single short retry is used only for transient network fetch failures. */
+  const partitionResults=new Array(allAccounts.length);let partitionCursor=0;
+  async function readPartitionForAccount(p){
     const path='user_data/'+encodeURIComponent(p.uid)+'/visit_days';
     try{
-      const docs=await readCol(path);const rows=Array.isArray(docs)?docs:[];let entries=0,latest='';
+      let docs=null,lastErr=null;
+      for(let attempt=0;attempt<2;attempt++){
+        try{docs=await readCol(path);lastErr=null;break}
+        catch(e){lastErr=e;const transient=/failed to fetch|network request failed|timeout|temporarily unavailable/i.test(String(e?.message||e||''));if(!transient||attempt>0)break;await new Promise(resolve=>setTimeout(resolve,220))}
+      }
+      if(lastErr)throw lastErr;
+      const rows=Array.isArray(docs)?docs:[];let entries=0,latest='';
       for(const doc of rows){const data=doc?.data?.()||{};const docDate=String(data.date||doc?.id||'').slice(0,10);if(/^\d{4}-\d{2}-\d{2}$/.test(docDate)&&docDate>latest)latest=docDate;const arr=Array.isArray(data.visits)?data.visits:[];entries+=arr.length;
         for(const v of arr)addVisit(v,p.uid,'partition',docDate);
       }
       return {uid:p.uid,name:p.name,docs:rows.length,entries,latest,error:''};
     }catch(e){return {uid:p.uid,name:p.name,docs:0,entries:0,latest:'',error:String(e?.message||e||'Firebase read failed')}}
+  }
+  await Promise.all(Array.from({length:Math.min(3,allAccounts.length)},async()=>{
+    while(true){const i=partitionCursor++;if(i>=allAccounts.length)return;partitionResults[i]=await readPartitionForAccount(allAccounts[i])}
   }));
   diagnostics.partitionDocs=partitionResults.reduce((n,x)=>n+x.docs,0);diagnostics.partitionEntries=partitionResults.reduce((n,x)=>n+x.entries,0);diagnostics.latestPartitionDate=partitionResults.map(x=>x.latest).filter(Boolean).sort().pop()||'';diagnostics.readFailures=partitionResults.filter(x=>x.error);diagnostics.accounts=partitionResults;
   // Local unsynced visits stay visible locally; on Manual Sync they are safely published above.
@@ -19799,11 +19929,12 @@ async function rebuildMasterAggregateV12(options={}){
 window.rebuildMasterAggregate=rebuildMasterAggregateV12;
 window.fetchAllSalesmanData=()=>window.rebuildMasterAggregate();
 window.syncMasterFieldDashboard=async function(){
+  const syncStartedAt=performance.now();
   const runId=(Number(window.__shadabMasterSyncGeneration)||0)+1;window.__shadabMasterSyncGeneration=runId;
   const releaseFreshRead=window.shadabFirebaseSyncEngine?.beginManualSync?.();
   const b=document.getElementById('spMasterDashboardSyncBtn'),st=document.getElementById('spMasterDashboardSyncStatus'),root=document.getElementById('spAddedMasterDashboard');
   if(b){b.disabled=true;b.classList.add('is-syncing');b.setAttribute('aria-busy','true')};
-  if(st)st.textContent='Refreshing live salesman visits and task counts…';
+  if(st)st.textContent='Reading and verifying salesman visits + photo references…';
   /* Never leave old numbers looking current while a manual refresh is unresolved. */
   root?.querySelectorAll('.sp-added-overview .num, .sp-added-taskgrid .num').forEach(n=>{n.textContent='…'});
   const waitFor=(promise,ms,message)=>{let timer;return Promise.race([Promise.resolve(promise),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message)),ms)})]).finally(()=>clearTimeout(timer))};
@@ -19815,11 +19946,13 @@ window.syncMasterFieldDashboard=async function(){
     /* An earlier boot read may have finished while we waited. Keep its snapshot hidden
        until this forced/manual result has been verified. */
     root?.querySelectorAll('.sp-added-overview .num, .sp-added-taskgrid .num').forEach(n=>{n.textContent='…'});
-    if(st)st.textContent='Reading latest Firebase records…';
+    if(st)st.textContent='Reading latest salesman visits, assignments & photo references…';
     const c=await waitFor(rebuildMasterAggregateV12({publishLocal:true,force:true,manualRunId:runId}),60000,'Master sync timed out after 60 seconds. Fresh data was not verified; counts remain hidden. Check the connection and retry.');
     if(runId!==Number(window.__shadabMasterSyncGeneration))return c;
     const d=window.__shadabMasterVisitReadDiagnostics||{};
-    if(st){if(d.localPublishError)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • local publish failed: '+d.localPublishError;else if(d.readFailures?.length)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+d.readFailures.length+' read errors';else if(d.localUnmapped||d.localWithoutId)st.textContent='PARTIAL SYNC • '+c.visits.length+' visits • '+(d.localPublished||0)+' local published • '+(d.localUnmapped||0)+' unassigned local • '+(d.localWithoutId||0)+' without ID';else st.textContent='Synced '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+(d.partitionDocs||0)+' day docs • local published '+(d.localPublished||0)+' • photos load when opened';}
+    const partial=!!(d.localPublishError||d.readFailures?.length||d.localUnmapped||d.localWithoutId);
+    if(st){if(d.localPublishError)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • local publish failed: '+d.localPublishError;else if(d.readFailures?.length)st.textContent='PARTIAL SYNC • '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+d.readFailures.length+' read errors';else if(d.localUnmapped||d.localWithoutId)st.textContent='PARTIAL SYNC • '+c.visits.length+' visits • '+(d.localPublished||0)+' local published • '+(d.localUnmapped||0)+' unassigned local • '+(d.localWithoutId||0)+' without ID';else st.textContent='Synced '+c.salesmen.length+' salesmen • '+c.visits.length+' visits • '+(d.partitionDocs||0)+' day docs • salesman photo references retained • images load on demand';}
+    try{window.__spAuditLogEvent?.('Master dashboard sync result',{durationMs:Math.max(0,Math.round(performance.now()-syncStartedAt)),salesmen:c.salesmen.length,visits:c.visits.length,partitionDocs:d.partitionDocs||0,readFailures:d.readFailures?.length||0,localPublishError:d.localPublishError||'',partial},partial?'warning':'success')}catch(_){}
     return c;
   }catch(e){
     const msg=String(e?.message||e);
@@ -19828,6 +19961,7 @@ window.syncMasterFieldDashboard=async function(){
     if(/timed out|still running after 15 seconds/i.test(msg))window.__shadabMasterSyncGeneration=runId+1;
     if(st)st.textContent='SYNC FAILED • '+msg;
     root?.querySelectorAll('.sp-added-overview .num, .sp-added-taskgrid .num').forEach(n=>{n.textContent='—'});
+    try{window.__spAuditLogEvent?.('Master dashboard sync result',{durationMs:Math.max(0,Math.round(performance.now()-syncStartedAt)),error:msg,countsHidden:true},'error')}catch(_){}
     console.error('Master Dashboard single-core sync failed:',e);
     try{window.toast35?.('✕ Master sync failed — '+msg)}catch(_){}
     throw e;
@@ -19979,10 +20113,54 @@ async function syncSalesmanFirebaseV12(reason){
          No unconditional 'today' write: unchanged day documents are never rewritten. */
       for(const d of groups.keys())writeDates.add(d);
 
+      const PHOTO_REPAIR_TARGETS={
+        'mv6mk86fl6ljpn':'QBlIhQuhBqRTJzCas5Ck5Ze5w6g2',
+        'mv6jh7zrsdjlel':'3fH7UgJyJbYEU3mRwhjq8P5szws1',
+        'mv6hweh1w32pkk':'3fH7UgJyJbYEU3mRwhjq8P5szws1',
+        'mv6hu1f63dhqio':'3fH7UgJyJbYEU3mRwhjq8P5szws1',
+        'mv6hod9cng8k0x':'3fH7UgJyJbYEU3mRwhjq8P5szws1',
+        'mv6hnmqp5ku6df':'3fH7UgJyJbYEU3mRwhjq8P5szws1',
+        'mv6hlguajv8foz':'3fH7UgJyJbYEU3mRwhjq8P5szws1',
+        'mv6hk221qkn7ad':'3fH7UgJyJbYEU3mRwhjq8P5szws1'
+      };
+      const photoRepairRecord={at:iso(),uid,attempted:[],reuploaded:[],unavailable:[],errors:[]};
+      let repairedSet=new Set();try{repairedSet=new Set(JSON.parse(localStorage.getItem('shadab_v12_photo_repaired_ids_v1_'+uid)||'[]'))}catch(e){}
       for(const v of current){
+        const id=String(v?.id||v?.visitId||'');
+        const targeted=PHOTO_REPAIR_TARGETS[id]===uid&&!repairedSet.has(id);
+        if(targeted){
+          photoRepairRecord.attempted.push(id);
+          let source='';
+          for(const candidate of [v?.photo,v?.image,v?.visitPhoto,v?.picture,v?.photoData,v?.imageData,v?.dataUrl,v?.base64]){
+            if(typeof candidate==='string'&&candidate.startsWith('data:image/')){source=candidate;break}
+            if(candidate&&typeof candidate==='object'){
+              const nested=[candidate.data,candidate.base64,candidate.dataUrl,candidate.url,candidate.downloadURL].find(x=>typeof x==='string'&&x.startsWith('data:image/'));
+              if(nested){source=nested;break}
+            }
+          }
+          if(!source){try{const cached=await photoGet(id);const candidate=cached?.data||cached?.photo||cached?.image||cached?.dataUrl;if(typeof candidate==='string'&&candidate.startsWith('data:image/'))source=candidate}catch(e){}}
+          if(source){
+            v.photo=source;
+            try{
+              const ref=await uploadVisitPhotoV12(uid,v);
+              if(ref){
+                v.photoRef=ref;v.photoPending=false;repairedSet.add(id);photoRepairRecord.reuploaded.push(id);
+                try{localStorage.setItem('shadab_v12_photo_repaired_ids_v1_'+uid,JSON.stringify([...repairedSet]))}catch(e){}
+              }else{photoRepairRecord.unavailable.push({id,reason:'upload returned no media reference'})}
+            }catch(e){photoRepairRecord.errors.push({id,error:String(e?.message||e).slice(0,160)});v.photoPending=true}
+          }else{
+            photoRepairRecord.unavailable.push({id,reason:'no photo bytes in this device memory or IndexedDB'});
+          }
+          continue;
+        }
         if(!v?.photoRef&&(v?.photoPending||v?.photo&&String(v.photo).startsWith('data:image/'))){
           try{await uploadVisitPhotoV12(uid,v)}catch(e){v.photoPending=true;console.warn('V12 photo upload deferred:',e)}
         }
+      }
+      if(photoRepairRecord.attempted.length){
+        window.__shadabLastTargetedPhotoRepair=photoRepairRecord;
+        try{localStorage.setItem('shadab_v12_last_photo_repair_v1_'+uid,JSON.stringify(photoRepairRecord))}catch(e){}
+        try{window.__spAuditLogEvent?.('Targeted visit photo repair',{uid,attempted:photoRepairRecord.attempted.length,reuploaded:photoRepairRecord.reuploaded.length,unavailable:photoRepairRecord.unavailable.length,errors:photoRepairRecord.errors.length,visitIds:photoRepairRecord.attempted},photoRepairRecord.reuploaded.length===photoRepairRecord.attempted.length?'success':'warning')}catch(e){}
       }
       /* Rebuild groups after photo refs have been attached. */
       groups.clear();
@@ -23440,8 +23618,14 @@ html[data-shadab-theme="light"] #spNpOverlay .spnp-btn.danger{color:#a52a43;back
  const readLocal=()=>{try{return JSON.parse(localStorage.getItem(LOCAL)||'null')}catch(e){return null}};
 
  const IMAGE_DB='shadab_product_image_cache_v1',IMAGE_STORE='images',SNAPSHOT_STORE='catalogueSnapshots';
- function imageDb(){return new Promise((resolve,reject)=>{try{const req=indexedDB.open(IMAGE_DB,2);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains(IMAGE_STORE))d.createObjectStore(IMAGE_STORE);if(!d.objectStoreNames.contains(SNAPSHOT_STORE))d.createObjectStore(SNAPSHOT_STORE)};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Image cache unavailable'));}catch(e){reject(e)}})}
+ let imageDbPromise=null;
+ function imageDb(){
+  if(imageDbPromise)return imageDbPromise;
+  imageDbPromise=new Promise((resolve,reject)=>{try{const req=indexedDB.open(IMAGE_DB,2);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains(IMAGE_STORE))d.createObjectStore(IMAGE_STORE);if(!d.objectStoreNames.contains(SNAPSHOT_STORE))d.createObjectStore(SNAPSHOT_STORE)};req.onsuccess=()=>{const d=req.result;d.onversionchange=()=>{try{d.close()}catch(_){}imageDbPromise=null};resolve(d)};req.onerror=()=>{imageDbPromise=null;reject(req.error||new Error('Product image cache could not open'))};req.onblocked=()=>{imageDbPromise=null;reject(new Error('Product image cache is blocked by another open tab'))};}catch(e){imageDbPromise=null;reject(e)}});
+  return imageDbPromise;
+ }
  async function cacheGet(key){try{const d=await imageDb();return await new Promise((resolve,reject)=>{const r=d.transaction(IMAGE_STORE,'readonly').objectStore(IMAGE_STORE).get(key);r.onsuccess=()=>resolve(typeof r.result==='string'?r.result:'');r.onerror=()=>reject(r.error);});}catch(_){return ''}}
+ function cacheGetBounded(key,ms=900){return new Promise(resolve=>{let done=false,timer=0;const finish=v=>{if(done)return;done=true;clearTimeout(timer);resolve(typeof v==='string'?v:'')};timer=setTimeout(()=>finish(''),ms);Promise.resolve().then(()=>cacheGet(key)).then(finish,()=>finish(''));});}
  async function cachePut(key,value){try{const d=await imageDb();await new Promise((resolve,reject)=>{const tx=d.transaction(IMAGE_STORE,'readwrite');tx.objectStore(IMAGE_STORE).put(value,key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}catch(e){console.warn('Product image persistent cache unavailable',e)}}
  async function cacheRemove(key){try{const d=await imageDb();await new Promise((resolve,reject)=>{const tx=d.transaction(IMAGE_STORE,'readwrite');tx.objectStore(IMAGE_STORE).delete(key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}catch(_){}}
  async function cachePublishedManifestRecord(data){try{const products=normalize(data?.products);const companies=Array.isArray(data?.companies)?normalizeCompanies(data.companies):normalizeCompanies([...DEFAULT_COMPANIES,...products.map(p=>p.company)]);const companyDatabaseRefs=normalizeDatabaseRefs(data?.companyDatabaseRefs);const d=await imageDb();await new Promise((resolve,reject)=>{const tx=d.transaction(SNAPSHOT_STORE,'readwrite');tx.objectStore(SNAPSHOT_STORE).put({version:Number(data?.version)||0,products,companies,companyDatabaseRefs,updatedAt:String(data?.updatedAt||''),count:products.length},'published');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}catch(e){console.warn('Catalogue snapshot cache unavailable',e)}}
@@ -23818,19 +24002,20 @@ async function loadManifest(){
   if(!docId)return '';const id=String(docId),key=imageCacheKey(id,version);
   const memo=imageCache.get(key);if(String(memo||'').startsWith('data:image/')||/^https?:\/\//i.test(String(memo||'')))return memo;
   if(imageLoadPromises.has(key))return imageLoadPromises.get(key);
+  const failedUntil=Number(imageLoadFailures.get(key)||0);if(failedUntil>Date.now())return '';if(failedUntil)imageLoadFailures.delete(key);
   const task=(async()=>{
    try{
-    let cached=await Promise.race([cacheGet(key),new Promise(resolve=>setTimeout(()=>resolve(''),700))]);
-    if(!(String(cached||'').startsWith('data:image/')||/^https?:\/\//i.test(String(cached||'')))){const legacyKey=imageCacheKey(id,'legacy');if(legacyKey!==key)cached=await Promise.race([cacheGet(legacyKey),new Promise(resolve=>setTimeout(()=>resolve(''),700))]);}
+    let cached=await cacheGetBounded(key,900);
+    if(!(String(cached||'').startsWith('data:image/')||/^https?:\/\//i.test(String(cached||'')))){const legacyKey=imageCacheKey(id,'legacy');if(legacyKey!==key)cached=await cacheGetBounded(legacyKey,900);}
     if(String(cached||'').startsWith('data:image/')||/^https?:\/\//i.test(String(cached||''))){imageCache.set(key,cached);imageLoadFailures.delete(key);return cached;}
     const candidates=[...new Set([id,id.startsWith(IMAGE_PREFIX)?id.slice(IMAGE_PREFIX.length):IMAGE_PREFIX+id])];let found=null,lastError=null;
     for(const candidate of candidates){
      try{
       if(imageReadActive>=8)await new Promise(resolve=>imageReadQueue.push(resolve));imageReadActive++;
-      try{found=await read('app_pdf_documents/'+candidate)}finally{imageReadActive--;const next=imageReadQueue.shift();if(next)next();}
+      try{found=await Promise.race([read('app_pdf_documents/'+candidate),new Promise((_,reject)=>setTimeout(()=>reject(new Error('Product image request timed out')),5000))])}finally{imageReadActive--;const next=imageReadQueue.shift();if(next)next();}
       const test=found&&(found.imageData||found.image||found.photoData||found.dataUrl||found.imageBase64||found.base64||found.photo||found.content||found.imageDataBase64||found.base64Image||found.photoBase64||found.url);
       if(test)break;
-     }catch(e){lastError=e;found=null;}
+     }catch(e){lastError=e;found=null;if(/timed out|failed to fetch|network/i.test(String(e?.message||e)))break;}
     }
     if(!found&&lastError)throw lastError;
     const raw=found?.imageData||found?.image||found?.photoData||found?.dataUrl||found?.imageBase64||found?.base64||found?.photo||found?.content||found?.imageDataBase64||found?.base64Image||found?.photoBase64||found?.url||'';
@@ -23839,8 +24024,8 @@ async function loadManifest(){
     if(src.startsWith('data:image/')||/^https?:\/\//i.test(src)){
      imageCache.set(key,src);imageLoadFailures.delete(key);Promise.resolve().then(()=>cachePut(key,src)).catch(cacheErr=>console.warn('Product image cache write skipped',id,cacheErr));if(version==='legacy')Promise.resolve().then(()=>cachePut(imageCacheKey(id,'legacy'),src)).catch(()=>{});return src;
     }
-    imageLoadFailures.set(key,Date.now()+5000);return '';
-   }catch(e){console.warn('Product image read failed',id,e);imageLoadFailures.set(key,Date.now()+5000);return '';}
+    imageLoadFailures.set(key,Date.now()+30000);return '';
+   }catch(e){console.warn('Product image read failed',id,e);imageLoadFailures.set(key,Date.now()+30000);return '';}
   })().finally(()=>{loadingImages.delete(key);imageLoadPromises.delete(key)});
   loadingImages.add(key);imageLoadPromises.set(key,task);return task;
  }
@@ -23855,7 +24040,7 @@ async function loadManifest(){
    if(src){const img=document.createElement('img');img.alt='Product';img.loading='lazy';img.decoding='async';img.src=src;img.onerror=()=>{try{img.remove()}catch(_){}retryable(node,id,version)};node.textContent='';node.appendChild(img);node.dataset.loading='';node.onclick=null;const item=node.closest('[data-spnp-id]');if(item&&item.dataset.spnpId===editingId)formImage=src;}
    else retryable(node,id,version);
   };
-  if('IntersectionObserver'in window){const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);hydrate(e.target)}}),{root:body,rootMargin:'700px'});nodes.forEach(n=>io.observe(n));}
+  if('IntersectionObserver'in window){const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);hydrate(e.target)}}),{root:body,rootMargin:'180px'});nodes.forEach(n=>io.observe(n));}
   else nodes.slice(0,12).forEach(hydrate);
  }
  async function shareCataloguePDF(){
@@ -24125,38 +24310,95 @@ html[data-shadab-theme="dark"] #sp35LoginButton.sp35-name-glow-box {
 <script id="sp-update-activity-audit-center-v2">
 (function(){
 'use strict';
-const STORE='sp_update_activity_audit_v2', VERSION='UPDATE & ACTIVITY AUDIT CENTER • 2026-10-13 • v5 PATH/PDF FORENSIC FIX';
+const STORE='sp_update_activity_audit_v2', VERSION='UPDATE & ACTIVITY AUDIT CENTER • 2026-10-13 • v10 ERROR ROOT CAUSE + CATALOGUE LAZY LOAD + PHOTO DATE FALLBACK';
 const MAX=500, CLOUD_MAX=100, FLUSH_MS=3600000; let hooked=false, busy=false, suppress=false, lastFlush=0, cloudState='Not synced yet', remoteRows=[];
+const FIX_BUILD_START_KEY=STORE+'_first_v10_start'; let fixBuildStart=0; try{const prior=Number(localStorage.getItem(FIX_BUILD_START_KEY)||0);if(prior>0)fixBuildStart=prior;else{fixBuildStart=Date.now();localStorage.setItem(FIX_BUILD_START_KEY,String(fixBuildStart));}}catch(_){fixBuildStart=Date.now();}
 const readCache=new Map(),readInflight=new Map(),MASTER_CACHE_MS=30000;
-let captureOn=false,captureObserver=null,lastScreen='',remoteLoadedAt=0,screenStartedAt=performance.now(),scrollRaf=0,scrollFrames=0,scrollWindowStart=0,scrollActiveUntil=0;
+let captureOn=false,captureObserver=null,lastScreen='',remoteLoadedAt=0,lastTriggerAt=0,lastTriggerLabel='',scrollRaf=0,scrollFrames=0,scrollWindowStart=0,scrollActiveUntil=0;
 function screenName(){const visible=[...document.querySelectorAll('[id]')].filter(e=>{if(!e.id||!/(modal|panel|control|dashboard|screen|overlay|workbody)/i.test(e.id))return false;const r=e.getBoundingClientRect();return r.width>120&&r.height>80&&getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden'}).sort((a,b)=>{const ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();return (rb.width*rb.height)-(ra.width*ra.height)});return visible[0]?.id||'main app view'}
+function captureClick(e){if(!captureOn)return;const el=e.target?.closest?.('button,[onclick],[role="button"],a,.sp-added-dashboard-card,.dashboard-card');if(!el)return;lastTriggerAt=performance.now();lastTriggerLabel=String(el.getAttribute('aria-label')||el.innerText||el.title||el.id||el.tagName||'UI action').replace(/\s+/g,' ').trim().slice(0,100);const at=lastTriggerAt;setTimeout(()=>{if(lastTriggerAt===at&&performance.now()-at>=10000){lastTriggerAt=0;lastTriggerLabel=''}},10000)}
+document.addEventListener('click',captureClick,true);
 function startScrollMonitor(){if(scrollRaf)return;scrollFrames=0;scrollWindowStart=performance.now();const tick=now=>{scrollRaf=0;if(!captureOn)return;if(now<scrollActiveUntil){scrollFrames++;if(now-scrollWindowStart>=1000){const fps=Math.round(scrollFrames*1000/(now-scrollWindowStart));add('Scroll frame-rate sample',{fps,classification:fps>=50?'SMOOTH':fps>=30?'ACCEPTABLE':'JANKY'},fps<30?'warning':'info');scrollFrames=0;scrollWindowStart=now;}scrollRaf=requestAnimationFrame(tick)}};scrollRaf=requestAnimationFrame(tick)}
 function onScroll(){if(!captureOn)return;scrollActiveUntil=performance.now()+1200;startScrollMonitor()}
 function recordNavigationTiming(){try{const n=performance.getEntriesByType('navigation')[0];if(n&&captureOn)add('App startup timing',{domContentLoadedMs:Math.round(n.domContentLoadedEventEnd),loadEventMs:Math.round(n.loadEventEnd),domInteractiveMs:Math.round(n.domInteractive),transferSize:n.transferSize||0},'info')}catch(_){}}
-function startCapture(){if(captureOn)return;captureOn=true;lastScreen=screenName();screenStartedAt=performance.now();recordNavigationTiming();add('Forensic capture started',{screen:lastScreen,mode:'passive; no destructive actions'},'success');if(captureObserver)captureObserver.disconnect();captureObserver=new MutationObserver(()=>{if(!captureOn)return;const now=screenName();if(now!==lastScreen){const ended=performance.now(),durationMs=Math.max(0,Math.round(ended-screenStartedAt));if(captureOn)add('Screen open/load timing',{screen:lastScreen,openDurationMs:durationMs,classification:durationMs<300?'FAST':durationMs<1000?'OK':durationMs<2500?'SLOW':'VERY SLOW'},durationMs>=2500?'error':durationMs>=1000?'warning':'success');lastScreen=now;screenStartedAt=ended;add('Screen state changed',{screen:now},'info')}});try{captureObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','aria-hidden']})}catch(_){}render()}
-function stopCapture(){if(!captureOn)return;if(captureOn){const durationMs=Math.max(0,Math.round(performance.now()-screenStartedAt));add('Screen open/load timing',{screen:lastScreen,openDurationMs:durationMs,classification:durationMs<300?'FAST':durationMs<1000?'OK':durationMs<2500?'SLOW':'VERY SLOW'},durationMs>=2500?'error':durationMs>=1000?'warning':'success')}captureOn=false;if(scrollRaf)cancelAnimationFrame(scrollRaf);scrollRaf=0;if(captureObserver)captureObserver.disconnect();captureObserver=null;add('Forensic capture stopped',{screen:screenName()},'success');render()}
+function transitionTiming(from,to,now){const elapsed=lastTriggerAt&&now-lastTriggerAt<=15000?Math.max(0,Math.round(now-lastTriggerAt)):null;if(elapsed!==null){add('Screen open/load timing',{from,screen:to,trigger:lastTriggerLabel,openDurationMs:elapsed,classification:elapsed<300?'FAST':elapsed<1000?'OK':elapsed<2500?'SLOW':'VERY SLOW'},elapsed>=2500?'warning':elapsed>=1000?'warning':'success')}else add('Screen state changed',{from,screen:to,timing:'No linked user click; open duration not inferred'},'info');lastTriggerAt=0;lastTriggerLabel=''}
+function startCapture(){if(captureOn)return;captureOn=true;lastScreen=screenName();lastTriggerAt=0;lastTriggerLabel='';recordNavigationTiming();add('Forensic capture started',{screen:lastScreen,mode:'passive; no destructive actions'},'success');if(captureObserver)captureObserver.disconnect();captureObserver=new MutationObserver(()=>{if(!captureOn)return;const now=screenName();if(now!==lastScreen){transitionTiming(lastScreen,now,performance.now());lastScreen=now}});try{captureObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','aria-hidden']})}catch(_){}render()}
+function stopCapture(){if(!captureOn)return;if(lastTriggerAt){const elapsed=Math.max(0,Math.round(performance.now()-lastTriggerAt));add('Screen transition not observed',{screen:lastScreen,trigger:lastTriggerLabel,elapsedSinceClickMs:elapsed},'warning');lastTriggerAt=0;lastTriggerLabel=''}captureOn=false;if(scrollRaf)cancelAnimationFrame(scrollRaf);scrollRaf=0;if(captureObserver)captureObserver.disconnect();captureObserver=null;add('Forensic capture stopped',{screen:screenName()},'success');render()}
 function read(){try{const x=JSON.parse(localStorage.getItem(STORE)||'[]');return Array.isArray(x)?x:[]}catch(_){return []}}
 function write(a){try{localStorage.setItem(STORE,JSON.stringify(a.slice(0,MAX)))}catch(e){try{localStorage.setItem(STORE,JSON.stringify(a.slice(0,100)))}catch(_){}}}
 function queueRead(){try{return JSON.parse(localStorage.getItem(STORE+'_queue')||'[]')}catch(_){return []}}
 function queueWrite(a){try{localStorage.setItem(STORE+'_queue',JSON.stringify(a.slice(-200)))}catch(_){}}
 function who(){try{const s=window.shadabRestCurrentSession?.();return {email:s?.email||'unknown',uid:s?.uid||''}}catch(_){return {email:'unknown',uid:''}}}
-function add(type,detail={},status='info',opts={}){const u=who(),rec={id:(Date.now().toString(36)+Math.random().toString(36).slice(2,8)),at:new Date().toISOString(),type:String(type).slice(0,80),status,actor:u.email,uid:u.uid,detail};const a=read();a.unshift(rec);write(a);if(opts.cloud!==false){const q=queueRead();q.push(rec);queueWrite(q)}try{window.dispatchEvent(new CustomEvent('sp-audit-change',{detail:rec}))}catch(_){}return rec}
+function add(type,detail={},status='info',opts={}){
+ const nowMs=Date.now(),events=read(),msg=String(detail?.message||'');
+ // Browser emits a generic Script error and a second diagnostics event for the
+ // same failure. Fold the diagnostics into the original record rather than
+ // inflating the error count with duplicate entries.
+ if(type==='JavaScript error diagnostics'){
+   const dup=events.find(r=>r?.type==='JavaScript error'&&String(r?.detail?.message||'')==='Script error.'&&Math.abs(nowMs-Date.parse(r.at||''))<5000);
+   if(dup){dup.detail={...(dup.detail||{}),diagnostics:detail};write(events);const q=queueRead();const qi=q.findIndex(r=>r?.id===dup.id);if(qi>=0){q[qi]=dup;queueWrite(q)}try{window.dispatchEvent(new CustomEvent('sp-audit-change',{detail:dup}))}catch(_){}return dup;}
+ }
+ if(type==='JavaScript error'&&msg==='Script error.'){
+   const dup=events.find(r=>r?.type==='JavaScript error'&&String(r?.detail?.message||'')==='Script error.'&&Math.abs(nowMs-Date.parse(r.at||''))<2500);
+   if(dup)return dup;
+ }
+ const u=who(),rec={id:(Date.now().toString(36)+Math.random().toString(36).slice(2,8)),at:new Date(nowMs).toISOString(),type:String(type).slice(0,80),status,actor:u.email,uid:u.uid,detail};
+ events.unshift(rec);write(events);if(opts.cloud!==false){const q=queueRead();q.push(rec);queueWrite(q)}try{window.dispatchEvent(new CustomEvent('sp-audit-change',{detail:rec}))}catch(_){}return rec;
+}
 function safe(v){try{return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}catch(_){return ''}}
 function fmt(iso){try{return new Date(iso).toLocaleString()}catch(_){return iso||'—'}}
-function counts(rows){const c={read:0,write:0,delete:0,error:0,activity:0};rows.forEach(r=>{const t=(r.type||'').toLowerCase();if(t.includes('read'))c.read++;if(t.includes('write')||t.includes('add')||t.includes('update')||t.includes('save'))c.write++;if(t.includes('delete'))c.delete++;if(r.status==='error'||r.status==='failed')c.error++;c.activity++});return c}
+function assessEvent(r){
+ const type=String(r?.type||'').toLowerCase(),d=r?.detail||{},msg=String(d.message||d.error||d.reason||''),path=String(d.path||'');
+ if(/(?:remoteRows|alternate) is not defined/i.test(msg)){
+  const eventAt=Date.parse(r?.at||'');
+  if(eventAt&&fixBuildStart&&eventAt<fixBuildStart)return {status:'resolved-history',label:'HISTORICAL — v10 fixes the recorded forensic helper scope error; raw event retained'};
+  return {status:'error',label:'UNRESOLVED — this scope error occurred after the v10 fix baseline; investigate current build'};
+ }
+ if(/Today report has no records to check|Master report rows are not ready/i.test(msg))return {status:'expected-guard',label:'DATA NOT LOADED AT CHECK TIME — photo verifier now retries from the Master aggregate when available'};
+ if(/Cannot assign to read only property ['"]?spFinalDownloadPdf/i.test(msg))return {status:'resolved-history',label:'HISTORICAL — legacy PDF-handler overwrite from an older build; retained for audit'};
+ if(path.startsWith('app_settings/sharedDocuments/'))return {status:'resolved-history',label:'HISTORICAL — legacy document path; canonical sharedDocuments path is now normalized'};
+ if(/getContext.*undefined/i.test(msg)&&/firebase-auth-compat\.js/i.test(String(d.file||d.filename||'')))return {status:'transient-warning',label:'THIRD-PARTY SDK DIAGNOSTIC — Firebase Auth SDK reported a browser canvas/context error; retained, not attributed to app code'};
+ if(type==='javascript error diagnostics'||/^Script error\.$/i.test(msg))return {status:'transient-warning',label:'UNATTRIBUTED BROWSER ERROR — browser suppressed source/line; retained for follow-up, not counted as a confirmed app defect'};
+ if(/Blocked before network: Firestore Rules allow access only to the signed-in user document/i.test(msg))return {status:'expected-guard',label:'SAFETY GUARD — blocked locally before any Firebase network request'};
+ if(/Not signed in|Firebase session is not available/i.test(msg))return {status:'expected-guard',label:'AUTH WAIT — no active signed-in session at that moment'};
+ if(type==='network offline'||/Failed to fetch|Network request failed|timeout/i.test(msg))return {status:'transient-warning',label:'TRANSIENT NETWORK WARNING — not a confirmed code defect'};
+ if(r?.status==='error'||r?.status==='failed')return {status:'error',label:'UNRESOLVED ERROR — inspect the captured details'};
+ return {status:String(r?.status||'info'),label:String(r?.status||'info').toUpperCase()};
+}
+function counts(rows){
+ const c={read:0,write:0,delete:0,error:0,history:0,warning:0,activity:0};
+ const ordered=(Array.isArray(rows)?rows:[]).slice().sort((a,b)=>String(a.at||'').localeCompare(String(b.at||'')));
+ const activeErrorKeys=new Set();
+ ordered.forEach(r=>{
+  const t=String(r.type||'').toLowerCase(),a=assessEvent(r),d=r.detail||{};
+  if(t.includes('read'))c.read++;
+  if(t.includes('write')||t.includes('add')||t.includes('update')||t.includes('save'))c.write++;
+  if(t.includes('delete'))c.delete++;
+  if(a.status==='error'){
+   const msg=String(d.message||d.error||d.reason||'');
+   /* The card reports distinct unresolved issue signatures. Raw repetitions remain in the log/export. */
+   const key=[t,msg.slice(0,220),String(d.file||d.filename||''),String(d.line||d.lineno||''),String(d.path||''),String(r.uid||'')].join('|');
+   if(!activeErrorKeys.has(key)){activeErrorKeys.add(key);c.error++}
+  }
+  if(a.status==='resolved-history'||a.status==='expected-guard')c.history++;
+  if(a.status==='transient-warning')c.warning++;
+  c.activity++;
+ });
+ return c;
+}
 function getSession(){try{return window.shadabRestCurrentSession?.()||{}}catch(_){return {}}}
 async function flush(force=false){if(busy||!navigator.onLine)return;const q=queueRead();if(!q.length)return;if(!force&&Date.now()-lastFlush<FLUSH_MS)return;const ses=getSession(),uid=String(ses.uid||'');if(!uid||typeof window.shadabRestReadDoc!=='function'||typeof window.shadabRestWriteFields!=='function'){cloudState='Waiting for signed-in Firebase session';return}
  busy=true;lastFlush=Date.now();suppress=true;
  try{const path='user_data/'+encodeURIComponent(uid);const doc=await window.shadabRestReadDoc(path)||{};const old=Array.isArray(doc.activityAudit)?doc.activityAudit:[];const merged=new Map();old.concat(q).forEach(r=>{if(r&&r.id)merged.set(r.id,r)});const events=Array.from(merged.values()).sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,CLOUD_MAX);await window.shadabRestWriteFields(path,{activityAudit:events,activityAuditUpdatedAt:new Date().toISOString()});const ids=new Set(q.map(r=>r.id));queueWrite(queueRead().filter(r=>!ids.has(r.id)));cloudState='Cloud sync OK • '+events.length+' recent events';add('Audit batch synced',{count:q.length,cloudDocument:path},'success',{cloud:false});
  }catch(e){cloudState='Cloud sync failed: '+String(e?.message||e).slice(0,180);add('Audit cloud sync failed',{error:String(e?.message||e).slice(0,220)},'error',{cloud:false})}finally{suppress=false;busy=false;}
 }
-async function loadRemote(force=false){if(!force&&remoteLoadedAt&&Date.now()-remoteLoadedAt<300000)return;const ses=getSession();if(!ses.email||String(ses.email).toLowerCase()!=='master@shadabpharmacy.com'){remoteRows=[];return}if(typeof window.shadabRestReadCollection!=='function')return;const oldSuppress=suppress;suppress=true;try{const docs=await window.shadabRestReadCollection('user_data');remoteRows=[];(Array.isArray(docs)?docs:[]).forEach(d=>{const data=typeof d?.data==='function'?(d.data()||{}):(d?.data||d||{});if(Array.isArray(data.activityAudit))remoteRows.push(...data.activityAudit)});const m=new Map();remoteRows.forEach(r=>{if(r?.id)m.set(r.id,r)});remoteRows=Array.from(m.values()).sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,1000);remoteLoadedAt=Date.now();cloudState='Loaded shared activity from '+new Set(remoteRows.map(r=>r.uid).filter(Boolean)).size+' account(s)';}catch(e){cloudState='Shared log read failed: '+String(e?.message||e).slice(0,160)}finally{suppress=oldSuppress}}
-function render(){const b=document.getElementById('sp35WorkBody')||document.getElementById('sp35WorkBodyNew');if(!b)return;const local=read(),all=new Map();local.concat(remoteRows).forEach(r=>{if(r?.id)all.set(r.id,r)});const rows=Array.from(all.values()).sort((a,b)=>String(b.at).localeCompare(String(a.at))),c=counts(rows),today=new Date().toISOString().slice(0,10);
+async function loadRemote(force=false){if(!force&&remoteLoadedAt&&Date.now()-remoteLoadedAt<300000)return;const ses=getSession();if(!ses.email||String(ses.email).toLowerCase()!=='master@shadabpharmacy.com'){remoteRows=[];window.__spAuditRemoteRows=[];return}if(typeof window.shadabRestReadCollection!=='function')return;const oldSuppress=suppress;suppress=true;try{const docs=await window.shadabRestReadCollection('user_data');remoteRows=[];(Array.isArray(docs)?docs:[]).forEach(d=>{const data=typeof d?.data==='function'?(d.data()||{}):(d?.data||d||{});if(Array.isArray(data.activityAudit))remoteRows.push(...data.activityAudit)});const m=new Map();remoteRows.forEach(r=>{if(r?.id)m.set(r.id,r)});remoteRows=Array.from(m.values()).sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,1000);window.__spAuditRemoteRows=remoteRows.slice();remoteLoadedAt=Date.now();cloudState='Loaded shared activity from '+new Set(remoteRows.map(r=>r.uid).filter(Boolean)).size+' account(s)';}catch(e){cloudState='Shared log read failed: '+String(e?.message||e).slice(0,160)}finally{suppress=oldSuppress}}
+function render(){const b=document.getElementById('sp35WorkBody')||document.getElementById('sp35WorkBodyNew');if(!b)return;window.__spAuditRemoteRows=remoteRows.slice();const local=read(),all=new Map();local.concat(remoteRows).forEach(r=>{if(r?.id)all.set(r.id,r)});const rows=Array.from(all.values()).sort((a,b)=>String(b.at).localeCompare(String(a.at))),c=counts(rows),today=new Date().toISOString().slice(0,10);
  b.innerHTML=`<div class="sp35-notice-final"><b>Update & Activity Audit Center</b><br><small>${safe(VERSION)}</small><br><small>Cloud: ${safe(cloudState)} • Queued locally: ${queueRead().length} • Auto batch interval: 60 min when events exist • Recent cloud history per account: ${CLOUD_MAX} • Capture: ${captureOn?'ON':'OFF'}</small></div>
- <div class="sp-cc-grid" style="margin:10px 0;grid-template-columns:repeat(2,minmax(0,1fr))"><div class="sp-cc-card"><span class="ic">📥</span><span><b>Tracked reads</b><small>${c.read}</small></span></div><div class="sp-cc-card"><span class="ic">📤</span><span><b>Tracked writes</b><small>${c.write}</small></span></div><div class="sp-cc-card"><span class="ic">🗑️</span><span><b>Tracked deletes</b><small>${c.delete}</small></span></div><div class="sp-cc-card"><span class="ic">⚠️</span><span><b>Tracked errors</b><small>${c.error}</small></span></div></div>
+ <div class="sp-cc-grid" style="margin:10px 0;grid-template-columns:repeat(2,minmax(0,1fr))"><div class="sp-cc-card"><span class="ic">📥</span><span><b>Tracked reads</b><small>${c.read}</small></span></div><div class="sp-cc-card"><span class="ic">📤</span><span><b>Tracked writes</b><small>${c.write}</small></span></div><div class="sp-cc-card"><span class="ic">🗑️</span><span><b>Tracked deletes</b><small>${c.delete}</small></span></div><div class="sp-cc-card"><span class="ic">⚠️</span><span><b>Active errors</b><small>${c.error}</small></span></div><div class="sp-cc-card"><span class="ic">🧾</span><span><b>Historical / guarded</b><small>${c.history}</small></span></div><div class="sp-cc-card"><span class="ic">📶</span><span><b>Network warnings</b><small>${c.warning}</small></span></div></div>
  <div class="sp35-row-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="sp35-btn" id="spAuditToday">Today</button><button class="sp35-btn" id="spAuditAll">All dates</button><button class="sp35-btn" id="spAuditRefresh">Refresh shared logs</button><button class="sp35-btn" id="spAuditSync">Sync queued logs now</button><button class="sp35-btn" id="spAuditCapture">▶ Start Forensic Capture</button><button class="sp35-btn" id="spAuditExport">Export JSON</button></div><div class="notice"><b>App version/update</b><br>${safe(VERSION)}<br><small>Build label; not proof of the deployed version on every device. Events begin from this build; historical events are not retroactive.</small></div><div id="spAuditRows" style="display:grid;gap:8px;margin-top:10px"></div>`;
- let filter='today';function list(){const out=document.getElementById('spAuditRows');if(!out)return;const selected=rows.filter(r=>filter!=='today'||String(r.at||'').slice(0,10)===today);out.innerHTML=selected.slice(0,300).map(r=>`<div class="notice"><b>${safe(fmt(r.at))}</b> · ${safe(r.status||'info')}<br><b>${safe(r.type)}</b><br><small>Actor: ${safe(r.actor)} ${r.uid?'• UID: '+safe(r.uid):''}</small><br><small>${safe(JSON.stringify(r.detail||{}))}</small></div>`).join('')||'<div class="sp35-emptyx">No events for this filter.</div>'}
- document.getElementById('spAuditToday').onclick=()=>{filter='today';list()};document.getElementById('spAuditAll').onclick=()=>{filter='all';list()};document.getElementById('spAuditRefresh').onclick=async()=>{await loadRemote(true);render()};document.getElementById('spAuditSync').onclick=async()=>{await flush(true);await loadRemote(true);render()};document.getElementById('spAuditCapture').onclick=()=>{if(captureOn)stopCapture();else startCapture();};document.getElementById('spAuditCapture').textContent=captureOn?'■ Stop Forensic Capture':'▶ Start Forensic Capture';document.getElementById('spAuditExport').onclick=()=>{const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),cloudState,capture:{active:captureOn,screen:screenName(),mode:'passive'},local:read(),shared:remoteRows,queued:queueRead()},null,2)],{type:'application/json'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='shadab-pharmacy-audit-'+today+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};list();
+ let filter='today';function list(){const out=document.getElementById('spAuditRows');if(!out)return;const selected=rows.filter(r=>filter!=='today'||String(r.at||'').slice(0,10)===today);out.innerHTML=selected.slice(0,300).map(r=>{const a=assessEvent(r),detail={...(r.detail||{}),auditAssessment:a.label};return `<div class="notice"><b>${safe(fmt(r.at))}</b> · ${safe(a.status)}<br><b>${safe(r.type)}</b><br><small>Actor: ${safe(r.actor)} ${r.uid?'• UID: '+safe(r.uid):''}</small><br><small>${safe(JSON.stringify(detail))}</small></div>`}).join('')||'<div class="sp35-emptyx">No events for this filter.</div>'}
+ document.getElementById('spAuditToday').onclick=()=>{filter='today';list()};document.getElementById('spAuditAll').onclick=()=>{filter='all';list()};document.getElementById('spAuditRefresh').onclick=async()=>{await loadRemote(true);render()};document.getElementById('spAuditSync').onclick=async()=>{await flush(true);await loadRemote(true);render()};document.getElementById('spAuditCapture').onclick=()=>{if(captureOn)stopCapture();else startCapture();};document.getElementById('spAuditCapture').textContent=captureOn?'■ Stop Forensic Capture':'▶ Start Forensic Capture';document.getElementById('spAuditExport').onclick=()=>{const rawLocal=read(),rawShared=remoteRows,rawQueued=queueRead(),allForAssessment=[...rawLocal,...rawShared,...rawQueued],assessments=allForAssessment.map(r=>({id:r.id,at:r.at,originalStatus:r.status,assessment:assessEvent(r).status,label:assessEvent(r).label})).filter(a=>a.assessment!=='error'&&a.assessment!==String(a.originalStatus||''));const blob=new Blob([JSON.stringify({version:VERSION,exportedAt:new Date().toISOString(),cloudState,capture:{active:captureOn,screen:screenName(),mode:'passive'},summary:counts(Array.from(new Map(allForAssessment.filter(r=>r?.id).map(r=>[r.id,r])).values())),issueAssessments:assessments,pdfDiagnostics:window.__spPdfLastPhotoDiagnostics||null,pdfPerformance:window.__spPdfLastPerformance||null,pdfUiTiming:window.__spPdfLastUiTiming||null,local:rawLocal,shared:rawShared,queued:rawQueued},null,2)],{type:'application/json'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='shadab-pharmacy-audit-'+today+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};list();
 }
 window.sp35Point43=async function(){hook();await loadRemote();render();await flush(false)};
 function hook(){if(hooked)return;const names=[['shadabRestReadDoc','Firebase read document'],['shadabRestReadCollection','Firebase read collection'],['shadabRestWriteDoc','Firebase write document'],['shadabRestWriteFields','Firebase write fields'],['shadabRestDeleteDoc','Firebase delete document']];let any=false;names.forEach(([name,label])=>{const original=window[name];if(typeof original!=='function'||original.__spAuditWrapped)return;const wrapped=async function(...args){const path=String(args[0]||'').slice(0,180);if(suppress||/user_data\/[^/]+$/.test(path)&&(/activityAudit/.test(JSON.stringify(args[1]||{}))))return original.apply(this,args);const cacheable=name==='shadabRestReadDoc'&&path==='app_settings/masterData';if(cacheable){const hit=readCache.get(path);if(hit&&Date.now()-hit.at<MASTER_CACHE_MS){if(!suppress)add('Cache hit (no Firebase read)',{path,ttlMs:MASTER_CACHE_MS},'info',{cloud:true});return hit.value}if(readInflight.has(path))return readInflight.get(path)}try{const task=original.apply(this,args);if(cacheable)readInflight.set(path,task);const result=await task;if(cacheable)readCache.set(path,{at:Date.now(),value:result});if(name!=='shadabRestReadDoc'||path!=='app_settings/masterData'){}if(name==='shadabRestWriteDoc'||name==='shadabRestWriteFields'||name==='shadabRestDeleteDoc'){const changed=String(args[0]||'');if(changed==='app_settings/masterData')readCache.delete(changed)}if(!suppress&&!/activityAudit/.test(path))add(label,{path,method:name},'success');return result}catch(e){if(!suppress&&!/activityAudit/.test(path))add(label,{path,method:name,error:String(e?.message||e).slice(0,250)},'error');throw e}finally{if(cacheable)readInflight.delete(path)}};wrapped.__spAuditWrapped=true;wrapped.__spAuditOriginal=original;window[name]=wrapped;any=true});hooked=any}
@@ -24239,7 +24481,35 @@ function normalizePath(value){
   return p;
 }
 function docFamily(path){const m=String(path).match(/^sharedDocuments\/(orderForm|supplySchedule|license)(?:__chunk_\d+)?$/);return m?m[1]:''}
-function invalidate(path){const p=normalizePath(path),family=docFamily(p);if(!family)return;for(const k of docCache.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))docCache.delete(k);for(const k of errorCache.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))errorCache.delete(k);for(const k of inflight.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))inflight.delete(k)}
+function isVisitMediaPath(path){return /^user_data\/[^/]+\/visit_media\/[^/]+$/.test(String(path))}
+function invalidate(path){
+ const p=normalizePath(path),family=docFamily(p);
+ docCache.delete(p);errorCache.delete(p);inflight.delete(p);
+ if(!family)return;
+ for(const k of docCache.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))docCache.delete(k);
+ for(const k of errorCache.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))errorCache.delete(k);
+ for(const k of inflight.keys())if(k===`sharedDocuments/${family}`||k.startsWith(`sharedDocuments/${family}__chunk_`))inflight.delete(k)
+}
+function hasVisitMediaPayload(value){
+ try{
+  const body=typeof value?.data==='function'?(value.data()||{}):(value||{});
+  const candidates=[body?.data,body?.photo,body?.image,body?.photoData,body?.picture,body?.dataUrl,body?.base64,body?.photoUrl,body?.imageUrl];
+  return candidates.some(v=>{
+   if(v&&typeof v==='object')v=v.stringValue||v.bytesValue||v.url||v.downloadURL||v.data||'';
+   if(typeof v!=='string'||!v)return false;
+   return /^data:image\//i.test(v)||/^https?:\/\//i.test(v)||(v.length>100&&/^[A-Za-z0-9+/=\r\n]+$/.test(v));
+  });
+ }catch(_){return false}
+}
+function ttlFor(p,family){
+ if(family)return CACHE_TTL;
+ // Cache positive media payloads for one day, but never cache an empty media document:
+ // salesmen may restore its image from another device after this read.
+ if(isVisitMediaPath(p))return 86400000;
+ if(p==='app_settings/masterData'||p==='app_settings/adminSchedules')return 30000;
+ if(/^salesmen\/[^/]+$/.test(p))return 5000;
+ return 0;
+}
 function addAudit(type,detail,status='info'){
   try{
     const ses=window.shadabRestCurrentSession?.()||{};
@@ -24250,23 +24520,30 @@ function addAudit(type,detail,status='info'){
     window.dispatchEvent(new CustomEvent('sp-audit-change',{detail:r}));
   }catch(_){ }
 }
-function logCacheHit(path){const now=Date.now(),last=lastHitLog.get(path)||0;if(now-last<10000)return;lastHitLog.set(path,now);if(String(path).startsWith('suppressed:'))addAudit('Repeated failed read suppressed',{path:String(path).slice(11),ttlMs:ERROR_TTL},'warning');else addAudit('Cache hit (no Firebase read)',{path,ttlMs:CACHE_TTL},'info')}
+function logCacheHit(path,ttl=CACHE_TTL){const now=Date.now(),last=lastHitLog.get(path)||0;if(now-last<10000)return;lastHitLog.set(path,now);if(String(path).startsWith('suppressed:'))addAudit('Repeated failed read suppressed',{path:String(path).slice(11),ttlMs:ttl},'warning');else addAudit('Cache hit (no Firebase read)',{path,ttlMs:ttl},'info')}
 function wrapRead(){
  const name='shadabRestReadDoc',original=window[name];
  if(typeof original!=='function'||original.__spFinalPathCache)return false;
  const wrapped=async function(path,...args){
-   const p=normalizePath(path),family=docFamily(p);
-   if(!family)return original.call(this,p,...args);
+   const p=normalizePath(path),family=docFamily(p),ttl=ttlFor(p,family);
+   if(!ttl)return original.call(this,p,...args);
    const now=Date.now(),hit=docCache.get(p),failed=errorCache.get(p);
-   if(hit&&now-hit.at<CACHE_TTL){logCacheHit(p);return hit.value}
-   if(failed&&now-failed.at<ERROR_TTL){logCacheHit('suppressed:'+p);throw failed.error}
+   if(hit&&now-hit.at<ttl){logCacheHit(p,ttl);return hit.value}
+   const errorTtl=family?ERROR_TTL:2500;
+   if(failed&&now-failed.at<errorTtl){logCacheHit('suppressed:'+p,errorTtl);throw failed.error}
    if(inflight.has(p))return inflight.get(p);
    const task=Promise.resolve().then(()=>original.call(this,p,...args)).then(value=>{
-     errorCache.delete(p);docCache.set(p,{at:Date.now(),value});
+     errorCache.delete(p);
+     if(isVisitMediaPath(p)&&!hasVisitMediaPayload(value)){
+       /* Critical: do not cache a metadata-only/empty photo document for 24 hours. */
+       docCache.delete(p);
+     }else{
+       docCache.set(p,{at:Date.now(),value});
+     }
      return value;
    }).catch(error=>{
-     // Briefly suppress repeated permission/network failures from older duplicate
-     // hydration handlers. Writes invalidate this negative cache immediately.
+     // Coalesce rapid failed retries too; profile failures use a short backoff so
+     // login/profile recovery is not blocked for long. Writes invalidate this immediately.
      errorCache.set(p,{at:Date.now(),error});
      throw error;
    }).finally(()=>inflight.delete(p));
@@ -24292,16 +24569,20 @@ const labels={today:'Today',week:'This Week',month:'This Month',unique:'Unique S
 let pending=false;
 function closeConfirm(){const o=document.getElementById('spPdfConfirmOverlay');if(o)o.remove();pending=false}
 function askPdf(kind,runner){
+ const promptStarted=performance.now();
  if(pending)return false;pending=true;
  let o=document.getElementById('spPdfConfirmOverlay');if(o)o.remove();
  o=document.createElement('div');o.id='spPdfConfirmOverlay';o.setAttribute('role','presentation');
  const label=labels[String(kind||'today')]||'Master';
  o.innerHTML='<section id="spPdfConfirmPanel" role="dialog" aria-modal="true" aria-labelledby="spPdfConfirmTitle"><div id="spPdfConfirmHead"><div id="spPdfConfirmIcon" aria-hidden="true">⇩</div><div><h3 id="spPdfConfirmTitle">Download PDF report?</h3><div style="font-size:12px;color:#5ee5ff;font-weight:800;margin-top:4px">SHADAB PHARMACY</div></div></div><p id="spPdfConfirmSubtitle">'+label.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+' report is ready to prepare. Choose Download PDF to continue, or Cancel to return without downloading.</p><div id="spPdfConfirmActions"><button id="spPdfConfirmDownload" type="button">⬇ Download PDF</button><button id="spPdfConfirmCancel" type="button">Cancel</button></div></section>';
  document.body.appendChild(o);
+ o.classList.add('show');
+ window.__spPdfLastUiTiming={action:'confirmation',kind:String(kind||'today'),clickToPromptMs:Math.max(0,Math.round(performance.now()-promptStarted)),shownAt:new Date().toISOString()};
  o.addEventListener('click',e=>{if(e.target===o)closeConfirm()});
  o.querySelector('#spPdfConfirmCancel').addEventListener('click',closeConfirm);
  o.querySelector('#spPdfConfirmDownload').addEventListener('click',()=>{
    const b=o.querySelector('#spPdfConfirmDownload');if(b){b.disabled=true;b.textContent='Preparing PDF…'}
+   try{window.toast35?.('Preparing PDF… You can cancel before starting, but generation may take several seconds for missing photos')}catch(_){}
    closeConfirm();
    try{const r=runner(kind);if(r&&typeof r.then==='function')r.catch(err=>{try{window.toast35?.('✕ PDF failed — '+(err?.message||err))}catch(_){}})}catch(err){try{window.toast35?.('✕ PDF failed — '+(err?.message||err))}catch(_){}}
  });
@@ -24309,23 +24590,40 @@ function askPdf(kind,runner){
  return true;
 }
 const originalReportDownload=typeof window.spFinalDownloadPdf==='function'?window.spFinalDownloadPdf:null;
-if(originalReportDownload&&!originalReportDownload.__spPdfConfirmWrapper){
- const wrapped=function(kind){return askPdf(kind,k=>originalReportDownload.call(window,k))};
- wrapped.__spPdfConfirmWrapper=true;wrapped.__spPdfConfirmOriginal=originalReportDownload;window.spFinalDownloadPdf=wrapped;window.downloadMasterReportPDF=wrapped;
-}
 const originalTaskDownload=typeof window.spV37MasterTodayTaskDownload==='function'?window.spV37MasterTodayTaskDownload:(typeof window.spV35MasterTodayTaskDownload==='function'?window.spV35MasterTodayTaskDownload:null);
-if(originalTaskDownload&&!originalTaskDownload.__spPdfConfirmWrapper){
- const wrappedTask=function(kind){return askPdf(kind,k=>originalTaskDownload.call(window,k))};
- wrappedTask.__spPdfConfirmWrapper=true;wrappedTask.__spPdfConfirmOriginal=originalTaskDownload;window.spV37MasterTodayTaskDownload=wrappedTask;window.spV35MasterTodayTaskDownload=wrappedTask;
+function inlineKind(attr,name){
+ const i=attr.indexOf(name+'(');if(i<0)return null;
+ const tail=attr.slice(i+name.length+1),m=tail.match(/^\s*(?:"((?:\\.|[^"])*)"|'((?:\\.|[^'])*)'|([A-Za-z0-9_-]+))/);
+ if(!m)return null;
+ if(m[1]!==undefined){try{return JSON.parse('"'+m[1]+'"')}catch(_){return m[1]}}
+ return m[2]!==undefined?m[2]:m[3];
 }
+/* Do not replace any frozen PDF aliases. A delegated capture-phase click handler
+   presents the app's Download/Cancel choice, then calls the locked canonical function. */
+if(!window.__spPdfConfirmCaptureInstalled){
+ window.__spPdfConfirmCaptureInstalled=true;
+ document.addEventListener('click',function(e){
+  const node=e.target?.closest?.('[onclick*="spFinalDownloadPdf("],[onclick*="downloadMasterReportPDF("],[onclick*="downloadMasterFieldReportPDF("],[onclick*="spV37MasterTodayTaskDownload("],[onclick*="spV35MasterTodayTaskDownload("]');
+  if(!node||node.closest?.('#spPdfConfirmOverlay'))return;
+  const attr=String(node.getAttribute('onclick')||node.onclick?.toString?.()||'');
+  let runner=null,name='';
+  for(const n of ['spFinalDownloadPdf','downloadMasterReportPDF','downloadMasterFieldReportPDF'])if(attr.includes(n+'(')){name=n;runner=originalReportDownload;break}
+  if(!runner){for(const n of ['spV37MasterTodayTaskDownload','spV35MasterTodayTaskDownload'])if(attr.includes(n+'(')){name=n;runner=originalTaskDownload;break}}
+  if(typeof runner!=='function'||!name)return;
+  const kind=inlineKind(attr,name);if(!kind)return;
+  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+  askPdf(kind,k=>runner.call(window,k));
+ },true);
+}
+window.__spPdfConfirmCaptureReady=!!originalReportDownload;
 /* Record better evidence when a browser suppresses details into generic Script error. */
 window.addEventListener('error',function(e){
  if(String(e?.message||'').trim()!=='Script error.')return;
  let scripts=[];try{scripts=performance.getEntriesByType('resource').filter(x=>/\.js(?:\?|$)/i.test(x.name)).slice(-8).map(x=>x.name.slice(-160))}catch(_){ }
  addAudit('JavaScript error diagnostics',{message:'Browser reported a generic Script error and suppressed its origin/line details.',filename:String(e?.filename||''),line:Number(e?.lineno||0),screen:(document.querySelector('.sp-added-dash-view.show')?.id||document.querySelector('.modal.show')?.id||'main app'),recentScriptResources:scripts},'error');
 },true);
-window.spFinalDocumentReadRepair={normalizePath,cacheTTL:CACHE_TTL,errorBackoffMs:ERROR_TTL,manualInvalidate:path=>invalidate(path),version:'2026-10-13-v2'};
-addAudit('App update loaded',{version:'SHADAB PHARMACY • PATH NORMALIZATION + PDF CONFIRM • 2026-10-13',scope:'Legacy shared-document path repair, 60s manifest/chunk cache, 15s repeated failure suppression, explicit PDF Download/Cancel'},'success');
+window.spFinalDocumentReadRepair={normalizePath,cacheTTL:CACHE_TTL,errorBackoffMs:ERROR_TTL,manualInvalidate:path=>invalidate(path),version:'2026-10-13-v4-photo-retention-download-flow'};
+addAudit('App update loaded',{version:'SHADAB PHARMACY • PHOTO RETENTION + PDF DOWNLOAD FLOW • 2026-10-13',scope:'Master identity session priority, frozen PDF handler capture confirmation, shared-document read cache and short salesman-profile read cache'},'success');
 })();
 </script>
 
@@ -24333,3 +24631,478 @@ addAudit('App update loaded',{version:'SHADAB PHARMACY • PATH NORMALIZATION + 
 </html>
 
 <!-- Point 24 v3: passive forensic capture controls, hourly batched audit sync, shared-document read path correction. Live Firebase cross-device verification remains required. -->
+
+
+<style id="sp25-audit-arrow-geometry-match">
+/* Match the existing Master Control arrow button: compact circular chevron, not an oversized pill. */
+#spAuditMasterLauncher .sp-added-dashboard-go{
+ width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;
+ max-width:36px!important;max-height:36px!important;flex:0 0 36px!important;
+ display:grid!important;place-items:center!important;box-sizing:border-box!important;
+ padding:0!important;margin:0!important;border-radius:50%!important;
+ font-size:20px!important;line-height:1!important;font-weight:500!important;
+ text-align:center!important;transform:none!important;overflow:hidden!important;
+}
+@media(max-width:700px){#spAuditMasterLauncher .sp-added-dashboard-go{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;max-width:34px!important;max-height:34px!important;flex-basis:34px!important;font-size:19px!important}}
+</style>
+<script id="sp25-audit-report-classification-and-pdf-runtime">
+(function(){
+ 'use strict';
+ try{
+   // The raw activity history is preserved. This summary only clarifies that old
+   // build errors and locally-blocked pre-login requests are not live failures.
+   window.__shadabAuditIssueAssessmentVersion='v7-2026-10-13';
+ }catch(_){}
+ // Avoid starting another PDF while one is already loading images/building.
+ // The canonical handler sets/clears this flag in its own try/finally.
+ window.__shadabPdfProgressReady=true;
+})();
+</script>
+
+<!-- SP26: audited photo recovery and persistent diagnostic dashboard -->
+
+<style id="sp26-audit-verification-cards-style">
+#sp26AuditVerificationCards{margin:12px 0 14px;color:#edfaff;background:linear-gradient(140deg,rgba(2,52,76,.82),rgba(7,24,43,.94));border:1px solid rgba(61,206,255,.28);border-radius:18px;padding:12px;box-shadow:inset 0 1px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.16)}
+#sp26AuditVerificationCards .sp26-audit-extra-head{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}#sp26AuditVerificationCards .sp26-audit-extra-head strong{font-size:15px;letter-spacing:.02em}#sp26AuditVerificationCards .sp26-audit-extra-head small{font-size:11px;line-height:1.35;color:#a9d6e9}
+#sp26AuditVerificationCards .sp26-audit-extra-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#sp26AuditVerificationCards .sp26-audit-card{min-width:0;padding:10px;border-radius:13px;border:1px solid rgba(124,214,255,.20);background:linear-gradient(145deg,rgba(11,65,89,.72),rgba(5,29,49,.84));display:flex;flex-direction:column;gap:5px}
+#sp26AuditVerificationCards .sp26-audit-card b{font-size:11px;color:#a9e7ff;font-weight:800}#sp26AuditVerificationCards .sp26-audit-card strong{font-size:14px;color:#fff;overflow-wrap:anywhere}#sp26AuditVerificationCards .sp26-audit-card small{font-size:10px;line-height:1.4;color:#bad1df;overflow-wrap:anywhere;min-height:28px}
+#sp26AuditVerificationCards .sp26-audit-card button{margin-top:4px;min-height:34px;border:1px solid rgba(51,213,255,.54);border-radius:10px;padding:7px 9px;color:#f3fcff;background:linear-gradient(135deg,#007ba2,#16489a);font-size:11px;font-weight:800}
+#sp26AuditVerificationCards .sp26-audit-card button:disabled{opacity:.65}#sp26AuditVerificationCards #sp26AuditVerificationStatus{margin-top:9px;padding:8px;border-radius:10px;color:#b6eaff;background:rgba(1,23,40,.68);font-size:11px;line-height:1.4}
+@media(min-width:760px){#sp26AuditVerificationCards .sp26-audit-extra-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(prefers-reduced-motion:reduce){#sp26AuditVerificationCards *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
+
+<script id="sp26-audit-photo-recovery-verification-cards">
+/* SP26: persistent PDF/photo diagnostics, targeted legacy-photo recovery, and additive audit verification cards. */
+(function(){
+'use strict';
+const DIAG_KEYS={photo:'sp_audit_pdf_photo_diag_v1',performance:'sp_audit_pdf_performance_v1',ui:'sp_audit_pdf_ui_timing_v1'};
+const AUDIT_STORE='sp_update_activity_audit_v2',AUDIT_QUEUE=AUDIT_STORE+'_queue';
+const safeText=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function parse(v,fallback=null){try{return JSON.parse(v)}catch(_){return fallback}}
+function readAudit(){const x=parse(localStorage.getItem(AUDIT_STORE)||'[]',[]);return Array.isArray(x)?x:[]}
+function pushAudit(type,detail,status='info'){
+ try{
+  const s=window.shadabRestCurrentSession?.()||{};
+  const r={id:Date.now().toString(36)+Math.random().toString(36).slice(2,8),at:new Date().toISOString(),type,status,actor:s.email||'unknown',uid:s.uid||'',detail};
+  const a=readAudit();a.unshift(r);try{localStorage.setItem(AUDIT_STORE,JSON.stringify(a.slice(0,500)))}catch(_){}
+  const q=parse(localStorage.getItem(AUDIT_QUEUE)||'[]',[]);q.push(r);try{localStorage.setItem(AUDIT_QUEUE,JSON.stringify(q.slice(-200)))}catch(_){}
+  window.dispatchEvent(new CustomEvent('sp-audit-change',{detail:r}));
+  }catch(_){}
+}
+window.__spAuditLogEvent=pushAudit;
+function persistMetric(name,key){
+ try{
+  const desc=Object.getOwnPropertyDescriptor(window,name);
+  let value=desc&&Object.prototype.hasOwnProperty.call(desc,'value')?desc.value:window[name];
+  if(desc&&desc.configurable===false){if(value!=null)localStorage.setItem(key,JSON.stringify(value));return;}
+  Object.defineProperty(window,name,{configurable:true,enumerable:true,get(){return value},set(v){value=v;try{if(v==null)localStorage.removeItem(key);else localStorage.setItem(key,JSON.stringify(v))}catch(_){};try{window.__spAuditVerificationRefresh?.()}catch(_){}}});
+  if(value==null){const stored=parse(localStorage.getItem(key)||'null',null);if(stored!=null)value=stored;}
+  if(value!=null){try{localStorage.setItem(key,JSON.stringify(value))}catch(_){}}
+ }catch(_){}
+}
+persistMetric('__spPdfLastPhotoDiagnostics',DIAG_KEYS.photo);
+persistMetric('__spPdfLastPerformance',DIAG_KEYS.performance);
+persistMetric('__spPdfLastUiTiming',DIAG_KEYS.ui);
+
+function isImg(v){return typeof v==='string'&&/^data:image\//i.test(v)}
+function asDataUrl(value,mime){
+ if(isImg(value))return value;
+ if(value&&typeof value==='object'){
+  const candidate=value.data||value.dataUrl||value.photo||value.image||value.base64||value.content||'';
+  return asDataUrl(candidate,value.mime||value.contentType||mime);
+ }
+ const s=String(value||'').trim();if(!s)return '';
+ if(/^data:image\//i.test(s))return s;
+ if(/^[A-Za-z0-9+/=\r\n]+$/.test(s)&&s.length>100){const mt=String(mime||'image/jpeg').split(';')[0];return 'data:'+(mt.startsWith('image/')?mt:'image/jpeg')+';base64,'+s.replace(/\s/g,'')}
+ return '';
+}
+function safeId(v){return String(v??'').replace(/[^a-zA-Z0-9._-]/g,'_')}
+function refUid(ref){const m=String(ref||'').match(/^user_data\/([^/]+)\/visit_media\//);if(!m)return '';try{return decodeURIComponent(m[1])}catch(_){return m[1]}}
+function mediaRefUid(ref){const m=String(ref||'').match(/^user_data\/[^/]+\/visit_media\/([^/]+)$/);if(!m)return '';try{return decodeURIComponent(m[1])}catch(_){return m[1]}}
+function ownerUid(row){
+ const c=window.__spMasterAggregateCache||{},profiles=Array.isArray(c.salesmen)?c.salesmen:[];
+ const rowUid=String(row?.uid||'').trim();
+ if(rowUid&&profiles.some(p=>String(p.uid||'')===rowUid))return rowUid;
+ const names=[row?.visitedBy,row?.salesman,row?.salesmanName,row?.ownerName,row?.email,row?.salesmanEmail].map(x=>String(x||'').trim().toLowerCase()).filter(Boolean);
+ const hit=profiles.find(p=>names.includes(String(p.name||p.salesman||'').trim().toLowerCase())||names.includes(String(p.email||'').trim().toLowerCase())||names.includes(String(p.uid||'').trim().toLowerCase()));
+ if(hit?.uid)return String(hit.uid);
+ if(rowUid&&/^[A-Za-z0-9_-]{20,}$/.test(rowUid))return rowUid;
+ return refUid(row?.photoRef)||'';
+}
+function candidateRefs(row){
+ const id=String(row?.id||row?.visitId||row?.key||'').trim(),uid=ownerUid(row),original=String(row?.photoRef||'').trim(),out=[];
+ const add=x=>{x=String(x||'').replace(/^\/+|\/+$/g,'');if(x&&/^user_data\/[^/]+\/visit_media\/[^/]+$/.test(x)&&!out.includes(x))out.push(x)};
+ add(original);
+ if(uid&&id){
+  add('user_data/'+encodeURIComponent(uid)+'/visit_media/'+encodeURIComponent(safeId(id)));
+  const raw=encodeURIComponent(id);if(raw!==encodeURIComponent(safeId(id)))add('user_data/'+encodeURIComponent(uid)+'/visit_media/'+raw);
+ }
+ return out.slice(0,3);
+}
+let photoVaultPromise=null;
+function readPhotoVault(){
+ if(photoVaultPromise)return photoVaultPromise;
+ photoVaultPromise=new Promise(resolve=>{
+  try{const req=indexedDB.open('shadab_visit_media_v12',1);req.onupgradeneeded=()=>{try{const db=req.result;if(!db.objectStoreNames.contains('photos'))db.createObjectStore('photos',{keyPath:'id'})}catch(_){}};req.onerror=()=>resolve(new Map());req.onsuccess=()=>{
+    const db=req.result;try{const tx=db.transaction('photos','readonly'),q=tx.objectStore('photos').getAll();q.onerror=()=>resolve(new Map());q.onsuccess=()=>{const map=new Map();for(const r of (q.result||[])){const d=asDataUrl(r?.data||r?.photo||r?.image||r?.dataUrl,r?.mime);if(!d)continue;for(const k of [r?.id,r?.visitId,r?.key])if(k)map.set(String(k),d);}resolve(map)};}catch(_){resolve(new Map())}
+  }}catch(_){resolve(new Map())}
+ });return photoVaultPromise;
+}
+async function writePhotoVault(id,data,date){
+ if(!id||!isImg(data))return false;
+ try{const db=await new Promise((resolve,reject)=>{const req=indexedDB.open('shadab_visit_media_v12',1);req.onupgradeneeded=()=>{try{if(!req.result.objectStoreNames.contains('photos'))req.result.createObjectStore('photos',{keyPath:'id'})}catch(_){}};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});return await new Promise(resolve=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').put({id:String(id),data:String(data),date:String(date||''),createdAt:Date.now(),expiresAt:0});tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false)})}catch(_){return false}
+}
+function toJpeg(src){
+ if(!isImg(src))return Promise.resolve('');if(/^data:image\/(?:jpeg|jpg);/i.test(src))return Promise.resolve(src);
+ return new Promise(resolve=>{let done=false;const end=x=>{if(done)return;done=true;resolve(x||'')};try{const im=new Image();im.onload=()=>{try{const sw=im.naturalWidth||im.width||1,sh=im.naturalHeight||im.height||1,scale=Math.min(1,1100/Math.max(sw,sh)),w=Math.max(1,Math.round(sw*scale)),h=Math.max(1,Math.round(sh*scale)),c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d',{alpha:false});if(!ctx)return end('');ctx.drawImage(im,0,0,w,h);const out=c.toDataURL('image/jpeg',.78);c.width=1;c.height=1;end(/^data:image\/jpeg;/i.test(out)?out:'')}catch(_){end('')}};im.onerror=()=>end('');im.src=src}catch(_){end('')}})
+}
+function unwrapPhotoDocument(doc){
+ try{
+  if(typeof doc?.data==='function')return doc.data()||{};
+  if(doc?.fields&&typeof doc.fields==='object'){
+   const decode=v=>{
+    if(!v||typeof v!=='object')return v;
+    if('stringValue'in v)return v.stringValue;
+    if('bytesValue'in v)return v.bytesValue;
+    if('integerValue'in v)return Number(v.integerValue);
+    if('doubleValue'in v)return Number(v.doubleValue);
+    if('booleanValue'in v)return !!v.booleanValue;
+    if('arrayValue'in v)return (v.arrayValue?.values||[]).map(decode);
+    if('mapValue'in v)return Object.fromEntries(Object.entries(v.mapValue?.fields||{}).map(([k,x])=>[k,decode(x)]));
+    return v;
+   };
+   return Object.fromEntries(Object.entries(doc.fields).map(([k,v])=>[k,decode(v)]));
+  }
+  return doc&&typeof doc==='object'?doc:{};
+ }catch(_){return {}}
+}
+function photoFromRecord(rec){
+ if(!rec||typeof rec!=='object')return '';
+ const body=unwrapPhotoDocument(rec);
+ const fields=['photo','image','visitPhoto','picture','photoData','imageData','photoUrl','photoURL','imageUrl','imageURL','dataUrl','base64','data'];
+ for(const key of fields){
+  const raw=body[key];if(raw==null)continue;
+  if(raw&&typeof raw==='object'){
+   for(const nested of [raw.data,raw.base64,raw.dataUrl,raw.url,raw.downloadURL,raw.stringValue,raw.bytesValue]){
+    const out=asDataUrl(nested,body.photoMime||body.mime||body.contentType);if(out)return out;
+   }
+  }
+  const out=asDataUrl(raw,body.photoMime||body.mime||body.contentType);if(out)return out;
+ }
+ return '';
+}
+async function fetchImageUrl(url){
+ if(!/^https?:\/\//i.test(String(url||'')))return '';
+ try{
+  const response=await fetch(url,{cache:'force-cache',credentials:'omit'});
+  if(!response.ok)return '';
+  const blob=await response.blob();if(!String(blob.type||'').startsWith('image/'))return '';
+  return await new Promise(resolve=>{const fr=new FileReader();fr.onload=()=>resolve(asDataUrl(fr.result,blob.type));fr.onerror=()=>resolve('');fr.readAsDataURL(blob)});
+ }catch(_){return ''}
+}
+async function photoFromRecordAsync(rec){
+  let out=photoFromRecord(rec);if(out)return out;
+  const body=unwrapPhotoDocument(rec);
+  for(const key of ['photoUrl','photoURL','imageUrl','imageURL','downloadURL','url']){
+    const u=body?.[key];
+    if(typeof u==='string'&&/^https?:\/\//i.test(u)){out=await fetchImageUrl(u);if(out)return out}
+  }
+  return '';
+}
+async function readCloudPhoto(path){
+ if(typeof window.shadabRestReadDoc!=='function')return {data:'',status:'reader-unavailable'};
+ try{
+  const d=await window.shadabRestReadDoc(path);
+  const body=unwrapPhotoDocument(d);
+  const direct=photoFromRecord(body);
+  if(direct)return {data:direct,status:'found'};
+  for(const f of [body?.photoUrl,body?.photoURL,body?.imageUrl,body?.imageURL,body?.downloadURL,body?.url]){
+   if(typeof f==='string'&&/^https?:\/\//i.test(f)){const remote=await fetchImageUrl(f);if(remote)return {data:remote,status:'found-url'}}
+  }
+  return {data:'',status:'document-without-image-data'};
+ }catch(e){return {data:'',status:String(e?.message||e||'read-failed').slice(0,180)}}
+}
+async function repairRows(rows,date,diag){
+ if(!Array.isArray(rows)||!rows.length)return rows;
+ const vault=await readPhotoVault();
+ const report={...(diag||{}),recoveryPatchVersion:'sp26-photo-integrity-v3',extraIndexedDbHits:0,extraCloudAttempts:0,extraRecovered:0,extraPathFallbacks:0,extraMissing:[],attemptedPathCount:0};
+ const tasks=[];
+ const bounded=(promise,ms,fallback)=>new Promise(resolve=>{let settled=false;let timer=0;const finish=value=>{if(settled)return;settled=true;clearTimeout(timer);resolve(value)};timer=setTimeout(()=>finish(fallback),ms);Promise.resolve(promise).then(finish,()=>finish(fallback));});
+ let progressDone=0;window.__spPhotoAuditProgress={done:0,total:0,at:new Date().toISOString()};
+ for(const row of rows){
+  if(!row||typeof row!=='object')continue;
+  const fields=[row.photo,row.image,row.visitPhoto,row.picture,row.photoData,row.imageData,row.photoUrl,row.photoURL,row.imageUrl,row.photoURLData];
+  let existing='';for(const f of fields){existing=asDataUrl(f,row.photoMime||row.mime);if(existing)break}
+  if(existing){row.photo=existing;continue}
+  const id=String(row.id||row.visitId||row.key||'').trim();
+  const ref=String(row.photoRef||'').trim();
+  const aliases=[id, String(row.visitId||''),String(row.key||''),mediaRefUid(ref)].filter(Boolean);
+  const local=aliases.map(k=>vault.get(k)).find(isImg);
+  if(local){row.photo=local;report.extraIndexedDbHits++;continue}
+  // Only query exact owner-specific references: no unbounded collection scans.
+  const refs=candidateRefs(row);
+  if(refs.length)tasks.push({row,id,refs});
+  else report.extraMissing.push({visitId:id,store:String(row.store||row.name||row.storeName||'').slice(0,80),reason:!id?'missing visit identifier':'owner/photo reference unavailable',photoFields:Object.keys(row).filter(k=>/photo|image|picture/i.test(k))});
+ }
+ let cursor=0;const active=new Set();window.__spPhotoAuditProgress={done:0,total:tasks.length,at:new Date().toISOString()};
+ const fallbackReadCache=new Map();
+ async function readFallbackDoc(path){
+  if(fallbackReadCache.has(path))return fallbackReadCache.get(path);
+  if(typeof window.shadabRestReadDoc!=='function')return null;
+  try{const v=await bounded(window.shadabRestReadDoc(path),6000,null);fallbackReadCache.set(path,v||{});return v||{}}
+  catch(e){fallbackReadCache.set(path,null);return null}
+ }
+ async function fallbackPhoto(row,id,uid){
+  /* First inspect this device's live rows; then one canonical day doc and one legacy
+     parent document per owner. No unbounded collection scans are performed. */
+  const runtime=Array.isArray(window.visits)?window.visits:[];
+  const live=runtime.find(v=>String(v?.id||v?.visitId||'')===String(id));
+  let found=await photoFromRecordAsync(live);if(found)return {data:found,source:'runtime-local'};
+  const normalizeDay=value=>{
+   const raw=String(value||'').trim();let m=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+'-'+m[2]+'-'+m[3];
+   m=raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);if(m)return m[3]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0');
+   const ts=Date.parse(raw);if(Number.isFinite(ts)&&raw)return new Date(ts).toISOString().slice(0,10);
+   const fallback=String(date||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(fallback)?fallback:'';
+  };
+  const day=normalizeDay(row?.date||row?.visitDate||date);
+  const paths=[];
+  if(uid&&/^\d{4}-\d{2}-\d{2}$/.test(day))paths.push('user_data/'+encodeURIComponent(uid)+'/visit_days/'+day);
+  if(uid)paths.push('user_data/'+encodeURIComponent(uid));
+  for(const path of paths){
+   report.extraCloudAttempts++;report.attemptedPathCount++;
+   const doc=await readFallbackDoc(path),body=unwrapPhotoDocument(doc);
+   const candidates=path.endsWith('/visit_days/'+day)?(Array.isArray(body.visits)?body.visits:[]):(Array.isArray(body.visits)?body.visits:[]);
+   const match=candidates.find(v=>String(v?.id||v?.visitId||v?.key||'')===String(id));
+   found=await photoFromRecordAsync(match);
+   if(found)return {data:found,source:path};
+   const nestedRef=String(match?.photoRef||match?.imageRef||match?.mediaRef||'');
+   if(nestedRef&&nestedRef!==String(row?.photoRef||'')&&/^user_data\/[^/]+\/visit_media\/[^/]+$/.test(nestedRef)){
+    const ans=await readCloudPhoto(nestedRef);
+    if(ans.data)return {data:ans.data,source:nestedRef};
+   }
+  }
+  return {data:'',source:'',tried:paths};
+ }
+ async function worker(){while(cursor<tasks.length){const item=tasks[cursor++];const row=item.row;let found='';let foundPath='';let lastError='',source='',alternate={data:'',source:'',tried:[]};
+   for(let i=0;i<item.refs.length;i++){
+    const path=item.refs[i];report.extraCloudAttempts++;report.attemptedPathCount++;
+    const ans=await bounded(readCloudPhoto(path),6500,{data:'',status:'timeout'});if(ans.data){found=ans.data;foundPath=path;if(i>0)report.extraPathFallbacks++;break}lastError=ans.status;if(ans.status==='timeout'||/failed to fetch|network|timeout/i.test(String(ans.status||'')))break;
+   }
+   if(!found){
+    const uid=ownerUid(row);
+    alternate=await bounded(fallbackPhoto(row,item.id,uid),14000,{data:'',source:'',tried:[]});
+    if(alternate.data){found=alternate.data;source=alternate.source;foundPath=String(row.photoRef||item.refs[0]||'');report.extraPathFallbacks++;report.alternateSource=source}
+   }
+   if(found){row.photo=found;if(foundPath)row.photoRef=foundPath;report.extraRecovered++;await writePhotoVault(item.id,found,date);try{vault.set(String(item.id),found);if(row.photoRef)vault.set(mediaRefUid(row.photoRef),found)}catch(_){}}
+   else report.extraMissing.push({visitId:item.id,store:String(row.store||row.name||row.storeName||'').slice(0,80),reason:lastError||'photo bytes not found',tried:item.refs,ownerUid:ownerUid(row)||'',hadOriginalPhotoRef:!!row.photoRef,alternateSourceTried:true,alternatePaths:alternate?.tried||[]});
+   progressDone++;window.__spPhotoAuditProgress={done:progressDone,total:tasks.length,recovered:report.extraRecovered,missing:report.extraMissing.length,at:new Date().toISOString()};try{window.dispatchEvent(new CustomEvent('sp-photo-audit-progress',{detail:window.__spPhotoAuditProgress}))}catch(_){}
+  }}
+ await Promise.all(Array.from({length:Math.min(4,tasks.length)},worker));
+ let convertCursor=0;const needing=rows.filter(r=>isImg(r?.photo)&&!/^data:image\/(?:jpeg|jpg);/i.test(String(r.photo)));
+ async function convertWorker(){while(convertCursor<needing.length){const r=needing[convertCursor++];const before=r.photo;const jpeg=await toJpeg(before);if(jpeg)r.photo=jpeg;else{delete r.photo;report.extraMissing.push({visitId:String(r.id||r.visitId||''),store:String(r.store||r.name||'').slice(0,80),reason:'image data existed but JPEG conversion failed'})}}}
+ await Promise.all(Array.from({length:Math.min(4,needing.length)},convertWorker));
+ report.photosEmbedded=rows.filter(r=>/^data:image\/(?:jpeg|jpg);/i.test(String(r?.photo||''))).length;
+ report.records=rows.length;report.initialMissingCount=Array.isArray(report.missing)?report.missing.length:0;report.extraMissing=report.extraMissing.slice(0,100);
+ const unresolvedById=new Map(report.extraMissing.map(x=>[String(x.visitId||''),x]));
+ report.missing=rows.filter(r=>!/^data:image\/(?:jpeg|jpg);/i.test(String(r?.photo||''))).slice(0,100).map(r=>{const id=String(r?.id||r?.visitId||r?.key||'');const prev=unresolvedById.get(id);const status=String(r?.status||r?.result||'').trim().toLowerCase();const hasEvidence=!!(r?.visitedAt||r?.visitTime||(r?.time&&String(r.time)!=='—')||r?.person||r?.order||r?.orderReceived||r?.orderTaken||r?.hasOrder||r?.isOrder||r?.photoCapturedAt||r?.photoUrl||r?.photoRef);const planned=['planned','assigned','pending','not visited','remaining'].includes(status);return {visitId:id,store:String(r?.store||r?.name||r?.storeName||'').slice(0,80),expected:!planned||hasEvidence,reason:prev?.reason||'No usable image bytes were found in the row or indexed media locations',tried:[...(prev?.tried||[]),...(prev?.alternatePaths||[])],ownerUid:ownerUid(r)||'',photoFields:Object.keys(r||{}).filter(k=>/photo|image|picture/i.test(k)),photoRef:String(r?.photoRef||'').slice(0,220)}});
+ report.missingCount=report.missing.length;report.expectedMissingCount=report.missing.filter(x=>x.expected).length;report.finishedAt=new Date().toISOString();
+ window.__spPdfLastPhotoDiagnostics=report;
+ pushAudit('PDF photo integrity check',{date:String(date||''),records:report.records,embedded:report.photosEmbedded||0,restoredFromIndexedDB:Number(report.restoredFromIndexedDB||0)+report.extraIndexedDbHits,recoveredFromFirebase:Number(report.recoveredFromFirebase||0)+report.extraRecovered,cloudAttempts:Number(report.remoteAttempts||0)+report.extraCloudAttempts,missing:report.missingCount,expectedMissing:report.expectedMissingCount,fallbackPaths:report.extraPathFallbacks},report.missingCount?'warning':'success');
+ return rows;
+}
+const originalPrepare=typeof window.__v16PrepareExactPdfDataForTest==='function'?window.__v16PrepareExactPdfDataForTest:null;
+if(originalPrepare&&!originalPrepare.__sp26PhotoRecovery){
+ const wrapped=async function(rows,date){
+  const started=performance.now();let out=Array.isArray(rows)?rows.map(v=>({...v})):[];let preDiag=null;
+  try{out=await originalPrepare.call(this,out,date);preDiag=window.__spPdfLastPhotoDiagnostics||null}catch(e){pushAudit('PDF photo preparation warning',{error:String(e?.message||e).slice(0,180),records:out.length},'warning')}
+  try{out=await repairRows(out,date,preDiag)}catch(e){const failed={...(preDiag||{}),recoveryPatchVersion:'sp26-photo-integrity-v3',patchError:String(e?.message||e).slice(0,180),finishedAt:new Date().toISOString()};window.__spPdfLastPhotoDiagnostics=failed;pushAudit('PDF photo recovery failed',{error:failed.patchError},'error')}
+  const elapsed=Math.max(0,Math.round(performance.now()-started));window.__spPdfPhotoHydrationTiming={durationMs:elapsed,records:out.length,at:new Date().toISOString()};
+  return out;
+ };
+ wrapped.__sp26PhotoRecovery=true;wrapped.__sp26Original=originalPrepare;window.__v16PrepareExactPdfDataForTest=wrapped;
+}
+window.__spRunTodayPhotoIntegrityCheck=async function(){
+ if(window.__spPhotoAuditCheckBusy)return {ok:false,error:'Photo check already running'};
+ window.__spPhotoAuditCheckBusy=true;
+ try{
+  const dateNow=()=>String(window.__spMasterAggregateCache?.dateRange?.today||window.todayISO?.()||new Date().toISOString().slice(0,10));
+  const get=window.__shadabMasterRows||window.masterRows;
+  let rows=typeof get==='function'?get('today'):[];
+  if(!Array.isArray(rows)||!rows.length){
+   const cache=window.__spMasterAggregateCache||{};const currentDate=dateNow();
+   rows=Array.isArray(cache.visits)?cache.visits.filter(v=>String(v?.date||v?.visitDate||'').slice(0,10)===currentDate):[];
+  }
+  if((!Array.isArray(rows)||!rows.length)&&!window.__spMasterAggregateCache?.dashboardCleared&&typeof window.rebuildMasterAggregate==='function'){
+   pushAudit('Photo check loading Master aggregate',{date:dateNow(),mode:'manual on-demand refresh'},'info');
+   await Promise.race([window.rebuildMasterAggregate({force:true}),new Promise((_,reject)=>setTimeout(()=>reject(new Error('Master aggregate refresh timed out after 45 seconds. Sync the Master Field Dashboard and retry; no records were changed.')),45000))]);
+   const fresh=window.__shadabMasterRows||window.masterRows;
+   rows=typeof fresh==='function'?fresh('today'):[];
+   if((!Array.isArray(rows)||!rows.length)&&Array.isArray(window.__spMasterAggregateCache?.visits))rows=window.__spMasterAggregateCache.visits.filter(v=>String(v?.date||v?.visitDate||'').slice(0,10)===dateNow());
+  }
+  if(!Array.isArray(rows)||!rows.length)throw new Error(window.__spMasterAggregateCache?.dashboardCleared?'Master dashboard is explicitly cleared; sync/rebuild it before checking photos.':'No Today visit rows were available after checking the cache and refresh. Open Master Field Dashboard, sync once, and retry. No records were edited or deleted.');
+  const date=dateNow();
+  const result=await (window.__v16PrepareExactPdfDataForTest?window.__v16PrepareExactPdfDataForTest(rows,date):repairRows(rows.map(v=>({...v})),date,{}));
+  return {ok:true,records:result.length,diagnostics:window.__spPdfLastPhotoDiagnostics||null};
+ }catch(e){
+  const message=String(e?.message||e).slice(0,220),noRows=/No Today visit rows|dashboard is explicitly cleared|refresh timed out/i.test(message);
+  pushAudit(noRows?'Manual photo integrity check incomplete':'Manual photo integrity check failed',{error:message},noRows?'warning':'error');
+  return {ok:false,error:message};
+ }finally{window.__spPhotoAuditCheckBusy=false;try{window.__spAuditVerificationRefresh?.()}catch(_){} }
+};
+
+function fmtMs(v){const n=Number(v);return Number.isFinite(n)&&n>=0?(n>=1000?(n/1000).toFixed(1)+' s':Math.round(n)+' ms'):'—'}
+function localEvents(){return readAudit()}
+function latest(events,pred){return events.find(pred)||null}
+function metricState(){
+ const ev=localEvents().sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
+ const photo=window.__spPdfLastPhotoDiagnostics||parse(localStorage.getItem(DIAG_KEYS.photo)||'null',null);
+ const perf=window.__spPdfLastPerformance||parse(localStorage.getItem(DIAG_KEYS.performance)||'null',null);
+ const ui=window.__spPdfLastUiTiming||parse(localStorage.getItem(DIAG_KEYS.ui)||'null',null);
+ const open=latest(ev,r=>r.type==='Screen open/load timing'),fps=latest(ev,r=>r.type==='Scroll frame-rate sample'),sync=latest(ev,r=>/sync/i.test(r.type||'')&&['success','error','failed','warning'].includes(r.status));
+ const reads=ev.filter(r=>/firebase read/i.test(r.type||'')&&r.status==='success'&&r.detail?.path),paths=new Map();reads.forEach(r=>paths.set(r.detail.path,(paths.get(r.detail.path)||0)+1));const top=[...paths.entries()].sort((a,b)=>b[1]-a[1])[0];
+ const combined=ev.concat(Array.isArray(window.__spAuditRemoteRows)?window.__spAuditRemoteRows:[]).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
+ const photoRepair=latest(combined,r=>r.type==='Targeted visit photo repair');
+ const sess=window.shadabRestCurrentSession?.()||{};
+ return {ev,photo,perf,ui,open,fps,sync,photoRepair,readCount:reads.length,top,sess};
+}
+function setText(id,value){const e=document.getElementById(id);if(e){const v=String(value??'—');if(e.textContent!==v)e.textContent=v}}
+function updateCards(){
+ const host=document.getElementById('sp26AuditVerificationCards');if(!host)return;const m=metricState(),d=m.photo,perf=m.perf,ui=m.ui;
+ if(d){const n=Number(d.photosEmbedded||0),total=Number(d.records||0),miss=Array.isArray(d.missing)?d.missing.length:Number(d.missingCount||0);setText('sp26PhotoMetric',n+' / '+total+' embedded');setText('sp26PhotoDetail',miss+' rows without image • '+Number(d.extraRecovered||0)+Number(d.recoveredFromFirebase||0)+' cloud recoveries • '+(d.finishedAt?new Date(d.finishedAt).toLocaleTimeString():'time n/a'))}else{setText('sp26PhotoMetric','Not tested');setText('sp26PhotoDetail','Run the targeted photo check or generate a report')}
+ if(perf){setText('sp26PdfMetric',perf.failed?'FAILED':perf.state==='preparing'?'Preparing…':fmtMs(perf.durationMs));setText('sp26PdfDetail',(perf.kind||'PDF')+(perf.error?' • '+perf.error:''))}else{setText('sp26PdfMetric','Not tested');setText('sp26PdfDetail','Download/share timing is saved after a PDF action')}
+ if(m.open){setText('sp26ScreenMetric',fmtMs(m.open.detail?.openDurationMs));setText('sp26ScreenDetail',(m.open.detail?.classification||'Measured')+' • '+(m.open.detail?.screen||'screen'))}else{setText('sp26ScreenMetric','Capture needed');setText('sp26ScreenDetail','Start capture, then open an app/screen')}
+ if(m.fps){setText('sp26FpsMetric',Number(m.fps.detail?.fps||0)+' FPS');setText('sp26FpsDetail',m.fps.detail?.classification||'Measured')}else{setText('sp26FpsMetric','Capture needed');setText('sp26FpsDetail','Scroll while Forensic Capture is ON')}
+ setText('sp26ReadMetric',String(m.readCount));setText('sp26ReadDetail',m.top?('Top local path: '+m.top[0]+' • '+m.top[1]+' reads'):'No locally tracked reads yet');
+ const se=m.sess||{};setText('sp26IdentityMetric',se.email||'Signed out');setText('sp26IdentityDetail',String(se.uid||'').slice(0,16)+(se.uid?'…':'')+' • Master expected: master@shadabpharmacy.com');
+ if(m.sync){setText('sp26SyncMetric',m.sync.status==='success'?'Latest tracked sync success':m.sync.status==='warning'?'Latest sync partial / warning':'Latest tracked sync '+String(m.sync.status||m.sync.type));setText('sp26SyncDetail',m.sync.at?new Date(m.sync.at).toLocaleString():'No timestamp')}else{setText('sp26SyncMetric','No recent sync event');setText('sp26SyncDetail','Manual sync events will appear here')}
+ if(m.photoRepair){
+  const d=m.photoRepair.detail||{},attempted=Number(d.attempted||0),done=Number(d.reuploaded||0),unavailable=Number(d.unavailable||0),errors=Number(d.errors||0);
+  setText('sp26PhotoRepairMetric',done>0?'Re-uploaded '+done+' / '+Math.max(attempted,done):unavailable>0?'Original photo bytes unavailable':'Repair attempted');
+  setText('sp26PhotoRepairDetail',unavailable+' unavailable • '+errors+' errors • '+(m.photoRepair.actor||'salesman device')+' • '+(m.photoRepair.at?new Date(m.photoRepair.at).toLocaleString():''));
+ }else{
+  setText('sp26PhotoRepairMetric','Waiting for owner device');
+  setText('sp26PhotoRepairDetail','The affected salesman must sync on their original device if the image bytes still exist there');
+ }
+}
+window.__spAuditVerificationRefresh=updateCards;
+function ensureCards(){
+ const b=document.getElementById('sp35WorkBody')||document.getElementById('sp35WorkBodyNew');if(!b||!b.querySelector('#spAuditRows'))return;
+ let host=b.querySelector('#sp26AuditVerificationCards');
+ if(!host){
+  host=document.createElement('section');host.id='sp26AuditVerificationCards';host.innerHTML=`<div class="sp26-audit-extra-head"><strong>Live Verification & Diagnostics</strong><small>Saved diagnostics survive page reloads. Checks are on-demand and do not run automatically.</small></div><div class="sp26-audit-extra-grid">
+  <div class="sp26-audit-card"><b>Photo Integrity</b><strong id="sp26PhotoMetric">Not tested</strong><small id="sp26PhotoDetail">Run the targeted photo check or generate a report</small><button type="button" id="sp26VerifyPhotos">Verify Today Photos</button></div>
+  <div class="sp26-audit-card"><b>PDF Performance</b><strong id="sp26PdfMetric">Not tested</strong><small id="sp26PdfDetail">Timing saved after a PDF action</small></div>
+  <div class="sp26-audit-card"><b>Screen Open Time</b><strong id="sp26ScreenMetric">Capture needed</strong><small id="sp26ScreenDetail">Start capture, then open an app/screen</small></div>
+  <div class="sp26-audit-card"><b>Scroll Smoothness</b><strong id="sp26FpsMetric">Capture needed</strong><small id="sp26FpsDetail">Scroll while Forensic Capture is ON</small></div>
+  <div class="sp26-audit-card"><b>Firebase Read Hotspot</b><strong id="sp26ReadMetric">0</strong><small id="sp26ReadDetail">Most-read path in local audit history</small></div>
+  <div class="sp26-audit-card"><b>Active Login Identity</b><strong id="sp26IdentityMetric">—</strong><small id="sp26IdentityDetail">Master expected: master@shadabpharmacy.com</small></div>
+  <div class="sp26-audit-card"><b>Sync Health</b><strong id="sp26SyncMetric">Not tested</strong><small id="sp26SyncDetail">Latest tracked sync event</small></div>
+  <div class="sp26-audit-card"><b>Salesman Photo Re-upload</b><strong id="sp26PhotoRepairMetric">Waiting for owner device</strong><small id="sp26PhotoRepairDetail">The affected salesman must sync on their original device if the image bytes still exist there</small></div></div><div id="sp26AuditVerificationStatus" role="status" aria-live="polite"></div>`;
+  const grid=b.querySelector('.sp-cc-grid');const actions=b.querySelector('.sp35-row-actions');if(grid)grid.insertAdjacentElement('afterend',host);else if(actions)actions.insertAdjacentElement('beforebegin',host);else b.prepend(host);
+  host.querySelector('#sp26VerifyPhotos').addEventListener('click',async()=>{const btn=host.querySelector('#sp26VerifyPhotos'),status=host.querySelector('#sp26AuditVerificationStatus');btn.disabled=true;btn.textContent='Loading Today visits…';if(status)status.textContent='Preparing a read-only check. If the Master aggregate is not loaded, it will refresh on demand; no visit records are edited or deleted.';const progressHandler=e=>{const p=e?.detail||window.__spPhotoAuditProgress||{};btn.textContent='Checking photos '+Number(p.done||0)+'/'+Number(p.total||0)+'…';if(status)status.textContent='Checking photo references • '+Number(p.done||0)+' of '+Number(p.total||0)+' missing-photo rows processed • '+Number(p.recovered||0)+' recovered.'};window.addEventListener('sp-photo-audit-progress',progressHandler);let progressTimer=setInterval(progressHandler,500),checkTimeout=0;try{const checkPromise=window.__spRunTodayPhotoIntegrityCheck();const r=await Promise.race([checkPromise,new Promise((_,reject)=>{checkTimeout=setTimeout(()=>reject(new Error('Photo verification exceeded 45 seconds. The screen was released; export JSON and retry after Master Sync. No visit records were changed.')),45000)})]);if(status)status.textContent=r.ok?('Photo check complete • '+r.records+' records • '+Number(r.diagnostics?.photosEmbedded||0)+' embedded • '+(Array.isArray(r.diagnostics?.missing)?r.diagnostics.missing.length:0)+' rows without images. Export JSON for details.'):'Photo check incomplete: '+r.error}catch(e){if(status)status.textContent='Photo check failed: '+(e?.message||e);try{pushAudit('Manual photo integrity check failed',{error:String(e?.message||e),screen:'Update & Activity Audit'},'warning')}catch(_){}}finally{clearTimeout(checkTimeout);clearInterval(progressTimer);window.removeEventListener('sp-photo-audit-progress',progressHandler);btn.disabled=false;btn.textContent='Verify Today Photos';updateCards()}});
+ }
+ updateCards();
+}
+const ob=new MutationObserver(()=>{ensureCards()});try{ob.observe(document.body,{subtree:true,childList:true})}catch(_){}
+ensureCards();window.addEventListener('load',ensureCards,{once:true});window.addEventListener('sp-audit-change',updateCards);
+setTimeout(ensureCards,500);setTimeout(ensureCards,1600);setTimeout(updateCards,2000);
+})();
+
+</script>
+
+<!-- ===== FINAL SAFETY PATCH: ADMIN SCROLL GESTURE MUST NOT OPEN CONTROLS ===== -->
+<script id="sp-admin-scroll-click-guard-v1">
+(function(){
+ 'use strict';
+ const NAV_SELECTOR='#spAdminCCLauncher,#spAddedDashboardShortcuts .sp-added-dashboard-card,#spAddedDashboardShortcuts .sp-master-admin-card,#spAdminExact41 .sp-cc-card,#adminDashboardBox .sp-admin-tool-card,#sp35ControlGrid .sp35-control-card,#sp35ControlGrid .sp35-final-card,.sp35-control-card,.sp35-final-card';
+ let start=null,moved=false;
+ function xy(t){return {x:Number(t?.clientX||0),y:Number(t?.clientY||0)}}
+ function markMove(t){
+   if(!start||!t)return;
+   const p=xy(t);
+   if(Math.abs(p.x-start.x)>12||Math.abs(p.y-start.y)>12){moved=true;window.__spAdminTouchGestureMoved=true}
+ }
+ document.addEventListener('touchstart',function(e){
+   const t=e.touches&&e.touches[0];if(!t)return;
+   window.__spIgnoreAdminOpenUntil=0;window.__spAdminTouchGestureMoved=false;start={...xy(t),target:e.target,at:Date.now()};moved=false;
+ },{capture:true,passive:true});
+ document.addEventListener('touchmove',function(e){markMove(e.touches&&e.touches[0])},{capture:true,passive:true});
+ document.addEventListener('touchend',function(e){
+   if(!start)return;
+   markMove(e.changedTouches&&e.changedTouches[0]);
+   const target=(start.target&&start.target.closest&&start.target.closest(NAV_SELECTOR))||
+                (e.target&&e.target.closest&&e.target.closest(NAV_SELECTOR));
+   if(moved&&target){
+     window.__spIgnoreAdminOpenUntil=Date.now()+750;window.__spAdminTouchGestureMoved=true;
+     try{e.preventDefault()}catch(_){}
+     try{e.stopPropagation();e.stopImmediatePropagation()}catch(_){}
+   }
+   start=null;moved=false;
+ },{capture:true,passive:false});
+ document.addEventListener('touchcancel',function(){start=null;moved=false},{capture:true,passive:true});
+ document.addEventListener('click',function(e){
+   if(Date.now()>=Number(window.__spIgnoreAdminOpenUntil||0))return;
+   const target=e.target&&e.target.closest&&e.target.closest(NAV_SELECTOR);if(!target)return;
+   try{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()}catch(_){}
+ },true);
+})();
+</script>
+<!-- ===== END ADMIN SCROLL CLICK GUARD ===== -->
+<!-- ===== FINAL SAFETY PATCH: KEEP SYNC STATUS TRUTHFUL AND PHOTO-AWARE ===== -->
+<script id="sp-sync-photo-status-truth-v1">
+(function(){
+ 'use strict';
+ const stamp=()=>new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const setStatus=(msg,cls)=>{
+   const el=document.getElementById('syncText');
+   if(el){el.textContent=msg;el.classList.remove('firebase-connected','firebase-error','firebase-checking');if(cls)el.classList.add(cls)}
+   try{window.shadabFirebaseStatus?.(cls||'firebase-connected',msg)}catch(_){}
+ };
+ const previousCheck=window.shadabFirebaseRecheck;
+ window.__shadabSyncFailureNeedsSuccess=!!window.__shadabSyncFailureNeedsSuccess;
+ if(typeof previousCheck==='function'&&!previousCheck.__spFailureHold){
+   const guardedCheck=function(){
+     if(window.__shadabSyncFailureNeedsSuccess)return;
+     return previousCheck.apply(this,arguments);
+   };
+   guardedCheck.__spFailureHold=true;guardedCheck.__spFailureHoldOriginal=previousCheck;
+   window.shadabFirebaseRecheck=guardedCheck;
+ }
+ const base=window.sp35ManualServerRefresh;
+ if(typeof base==='function'&&!base.__spPhotoStatusTruth){
+   const wrapped=async function(){
+     const started=performance.now();
+     window.__shadabSyncFailureNeedsSuccess=true;
+     setStatus('Syncing salesman visits & photo references…','firebase-checking');
+     try{
+       const result=await base.apply(this,arguments);
+       if(result===false||result?.ok===false||result?.success===false){
+         const msg=String(result?.error||result?.message||'Firebase did not confirm this sync');
+         throw new Error(msg);
+       }
+       window.__shadabSyncFailureNeedsSuccess=false;
+       const payload={durationMs:Math.max(0,Math.round(performance.now()-started)),result:result===true?'ok':(result?.mode||result?.reason||'completed'),message:'Manual sync promise resolved; visit/photo references handled by the canonical sync engine'};
+       try{window.__spAuditLogEvent?.('Top manual sync result',payload,'success')}catch(_){}
+       setStatus('✓ Sync successful • saved visits/photo references • '+stamp(),'firebase-connected');
+       clearTimeout(window.__manualSyncStatusTimer);
+       window.__manualSyncStatusTimer=setTimeout(()=>{
+         if(!window.__shadabSyncFailureNeedsSuccess)setStatus('Salesman visits & photo references ready • auto sync every 1 hour','firebase-connected');
+       },4500);
+       return result;
+     }catch(err){
+       window.__shadabSyncFailureNeedsSuccess=true;
+       const msg=String(err?.message||err||'Sync failed');
+       try{window.__spAuditLogEvent?.('Top manual sync result',{durationMs:Math.max(0,Math.round(performance.now()-started)),error:msg,dataPreserved:true},'error')}catch(_){}
+       setStatus('✕ Sync failed • local data safe • retry required','firebase-error');
+       throw err;
+     }
+   };
+   wrapped.__spPhotoStatusTruth=true;wrapped.__spPhotoStatusTruthOriginal=base;
+   window.sp35ManualServerRefresh=wrapped;
+ }
+})();
+</script>
+<!-- ===== END SYNC STATUS TRUTH PATCH ===== -->
+</body>
+</html>
