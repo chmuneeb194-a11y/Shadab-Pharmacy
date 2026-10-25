@@ -25071,15 +25071,17 @@ window.__spAssertVisitPdfPhotos=function(rows){
  const diag=window.__spPdfLastPhotoDiagnostics||{};
  const missing=Array.isArray(diag.missing)?diag.missing:[];
  const unresolved=missing.filter(m=>m&&m.expected!==false&&(m.photoRef||(Array.isArray(m.tried)&&m.tried.length)));
- /* The previously observed failure mode was a completely image-less PDF when owner UID
-    or photoRef was absent. Even if no reference could be derived, never silently export
-    a multi-visit report with zero image objects; route the user to the read-only diagnostic. */
  const zeroPhotoFailure=Number(diag.records||0)>=2&&Number(diag.photosEmbedded||0)===0&&missing.some(m=>m&&m.expected!==false);
  if(unresolved.length||zeroPhotoFailure){
   const affected=unresolved.length||Number(diag.expectedMissingCount||missing.filter(m=>m&&m.expected!==false).length)||missing.length;
   const sample=(unresolved.length?unresolved:missing.filter(m=>m&&m.expected!==false)).slice(0,3).map(m=>String(m.store||m.visitId||'visit')+': '+String(m.reason||'saved media not recovered')).join(' | ');
-  throw new Error(affected+' visit photo(s) could not be recovered from IndexedDB/Firebase. To avoid sharing another PDF with blank photo boxes, the PDF was not shared or downloaded. Open Master Control Center → Update & Activity Audit → Verify Today Photos and export the JSON diagnostic. '+sample);
+  const warning=affected+' visit photo(s) are unavailable from IndexedDB/Firebase. PDF export will continue so you can still download or share the report; unavailable photo boxes may remain blank. '+sample;
+  window.__spPdfLastPhotoWarning={at:new Date().toISOString(),affected,warning,records:Number(diag.records||0),photosEmbedded:Number(diag.photosEmbedded||0)};
+  console.warn('[Shadab Pharmacy PDF photo warning]',window.__spPdfLastPhotoWarning);
+  try{window.toast35?.('⚠ PDF will continue; '+affected+' photo(s) unavailable. Check Update & Activity Audit.')}catch(_e){}
+  return false;
  }
+ window.__spPdfLastPhotoWarning=null;
  return true;
 };
 window.__spRunTodayPhotoIntegrityCheck=async function(){
